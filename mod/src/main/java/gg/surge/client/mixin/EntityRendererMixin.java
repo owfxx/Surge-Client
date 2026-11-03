@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Surge badge on player nametags, and entity culling: small, decorative entities stop rendering beyond a short distance. Mobs and players are never culled. */
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin {
 	@Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
@@ -29,7 +28,6 @@ public abstract class EntityRendererMixin {
 		if (entity.distanceToSqr(camX, camY, camZ) > max * max) cir.setReturnValue(false);
 	}
 
-	/** TNT Timer: lit TNT always gets a "nametag" (the countdown). */
 	@Inject(method = "shouldShowName(Lnet/minecraft/world/entity/Entity;D)Z", at = @At("RETURN"), cancellable = true)
 	private void surge$tntName(Entity entity, double distSq, CallbackInfoReturnable<Boolean> cir) {
 		if (entity instanceof net.minecraft.world.entity.item.PrimedTnt && gg.surge.client.mods.Mods.TNT_TIMER.enabled()) cir.setReturnValue(true);

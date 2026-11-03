@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-/** Chat mod: a gray timestamp in front of each message. */
 @Mixin(ChatComponent.class)
 public abstract class ChatComponentMixin {
 	@ModifyVariable(method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V",

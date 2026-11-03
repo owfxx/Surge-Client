@@ -27,6 +27,7 @@ Requires Windows 10 or 11 and a Minecraft Java Edition account.
 - FPS boost that doesn't change how the game looks, with extra options if you want even more FPS
 - Command Keys: bind a key to a chat message or command
 - Wardrobe with wings, halos, capes and animated emotes (press **B** for the emote wheel)
+- Friends: add people, chat, set your status and see which server your friends are on
 
 All keys can be changed in **Options → Controls → Key Binds → Surge Client**.
 

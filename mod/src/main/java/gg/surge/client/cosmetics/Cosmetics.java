@@ -8,12 +8,7 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.UUID;
 
-/**
- * Which cosmetics a player shows: yours from the wardrobe (only owned ones), other
- * Surge players' from the online service. Wings, halos and capes are 3D models (CosmeticLayer).
- */
 public final class Cosmetics {
-	/** Wardrobe hover preview: "wings", "halo" or "cape" plus the style key, or null. */
 	public static volatile String previewSub, previewKey;
 
 	private Cosmetics() {}
@@ -23,12 +18,10 @@ public final class Cosmetics {
 		previewKey = key;
 	}
 
-	/** Your equipped style if you own it, else "none". */
 	public static String equipped(String type, String key) {
 		return key != null && !"none".equals(key) && Wallet.get().owns(type + ":" + key) ? key : "none";
 	}
 
-	/** The style a player shows for this type, or null for none. */
 	public static String forPlayer(Player p, String type) {
 		Minecraft mc = Minecraft.getInstance();
 		if (p == mc.player) {

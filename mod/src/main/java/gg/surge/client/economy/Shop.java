@@ -3,15 +3,12 @@ package gg.surge.client.economy;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Everything sold in the wardrobe. Prices are in Surge Coins (all ≥ 600). */
 public final class Shop {
 	public record Item(String id, String category, String sub, String name, int price) {
-		/** The value stored in the config when equipped, e.g. "flame" for "trail:flame". */
 		public String key() { return id.substring(id.indexOf(':') + 1); }
 	}
 
 	public static final List<Item> ITEMS = new ArrayList<>();
-
 
 	private Shop() {}
 
@@ -20,7 +17,6 @@ public final class Shop {
 	}
 
 	static {
-		// Cosmetics: one list, no sub-categories. Wings, halos and capes.
 		String[][] cos = {
 			{"wings:angel", "Angel Wings", "1200"}, {"wings:surge", "Surge Wings", "1500"}, {"wings:soul", "Soul Wings", "1100"},
 			{"wings:flame", "Flame Wings", "1100"}, {"wings:void", "Void Wings", "1300"}, {"wings:crystal", "Crystal Wings", "1400"},
@@ -47,7 +43,6 @@ public final class Shop {
 		}
 	}
 
-	/** Price after the best running sale. */
 	public static int price(Item item) {
 		int pct = Sales.discount(item);
 		return pct <= 0 ? item.price() : Math.max(0, Math.round(item.price() * (100 - pct) / 100f));

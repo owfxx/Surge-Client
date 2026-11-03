@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Block entity culling: chests, signs, banners, heads etc. stop rendering beyond 48 blocks. Beacons are kept. */
 @Mixin(BlockEntityRenderDispatcher.class)
 public abstract class BlockEntityRenderDispatcherMixin {
 	@Inject(method = "tryExtractRenderState", at = @At("HEAD"), cancellable = true)

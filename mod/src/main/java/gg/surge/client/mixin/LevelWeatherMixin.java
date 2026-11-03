@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Weather Changer: what you see on your screen only; the server's weather is untouched. */
 @Mixin(Level.class)
 public abstract class LevelWeatherMixin {
 	@Inject(method = "getRainLevel(F)F", at = @At("HEAD"), cancellable = true)

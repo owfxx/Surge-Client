@@ -13,19 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Sales: a percentage off one item, a category (all wings, all emotes…) or everything.
- * Stored in sales.json in the Surge folder, and also read from the published codes.json
- * (the launcher writes sales into it), so everyone gets the same sales.
- */
 public final class Sales {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
 	public static final class Sale {
-		/** "all", "cosmetic", "emote", "sub:wings", or an item id like "wings:angel". */
 		public String target = "all";
 		public int percent = 20;
-		/** Epoch millis; 0 = no end date. */
 		public long until;
 
 		public boolean active() { return percent > 0 && (until == 0 || System.currentTimeMillis() < until); }
@@ -84,7 +77,6 @@ public final class Sales {
 		};
 	}
 
-	/** Best active discount in percent for this item (0 when none). */
 	public static int discount(Shop.Item item) {
 		if (!loaded) load();
 		int best = 0;

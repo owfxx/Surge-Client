@@ -29,11 +29,6 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-/**
- * The Right Shift menu. Sidebar with categories, a search box and a grid of mod cards.
- * Left click a card to toggle it, right click (or the gear) for its settings.
- * Drawn by hand and clicks are polled, so it doesn't depend on Minecraft's input API.
- */
 public class SurgeMenuScreen extends Screen {
 	private enum Tab {
 		ALL("All mods", Items.NETHER_STAR), HUD("HUD", Items.ITEM_FRAME), PVP("PvP", Items.NETHERITE_SWORD),
@@ -65,9 +60,7 @@ public class SurgeMenuScreen extends Screen {
 	private final List<EditBox> boxes = new ArrayList<>();
 	private boolean needsRebuild;
 
-	// layout
 	private int px, py, pw, ph, cx, cy, cw, ch;
-	// input
 	private boolean wasL = true, wasR = true, escWas = true;
 	private boolean clickL, clickR, downL;
 	private Runnable action;
@@ -75,10 +68,8 @@ public class SurgeMenuScreen extends Screen {
 	private String tip;
 	private long tipSince;
 	private Object tipKey;
-	// scrolling
 	private float scroll, scrollTarget;
 	private int contentH;
-	// slider drag / key capture
 	private SliderModel dragging;
 	private java.util.function.BiConsumer<Integer, Integer> drag2d;
 	private int dragX, dragW;
@@ -95,14 +86,12 @@ public class SurgeMenuScreen extends Screen {
 		this.parent = parent;
 	}
 
-	/** Opens on the Settings tab (status, friends, FPS options). */
 	public static SurgeMenuScreen general(Screen parent) {
 		tab = Tab.FPS;
 		query = "";
 		return new SurgeMenuScreen(parent);
 	}
 
-	/** Opens straight into a mod's settings page. */
 	public static SurgeMenuScreen settings(SurgeMod mod, Screen parent) {
 		SurgeMenuScreen s = new SurgeMenuScreen(parent);
 		s.openMod = mod;
@@ -158,7 +147,6 @@ public class SurgeMenuScreen extends Screen {
 		buildPage();
 	}
 
-	// ------------------------------------------------------------------ pages
 	private boolean gridMode() {
 		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.KEYS));
 	}
@@ -336,7 +324,6 @@ public class SurgeMenuScreen extends Screen {
 		}));
 	}
 
-	// ------------------------------------------------------------------ input
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
 		if (scrollY != 0) {
@@ -397,11 +384,10 @@ public class SurgeMenuScreen extends Screen {
 
 	private void listen(IntConsumer target) {
 		keyPrev.clear();
-		CommandKeys.pollPressed(minecraft, keyPrev); // snapshot keys already held
+		CommandKeys.pollPressed(minecraft, keyPrev);
 		listening = target;
 	}
 
-	// ------------------------------------------------------------------ render
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		Ui.frame();
@@ -454,14 +440,11 @@ public class SurgeMenuScreen extends Screen {
 		String fps = minecraft.getFps() + " fps";
 		g.drawString(font, fps, px + 32 + font.width("Surge") + 6, py + 11, Ui.FAINT, false);
 
-		// close
 		int bx = px + pw - 26;
 		if (Ui.iconButton(g, mx, my, bx, py + 6, 18, Ui.CROSS) && clickL) action = this::onClose;
-		// edit hud
 		int ew = font.width("Edit HUD") + 16;
 		bx -= ew + 4;
 		if (Ui.pill(g, font, mx, my, bx, py + 6, ew, 18, "Edit HUD", true) && clickL) action = () -> minecraft.setScreen(new HudEditorScreen(this));
-		// search
 		int sw = Math.min(140, bx - (px + SIDEBAR_W + 8) - 8);
 		int sx = bx - sw - 6;
 		boolean focused = search.isFocused();
@@ -487,7 +470,6 @@ public class SurgeMenuScreen extends Screen {
 			g.drawString(font, Ui.fit(font, t.label, SIDEBAR_W - 36), px + 28, y + 6, sel || selSoft ? Ui.TEXT : Ui.MUTED, false);
 			y += 22;
 		}
-		// bottom buttons
 		int by = py + ph - 52;
 		if (Ui.itemButton(g, mx, my, px + 8, by, 20, new ItemStack(Items.LEATHER_CHESTPLATE)) && clickL) action = () -> minecraft.setScreen(new WardrobeScreen(this));
 		g.drawString(font, "Wardrobe", px + 34, by + 6, Ui.hover(mx, my, px + 8, by, SIDEBAR_W - 16, 20) ? Ui.TEXT : Ui.MUTED, false);
@@ -498,7 +480,6 @@ public class SurgeMenuScreen extends Screen {
 		if (Ui.hover(mx, my, px + 28, by, SIDEBAR_W - 36, 20) && clickL) action = () -> minecraft.setScreen(new EmoteWheelScreen());
 	}
 
-	// ------------------------------------------------------------------ grid
 	private void grid(GuiGraphics g, int mx, int my) {
 		List<SurgeMod> mods = visibleMods();
 		int cols = Math.max(2, (cw + GAP) / 92);
@@ -581,7 +562,6 @@ public class SurgeMenuScreen extends Screen {
 		g.fill(x, barY, x + 2, barY + barH, Ui.ACCENT_2);
 	}
 
-	// ------------------------------------------------------------------ pages
 	private void page(GuiGraphics g, int mx, int my, float delta) {
 		int top = cy;
 		if (openMod != null) {
@@ -627,7 +607,6 @@ public class SurgeMenuScreen extends Screen {
 		if (drag2d != null && downL) drag2d.accept(mx, my);
 	}
 
-	// ------------------------------------------------------------------ rows
 	interface SliderModel {
 		float fraction();
 
@@ -650,7 +629,6 @@ public class SurgeMenuScreen extends Screen {
 
 		abstract void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta);
 
-		/** Row background + label; shared by most rows. */
 		void base(GuiGraphics g, int x, int y, int w, boolean hov, String label, ItemStack icon) {
 			float a = Ui.anim(this, hov);
 			if (a > 0.01f) g.fill(x, y + 1, x + w, y + height() - 1, Colors.alpha(0xFF2E2E33, a));
@@ -825,7 +803,6 @@ public class SurgeMenuScreen extends Screen {
 				boolean over = hov && Ui.hover(mx, my, bx - 1, by - 1, sz + 2, sz + 2);
 				g.fill(bx - 1, by - 1, bx + sz + 1, by + sz + 1, sel ? 0xFFFFFFFF : over ? 0xFFB9B9BE : Ui.EDGE);
 				if (pick) {
-					// custom color: shows the current custom color with a little plus
 					g.fill(bx, by, bx + sz, by + sz, custom ? Colors.parse(setting.get()) : 0xFF2A2A2E);
 					Ui.icon(g, new String[]{"..X..", "..X..", "XXXXX", "..X..", "..X.."}, bx + 3, by + 3, 1, custom ? 0xFF000000 : 0xFFFFFFFF);
 					if (over && clickL) action = () -> { open = !open; if (open) loadHsv(); };
@@ -840,7 +817,6 @@ public class SurgeMenuScreen extends Screen {
 				if (!pick && over && clickL) action = () -> { setting.set(v); open = false; };
 			}
 			if (!open) return;
-			// saturation/brightness square + hue bar + preview
 			int pw = Math.min(150, w - 70), ph = 46;
 			int px = x + w - 4 - pw - 40, py = y + 24;
 			for (int i = 0; i < pw; i++) {
@@ -855,7 +831,6 @@ public class SurgeMenuScreen extends Screen {
 			Ui.outline(g, px - 1, hy - 1, pw + 2, 9, Ui.EDGE);
 			int hx = px + Math.round(hue * (pw - 1));
 			g.fill(hx - 1, hy - 2, hx + 2, hy + 9, 0xFFFFFFFF);
-			// preview + hex
 			int cx2 = px + pw + 8;
 			g.fill(cx2, py, cx2 + 30, py + 24, Ui.EDGE);
 			g.fill(cx2 + 1, py + 1, cx2 + 29, py + 23, Colors.hsv(hue, sat, val));
@@ -1002,7 +977,6 @@ public class SurgeMenuScreen extends Screen {
 		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
 			float a = Ui.anim(this, hov);
 			if (a > 0.01f) g.fill(x, y + 1, x + w, y + 23, Colors.alpha(0xFF2E2E33, a));
-			// color swatch: click to change
 			boolean overColor = hov && Ui.hover(mx, my, x + 4, y + 5, 14, 14);
 			g.fill(x + 4, y + 5, x + 18, y + 19, overColor ? 0xFFFFFFFF : Ui.EDGE);
 			g.fill(x + 5, y + 6, x + 17, y + 18, Colors.parse(wp.color));

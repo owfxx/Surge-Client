@@ -1,8 +1,3 @@
-// Updates through GitHub Releases.
-//  - Players: the launcher downloads the newest Surge mod jar (and offers launcher updates) from
-//    the releases of the update repo, so nobody has to reinstall anything.
-//  - Admin: publish a mod jar, a launcher exe, or codes.json + sales from the admin panel.
-// The repo comes from update-source.json (written by the GitHub Action when it builds) or Settings.
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -19,7 +14,7 @@ function bundledSource() {
     process.resourcesPath && path.join(process.resourcesPath, 'update-source.json'),
     path.join(__dirname, '..', '..', 'update-source.json'),
   ]) {
-    try { if (p && fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')).repo || ''; } catch { /* ignore */ }
+    try { if (p && fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')).repo || ''; } catch { }
   }
   return '';
 }
@@ -28,7 +23,6 @@ function repo() {
   return (config.load().updateRepo || bundledSource() || '').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
 }
 
-/** Public codes link for the repo (codes.json kept on the "data" release). */
 function codesUrl() {
   const r = repo();
   return r ? `https://github.com/${r}/releases/download/data/codes.json` : '';
@@ -58,7 +52,6 @@ async function gh(method, url, token, body, extra = {}) {
   return data;
 }
 
-// ---------- versions ----------
 const num = v => String(v || '0').split(/[+]|-mc/)[0].replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
 function newer(a, b) {
   const x = num(a), y = num(b);
@@ -75,10 +68,8 @@ async function releases() {
   return gh('GET', `/repos/${r}/releases?per_page=30`);
 }
 
-// ---------- mod updates (players) ----------
 function updateDir(mcVersion) { return path.join(UPDATES, mcVersion); }
 
-/** Newest downloaded update jar for this Minecraft version, or null. */
 function downloadedMod(mcVersion) {
   const dir = updateDir(mcVersion);
   if (!fs.existsSync(dir)) return null;
@@ -87,7 +78,6 @@ function downloadedMod(mcVersion) {
   return jars[0] ? path.join(dir, jars[0]) : null;
 }
 
-/** Downloads the newest mod jar for mcVersion if the release is newer than what we have. */
 async function updateMod(mcVersion, haveVersion, onProgress = () => {}) {
   const list = await releases();
   let best = null;
@@ -113,7 +103,6 @@ async function updateMod(mcVersion, haveVersion, onProgress = () => {}) {
   return path.join(dir, best.name);
 }
 
-// ---------- launcher updates ----------
 async function checkLauncher(currentVersion) {
   const list = await releases();
   for (const rel of list) {
@@ -127,7 +116,6 @@ async function checkLauncher(currentVersion) {
   return null;
 }
 
-/** Downloads the new exe and swaps it in after the launcher closes (portable build). */
 async function applyLauncher(url, onProgress = () => {}) {
   onProgress({ stage: 'Downloading update…' });
   const res = await fetch(url, { headers: { 'User-Agent': UA } });
@@ -150,7 +138,6 @@ async function applyLauncher(url, onProgress = () => {}) {
   return { file: target, restart: true };
 }
 
-// ---------- publishing (admin) ----------
 async function releaseByTag(r, tag, token) {
   try { return await gh('GET', `/repos/${r}/releases/tags/${encodeURIComponent(tag)}`, token); } catch (e) { if (e.status === 404) return null; throw e; }
 }
@@ -161,7 +148,6 @@ async function uploadAsset(r, rel, token, name, buf, type) {
   return gh('POST', `${up}?name=${encodeURIComponent(name)}`, token, buf, { 'Content-Type': type });
 }
 
-/** Publishes a mod jar or launcher exe as a new release that every launcher picks up. */
 async function publishFile({ token, file, notes = '' }) {
   const r = repo();
   if (!r) throw new Error('Set the update repo first (owner/name)');
@@ -183,7 +169,6 @@ async function publishFile({ token, file, notes = '' }) {
   return { tag, url: rel.html_url };
 }
 
-/** Publishes codes.json (code hashes + sales) to the "data" release, the default codes link. */
 async function publishCodes({ token, json }) {
   const r = repo();
   if (!r) throw new Error('Set the update repo first (owner/name)');
@@ -194,7 +179,6 @@ async function publishCodes({ token, json }) {
   return codesUrl();
 }
 
-/** Publishes discover.json (partnered servers on the in-game Discover tab) to the "data" release. */
 async function publishDiscover({ token, servers }) {
   const r = repo();
   if (!r) throw new Error('Set the update repo first (owner/name)');

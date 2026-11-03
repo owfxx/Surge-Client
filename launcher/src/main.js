@@ -41,7 +41,6 @@ function createWindow() {
 const send = (ch, data) => { if (win && !win.isDestroyed()) win.webContents.send(ch, data); };
 const task = label => p => send('task:progress', { label, ...p });
 
-// Wraps handlers so errors reach the UI as { error } instead of crashing.
 function handle(channel, fn) {
   ipcMain.handle(channel, async (_e, ...args) => {
     try { return { ok: true, data: await fn(...args) }; } catch (err) {
@@ -51,12 +50,10 @@ function handle(channel, fn) {
   });
 }
 
-// Window
 ipcMain.on('win:min', () => win.minimize());
 ipcMain.on('win:max', () => (win.isMaximized() ? win.unmaximize() : win.maximize()));
 ipcMain.on('win:close', () => win.close());
 
-// Settings
 handle('config:get', () => ({ ...config.load(), totalGb: config.totalGb, dataDir: paths.root }));
 handle('config:set', patch => {
   const next = config.save(patch);
@@ -70,13 +67,11 @@ handle('dialog:java', async () => {
   return r.canceled ? null : r.filePaths[0];
 });
 
-// Accounts
 handle('auth:list', () => auth.publicAccounts());
 handle('auth:login', () => auth.login());
 handle('auth:logout', uuid => auth.logout(uuid));
 handle('auth:active', uuid => auth.setActive(uuid));
 
-// Modpacks / instances
 handle('fabric:versions', () => fabric.gameVersions());
 handle('instances:list', () => instances.list().map(i => ({ ...i, surgeModAvailable: launcher.surgeModAvailable(i.mcVersion) })));
 handle('instances:content', id => instances.listContent(id));
@@ -140,7 +135,6 @@ handle('instances:addFiles', async (id, type) => {
   return r.filePaths.length;
 });
 
-// Browsing
 const sources = { modrinth, curseforge };
 handle('browse:search', ({ source, ...q }) => sources[source].search(q));
 handle('browse:install', async ({ source, id, type, instanceId }) => {
@@ -157,7 +151,6 @@ handle('browse:installPack', async ({ source, id, title }) => {
   return inst;
 });
 
-// Admin
 handle('social:get', () => require('./core/social').social().catch(() => null));
 handle('admin:status', () => admin.status());
 handle('admin:setup', pw => admin.setup(pw));
@@ -173,7 +166,7 @@ handle('admin:release', () => ({ repo: release.repo(), hasToken: admin.hasToken(
 handle('admin:setRepo', r => { config.save({ updateRepo: String(r || '').trim() }); return release.repo(); });
 handle('admin:setToken', t => admin.setToken(String(t || '').trim()));
 handle('admin:publishFile', async notes => {
-  admin.list(); // throws if locked
+  admin.list();
   const r = await dialog.showOpenDialog(win, { title: 'Pick the mod .jar or launcher .exe to publish', properties: ['openFile'], filters: [{ name: 'Surge builds', extensions: ['jar', 'exe'] }] });
   if (r.canceled || !r.filePaths[0]) return null;
   return release.publishFile({ token: admin.getToken(), file: r.filePaths[0], notes });
@@ -189,10 +182,8 @@ handle('admin:export', async () => {
   return r.canceled ? null : admin.exportPublic(r.filePath);
 });
 
-// Launch
 handle('servers:ping', address => servers.ping(address));
 
-// ---------- Discord status ----------
 let presenceTimer = null;
 function presenceIdle() {
   clearInterval(presenceTimer);
@@ -205,7 +196,7 @@ function presencePlaying(inst) {
   let last = '';
   const update = () => {
     let st = { state: 'menu' };
-    try { st = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { /* not written yet */ }
+    try { st = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { }
     const cfg = config.load();
     if (st.discord === false) { if (last !== 'off') { last = 'off'; discord.set({ details: 'Playing Minecraft' }); } return; }
     const showServer = cfg.discordShowServer && st.showServer !== false;
@@ -217,7 +208,7 @@ function presencePlaying(inst) {
     last = key;
     discord.set({ details, state, since: st.since && st.state !== 'menu' ? st.since : since });
   };
-  try { fs.writeFileSync(file, JSON.stringify({ state: 'menu', server: '', since })); } catch { /* ignore */ }
+  try { fs.writeFileSync(file, JSON.stringify({ state: 'menu', server: '', since })); } catch { }
   update();
   clearInterval(presenceTimer);
   presenceTimer = setInterval(update, 5000);
@@ -241,7 +232,6 @@ handle('launch:start', (id, target = {}) => {
       send('launch:log', line);
     },
     onExit: code => {
-      // Exit codes 0 and 130 (closed normally / Ctrl+C) aren't crashes.
       const crash = code && code !== 130 ? crash_.analyze(instances.dirOf(id), logTail, startedAt) : null;
       send('launch:exit', { code, crash });
       presenceIdle();
@@ -251,7 +241,6 @@ handle('launch:start', (id, target = {}) => {
 });
 handle('shell:openFile', file => shell.openPath(file));
 
-// Worlds and screenshots (only paths inside the instance folder are accepted)
 const inside = (id, p) => path.resolve(p).startsWith(path.resolve(instances.dirOf(id)) + path.sep);
 handle('instances:worlds', id => instances.worlds(id));
 handle('instances:screenshots', id => instances.screenshots(id));
@@ -260,7 +249,6 @@ handle('files:show', (id, p) => { if (inside(id, p)) shell.showItemInFolder(p); 
 handle('files:open', (id, p) => { if (inside(id, p)) return shell.openPath(p); });
 handle('files:copyImage', (id, p) => { if (inside(id, p)) clipboard.writeImage(nativeImage.createFromPath(p)); });
 
-// Skins
 handle('skins:profile', () => skins.profile());
 handle('skins:library', () => skins.library());
 handle('skins:upload', (name, variant) => skins.upload(name, variant));
@@ -273,7 +261,6 @@ handle('skins:import', async () => {
   return r.canceled ? null : skins.importFiles(r.filePaths);
 });
 
-// Mod updates
 handle('updates:check', id => updates.check(id));
 handle('updates:apply', async (id, list) => {
   const progress = task('Updating mods');
@@ -284,7 +271,6 @@ handle('updates:apply', async (id, list) => {
 
 handle('launch:running', () => launcher.isRunning());
 
-// Launcher updates from the update repo
 handle('selfupdate:check', () => release.checkLauncher(app.getVersion()));
 handle('selfupdate:apply', async url => {
   const r = await release.applyLauncher(url, p => send('launch:progress', p));

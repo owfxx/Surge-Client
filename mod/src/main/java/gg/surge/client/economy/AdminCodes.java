@@ -13,10 +13,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * In-game version of the launcher's admin panel. Same files: admin.json keeps the plain
- * codes (only on the admin's PC), codes.json keeps hashes + coins + sales and is safe to publish.
- */
 public final class AdminCodes {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -60,11 +56,6 @@ public final class AdminCodes {
 		return create(null, coins, List.of(), count);
 	}
 
-	/**
-	 * Makes codes. custom = your own text (e.g. "SURGE2026", made once) or null for random ones.
-	 * Each code gives the coins and unlocks the items (ids like "cape:surge" or "emote:WAVE").
-	 * Returns the codes, or an empty list if the custom code already exists.
-	 */
 	public static List<String> create(String custom, int coins, List<String> items, int count) {
 		JsonObject d = read();
 		JsonArray arr = d.getAsJsonArray("codes");
@@ -108,7 +99,6 @@ public final class AdminCodes {
 		write(d);
 	}
 
-	/** Rewrites codes.json (hashes, coins and sales) after any change. */
 	public static void publish() {
 		write(read());
 	}

@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Wardrobe: cosmetics, emotes, outfits, skins and Surge Coins, with a live preview of your character. */
 public class WardrobeScreen extends Screen {
 	public enum Section {
 		COSMETICS("Cosmetics", Items.ELYTRA), EMOTES("Emotes", Items.ARMOR_STAND), OUTFITS("Outfits", Items.LEATHER_CHESTPLATE),
@@ -151,7 +150,6 @@ public class WardrobeScreen extends Screen {
 		return false;
 	}
 
-	// ---------- equip ----------
 	private static String equippedKey(String type) {
 		SurgeConfig c = SurgeConfig.get();
 		return switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; default -> c.cape; };
@@ -171,7 +169,6 @@ public class WardrobeScreen extends Screen {
 		return item.id().substring(0, item.id().indexOf(':'));
 	}
 
-	/** First click asks, second click within 3 seconds buys. */
 	private void buyFlow(Shop.Item item) {
 		Wallet w = Wallet.get();
 		int price = Shop.price(item);
@@ -209,7 +206,6 @@ public class WardrobeScreen extends Screen {
 		}));
 	}
 
-	// ---------- render ----------
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		Ui.frame();
@@ -236,7 +232,6 @@ public class WardrobeScreen extends Screen {
 		Ui.logo(g, px + 9, py + 8, 16);
 		g.drawString(font, Component.literal("Wardrobe").withStyle(ChatFormatting.BOLD), px + 30, py + 12, Ui.TEXT, true);
 
-		// coins chip
 		String bal = String.valueOf(Wallet.get().coins);
 		int bw = font.width(bal) + 28, bx = px + pw - bw - 30;
 		boolean balHover = Ui.hover(mx, my, bx, py + 7, bw, 18);
@@ -247,7 +242,6 @@ public class WardrobeScreen extends Screen {
 		if (balHover && click) action = () -> switchTo(Section.CURRENCY);
 		if (Ui.iconButton(g, mx, my, px + pw - 26, py + 7, 18, Ui.CROSS) && click) action = this::onClose;
 
-		// sidebar
 		int sy = py + 36;
 		for (Section s : Section.values()) {
 			boolean sel = s == section;
@@ -286,7 +280,6 @@ public class WardrobeScreen extends Screen {
 			case CURRENCY -> action = coinsPage(g, mx, my, click, delta, action);
 		}
 
-		// live preview
 		applyPreview(hoveredItem);
 		if (preview()) {
 			int x1 = px + pw - 128, y1 = py + 36, x2 = px + pw - 10, y2 = py + ph - 10;
@@ -298,7 +291,6 @@ public class WardrobeScreen extends Screen {
 			Ui.centered(g, font, Ui.fit(font, hint, x2 - x1 - 8), (x1 + x2) / 2, y2 - 13, hc);
 		}
 
-		// message line
 		long age = System.currentTimeMillis() - messageAt;
 		if (!message.isEmpty() && age < 4500 && section != Section.CURRENCY) {
 			float a = Math.min(1f, Math.min(age / 150f, (4500 - age) / 400f));
@@ -335,7 +327,6 @@ public class WardrobeScreen extends Screen {
 			g.drawString(font, tag, x + w - tw, yy + 4, 0xFF1A1200, false);
 		}
 
-		// bottom bar: price, buy?, equip / equipped / play
 		int bx = x + 4, by = yy + CARD_H - 19, bw = w - 8, bh = 15;
 		int fill, lip;
 		String label;
@@ -443,7 +434,7 @@ public class WardrobeScreen extends Screen {
 			String name = p.getFileName().toString().replaceAll("(?i)\\.png$", "");
 			int y = top + i * 24;
 			boolean hov = Ui.hover(mx, my, cx, y, cw, 22);
-			if (Ui.flat(g, mx, my, cx, y, cw, 22, false, "skin:" + name)) { /* hover only */ }
+			if (Ui.flat(g, mx, my, cx, y, cw, 22, false, "skin:" + name)) { }
 			g.drawString(font, Ui.fit(font, name, cw - 90), cx + 6, y + 7, Ui.TEXT, false);
 			if (Ui.pill(g, font, mx, my, cx + cw - 72, y + 3, 68, 16, "Apply", true) && click && hov) action = () -> {
 				toast("Uploading…", Ui.MUTED);

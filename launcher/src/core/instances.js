@@ -1,5 +1,3 @@
-// Instances = Surge "modpacks". Each one is a folder with its own mods,
-// resource packs, configs and worlds, plus an instance.json describing it.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -54,7 +52,6 @@ function remove(id) {
   fs.rmSync(dirOf(id), { recursive: true, force: true });
 }
 
-// Records where a file came from so it can be exported/updated later.
 function addContent(id, record) {
   const inst = get(id);
   inst.content = inst.content.filter(c => !(c.type === record.type && (c.file === record.file || (record.projectId && c.projectId === record.projectId && c.source === record.source))));
@@ -71,7 +68,6 @@ function hasProject(id, source, projectId) {
   });
 }
 
-// Scans the folders so files the user dropped in by hand show up too.
 function listContent(id) {
   const inst = get(id);
   const out = [];
@@ -108,8 +104,6 @@ function removeContent(id, type, file) {
 
 function sha(file, algo) { return crypto.createHash(algo).update(fs.readFileSync(file)).digest('hex'); }
 
-// Exports to Modrinth's .mrpack format. Modrinth-sourced files are linked;
-// everything else is embedded under overrides/.
 function exportMrpack(id, dest) {
   const inst = get(id);
   const zip = new AdmZip();
@@ -144,7 +138,6 @@ function exportMrpack(id, dest) {
   return dest;
 }
 
-// Singleplayer worlds, newest first.
 function worlds(id) {
   const dir = path.join(dirOf(id), 'saves');
   if (!fs.existsSync(dir)) return [];
@@ -154,7 +147,6 @@ function worlds(id) {
   }).sort((a, b) => b.lastPlayed - a.lastPlayed);
 }
 
-// Screenshots, newest first.
 function screenshots(id) {
   const dir = path.join(dirOf(id), 'screenshots');
   if (!fs.existsSync(dir)) return [];

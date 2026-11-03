@@ -17,11 +17,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 
-/**
- * 3D cosmetics on any player model: layered feathered wings that fold when you
- * stand still and flap when you move, a solid glowing halo, and a cape that swings
- * with your movement. Model space: y points down, the player faces -z.
- */
 public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static final int FULL_BRIGHT = 0xF000F0;
 	private static final Identifier WHITE = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/white.png");
@@ -30,7 +25,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		super(parent);
 	}
 
-	/** Finds which player a render state belongs to (by position, so it works for everyone). */
 	public static Player playerOf(AvatarRenderState s) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null) return null;
@@ -71,7 +65,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (halo != null) halo(ps, q, halo, age);
 	}
 
-	// ---------------- cape ----------------
 	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float speed, boolean sneaking) {
 		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_" + style + ".png");
 		float swing = 6f + speed * 55f + (float) Math.sin(age * 0.09f) * (1.5f + speed * 4f) + (sneaking ? 22f : 0f);
@@ -83,7 +76,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.mulPose(Axis.ZP.rotationDegrees(side));
 		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
 			float x0 = -5f / 16, x1 = 5f / 16, y0 = 0f, y1 = 1f, z0 = 0f, z1 = 1f / 16;
-			// outer (seen from behind), inner, sides, top, bottom; UVs from a 64x32 cape texture
 			face(pose, vc, light, 0, 0, 1, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, 1, 1, 11, 17);
 			face(pose, vc, light, 0, 0, -1, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, 12, 1, 22, 17);
 			face(pose, vc, light, -1, 0, 0, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, 0, 1, 1, 17);
@@ -94,7 +86,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.popPose();
 	}
 
-	/** One textured quad; corners go top-left, top-right, bottom-right, bottom-left. UV in texture pixels (64x32). */
 	private static void face(PoseStack.Pose pose, VertexConsumer vc, int light, float nx, float ny, float nz,
 							 float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, float dx, float dy, float dz,
 							 float u0, float v0, float u1, float v1) {
@@ -105,16 +96,14 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		vc.addVertex(pose, bx, by, bz).setColor(-1).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
 	}
 
-	// ---------------- wings ----------------
 	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving) {
 		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/wings_" + style + ".png");
 		boolean glows = !("angel".equals(style) || "gold".equals(style));
 		int lit = glows ? FULL_BRIGHT : light;
-		// standing: folded back with a slow breath; moving: open and flapping
 		float open = Math.min(1f, moving * 1.4f);
 		float flapSpeed = 0.07f + open * 0.18f;
 		float flap = (float) Math.sin(age * flapSpeed) * (4f + open * 22f);
-		float spread = 62f - open * 34f;      // angle back from the shoulder line
+		float spread = 62f - open * 34f;
 		float lift = 10f + open * 6f;
 
 		for (int side = -1; side <= 1; side += 2) {
@@ -125,7 +114,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
 			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
-				// back layer (slightly larger, darker) for depth, then the main feathers
 				wingQuad(pose, vc, 0.02f, -0.36f, 1.12f, 0.26f, -0.012f, lit, 0xFFB8B8B8);
 				wingQuad(pose, vc, 0.02f, -0.34f, 1.08f, 0.22f, 0.0f, lit, 0xFFFFFFFF);
 			});
@@ -142,7 +130,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		}
 	}
 
-	// ---------------- halo ----------------
 	private static int haloColor(String style) {
 		return switch (style) {
 			case "surge" -> 0xC66BFF;
@@ -161,7 +148,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.translate(0f, -0.66f + 0.03f * (float) Math.sin(age * 0.07), 0f);
 		ps.mulPose(Axis.XP.rotationDegrees(-10f));
 		ps.mulPose(Axis.YP.rotationDegrees(age * 1.6f));
-		// solid tube (torus) that glows, then a soft additive glow around it
 		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> torus(pose, vc, 0.26f, 0.032f, 40, 10, 0xFF000000 | rgb));
 		q.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, vc) -> {
 			ring(pose, vc, 0.16f, 0.38f, 0f, rgb, 46, 40);
@@ -198,7 +184,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		vc.addVertex(pose, p[0], p[1], p[2]).setColor(argb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, n[0], n[1], n[2]);
 	}
 
-	/** Flat annulus in the XZ plane at height y, both sides. */
 	private static void ring(PoseStack.Pose pose, VertexConsumer vc, float rIn, float rOut, float y, int rgb, int alpha, int seg) {
 		int argb = (Math.min(255, Math.max(0, alpha)) << 24) | (rgb & 0xFFFFFF);
 		for (int i = 0; i < seg; i++) {

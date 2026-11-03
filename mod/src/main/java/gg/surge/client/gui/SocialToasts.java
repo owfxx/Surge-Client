@@ -8,7 +8,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Friend pop-ups (messages, requests, friends coming online): slide in at the top right. */
 public final class SocialToasts {
 	private SocialToasts() {}
 
@@ -32,7 +31,6 @@ public final class SocialToasts {
 			Ui.logo(g, x + 5, y + 6, 16);
 			g.drawString(mc.font, title, x + 25, y + 5, Colors.alpha(0xFFFFFFFF, k), false);
 			g.drawString(mc.font, text, x + 25, y + 16, Colors.alpha(0xFFA9AAAE, k), false);
-			// time left
 			g.fill(x + 1, y + 26, x + 1 + Math.round((w - 2) * (1f - age / 6000f)), y + 27, Colors.alpha(Ui.ACCENT_2, k));
 			y += Math.round(32 * k);
 		}

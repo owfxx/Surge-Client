@@ -1,4 +1,3 @@
-/* Surge Client — modern Minecraft style: slate panels, chunky pressable buttons, pixel headings. */
 @font-face { font-family: 'Monocraft'; src: url('assets/font/Monocraft.otf') format('opentype'); font-display: block; }
 @font-face { font-family: 'Geist'; font-weight: 100 900; src: url('assets/font/geist-latin-wght-normal.woff2') format('woff2'); }
 
@@ -34,7 +33,6 @@ svg { display: block; }
 ::-webkit-scrollbar-thumb { background: var(--slate-3); border: 2px solid var(--bg); box-shadow: inset 0 -3px 0 var(--slate-2); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-/* ---------- frame ---------- */
 .titlebar { height: 34px; display: flex; align-items: center; justify-content: space-between; padding-left: 12px; -webkit-app-region: drag; background: var(--outline); position: relative; z-index: 5; }
 .brand-icon { width: 18px; height: 18px; }
 .win-buttons { display: flex; height: 100%; -webkit-app-region: no-drag; }
@@ -63,7 +61,6 @@ main.home { padding: 0; overflow: hidden; }
 .view-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .view-title { font: 26px/1.15 var(--pixel); margin: 0; text-shadow: 3px 3px 0 #000; }
 
-/* ---------- chunky buttons ---------- */
 .btn { position: relative; height: 40px; padding: 0 18px 4px; border: 2px solid var(--outline); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
   font: 14px var(--pixel); color: #fff; text-shadow: 2px 2px 0 rgba(0, 0, 0, .45);
   background: var(--slate-3); box-shadow: inset 0 -4px 0 #333336, inset 0 2px 0 rgba(255, 255, 255, .18); transition: transform .06s, background .1s; }
@@ -80,14 +77,12 @@ main.home { padding: 0; overflow: hidden; }
 .btn.x-btn:hover { background: var(--red); }
 .btn:disabled, .btn:disabled:hover { background: var(--slate-2); color: var(--dim); text-shadow: none; box-shadow: none; transform: none; cursor: default; }
 
-/* tab bar: attached buttons, the selected one is pressed in */
 .seg { display: inline-flex; border: 2px solid var(--outline); background: var(--outline); gap: 2px; }
 .seg button { height: 34px; padding: 0 14px 3px; border: 0; background: var(--slate-3); cursor: pointer; font: 13px var(--pixel); color: var(--muted); text-shadow: 2px 2px 0 rgba(0, 0, 0, .4);
   box-shadow: inset 0 -3px 0 #333336, inset 0 2px 0 rgba(255, 255, 255, .14); }
 .seg button:hover { color: #fff; background: #5c5c61; }
 .seg button.on { background: var(--purple); color: #fff; box-shadow: inset 0 -3px 0 var(--purple-lo), inset 0 2px 0 rgba(255, 255, 255, .28); }
 
-/* fields */
 .input { height: 40px; padding: 0 12px; background: #111112; border: 2px solid var(--slate-3); outline: none; color: #fff; }
 .input:focus { border-color: #fff; }
 .input::placeholder { color: var(--dim); }
@@ -100,7 +95,6 @@ input[type=checkbox] { appearance: none; width: 22px; height: 22px; margin: 0; b
 input[type=checkbox]:checked { background: var(--purple); box-shadow: inset 0 -3px 0 var(--purple-lo); }
 input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg); }
 
-/* toggle: square track with a chunky knob, like the game's newer menus */
 .toggle { width: 52px; height: 28px; flex: none; padding: 0; border: 2px solid var(--outline); background: #111112; position: relative; cursor: pointer; }
 .toggle::after { content: ""; position: absolute; top: 0; left: 0; width: 22px; height: 24px; background: var(--slate-3); box-shadow: inset 0 -3px 0 #333336, inset 0 2px 0 rgba(255, 255, 255, .2); transition: transform .12s; }
 .toggle.on { background: var(--purple-lo); }
@@ -115,7 +109,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .chip { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; background: rgba(0, 0, 0, .5); border: 2px solid rgba(255, 255, 255, .12); color: #fff; font: 12px var(--pixel); }
 .chip.accent { border-color: var(--purple-hi); color: #e2ccff; }
 
-/* ---------- home ---------- */
 .hero { position: relative; height: 100%; overflow: hidden;
   background:
     radial-gradient(620px 520px at 70% 58%, rgba(143, 80, 242, .24), transparent 70%),
@@ -143,7 +136,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .log-btn:hover { color: #fff; }
 .log { position: absolute; right: 16px; bottom: 16px; width: min(520px, 44%); height: 240px; overflow: auto; padding: 12px 14px; z-index: 3; font: 12px/1.5 Consolas, monospace; color: #d4d4d8; white-space: pre-wrap; user-select: text; background: rgba(22, 22, 23, .95); }
 
-/* ---------- modpacks ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .pack-card { padding: 12px; display: flex; gap: 14px; align-items: center; cursor: pointer; text-align: left; color: inherit; font: inherit; box-shadow: inset 0 -4px 0 #222224, inset 0 2px 0 rgba(255, 255, 255, .06); padding-bottom: 16px; }
 .pack-card:hover { background: var(--slate-2); }
@@ -173,7 +165,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .content-row .t > div:first-child { font-weight: 600; }
 .content-row.off .t, .content-row.off img { opacity: .45; }
 
-/* ---------- browse ---------- */
 .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 10px; }
 .result { display: flex; gap: 14px; padding: 12px; align-items: flex-start; }
 .result img, .result .ph { width: 60px; height: 60px; object-fit: cover; background: #111112; border: 2px solid var(--outline); flex: none; }
@@ -186,7 +177,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .empty .btn { margin-top: 14px; }
 .pager { display: flex; justify-content: center; gap: 10px; margin-top: 18px; align-items: center; color: var(--muted); font: 12px var(--pixel); }
 
-/* ---------- settings ---------- */
 .settings { max-width: 780px; display: flex; flex-direction: column; gap: 22px; }
 .settings h2 { font: 15px var(--pixel); color: var(--muted); margin: 0 0 8px; text-shadow: 2px 2px 0 #000; }
 .setting { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 16px; border-top: 2px solid var(--outline); min-height: 64px; }
@@ -194,7 +184,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .setting .label { font-weight: 600; }
 .setting .control { display: flex; align-items: center; gap: 8px; }
 
-/* ---------- overlays ---------- */
 .tasks { position: fixed; right: 16px; bottom: 16px; z-index: 20; display: flex; flex-direction: column; gap: 8px; width: 310px; }
 .task { padding: 12px 14px; background: var(--slate); border: 2px solid var(--outline); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .06), 0 10px 30px -10px #000; }
 .task .l { font: 13px var(--pixel); text-shadow: 2px 2px 0 #000; }
@@ -224,7 +213,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .pick-list .grow { flex: 1; min-width: 0; }
 .code { font: 14px var(--pixel); }
 
-/* ---------- servers ---------- */
 .servers { display: flex; flex-direction: column; gap: 8px; }
 .server { display: flex; align-items: center; gap: 14px; padding: 10px 12px; }
 .server-icon { width: 64px; height: 64px; background: #111112; border: 2px solid var(--outline); flex: none; image-rendering: pixelated; }
@@ -237,7 +225,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .bars i.on { background: #55ff55; }
 .quick { height: 44px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- skins ---------- */
 .skins-layout { display: grid; grid-template-columns: 320px 1fr; gap: 14px; align-items: start; }
 .skin-preview { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
 .skin-stage { height: 380px; background: radial-gradient(240px 260px at 50% 55%, rgba(143, 80, 242, .22), transparent 70%), #121214; border: 2px solid var(--outline); }
@@ -269,7 +256,6 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .menu button:hover { background: var(--slate-3); }
 .menu button.danger:hover { background: var(--red); }
 
-/* home: greeting, friends and news on the right of the hero */
 .home-side { position: absolute; right: 28px; top: 28px; bottom: 28px; width: 270px; z-index: 2; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
 .home-side > * { pointer-events: auto; }
 .greet { text-align: right; text-shadow: 2px 2px 0 rgba(0, 0, 0, .5); animation: rise .6s ease both; }

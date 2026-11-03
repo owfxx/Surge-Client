@@ -10,10 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Surge badge before names in the tab list. Targeted by name (and @Pseudo) so the
- * mod still builds and runs even if the tab list class is renamed in a future version.
- */
 @Pseudo
 @Mixin(targets = "net.minecraft.client.gui.components.PlayerTabOverlay")
 public abstract class PlayerTabOverlayMixin {
@@ -24,7 +20,6 @@ public abstract class PlayerTabOverlayMixin {
 		if (Badges.show(info.getProfile().id())) cir.setReturnValue(Badges.prefix(name));
 	}
 
-	/** Tab List: ping as a colored number instead of bars. */
 	@Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)
 	private void surge$ping(net.minecraft.client.gui.GuiGraphics g, int width, int x, int y, PlayerInfo info, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
 		if (!gg.surge.client.mods.Mods.TAB_LIST.enabled() || !gg.surge.client.mods.Mods.TAB_PING_NUMBER.on()) return;
@@ -40,7 +35,6 @@ public abstract class PlayerTabOverlayMixin {
 		ci.cancel();
 	}
 
-	/** Tab List: no background boxes. */
 	@com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"))
 	private void surge$noBackground(net.minecraft.client.gui.GuiGraphics g, int x1, int y1, int x2, int y2, int color, com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original) {
 		if (gg.surge.client.mods.Mods.TAB_LIST.enabled() && gg.surge.client.mods.Mods.TAB_NO_BG.on()) return;

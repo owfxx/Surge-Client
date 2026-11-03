@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Particle culling: particles that spawn more than 20 blocks from the camera are dropped. */
 @Mixin(ParticleEngine.class)
 public abstract class ParticleEngineMixin {
 	@Inject(method = "add", at = @At("HEAD"), cancellable = true)

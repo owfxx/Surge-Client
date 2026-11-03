@@ -18,10 +18,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Social: chat with friends, and manage friends, requests, blocks and mutes.
- * Right click a chat (or a friend) for Remove friend / Block / Mute.
- */
 public class SocialScreen extends Screen {
 	private enum Tab { CHAT, FRIENDS }
 
@@ -38,7 +34,6 @@ public class SocialScreen extends Screen {
 	private float scroll, scrollTarget;
 	private int contentH;
 	private long openedAt;
-	// right-click menu
 	private int menuX, menuY;
 	private List<String> menuLabels;
 	private List<Runnable> menuActions;
@@ -104,7 +99,6 @@ public class SocialScreen extends Screen {
 		menuActions = actions;
 	}
 
-	/** Remove friend / Block / Mute or Unmute for a friend. */
 	private void friendMenu(int x, int y, Social.Friend f) {
 		boolean isMuted = Social.muted.contains(f.uuid());
 		List<String> l = new ArrayList<>();
@@ -123,7 +117,6 @@ public class SocialScreen extends Screen {
 		ConnectScreen.startConnecting(this, minecraft, ServerAddress.parseString(ip), new ServerData(f.name() + "'s server", ip, ServerData.Type.OTHER), false, null);
 	}
 
-	// ------------------------------------------------------------------ render
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		Ui.frame();
@@ -138,7 +131,6 @@ public class SocialScreen extends Screen {
 		wasEnter = enter;
 		Runnable action = null;
 
-		// an open right-click menu takes the click first
 		if (menuLabels != null && (click || rclick)) {
 			int idx = -1;
 			for (int i = 0; i < menuLabels.size(); i++) if (Ui.hover(mx, my, menuX, menuY + 3 + i * 16, 104, 16)) idx = i;
@@ -154,7 +146,6 @@ public class SocialScreen extends Screen {
 		g.drawString(font, Component.literal("Social").withStyle(ChatFormatting.BOLD), px + 30, py + 12, Ui.TEXT, true);
 		if (Ui.iconButton(g, mx, my, px + pw - 26, py + 7, 18, Ui.CROSS) && click) action = this::onClose;
 
-		// your status: click to change
 		String st = Social.status();
 		String stLabel = Social.statusLabel(st);
 		int sw = font.width(stLabel) + 26, sx = px + pw - 32 - sw;
@@ -171,7 +162,6 @@ public class SocialScreen extends Screen {
 			click = false;
 		}
 
-		// sub-tabs
 		int tx = px + 92;
 		for (Tab t : Tab.values()) {
 			String label = t == Tab.CHAT ? "Chat" : "Friends";
@@ -204,7 +194,6 @@ public class SocialScreen extends Screen {
 			g.drawString(font, note, px + (pw - nw) / 2 + 6, py + ph - 18, noteColor, false);
 		}
 
-		// right-click menu on top of everything
 		if (menuLabels != null) {
 			int h = menuLabels.size() * 16 + 6;
 			Ui.shadow(g, menuX, menuY, 104, h);
@@ -232,7 +221,6 @@ public class SocialScreen extends Screen {
 		return n;
 	}
 
-	// ------------------------------------------------------------------ chat
 	private Runnable chat(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
 		List<Social.Friend> fr = Social.friends;
 		int lx = px + 1, lw = 150, top = py + 33, bottom = py + ph - 1;
@@ -269,7 +257,6 @@ public class SocialScreen extends Screen {
 		if (f == null) return action;
 		Social.UNREAD.remove(f.uuid());
 		int cx = lx + lw + 8, cw = px + pw - 8 - cx;
-		// header
 		dot(g, cx + 4, top + 11, Social.statusColor(f.status()));
 		g.drawString(font, Component.literal(f.name()).withStyle(ChatFormatting.BOLD), cx + 12, top + 7, Ui.TEXT, false);
 		String where = Social.statusLabel(f.status()) + (f.server().isEmpty() ? "" : "  on " + f.server());
@@ -279,10 +266,9 @@ public class SocialScreen extends Screen {
 		}
 		g.fill(cx, top + 30, cx + cw, top + 31, 0xFF34343A);
 
-		// messages, newest at the bottom
 		int areaTop = top + 34, areaBottom = bottom - 28;
 		List<Social.Message> msgs = Social.CHATS.getOrDefault(f.uuid(), List.of());
-		List<String[]> rows = new ArrayList<>(); // {side, text, time}
+		List<String[]> rows = new ArrayList<>();
 		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
 		for (Social.Message m : msgs) {
 			boolean mine = m.from().equals(Social.myUuid);
@@ -314,7 +300,6 @@ public class SocialScreen extends Screen {
 		g.disableScissor();
 		if (msgs.isEmpty()) Ui.centered(g, font, "Say hi to " + f.name(), cx + cw / 2, (areaTop + areaBottom) / 2, Ui.FAINT);
 
-		// input
 		int iy = bottom - 24;
 		int sendW = 48;
 		Ui.box(g, cx, iy, cw - sendW - 4, 18, 0xFF161619, input.isFocused() ? Ui.ACCENT : Ui.EDGE);
@@ -344,11 +329,9 @@ public class SocialScreen extends Screen {
 		return n;
 	}
 
-	// ------------------------------------------------------------------ friends
 	private Runnable friendsTab(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
 		Social.openChat = null;
 		int x = px + 12, w = pw - 24, top = py + 40;
-		// add a friend
 		g.drawString(font, "Add a friend", x, top, Ui.ACCENT_2, false);
 		int bw = Math.min(200, w - 110);
 		Ui.box(g, x, top + 12, bw, 18, 0xFF161619, addBox.isFocused() ? Ui.ACCENT : Ui.EDGE);
@@ -369,9 +352,8 @@ public class SocialScreen extends Screen {
 			action = () -> Social.addFriend(name, msg -> note(msg, msg.startsWith("Request") || msg.startsWith("You're") ? 0xFF8CFFA0 : 0xFFFF8C8C));
 		}
 
-		// lists (scrollable)
 		int listTop = top + 40, listBottom = py + ph - 8;
-		List<Object[]> rows = new ArrayList<>(); // {kind, object}
+		List<Object[]> rows = new ArrayList<>();
 		if (!Social.incoming.isEmpty()) { rows.add(new Object[]{"h", "Friend requests (" + Social.incoming.size() + ")"}); for (var p : Social.incoming) rows.add(new Object[]{"in", p}); }
 		if (!Social.outgoing.isEmpty()) { rows.add(new Object[]{"h", "Sent requests"}); for (var p : Social.outgoing) rows.add(new Object[]{"out", p}); }
 		rows.add(new Object[]{"h", "Friends (" + Social.friends.size() + ")"});

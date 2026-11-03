@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-/** Lists skins from the Surge skins folder and sets them on your Minecraft account. */
 public final class SkinUploader {
 	private SkinUploader() {}
 
@@ -39,7 +38,6 @@ public final class SkinUploader {
 		try { new ProcessBuilder("explorer", folder().toString()).start(); } catch (Exception ignored) { }
 	}
 
-	/** Resolves to null on success or an error message. */
 	public static CompletableFuture<String> upload(Path png, boolean slim) {
 		String token = Minecraft.getInstance().getUser().getAccessToken();
 		return CompletableFuture.supplyAsync(() -> {

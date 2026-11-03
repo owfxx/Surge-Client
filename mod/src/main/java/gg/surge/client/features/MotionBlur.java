@@ -5,10 +5,6 @@ import gg.surge.client.mods.Mods;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
-/**
- * Motion blur: blends each frame with the last one (post effects in assets/surge/post_effect).
- * The game clears post effects when the camera changes, so this re-applies it every tick.
- */
 public final class MotionBlur {
 	private static final int[] LEVELS = {20, 35, 50, 65, 80};
 	private static Identifier applied;
@@ -36,7 +32,6 @@ public final class MotionBlur {
 				applied = null;
 			}
 		} catch (Throwable ignored) {
-			// leave the screen alone if post effects aren't available
 		}
 	}
 }

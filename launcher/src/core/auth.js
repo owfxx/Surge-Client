@@ -1,5 +1,3 @@
-// Microsoft account login via msmc. Refresh tokens are encrypted with the OS
-// keychain (Electron safeStorage) before being written to disk.
 const fs = require('fs');
 const { safeStorage } = require('electron');
 const { Auth } = require('msmc');
@@ -49,7 +47,6 @@ function setActive(uuid) {
   return publicAccounts();
 }
 
-// Returns an MCLC authorization object for the active account, refreshing tokens.
 async function getLaunchAuth() {
   const s = readStore();
   const acc = s.accounts.find(a => a.uuid === s.active);

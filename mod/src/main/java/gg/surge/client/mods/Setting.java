@@ -5,7 +5,6 @@ import gg.surge.client.config.SurgeConfig;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
-/** One option on a mod's settings page. Values live in the mod's ModuleState.opts. */
 public abstract class Setting<T> {
 	public final SurgeMod mod;
 	public final String key;
@@ -20,7 +19,6 @@ public abstract class Setting<T> {
 		this.def = def;
 	}
 
-	/** Only show this setting while the condition holds (e.g. a color that only matters when a box is on). */
 	@SuppressWarnings("unchecked")
 	public <S extends Setting<T>> S showIf(BooleanSupplier cond) {
 		this.visible = cond;
@@ -53,12 +51,10 @@ public abstract class Setting<T> {
 		mod.changed();
 	}
 
-	/** Stored settings (not headers or buttons). */
 	public boolean stored() {
 		return true;
 	}
 
-	// ------------------------------------------------------------------ types
 	public static class Toggle extends Setting<Boolean> {
 		public Toggle(SurgeMod mod, String key, String name, boolean def) { super(mod, key, name, def); }
 
@@ -94,7 +90,6 @@ public abstract class Setting<T> {
 			return Math.round(v * 1000f) / 1000f;
 		}
 
-		/** 0..1 position of the knob. */
 		public float fraction() { return max == min ? 0 : (get() - min) / (max - min); }
 
 		public void setFraction(float f) {
@@ -111,7 +106,6 @@ public abstract class Setting<T> {
 
 	public static class Choice extends Setting<String> {
 		public final String[] values;
-		/** How a value is shown in the menu (e.g. a country code as its name). */
 		public java.util.function.Function<String, String> label = v -> v;
 
 		public Choice(SurgeMod mod, String key, String name, String def, String... values) {
@@ -134,7 +128,6 @@ public abstract class Setting<T> {
 		}
 	}
 
-	/** A color from the palette, stored as "RRGGBB" or "chroma" (cycling rainbow). */
 	public static class Color extends Setting<String> {
 		public static final String[] PALETTE = {"FFFFFF", "AAAAAA", "555555", "000000", "FF5555", "FFAA00", "FFFF55", "55FF55",
 			"55FFFF", "5599FF", "B483FF", "FF77DD", "chroma"};
@@ -145,7 +138,6 @@ public abstract class Setting<T> {
 
 		public boolean chroma() { return "chroma".equals(get()); }
 
-		/** Opaque RGB right now (chroma moves over time; offset shifts the hue, e.g. per character). */
 		public int rgb(float offset) {
 			return chroma() ? Colors.chroma(offset) : Colors.parse(get());
 		}

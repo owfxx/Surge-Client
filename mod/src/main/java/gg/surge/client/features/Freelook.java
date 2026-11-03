@@ -4,10 +4,6 @@ import gg.surge.client.mods.Mods;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 
-/**
- * Freelook: look around your character without turning. Mouse movement goes to a
- * separate camera angle (see EntityTurnMixin and CameraMixin) while active.
- */
 public final class Freelook {
 	private static boolean active;
 	private static float yaw, pitch;
@@ -22,7 +18,6 @@ public final class Freelook {
 
 	public static float pitch() { return pitch; }
 
-	/** Called every tick with the key state. */
 	public static void update(Minecraft mc, boolean keyDown) {
 		boolean allowed = Mods.FREELOOK.enabled() && mc.player != null && mc.screen == null;
 		boolean pressed = keyDown && !keyWasDown;
@@ -50,14 +45,12 @@ public final class Freelook {
 		if (previous != null) mc.options.setCameraType(previous);
 	}
 
-	/** Mouse movement while freelooking (same scale the game uses for turning). */
 	public static void turn(double dx, double dy) {
 		yaw += (float) dx * 0.15f;
 		float dp = (float) dy * 0.15f * (Mods.FREELOOK_INVERT.on() ? -1 : 1);
 		pitch = Math.max(-90f, Math.min(90f, pitch + dp));
 	}
 
-	/** Camera angle to use: front view looks back at you. */
 	public static float cameraYaw() {
 		return Mods.FREELOOK_VIEW.is("Front") ? yaw + 180f : yaw;
 	}

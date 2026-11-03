@@ -1,5 +1,3 @@
-// Skins and capes for the signed-in account (Minecraft services API),
-// plus a local skin library in <data>/skins.
 const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
@@ -78,7 +76,6 @@ function remove(name) {
   return library();
 }
 
-// Saves the account's current skin into the library.
 async function saveCurrent() {
   const p = await profile();
   if (!p.skin) throw new Error('This account has no custom skin');

@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Totem Tweaks: pop counter in chat, smaller or hidden totem animation (see ScreenEffectRendererMixin). */
 public final class TotemTweaks {
 	private static final Map<UUID, Integer> POPS = new HashMap<>();
 	private static Object lastLevel;

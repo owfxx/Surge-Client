@@ -8,11 +8,6 @@ import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.particles.ParticleTypes;
 
-/**
- * Custom animated emotes. Each emote poses the player model's head, body, arms and
- * legs over time (see PlayerModelMixin), so they're real animations instead of
- * in-game actions. Emotes show on your own player.
- */
 public final class Emotes {
 	public enum Emote {
 		WAVE("Wave", 3.0f, false), CLAP("Clap", 3.0f, false), FLUSTERED("Flustered", 4.0f, false),
@@ -47,7 +42,6 @@ public final class Emotes {
 	private static Emote current;
 	private static long startNanos;
 	private static CameraType previousCamera;
-	/** Shown on your model while hovering in the wheel or wardrobe (doesn't need to be owned). */
 	private static Emote preview;
 	private static long previewStart;
 	private static int particleTick;
@@ -91,7 +85,6 @@ public final class Emotes {
 		if (p == null) { current = null; return; }
 		var o = mc.options;
 		float t = (System.nanoTime() - startNanos) / 1e9f;
-		// Moving, jumping or attacking ends the emote, like other clients.
 		if (t > 0.25f && (o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown() || o.keyAttack.isDown())) {
 			stop(mc);
 			return;
@@ -106,8 +99,6 @@ public final class Emotes {
 		else if (current.loops && t > current.seconds * 3) stop(mc);
 	}
 
-	// ------------------------------------------------------------------ animation
-	/** Another Surge player's emote (from the online service). */
 	public static void animateRemote(PlayerModel m, java.util.UUID id) {
 		long[] start = new long[1];
 		Emote e = gg.surge.client.net.SurgeNet.remoteEmote(id, start);
@@ -115,7 +106,6 @@ public final class Emotes {
 		run(m, e, (System.currentTimeMillis() - start[0]) / 1000f, false);
 	}
 
-	/** Called from PlayerModelMixin after vanilla posed your model. */
 	public static void animate(PlayerModel m) {
 		Emote e;
 		float t;
@@ -126,7 +116,6 @@ public final class Emotes {
 	}
 
 	private static void run(PlayerModel m, Emote e, float t, boolean previewing) {
-		// ease in over the first 0.2s, and out over the last 0.25s of one-shot emotes
 		float in = ease(Math.min(1f, t / 0.2f));
 		if (previewing && !e.loops) t = t % (e.seconds + 0.6f);
 		float out = e.loops || previewing ? 1f : ease(Math.min(1f, Math.max(0f, (e.seconds - t) / 0.25f)));
@@ -140,18 +129,14 @@ public final class Emotes {
 		return x * x * (3 - 2 * x);
 	}
 
-	/**
-	 * Target angles in degrees for each part, blended with the vanilla pose by k.
-	 * Model space: y points down, the player faces -z, the right arm is at -x.
-	 */
 	public static final class Pose {
 		final PlayerModel m;
 		final float k;
 		float[] head, body, rArm, lArm, rLeg, lLeg;
-		float lean; // whole-body lean forward (+) or back (-), pivoting at the hips
-		float bob;  // move everything up (-) or down (+), in model pixels
-		float sway; // move the upper body sideways, in model pixels
-		float spin; // turn the whole body around (degrees)
+		float lean;
+		float bob;
+		float sway;
+		float spin;
 
 		Pose(PlayerModel m, float k) {
 			this.m = m;
@@ -195,7 +180,6 @@ public final class Emotes {
 			set(m.leftLeg, lLeg);
 			float a = (float) Math.toRadians(lean) * k;
 			if (a != 0) {
-				// rotate the upper body around the hips (y = 12)
 				float cos = (float) Math.cos(a), sin = (float) Math.sin(a);
 				m.body.xRot += a;
 				m.body.y += 12 - 12 * cos;

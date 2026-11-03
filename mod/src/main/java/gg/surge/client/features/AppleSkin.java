@@ -11,11 +11,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
-/**
- * AppleSkin-style hunger bar: a gold outline on shanks that still have saturation,
- * and the shanks the food in your hand would fill, gently flashing.
- * Drawn right after the vanilla food bar (same positions as vanilla).
- */
 public final class AppleSkin {
 	private static final Identifier FULL = Identifier.fromNamespaceAndPath("minecraft", "hud/food_full");
 	private static final Identifier HALF = Identifier.fromNamespaceAndPath("minecraft", "hud/food_half");
@@ -61,7 +56,6 @@ public final class AppleSkin {
 				if (s <= 0) break;
 				int x = right - i * 8 - 9;
 				int col = s >= 2 ? 0xFFFFC22E : 0xB0FFC22E;
-				// gold frame; a half-saturated shank only gets the left half
 				int w = s >= 2 ? 9 : 5;
 				g.fill(x, y, x + w, y + 1, col);
 				g.fill(x, y + 8, x + w, y + 9, col);

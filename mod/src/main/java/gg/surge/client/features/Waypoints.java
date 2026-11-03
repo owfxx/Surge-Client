@@ -11,16 +11,11 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Waypoints: saved per server (or singleplayer world) and dimension. Markers are
- * projected onto the HUD with the camera's own angles, so they show through walls.
- */
 public final class Waypoints {
 	private static final String[] COLORS = {"B483FF", "55FFFF", "55FF55", "FFFF55", "FFAA00", "FF5555", "FF77DD", "FFFFFF"};
 
 	private Waypoints() {}
 
-	/** Which server/world + dimension you're in, e.g. "play.example.net|minecraft:overworld". */
 	public static String worldKey(Minecraft mc) {
 		if (mc.level == null) return "";
 		String where;
@@ -58,7 +53,6 @@ public final class Waypoints {
 		return COLORS[0];
 	}
 
-	// ---------- projection (Minecraft's own view vectors, so it matches the camera exactly) ----------
 	private static double ex, ey, ez, fx, fy, fz, rx, ry, rz, ux, uy, uz, focal, halfW, halfH;
 
 	private static void setupCamera(GuiGraphics g, Minecraft mc) {
@@ -74,7 +68,6 @@ public final class Waypoints {
 		focal = halfH / Math.tan(Math.toRadians(Zoom.lastFov()) / 2.0);
 	}
 
-	/** Screen x, y and depth of a world point, or null when it's behind you. */
 	private static double[] project(double x, double y, double z) {
 		double vx = x - ex, vy = y - ey, vz = z - ez;
 		double cz = vx * fx + vy * fy + vz * fz;
@@ -83,7 +76,6 @@ public final class Waypoints {
 		return new double[]{halfW + cx / cz * focal, halfH - cy / cz * focal, cz};
 	}
 
-	/** Thin line between two screen points (drawn as tiny fills). */
 	private static void line(GuiGraphics g, double[] a, double[] b, int col) {
 		if (a == null || b == null) return;
 		double dx = b[0] - a[0], dy = b[1] - a[1];
@@ -97,7 +89,6 @@ public final class Waypoints {
 
 	private static final int[][] EDGES = {{0, 1}, {1, 3}, {3, 2}, {2, 0}, {4, 5}, {5, 7}, {7, 6}, {6, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
 
-	/** Glowing outline of the waypoint's block, seen through walls. */
 	private static void blockGlow(GuiGraphics g, SurgeConfig.Waypoint wp, int rgb, float pulse) {
 		double[][] c = new double[8][];
 		for (int i = 0; i < 8; i++) c[i] = project(wp.x + (i & 1), wp.y + ((i >> 1) & 1), wp.z + ((i >> 2) & 1));
@@ -111,7 +102,6 @@ public final class Waypoints {
 		}
 	}
 
-	/** Creates (or moves) the "Death" waypoint when you die. */
 	private static boolean wasDead;
 
 	public static void tick(Minecraft mc) {
@@ -133,7 +123,6 @@ public final class Waypoints {
 		wasDead = dead;
 	}
 
-	/** Draws the in-world markers on the HUD. */
 	public static void render(GuiGraphics g, Minecraft mc) {
 		if (!Mods.WAYPOINTS.enabled() || !Mods.WP_WORLD.on() || mc.player == null || mc.level == null) return;
 		List<SurgeConfig.Waypoint> list = here(mc);

@@ -1,5 +1,3 @@
-// Where Surge keeps everything. Shared game files (assets, libraries, versions,
-// Java runtimes) live once in the root; each modpack/instance gets its own folder.
 const path = require('path');
 const os = require('os');
 const fs = require('fs');

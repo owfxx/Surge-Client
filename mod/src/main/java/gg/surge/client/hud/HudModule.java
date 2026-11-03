@@ -7,10 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.Item;
 
-/**
- * A draggable on-screen element (FPS counter, coords, keystrokes…).
- * Every HUD mod gets the same look settings: scale, background, text color, shadow, brackets.
- */
 public abstract class HudModule extends SurgeMod {
 	public static final int TEXT = 0xFFFFFFFF;
 
@@ -46,7 +42,6 @@ public abstract class HudModule extends SurgeMod {
 
 	private final int lookCount;
 
-	/** The mod's own settings first, then the shared look settings. */
 	@Override
 	public java.util.List<Setting<?>> pageSettings() {
 		java.util.List<Setting<?>> out = new java.util.ArrayList<>();
@@ -58,12 +53,10 @@ public abstract class HudModule extends SurgeMod {
 		return out;
 	}
 
-	/** Size in GUI pixels, used for layout and the HUD editor. */
 	public abstract int width(Minecraft mc);
 
 	public abstract int height(Minecraft mc);
 
-	/** Draw at the given top-left corner. */
 	public abstract void render(GuiGraphics g, Minecraft mc, int x, int y);
 
 	public float scale() {
@@ -82,7 +75,6 @@ public abstract class HudModule extends SurgeMod {
 		return clamp(Math.round(state().y * g.guiHeight()), 0, g.guiHeight() - scaledHeight(mc));
 	}
 
-	/** Draws the module at its saved position and scale. */
 	public void draw(GuiGraphics g, Minecraft mc) {
 		int x = screenX(g, mc), y = screenY(g, mc);
 		float s = scale();
@@ -98,7 +90,6 @@ public abstract class HudModule extends SurgeMod {
 		return Math.max(min, Math.min(max, v));
 	}
 
-	// ---------- shared text drawing (the global style in Settings can override every mod) ----------
 	private static boolean global() {
 		return gg.surge.client.mods.Mods.HUD_OVERRIDE.on();
 	}
@@ -134,7 +125,6 @@ public abstract class HudModule extends SurgeMod {
 		};
 	}
 
-	/** Draws text, letter by letter when the color is chroma so the rainbow flows across it. */
 	protected void text(GuiGraphics g, Minecraft mc, String s, int x, int y, int color) {
 		Setting.Color tc = textSetting();
 		if (!tc.chroma() || color != fg()) {
@@ -149,7 +139,6 @@ public abstract class HudModule extends SurgeMod {
 		}
 	}
 
-	/** Standard boxed one-line label used by most text modules. */
 	protected void box(GuiGraphics g, Minecraft mc, int x, int y, String text) {
 		box(g, mc, x, y, boxWidth(mc, text), text);
 	}

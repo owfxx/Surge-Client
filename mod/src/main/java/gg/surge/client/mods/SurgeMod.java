@@ -8,10 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * A mod in the Right Shift menu. Left click toggles it, right click (or the gear)
- * opens its settings. HUD mods extend this through HudModule.
- */
 public class SurgeMod {
 	public enum Category {
 		HUD("HUD"), PVP("PvP"), VISUAL("Visual"), UTILITY("Utility");
@@ -30,7 +26,6 @@ public class SurgeMod {
 	public final List<Setting<?>> settings = new ArrayList<>();
 	private Consumer<Boolean> onToggle = on -> { };
 	private Runnable onChange = () -> { };
-	/** Some mods are always on and only have settings (e.g. Command Keys opens its own page). */
 	public boolean toggleable = true;
 
 	public SurgeMod(String id, String name, Category category, Item icon, String description, boolean defEnabled) {
@@ -66,13 +61,11 @@ public class SurgeMod {
 		setEnabled(!state().enabled);
 	}
 
-	/** Called when the mod is switched on or off. */
 	public SurgeMod onToggle(Consumer<Boolean> c) {
 		this.onToggle = c;
 		return this;
 	}
 
-	/** Called after any setting changes. */
 	public SurgeMod onChange(Runnable r) {
 		this.onChange = r;
 		return this;
@@ -88,7 +81,6 @@ public class SurgeMod {
 		changed();
 	}
 
-	// ---------- setting builders ----------
 	public <S extends Setting<?>> S add(S s) {
 		settings.add(s);
 		return s;
@@ -118,7 +110,6 @@ public class SurgeMod {
 		return add(new Setting.Header(this, name));
 	}
 
-	/** Settings in the order the settings page shows them. */
 	public List<Setting<?>> pageSettings() {
 		return settings;
 	}

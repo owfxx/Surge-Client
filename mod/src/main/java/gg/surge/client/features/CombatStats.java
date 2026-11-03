@@ -6,7 +6,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/** Reach, combo and last target for the Reach, Combo and Target HUD mods. */
 public final class CombatStats {
 	private static double lastReach = -1;
 	private static long lastHitAt;
@@ -40,7 +39,6 @@ public final class CombatStats {
 
 	public static int combo() { return combo; }
 
-	/** What you hit in the last 8 seconds, if it's still around. */
 	public static Entity target() {
 		if (target == null || target.isRemoved() || System.currentTimeMillis() - lastHitAt > 8000) return null;
 		return target;

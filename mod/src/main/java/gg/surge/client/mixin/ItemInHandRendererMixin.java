@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** View Model + Shield Fix: adjusts the held item right before it's drawn in first person. */
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
 	@Inject(method = "renderArmWithItem", at = @At(value = "INVOKE",

@@ -1,5 +1,3 @@
-// Modrinth: search mods / modpacks / resource packs and install them
-// (with required dependencies) into a Surge modpack.
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -47,7 +45,6 @@ async function bestVersion(projectId, mcVersion, type) {
   return versions.find(v => v.version_type === 'release') || versions[0] || null;
 }
 
-// Installs a project + its required deps into an instance. Returns installed titles.
 async function installProject(instanceId, projectId, type = 'mod', onProgress = () => {}, seen = new Set(), opts = {}) {
   if (seen.has(projectId)) return [];
   seen.add(projectId);
@@ -77,7 +74,6 @@ async function installProject(instanceId, projectId, type = 'mod', onProgress = 
   return installed;
 }
 
-// Installs a .mrpack file as a brand-new Surge modpack.
 async function installMrpackFile(file, { iconUrl = null, onProgress = () => {} } = {}) {
   const zip = new AdmZip(file);
   const indexEntry = zip.getEntry('modrinth.index.json');
@@ -93,7 +89,7 @@ async function installMrpackFile(file, { iconUrl = null, onProgress = () => {} }
   const files = (index.files || []).filter(f => f.env?.client !== 'unsupported');
   await pool(files, 8, async f => {
     const dest = path.resolve(dir, f.path);
-    if (!dest.startsWith(path.resolve(dir))) return; // ignore path traversal
+    if (!dest.startsWith(path.resolve(dir))) return;
     await download(f.downloads[0], dest, f.hashes?.sha1);
     const [folder, name] = f.path.split('/');
     const type = Object.entries(instances.CONTENT_DIRS).find(([, v]) => v === folder)?.[0];
@@ -129,24 +125,21 @@ async function installModpack(projectId, onProgress = () => {}, mcVersion = '') 
   }
 }
 
-// The performance stack every "Surge Optimized" pack gets. Each entry is a list of
-// alternatives: the first one with a build for the pack's Minecraft version is used.
-// Anything missing for that version is skipped.
 const PERFORMANCE_MODS = [
   ['fabric-api'],
-  ['sodium'],                       // rendering engine, the biggest FPS gain
-  ['lithium'],                      // game logic and physics
-  ['ferrite-core'],                 // lower memory use
-  ['entityculling'],                // skips entities and block entities you can't see
-  ['immediatelyfast'],              // faster HUD, text and item rendering
-  ['moreculling'],                  // culls hidden block faces and leaves
-  ['badoptimizations'],             // small client-side optimizations
-  ['dynamic-fps'],                  // lowers FPS when the game is in the background
-  ['particle-core'],                // cheaper particles
-  ['better-block-entities'],        // chests, signs, beds rendered as fast block models
-  ['scalablelux'],                  // faster lighting updates
-  ['krypton'],                      // faster networking
-  ['modernfix', 'modernfix-mvus'],  // faster startup and lower memory
+  ['sodium'],
+  ['lithium'],
+  ['ferrite-core'],
+  ['entityculling'],
+  ['immediatelyfast'],
+  ['moreculling'],
+  ['badoptimizations'],
+  ['dynamic-fps'],
+  ['particle-core'],
+  ['better-block-entities'],
+  ['scalablelux'],
+  ['krypton'],
+  ['modernfix', 'modernfix-mvus'],
 ];
 
 async function installPerformanceStack(instanceId, onProgress = () => {}) {

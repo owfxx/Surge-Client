@@ -24,7 +24,6 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
-// Copies the built jar into the launcher so it ships inside Surge Client.exe
 tasks.register('copyToLauncher', Copy) {
 	dependsOn remapJar
 	from remapJar.archiveFile

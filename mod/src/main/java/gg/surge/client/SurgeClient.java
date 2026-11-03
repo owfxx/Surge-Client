@@ -61,7 +61,6 @@ public class SurgeClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		SurgeConfig.load();
 
-		// These show up in Options > Controls > Key Binds under "Surge Client".
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "surge"));
 		menuKey = key("menu", GLFW.GLFW_KEY_RIGHT_SHIFT, category);
 		zoomKey = key("zoom", GLFW.GLFW_KEY_C, category);
@@ -143,7 +142,6 @@ public class SurgeClient implements ClientModInitializer {
 		});
 	}
 
-	/** Draws a vanilla HUD element scaled around an anchor point. */
 	private static void scaled(GuiGraphics g, float s, float ax, float ay, Runnable draw) {
 		if (Math.abs(s - 1f) < 0.01f) { draw.run(); return; }
 		g.pose().pushMatrix();
@@ -157,7 +155,6 @@ public class SurgeClient implements ClientModInitializer {
 	private static void tick(Minecraft mc) {
 		SurgeConfig.flush();
 
-		// Keybinds don't fire while a screen is open, so close the menu by polling the bound key.
 		boolean typing = mc.screen != null && mc.screen.getFocused() instanceof EditBox;
 		boolean menuDown = isBoundKeyDown(mc, menuKey);
 		boolean pressedNow = menuDown && !menuKeyWasDown;
@@ -166,7 +163,6 @@ public class SurgeClient implements ClientModInitializer {
 			mc.screen.onClose();
 		}
 
-		// Admin panel: Ctrl + Shift + F4, owner account only
 		long win = mc.getWindow().handle();
 		boolean f4 = GLFW.glfwGetKey(win, GLFW.GLFW_KEY_F4) == GLFW.GLFW_PRESS;
 		boolean ctrl = GLFW.glfwGetKey(win, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(win, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;

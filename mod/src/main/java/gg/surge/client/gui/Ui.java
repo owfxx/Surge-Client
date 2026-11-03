@@ -13,11 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Drawing kit for Surge's in-game UI, matching the launcher: modern Minecraft
- * style with slate panels, black outlines and chunky buttons that have a darker
- * bottom lip, purple accent, and smooth hover/toggle animations.
- */
 public final class Ui {
 	public static final int BG = 0xF2242427;
 	public static final int SIDEBAR = 0xFF1C1C1F;
@@ -46,22 +41,18 @@ public final class Ui {
 
 	private Ui() {}
 
-	// ---------- animation ----------
-	/** Call once at the start of a screen's render: advances the animation clock. */
 	public static void frame() {
 		long now = System.nanoTime();
 		long diff = now - lastFrame;
-		if (diff < 1_000_000L) return; // already advanced this frame
+		if (diff < 1_000_000L) return;
 		dt = Math.min(0.1f, diff / 1e9f);
 		lastFrame = now;
 	}
 
-	/** Seconds since the previous frame. */
 	public static float dt() {
 		return dt;
 	}
 
-	/** Eases toward target (0..1 usually) at a frame-rate independent speed. */
 	public static float approach(Object key, float target, float speed) {
 		if (!gg.surge.client.mods.Mods.UI_ANIM.on()) { ANIM.put(key, target); return target; }
 		speed *= gg.surge.client.mods.Mods.UI_ANIM_SPEED.get() / 100f;
@@ -80,13 +71,11 @@ public final class Ui {
 		ANIM.put(key, value);
 	}
 
-	// ---------- sound ----------
 	public static void click() {
 		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 0.55F));
 	}
 
-	/** Slightly higher click for switching something on, lower for off. */
 	public static void toggleSound(boolean on) {
 		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), on ? 1.25F : 0.85F, 0.5F));
@@ -95,7 +84,6 @@ public final class Ui {
 	private static final java.util.Set<Object> HOVERED = new java.util.HashSet<>();
 	private static final Map<Object, Long> HOVER_SINCE = new HashMap<>();
 
-	/** Soft tick when something becomes hovered (if hover sounds are on). Returns how long it's been hovered (ms). */
 	public static long hoverTick(Object key, boolean hov) {
 		if (hov) {
 			if (HOVERED.add(key)) {
@@ -110,11 +98,6 @@ public final class Ui {
 		return 0;
 	}
 
-	/**
-	 * Icon tile for the title and pause screens: glassy square, a white outline that animates in
-	 * on hover, a small pop, and a label that slides out after you keep hovering for a moment.
-	 * labelLeft = put the label to the left of the tile (for tiles on the right edge).
-	 */
 	public static boolean tile(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, ItemStack icon, String label, boolean labelLeft, float alpha) {
 		Object key = "tile:" + label;
 		boolean hov = alpha > 0.95f && hover(mx, my, x, y, size, size);
@@ -131,7 +114,6 @@ public final class Ui {
 		int s = Math.min(16, size - 6);
 		item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
 		g.pose().popMatrix();
-		// label after hovering for a moment
 		float l = approach(key + ":label", hov && held > 1200 ? 1f : 0f, 12f);
 		if (l > 0.01f) {
 			int tw = font.width(label) + 10;
@@ -148,15 +130,12 @@ public final class Ui {
 		return mx >= x && mx < x + w && my >= y && my < y + h;
 	}
 
-	// ---------- shapes ----------
-	/** Panel: 1px outline, solid fill, faint top highlight. */
 	public static void box(GuiGraphics g, int x, int y, int w, int h, int fill, int edge) {
 		g.fill(x, y, x + w, y + h, edge);
 		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
 		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x12FFFFFF);
 	}
 
-	/** Outline only. */
 	public static void outline(GuiGraphics g, int x, int y, int w, int h, int color) {
 		g.fill(x, y, x + w, y + 1, color);
 		g.fill(x, y + h - 1, x + w, y + h, color);
@@ -164,7 +143,6 @@ public final class Ui {
 		g.fill(x + w - 1, y + 1, x + w, y + h - 1, color);
 	}
 
-	/** Soft drop shadow around a rectangle. */
 	public static void shadow(GuiGraphics g, int x, int y, int w, int h) {
 		for (int i = 1; i <= 6; i++) {
 			int a = Math.max(0, 0x30 - i * 7);
@@ -172,7 +150,6 @@ public final class Ui {
 		}
 	}
 
-	/** Chunky button body: outline, fill, darker bottom lip, light top edge. */
 	public static void chunky(GuiGraphics g, int x, int y, int w, int h, int fill, int lip) {
 		g.fill(x, y, x + w, y + h, EDGE);
 		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, lip);
@@ -180,7 +157,6 @@ public final class Ui {
 		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x38FFFFFF);
 	}
 
-	/** Chunky button with animated hover; returns whether it's hovered. Active = selected / primary. */
 	public static boolean pill(GuiGraphics g, Font font, int mx, int my, int x, int y, int w, int h, String label, boolean active) {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick("pill:" + label + "@" + x + "," + y, hov);
@@ -192,7 +168,6 @@ public final class Ui {
 		return hov;
 	}
 
-	/** A subtle flat button (sidebar entries, list actions). */
 	public static boolean flat(GuiGraphics g, int mx, int my, int x, int y, int w, int h, boolean selected, Object key) {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick(key, hov);
@@ -202,7 +177,6 @@ public final class Ui {
 		return hov;
 	}
 
-	/** Animated on/off switch, 22x12. */
 	public static void toggleSwitch(GuiGraphics g, int x, int y, boolean on, Object key) {
 		float a = anim(key, on);
 		int track = Colors.lerp(0xFF55555A, ACCENT, a);
@@ -213,7 +187,6 @@ public final class Ui {
 		g.fill(kx, y + 9, kx + 10, y + 11, 0xFFB9B9BE);
 	}
 
-	/** Draws a slider track with a knob; fraction 0..1. */
 	public static void slider(GuiGraphics g, int x, int y, int w, float fraction, boolean active) {
 		int cy = y + 5;
 		g.fill(x, cy - 1, x + w, cy + 2, EDGE);
@@ -239,8 +212,6 @@ public final class Ui {
 		g.drawString(font, s, cx - font.width(s) / 2, y, color, true);
 	}
 
-	// ---------- images ----------
-	/** An item icon at any size (16 = normal). */
 	public static void item(GuiGraphics g, ItemStack stack, int x, int y, float size) {
 		if (Math.abs(size - 16f) < 0.01f) { g.renderItem(stack, x, y); return; }
 		float s = size / 16f;
@@ -251,7 +222,6 @@ public final class Ui {
 		g.pose().popMatrix();
 	}
 
-	/** The Surge crystal logo (128x128 texture) drawn at size x size. */
 	public static void logo(GuiGraphics g, int x, int y, int size) {
 		float s = size / 128f;
 		g.pose().pushMatrix();
@@ -269,7 +239,6 @@ public final class Ui {
 	public static final String[] SEARCH = {".XXXX...", "X....X..", "X....X..", "X....X..", ".XXXX...", ".....XX.", "......XX", "........"};
 	public static final String[] PLUS = {"...XX...", "...XX...", "...XX...", "XXXXXXXX", "XXXXXXXX", "...XX...", "...XX...", "...XX..."};
 
-	/** Draws an 8x8 pixel icon. */
 	public static void icon(GuiGraphics g, String[] px, int x, int y, int scale, int color) {
 		for (int r = 0; r < px.length; r++) {
 			for (int col = 0; col < px[r].length(); col++) {
@@ -278,7 +247,6 @@ public final class Ui {
 		}
 	}
 
-	/** Square chunky button with a pixel icon; returns whether it's hovered. */
 	public static boolean iconButton(GuiGraphics g, int mx, int my, int x, int y, int size, String[] px) {
 		boolean hov = hover(mx, my, x, y, size, size);
 		float a = anim("ib@" + x + "," + y, hov);
@@ -288,7 +256,6 @@ public final class Ui {
 		return hov;
 	}
 
-	/** Square chunky button with an item icon. */
 	public static boolean itemButton(GuiGraphics g, int mx, int my, int x, int y, int size, ItemStack stack) {
 		boolean hov = hover(mx, my, x, y, size, size);
 		float a = anim("itb@" + x + "," + y, hov);
@@ -298,7 +265,6 @@ public final class Ui {
 		return hov;
 	}
 
-	/** Word-wrapped tooltip next to the cursor. */
 	public static void tooltip(GuiGraphics g, Font font, String text, int mx, int my, int screenW, int screenH) {
 		int maxW = 170;
 		java.util.List<String> lines = new java.util.ArrayList<>();

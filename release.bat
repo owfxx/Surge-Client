@@ -1,6 +1,4 @@
 @echo off
-rem Publishes a new Surge Client version. GitHub builds the mod + launcher and every
-rem player's launcher updates on its own. Needs Git and Node.js.
 setlocal
 set /p VER=New version (like 1.0.1): 
 if "%VER%"=="" exit /b 1

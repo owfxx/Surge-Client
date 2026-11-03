@@ -9,10 +9,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Command Keys (Surge's own): a key sends a chat message or a command.
- * Text starting with "/" runs as a command. Placeholders: {x} {y} {z} {name} {server}.
- */
 public final class CommandKeys {
 	private static final Map<Integer, Boolean> WAS_DOWN = new HashMap<>();
 	private static long lastSent;
@@ -52,7 +48,6 @@ public final class CommandKeys {
 		else mc.getConnection().sendChat(text);
 	}
 
-	/** Readable name of a GLFW key, e.g. "G", "F6", "Numpad 1". */
 	public static String keyName(int key) {
 		if (key < 0) return "None";
 		String n = GLFW.glfwGetKeyName(key, 0);
@@ -85,7 +80,6 @@ public final class CommandKeys {
 		};
 	}
 
-	/** The first key that went down this frame (for "press a key" buttons), or -1. */
 	public static int pollPressed(Minecraft mc, Map<Integer, Boolean> prev) {
 		long window = mc.getWindow().handle();
 		int found = -1;

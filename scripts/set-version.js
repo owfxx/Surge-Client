@@ -1,4 +1,3 @@
-// Sets the version everywhere: node scripts/set-version.js 1.0.1
 const fs = require('fs');
 const path = require('path');
 const ver = (process.argv[2] || '').replace(/^v/, '');

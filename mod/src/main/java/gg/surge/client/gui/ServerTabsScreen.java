@@ -25,11 +25,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The Friends and Discover tabs next to the server list.
- * Friends: where your online friends are playing, with a Join button.
- * Discover: partnered servers, published by the owner from the launcher's admin panel (discover.json).
- */
 public class ServerTabsScreen extends Screen {
 	public enum Mode { SERVERS, FRIENDS, DISCOVER }
 
@@ -39,7 +34,7 @@ public class ServerTabsScreen extends Screen {
 	private static volatile String discoverError;
 	private static volatile long discoverAt;
 
-	private final Screen servers; // the vanilla server list
+	private final Screen servers;
 	private final Mode mode;
 	private final boolean[] down = {true};
 	private float scroll, scrollTarget;
@@ -59,7 +54,6 @@ public class ServerTabsScreen extends Screen {
 		if (mode == Mode.DISCOVER && (discover == null || System.currentTimeMillis() - discoverAt > 5 * 60_000)) loadDiscover();
 	}
 
-	/** Tabs drawn at the top left of the server list and of these screens. */
 	public static void drawTabs(Minecraft mc, Screen screen, Screen serverList, GuiGraphics g, int mx, int my, boolean[] wasDown, Mode active) {
 		boolean d = GLFW.glfwGetMouseButton(mc.getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 		boolean click = d && !wasDown[0];

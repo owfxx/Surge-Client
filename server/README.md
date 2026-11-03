@@ -1,6 +1,6 @@
 # Surge Client online service
 
-Makes cosmetics, emotes and the Surge badge visible to every Surge player. Runs free on Cloudflare.
+Makes cosmetics, emotes and the Surge badge visible to every Surge player, and powers friends, chat and status. Runs free on Cloudflare.
 
 1. Make a free account at https://dash.cloudflare.com and install Node.js.
 2. In this folder run:
@@ -10,3 +10,5 @@ Makes cosmetics, emotes and the Surge badge visible to every Surge player. Runs 
 3. In the Surge launcher: Settings → Online → paste that URL.
 
 Everyone who uses your launcher build with that URL now sees each other's wings, halos, capes, emotes and badges.
+
+Updating from an older version: run `npx wrangler deploy` again. New tables are created on their own.

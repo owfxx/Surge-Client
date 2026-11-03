@@ -1,4 +1,3 @@
-/* Surge Client — renderer. Plain JS, no framework. All system work goes through window.surge (preload). */
 const S = window.surge;
 const $ = (sel, root = document) => root.querySelector(sel);
 const view = $('#view');
@@ -24,7 +23,6 @@ const state = {
   versions: [],
 };
 
-/* ---------- feedback ---------- */
 function toast(msg, err = false) {
   const t = document.createElement('div');
   t.className = `toast${err ? ' err' : ''}`;
@@ -44,7 +42,6 @@ function clickSound() {
     audio = audio || new AudioContext();
     if (audio.state === 'suspended') audio.resume();
     const t = audio.currentTime;
-    // short filtered noise "tick" + a low body, like a chunky button
     const noise = audio.createBuffer(1, Math.floor(audio.sampleRate * 0.03), audio.sampleRate);
     const d = noise.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
@@ -60,7 +57,7 @@ function clickSound() {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
     o.connect(g).connect(audio.destination);
     src.start(t); o.start(t); o.stop(t + 0.07);
-  } catch { /* no audio */ }
+  } catch { }
 }
 document.addEventListener('pointerdown', e => {
   const b = e.target.closest('button');
@@ -90,7 +87,6 @@ function modal(html, bind) {
   bind?.($('#modalCard'), close);
   return close;
 }
-// Small dropdown menu under a button. items: [label, onClick, 'danger'?]
 function menu(anchor, items) {
   document.querySelector('.menu')?.remove();
   const m = document.createElement('div');
@@ -111,14 +107,12 @@ function menu(anchor, items) {
 }
 const img = (url, cls = '') => url ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy">` : `<img class="${cls}" src="${ICON}" alt="">`;
 
-// Broken remote images fall back to the Surge icon (CSP blocks inline onerror).
 document.addEventListener('error', e => {
   const t = e.target;
   if (t.tagName !== 'IMG') return;
   if (!t.dataset.fallback) { t.dataset.fallback = '1'; t.src = ICON; }
 }, true);
 
-/* ---------- background tasks (installs) ---------- */
 const tasks = new Map();
 S.onTask(p => {
   const key = p.label;
@@ -142,7 +136,6 @@ S.onTask(p => {
   }
 });
 
-/* ---------- launch events ---------- */
 S.onLaunchProgress(p => {
   const L = state.launch;
   if (p.stage === 'running') { L.stage = 'Playing'; L.current = L.total = 0; }
@@ -178,7 +171,6 @@ function crashModal(c) {
   });
 }
 
-/* ---------- data ---------- */
 async function refreshPacks() {
   state.packs = (await safe(() => S.instances.list())) || [];
   const cfgSel = state.cfg?.selectedInstance;
@@ -194,7 +186,6 @@ async function refreshAccounts() {
 const activeAccount = () => state.accounts.accounts.find(a => a.uuid === state.accounts.active);
 const modCount = p => (p?.content || []).filter(c => c.type === 'mod').length;
 
-/* ---------- navigation ---------- */
 document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
 document.querySelectorAll('[data-win]').forEach(b => b.addEventListener('click', () => S.win[b.dataset.win]()));
 $('#accountBtn').addEventListener('click', openAccounts);
@@ -215,11 +206,9 @@ function render() {
   ({ home: renderHome, packs: renderPacks, skins: renderSkins, servers: renderServers, browse: renderBrowse, settings: renderSettings })[state.view]();
 }
 
-/* ---------- Home: player on a crystal platform ---------- */
 const PLACEHOLDER_SKIN = 'chroynic';
 const Q_MARK = ['..XXXX..', '.XX..XX.', '.....XX.', '....XX..', '...XX...', '........', '...XX...'];
 
-// Signed out: a black skin with a "?" on the face.
 function unknownSkin() {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -233,8 +222,6 @@ function unknownSkin() {
   return c;
 }
 
-// Idle: a calm, natural stance. Arms sway a little like in the game's inventory
-// screen, with a slow breathing bob. The head follows the cursor (see the render loop).
 function surgeIdle() {
   return new skinview3d.FunctionAnimation((player, t) => {
     const s = player.skin;
@@ -268,11 +255,10 @@ function disposeScene() {
   if (viewer) { viewer.dispose(); viewer = null; }
 }
 
-// Faceted crystals, a hexagonal platform and floating dust around the player.
 function buildGeode(v) {
   const T = window.THREE;
   if (!T) return () => {};
-  T.ColorManagement.enabled = false; // the viewer renders without color conversion, so use hex colors as-is
+  T.ColorManagement.enabled = false;
   const group = new T.Group();
   group.position.x = shift;
   v.scene.add(group);
@@ -281,7 +267,6 @@ function buildGeode(v) {
   rim.position.set(shift, -4, -26);
   v.scene.add(rim);
 
-  // platform: a hexagon, like the icon
   const plat = new T.Mesh(new T.CylinderGeometry(13, 11, 5, 6), new T.MeshLambertMaterial({ color: 0x3a2c56, flatShading: true }));
   plat.position.y = -18.5;
   plat.rotation.y = Math.PI / 6;
@@ -296,9 +281,7 @@ function buildGeode(v) {
   glow.rotation.x = -Math.PI / 2; glow.rotation.z = Math.PI / 6; glow.position.y = -20.9;
   group.add(glow);
 
-  // crystals
   const crystalMat = (c, e) => new T.MeshLambertMaterial({ color: c, emissive: e, flatShading: true, transparent: true, opacity: 0.88 });
-  // [x, y, z, size, color, glow] around the player
   const specs = [
     [-26, -4, -10, 4.2, 0xb98aff, 0x1c0838], [24, 6, -12, 3.6, 0xcfa2ff, 0x200a40], [-18, 18, -24, 2.6, 0xff9fe2, 0x2a0a26],
     [30, -14, 2, 2.8, 0xa877ff, 0x180632], [-34, 24, -46, 5.5, 0x9d6cf0, 0x14052a], [38, 22, -40, 6, 0xb184ff, 0x16062e],
@@ -314,7 +297,6 @@ function buildGeode(v) {
     return m;
   });
 
-  // dust
   const N = 140, pos = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 120; pos[i * 3 + 1] = Math.random() * 70 - 30; pos[i * 3 + 2] = (Math.random() - 0.5) * 80 - 10; }
   const dustGeo = new T.BufferGeometry(); dustGeo.setAttribute('position', new T.BufferAttribute(pos, 3));
@@ -354,7 +336,6 @@ async function mountScene() {
   viewer.controls.enabled = false;
   viewer.globalLight.intensity = 2.2;
   viewer.cameraLight.intensity = 0.9;
-  // put the player on the right side of the hero
   shift = Math.min(30, box.width / 36);
   viewer.playerObject.position.x = shift;
   const tickGeode = buildGeode(viewer);
@@ -364,7 +345,7 @@ async function mountScene() {
   const urls = acc ? [`https://mc-heads.net/skin/${acc.uuid}`, `https://crafatar.com/skins/${acc.uuid}`, `https://mc-heads.net/skin/${PLACEHOLDER_SKIN}`] : [];
   let loaded = false;
   for (const u of urls) {
-    try { await viewer?.loadSkin(u); loaded = true; break; } catch { /* next */ }
+    try { await viewer?.loadSkin(u); loaded = true; break; } catch { }
   }
   if (!viewer) return;
   if (!loaded) viewer.loadSkin(unknownSkin());
@@ -426,7 +407,6 @@ function renderHome() {
   updateLaunchUI();
 }
 
-// Right side of home: a greeting and your friends, live from the Surge online service.
 const STATUS_COL = { online: '#4ade80', idle: '#facc15', busy: '#f87171', offline: '#71717a' };
 async function homeSide() {
   const h = new Date().getHours();
@@ -450,7 +430,6 @@ async function homeSide() {
   card.querySelectorAll('[data-join]').forEach(b => b.onclick = () => play({ server: b.dataset.join }));
 }
 
-// "Continue <world>" next to Play for the selected pack's most recent world.
 async function addContinueButton() {
   const p = state.selected;
   if (!p) return;
@@ -499,7 +478,6 @@ function updateLaunchUI() {
   }
 }
 
-// target: undefined (just play), { server: 'host' } or { world: 'folder' }
 async function play(target) {
   if (!target || typeof target !== 'object' || target instanceof Event) target = {};
   if (!state.selected) { go('packs'); newPackModal(); return; }
@@ -527,7 +505,6 @@ function pickPack() {
   }));
 }
 
-/* ---------- Accounts ---------- */
 function openAccounts() {
   const { accounts, active } = state.accounts;
   modal(`<h2>Accounts</h2>
@@ -551,7 +528,6 @@ function openAccounts() {
   });
 }
 
-/* ---------- Modpacks ---------- */
 function renderPacks() {
   if (state.detail) return renderDetail();
   view.innerHTML = `<div class="page">
@@ -745,8 +721,6 @@ function editPackModal(p) {
   });
 }
 
-/* ---------- Skins ---------- */
-// Front view of a skin (head, body, arms, legs + outer layers) drawn to a small canvas.
 function skinFront(dataUrl, canvas) {
   const im = new Image();
   im.onload = () => {
@@ -882,8 +856,6 @@ function drawCapes() {
   });
 }
 
-/* ---------- Servers ---------- */
-// Renders text with § color codes as colored spans.
 const MC_COLORS = { 0: '#000000', 1: '#0000aa', 2: '#00aa00', 3: '#00aaaa', 4: '#aa0000', 5: '#aa00aa', 6: '#ffaa00', 7: '#aaaaaa', 8: '#555555', 9: '#5555ff', a: '#55ff55', b: '#55ffff', c: '#ff5555', d: '#ff55ff', e: '#ffff55', f: '#ffffff' };
 function motdHtml(text) {
   let color = '#aaaaaa', bold = false, out = '';
@@ -973,7 +945,6 @@ function serverModal(index) {
   });
 }
 
-/* ---------- Browse ---------- */
 const TYPE_LABEL = { mod: 'Mods', modpack: 'Modpacks', resourcepack: 'Texture packs', shader: 'Shaders' };
 
 function renderBrowse() {
@@ -1064,7 +1035,6 @@ async function installResult(r, btn) {
   await refreshPacks();
 }
 
-/* ---------- Settings ---------- */
 function renderSettings() {
   const c = state.cfg;
   const maxRam = Math.max(4, c.totalGb) * 1024;
@@ -1116,7 +1086,6 @@ function renderSettings() {
   $('#sDiscordLink').onclick = () => S.open('https://discord.com/developers/applications');
 }
 
-/* ---------- Admin (Ctrl+Shift+F4) ---------- */
 window.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.code === 'F4') { e.preventDefault(); openAdmin(); } });
 
 async function openAdmin() {
@@ -1250,7 +1219,6 @@ async function adminPanel(tab = 'codes') {
     return;
   }
 
-  // updates
   const rel = (await safe(() => S.admin.release())) || {};
   modal(`<h2>Admin</h2>${tabs}
     <div class="form">
@@ -1277,7 +1245,6 @@ async function adminPanel(tab = 'codes') {
   });
 }
 
-/* ---------- launcher updates ---------- */
 async function checkSelfUpdate() {
   const u = await S.selfUpdate.check().catch(() => null);
   if (!u) return;
@@ -1289,7 +1256,6 @@ async function checkSelfUpdate() {
   });
 }
 
-/* ---------- boot ---------- */
 (async function boot() {
   state.cfg = await safe(() => S.config.get());
   await refreshAccounts();

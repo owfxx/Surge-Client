@@ -32,13 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/** All HUD mods, plus the click counter and timers they share. */
 public final class HudModules {
 	public static final List<HudModule> ALL = new ArrayList<>();
 
 	private HudModules() {}
 
-	// ---------- click tracking (polled once per frame) ----------
 	private static final Deque<Long> LEFT = new ArrayDeque<>();
 	private static final Deque<Long> RIGHT = new ArrayDeque<>();
 	private static boolean leftWasDown;
@@ -63,7 +61,6 @@ public final class HudModules {
 
 	public static int rightCps() { return RIGHT.size(); }
 
-	// ---------- stopwatch + session ----------
 	private static boolean swRunning;
 	private static long swStart, swElapsed;
 	private static long sessionStart = System.currentTimeMillis();
@@ -84,7 +81,6 @@ public final class HudModules {
 		return swElapsed + (swRunning ? System.currentTimeMillis() - swStart : 0);
 	}
 
-	/** Called every tick to restart the session timer when you join a world. */
 	public static void tick(Minecraft mc) {
 		boolean now = mc.level != null;
 		if (now && !inWorld) sessionStart = System.currentTimeMillis();
@@ -97,8 +93,6 @@ public final class HudModules {
 		return hundredths ? base + String.format(".%02d", (ms / 10) % 100) : base;
 	}
 
-	// ---------- simple text modules ----------
-	/** "120 FPS", "FPS: 120" or just "120", depending on the Label setting. */
 	static class TextModule extends HudModule {
 		private final String label;
 		private final Function<Minecraft, String> value;
@@ -271,7 +265,6 @@ public final class HudModules {
 		ALL.add(new ItemCounter());
 	}
 
-	// ---------- coordinates ----------
 	static final class Coordinates extends HudModule {
 		final Setting.Choice layout = choice("layout", "Layout", "Vertical", "Vertical", "Horizontal");
 		final Setting.Toggle direction = toggle("direction", "Show direction", true);
@@ -317,8 +310,6 @@ public final class HudModules {
 		}
 	}
 
-	// ---------- compass ----------
-	/** Lists the resource packs you have turned on (top first), like Lunar's Pack Display. */
 	static final class PackDisplay extends HudModule {
 		final Setting.Toggle header = toggle("header", "Show \"Packs\" title", true);
 		final Setting.Slider max = slider("max", "Most packs shown", 3, 1, 8, 1, "");
@@ -415,7 +406,6 @@ public final class HudModules {
 		}
 	}
 
-	// ---------- keystrokes ----------
 	static final class Keystrokes extends HudModule {
 		private static final int GAP = 2;
 		final Setting.Slider size = slider("size", "Key size", 20, 14, 30, 1, "px");
@@ -475,7 +465,6 @@ public final class HudModules {
 			if (space.on()) key(g, mc, x, yy, width(mc), 12, label(mc, o.keyJump, width(mc)), down(o.keyJump), dt);
 		}
 
-		/** The key this binding is actually set to, shortened to fit ("Left Button" -> "LMB"). */
 		private static String label(Minecraft mc, KeyMapping km, int w) {
 			String n = km.getTranslatedKeyMessage().getString();
 			n = switch (n) {
@@ -500,7 +489,6 @@ public final class HudModules {
 		private static boolean down(KeyMapping key) { return key.isDown(); }
 	}
 
-	// ---------- armor + held item durability ----------
 	static final class ArmorStatus extends HudModule {
 		private static final EquipmentSlot[] ARMOR = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 		final Setting.Choice layout = choice("layout", "Layout", "Vertical", "Vertical", "Horizontal", "Uku");
@@ -548,7 +536,6 @@ public final class HudModules {
 			return layout.is("Horizontal") ? 18 : 18 * stacks(mc).size();
 		}
 
-		/** Uku-style: a row of items, each with a colored durability bar and number under it. */
 		private void renderUku(GuiGraphics g, Minecraft mc, int x, int y) {
 			List<ItemStack> list = stacks(mc);
 			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
@@ -605,7 +592,6 @@ public final class HudModules {
 		}
 	}
 
-	// ---------- item counter ----------
 	static final class ItemCounter extends HudModule {
 		final Setting.Toggle arrows = toggle("arrows", "Arrows", true);
 		final Setting.Toggle totems = toggle("totems", "Totems", true);
@@ -663,7 +649,6 @@ public final class HudModules {
 		}
 	}
 
-	/** Tiny text helper for modules. */
 	static final class Ui2 {
 		static String fit(Minecraft mc, String s, int maxW) {
 			if (mc.font.width(s) <= maxW) return s;
@@ -672,7 +657,6 @@ public final class HudModules {
 		}
 	}
 
-	// ---------- active potion effects ----------
 	static final class PotionEffects extends HudModule implements HideVanillaEffects {
 		private static final String[] ROMAN = {"", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
 		final Setting.Choice style = choice("style", "Style", "Modern", "Modern", "Vanilla", "Compact");
@@ -751,7 +735,6 @@ public final class HudModules {
 			long now = System.currentTimeMillis();
 			for (int i = 0; i < ls.size(); i++) {
 				Line l = ls.get(i);
-				// effects about to run out gently pulse
 				float alpha = l.ending() ? 0.55f + 0.45f * (float) Math.abs(Math.sin(now / 250.0)) : 1f;
 				switch (style.get()) {
 					case "Compact" -> {
@@ -775,14 +758,13 @@ public final class HudModules {
 						g.drawString(mc.font, l.name(), tx, yy + 4, 0xFFFFFFFF, true);
 						if (!l.time().isEmpty()) g.drawString(mc.font, l.time(), tx, yy + 14, Colors.alpha(0xFF7F7F7F, alpha), true);
 					}
-					default -> { // Modern
+					default -> {
 						int yy = y + i * (rh + 2);
 						if (bgOn()) g.fill(x, yy, x + w, yy + rh, bg());
 						icon(g, l, x + 3, yy + 3, 16, alpha);
 						int tx = x + (icons.on() ? 23 : 5);
 						g.drawString(mc.font, l.name(), tx, yy + 3, Colors.alpha(l.color(), alpha), shadowOn());
 						if (!l.time().isEmpty()) g.drawString(mc.font, l.time(), tx, yy + 12, Colors.alpha(0xFFB9B9BE, alpha), shadowOn());
-						// time-left bar along the bottom
 						g.fill(x, yy + rh - 1, x + Math.round(w * l.left()), yy + rh, Colors.alpha(l.color(), 0.85f));
 					}
 				}
@@ -790,7 +772,6 @@ public final class HudModules {
 		}
 	}
 
-	/** The player's current movement state, most specific first ("" when standing still). */
 	static String action(Minecraft mc, boolean showToggled) {
 		LocalPlayer p = mc.player;
 		boolean sprintMod = Mods.TOGGLE_SPRINT.enabled() && Mods.sprintToggled();
@@ -810,7 +791,6 @@ public final class HudModules {
 		return a;
 	}
 
-	/** "dark_forest" -> "Dark Forest" */
 	static String pretty(String id) {
 		StringBuilder b = new StringBuilder();
 		for (String w : id.split("_")) if (!w.isEmpty()) b.append(b.isEmpty() ? "" : " ").append(Character.toUpperCase(w.charAt(0))).append(w.substring(1));

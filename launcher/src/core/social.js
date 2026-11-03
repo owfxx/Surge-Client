@@ -1,10 +1,7 @@
-// Signs the player in to the Surge online service with their Minecraft account,
-// the same way servers check accounts: Mojang "join" with a random id, then the
-// service asks Mojang "hasJoined". The token goes to the game (-Dsurge.token).
 const crypto = require('crypto');
 const config = require('./config');
 
-let cached = null; // { uuid, token, name, at }
+let cached = null;
 
 function apiUrl() {
   return (config.load().apiUrl || '').trim().replace(/\/$/, '');
@@ -31,7 +28,6 @@ async function signIn(authorization) {
   return cached;
 }
 
-/** Friends and requests for the launcher's home screen (signs in first if needed). */
 async function social() {
   const api = apiUrl();
   if (!api) return null;

@@ -7,11 +7,6 @@ import net.minecraft.client.OptionInstance;
 
 import java.util.Map;
 
-/**
- * Mods that work by changing a vanilla option (Toggle Sneak, Hurt Cam, No View Bobbing,
- * Static FOV, Clean Overlays). While a mod is on, Surge sets the option; when it's
- * switched off, your own value is put back.
- */
 public final class OptionTweaks {
 	private OptionTweaks() {}
 
@@ -32,11 +27,9 @@ public final class OptionTweaks {
 				option.set(v);
 			}
 		} catch (Exception ignored) {
-			// value not valid in this version
 		}
 	}
 
-	/** Makes the vanilla options match the mods. Safe to call any time. */
 	public static void apply(Minecraft mc) {
 		var o = mc.options;
 		tweak("toggleCrouch", o.toggleCrouch(), Mods.TOGGLE_SNEAK.enabled(), true);

@@ -1,12 +1,5 @@
-// Surge Client online service (Cloudflare Worker + D1, free tier).
-// Cosmetics, emotes, badges, friends, chat and status for every Surge player.
-//
-// Sign-in: the launcher proves the account with Mojang (the same check servers use):
-//   it calls Mojang's "join" with a random serverId, then POST /v1/auth {name, serverId};
-//   we ask Mojang "hasJoined" and hand back a token. Every social call needs that token.
-
-const FRESH_MS = 15 * 60 * 1000;   // cosmetics/badge: seen in the last 15 minutes
-const ONLINE_MS = 3 * 60 * 1000;   // friends list: online if a heartbeat came in the last 3 minutes
+const FRESH_MS = 15 * 60 * 1000;
+const ONLINE_MS = 3 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{32}$/;
 const clean = v => (typeof v === 'string' && /^[a-z0-9_:\-]{0,40}$/i.test(v) ? v : 'none');
 const norm = u => String(u || '').replace(/-/g, '').toLowerCase();
@@ -54,7 +47,6 @@ export default {
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
 
-    // ---------- sign in through Mojang ----------
     if (p === '/v1/auth' && req.method === 'POST') {
       const name = String(body.name || ''), serverId = String(body.serverId || '');
       if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[A-Za-z0-9_-]{8,64}$/.test(serverId)) return json({ error: 'bad request' }, 400);
@@ -68,7 +60,6 @@ export default {
       return json({ token, uuid, name: prof.name });
     }
 
-    // ---------- heartbeat: status, server, cosmetics, emote ----------
     if (p === '/v1/me' && req.method === 'PUT') {
       const u = await me(req, db);
       const uuid = u ? u.uuid : norm(body.uuid);
@@ -88,7 +79,6 @@ export default {
       return json({ ok: true, now });
     }
 
-    // ---------- other players' cosmetics (public) ----------
     if (p === '/v1/players' && req.method === 'GET') {
       const ids = (url.searchParams.get('ids') || '').split(',').map(norm).filter(s => UUID_RE.test(s)).slice(0, 200);
       if (!ids.length) return json({ players: {}, now: Date.now() });
@@ -99,14 +89,12 @@ export default {
       return json({ players, now: Date.now() });
     }
 
-    // Everything below needs a signed-in player.
     if (!p.startsWith('/v1/')) return json({ name: 'Surge Client service', ok: true });
     const u = await me(req, db);
     if (!u) return json({ error: 'Sign in through the Surge launcher' }, 401);
     const id = u.uuid;
     const target = norm(body.uuid);
 
-    // ---------- friends, requests, blocks, mutes ----------
     if (p === '/v1/social' && req.method === 'GET') {
       const now = Date.now();
       const { results: rows } = await db.prepare(`SELECT f.a, f.b, f.state, f.requester, u.uuid, u.name, u.status, u.server, u.seen
@@ -133,7 +121,7 @@ export default {
       const [a, b] = pair(id, other.uuid);
       const ex = await db.prepare('SELECT state, requester FROM friends WHERE a = ?1 AND b = ?2').bind(a, b).first();
       if (ex && ex.state === 'friends') return json({ error: 'Already friends' }, 400);
-      if (ex && ex.requester !== id) { // they asked first: accept
+      if (ex && ex.requester !== id) {
         await db.prepare("UPDATE friends SET state = 'friends' WHERE a = ?1 AND b = ?2").bind(a, b).run();
         return json({ ok: true, friends: true });
       }
@@ -161,7 +149,6 @@ export default {
       return json({ ok: true });
     }
 
-    // ---------- chat ----------
     if (p === '/v1/messages' && req.method === 'POST') {
       const text = String(body.text || '').trim().slice(0, 500);
       if (!UUID_RE.test(target) || !text) return json({ error: 'bad request' }, 400);

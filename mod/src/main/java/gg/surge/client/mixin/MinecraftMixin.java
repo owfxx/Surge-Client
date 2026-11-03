@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** Swaps the vanilla main menu for Surge's cleaner one (can be turned off in Features). */
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
 	@ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)

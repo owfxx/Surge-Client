@@ -1,4 +1,3 @@
-// Turns a crash into a short explanation and a fix.
 const fs = require('fs');
 const path = require('path');
 

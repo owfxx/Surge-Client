@@ -1,6 +1,5 @@
 package gg.surge.client.mods;
 
-/** Small color helpers. */
 public final class Colors {
 	private Colors() {}
 
@@ -12,7 +11,6 @@ public final class Colors {
 		}
 	}
 
-	/** HSV (0..1) to opaque ARGB. */
 	public static int hsv(float h, float s, float v) {
 		h = (h % 1f + 1f) % 1f;
 		int i = (int) (h * 6f);
@@ -29,7 +27,6 @@ public final class Colors {
 		return 0xFF000000 | (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
 	}
 
-	/** Soft rainbow that cycles every 4 seconds. */
 	public static int chroma(float offset) {
 		return hsv((System.currentTimeMillis() % 4000L) / 4000f + offset, 0.55f, 1f);
 	}

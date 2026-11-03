@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Totem Tweaks: count totem pops (entity event 35). TAIL only runs on the game thread. */
 @Mixin(ClientPacketListener.class)
 public abstract class TotemPopMixin {
 	@Inject(method = "handleEntityEvent", at = @At("TAIL"))

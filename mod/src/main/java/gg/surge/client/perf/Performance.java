@@ -18,38 +18,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-/**
- * Surge's FPS features. Each one is a separate switch:
- *  - "Surge" features are Surge's own render culling (see the mixins).
- *  - The rest set game options to their fastest value. Turning one off
- *    restores whatever the player had before.
- * The performance mods the launcher installs (Sodium, Lithium, …) stack on top.
- */
 public final class Performance {
-	// Read from render threads by the mixins.
 	public static volatile boolean hideFoliage;
 	public static volatile boolean cullEntities = true;
 	public static volatile boolean cullBlockEntities = true;
 	public static volatile boolean cullParticles = true;
 
-	// Distances in blocks. Far enough that you can't tell anything is skipped.
 	public static volatile double ITEM_DISTANCE = 40, ORB_DISTANCE = 32, DECOR_DISTANCE = 56;
 	public static volatile double BLOCK_ENTITY_DISTANCE = 64, PARTICLE_DISTANCE = 32, NAMETAG_DISTANCE = 48;
 	public static volatile boolean hideFarNametags = true;
 
-	/** A game option and the value Surge sets it to. Enum values are given by constant name. */
 	public record Change(Function<Options, OptionInstance<?>> option, Object fast) {}
 
-	/**
-	 * invisible = the game looks the same with it on. Those are on by default (Balanced);
-	 * the rest trade looks for FPS and are only on in Max FPS or when you switch them on.
-	 */
 	public record Feature(String key, String name, String description, boolean invisible, boolean needsReload, Item icon, List<Change> changes) {
 		public boolean defaultOn() { return invisible; }
 	}
 
 	public static final List<Feature> FEATURES = List.of(
-		// ---- no visual change
 		new Feature("cullEntities", "Entity Culling", "Skip far-away dropped items, XP orbs, arrows, armor stands and item frames", true, false, Items.ARMOR_STAND, List.of()),
 		new Feature("cullBlockEntities", "Block Entity Culling", "Skip chests, signs, banners and heads more than 64 blocks away", true, false, Items.CHEST, List.of()),
 		new Feature("cullParticles", "Particle Culling", "Skip particles more than 32 blocks away", true, false, Items.FIREWORK_STAR, List.of()),
@@ -62,7 +47,6 @@ public final class Performance {
 			List.of(new Change(Options::biomeBlendRadius, 1))),
 		new Feature("lightWeather", "Light Weather", "Rain and snow drawn a little closer to you", true, false, Items.WATER_BUCKET,
 			List.of(new Change(Options::weatherRadius, 7))),
-		// ---- trades looks for FPS
 		new Feature("fastLeaves", "Fast Leaves", "Solid leaves instead of see-through ones", false, true, Items.OAK_LEAVES,
 			List.of(new Change(Options::cutoutLeaves, false))),
 		new Feature("fastTransparency", "Fast Transparency", "Turn off improved transparency", false, true, Items.GLASS,
@@ -113,7 +97,6 @@ public final class Performance {
 		apply(mc);
 	}
 
-	// ---------- option values ----------
 	private static Object serialize(Object v) {
 		return v instanceof Enum<?> e ? e.name() : v;
 	}
@@ -128,7 +111,6 @@ public final class Performance {
 		return v;
 	}
 
-	/** Returns true if the value changed. */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static boolean write(OptionInstance option, Object v) {
 		try {
@@ -137,20 +119,17 @@ public final class Performance {
 			option.set(value);
 			return true;
 		} catch (Exception e) {
-			return false; // value not valid in this version
+			return false;
 		}
 	}
 
-	/** Makes the game match the switches. Safe to call any time. */
 	public static void apply(Minecraft mc) {
 		SurgeConfig c = SurgeConfig.get();
 		Options o = mc.options;
 		Map<String, Object> saved = c.saved;
 		boolean reload = false;
-		// Older versions turned on switches that change how the game looks; start fresh once.
 		if (c.boostVersion < 2) { c.boost.clear(); c.boostVersion = 2; }
 
-		// 1. switched-off features: put the player's own values back (reverse order)
 		for (int i = FEATURES.size() - 1; i >= 0; i--) {
 			Feature f = FEATURES.get(i);
 			if (enabled(f)) continue;
@@ -159,7 +138,6 @@ public final class Performance {
 				if (saved.containsKey(key) && write(f.changes().get(j).option().apply(o), saved.remove(key))) reload |= f.needsReload();
 			}
 		}
-		// 2. switched-on features: remember the player's value once, then set the fast one
 		for (Feature f : FEATURES) {
 			if (!enabled(f)) continue;
 			for (int j = 0; j < f.changes().size(); j++) {
@@ -185,7 +163,6 @@ public final class Performance {
 		if (reload && mc.level != null && mc.levelRenderer != null) mc.levelRenderer.allChanged();
 	}
 
-	/** Culling distances from the settings (cheap, safe to call while dragging a slider). */
 	public static void applyDistances() {
 		SurgeConfig c = SurgeConfig.get();
 		ITEM_DISTANCE = c.cullItems;
@@ -201,7 +178,6 @@ public final class Performance {
 		throw new IllegalArgumentException(key);
 	}
 
-	// ---------- presets ----------
 	public enum Preset { MAX_FPS, BALANCED, QUALITY }
 
 	public static void preset(Minecraft mc, Preset p) {
@@ -237,7 +213,7 @@ public final class Performance {
 		Set<Block> set = Collections.newSetFromMap(new IdentityHashMap<>());
 		for (String id : FOLIAGE_IDS) {
 			Block b = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("minecraft", id));
-			if (b != Blocks.AIR) set.add(b); // unknown ids resolve to air
+			if (b != Blocks.AIR) set.add(b);
 		}
 		return set;
 	}

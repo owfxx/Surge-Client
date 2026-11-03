@@ -13,11 +13,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Admin panel (Ctrl + Shift + F4, only for the owner's account). Make Surge Coin codes
- * and run sales. Writes the same files as the launcher's admin panel; publish codes.json
- * at your codes URL so everyone can redeem the codes and gets the sales.
- */
 public class AdminScreen extends Screen {
 	public static final String OWNER = "chroynic";
 	private static final int[] AMOUNTS = {600, 1000, 1500, 2500, 5000, 10000};
@@ -99,7 +94,6 @@ public class AdminScreen extends Screen {
 		int colW = (pw - 30) / 2;
 		int lx = px + 10, rx = px + 20 + colW, top = py + 40;
 
-		// ---------- codes ----------
 		g.drawString(font, "Coin codes", lx, top, Ui.ACCENT_2, false);
 		g.drawString(font, "Coins per code", lx, top + 16, Ui.MUTED, false);
 		int abw = (colW - 10) / 3;
@@ -108,7 +102,6 @@ public class AdminScreen extends Screen {
 			final int idx = i;
 			if (Ui.pill(g, font, mx, my, bx, by, abw, 16, String.valueOf(AMOUNTS[i]), i == amountIdx) && click) action = () -> amountIdx = idx;
 		}
-		// custom text (optional) and what the code unlocks
 		g.drawString(font, "Code", lx, top + 72, Ui.MUTED, false);
 		int cbx = lx + 36, cbw = colW - 36;
 		Ui.box(g, cbx, top + 68, cbw, 16, 0xFF161619, customBox.isFocused() ? Ui.ACCENT : Ui.EDGE);
@@ -175,7 +168,6 @@ public class AdminScreen extends Screen {
 			if (delHov && click) action = () -> { AdminCodes.remove(c.code()); toast("Deleted " + c.code()); };
 		}
 
-		// ---------- sales ----------
 		g.drawString(font, "Sales", rx, top, Ui.ACCENT_2, false);
 		g.drawString(font, "On", rx, top + 16, Ui.MUTED, false);
 		int tbx = rx + 22, tbw = colW - 22;
@@ -227,7 +219,6 @@ public class AdminScreen extends Screen {
 			if (endHov && click) action = () -> { Sales.local().remove(s); Sales.save(); AdminCodes.publish(); toast("Sale ended"); };
 		}
 
-		// footer
 		String foot = System.currentTimeMillis() < messageUntil ? message : "Upload codes.json from your Surge folder to your codes URL to share codes and sales.";
 		g.drawString(font, Ui.fit(font, foot, pw - 20), px + 10, py + ph - 15, System.currentTimeMillis() < messageUntil ? Ui.ACCENT_2 : Ui.FAINT, false);
 		g.fill(px + 1, py + ph - 20, px + pw - 1, py + ph - 19, Colors.alpha(Ui.EDGE, 0.8f));

@@ -8,13 +8,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 
 import java.lang.reflect.Field;
 
-/**
- * Damage Tint: changes the color and strength of the flash entities get when hit.
- * The game draws that flash from a small "overlay" texture; its top half is the hurt
- * color. We repaint those pixels. Fields are found by type, so name changes can't break it.
- */
 public final class DamageTint {
-	/** Overlay coordinates the game uses for "hurt" (u = 0, v = 3). */
 	public static final int HURT_OVERLAY = 3 << 16;
 
 	private static DynamicTexture texture;
@@ -38,12 +32,10 @@ public final class DamageTint {
 
 	private static int lastColor;
 
-	/** Chroma tint needs repainting as the color moves. */
 	public static void tick(Minecraft mc) {
 		if (Mods.DAMAGE_TINT.enabled() && Mods.TINT_COLOR.chroma()) apply(mc);
 	}
 
-	/** Repaints the hurt color from the settings (or back to vanilla). Safe to call any time on the render thread. */
 	public static void apply(Minecraft mc) {
 		try {
 			if (texture == null) {
@@ -58,7 +50,6 @@ public final class DamageTint {
 			int color = vanillaPixel;
 			if (on) {
 				int rgb = Mods.TINT_COLOR.rgb(0) & 0xFFFFFF;
-				// the shader keeps "alpha" of the original color, so strength = 255 - alpha
 				int alpha = 255 - Math.round(255 * Math.max(5, Math.min(95, Mods.TINT_OPACITY.get())) / 100f);
 				color = (alpha << 24) | rgb;
 			}
@@ -69,7 +60,6 @@ public final class DamageTint {
 			lastColor = color;
 			painted = on;
 		} catch (Throwable ignored) {
-			// leave the vanilla tint alone if anything about the texture changed
 		}
 	}
 }

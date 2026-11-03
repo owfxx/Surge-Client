@@ -3,7 +3,6 @@ package gg.surge.client.features;
 import gg.surge.client.mods.Mods;
 import net.minecraft.client.Minecraft;
 
-/** Hold-to-zoom (C by default). Smoothly eases in and out; scroll while zoomed to change the zoom level. */
 public final class Zoom {
 	private static boolean active;
 	private static float current = 1f;
@@ -29,14 +28,12 @@ public final class Zoom {
 		}
 	}
 
-	/** Mouse wheel while zoomed: zoom further in or out (between 1.5x and 50x). Returns true if used. */
 	public static boolean scroll(int steps) {
 		if (!active || !Mods.ZOOM_SCROLL.on()) return false;
 		scrollLevel = Math.max(1.5f, Math.min(50f, scrollLevel * (float) Math.pow(1.25, steps)));
 		return true;
 	}
 
-	/** How much to divide the FOV by this frame. */
 	public static float divisor() {
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - lastNanos) / 1e9f);
@@ -48,7 +45,6 @@ public final class Zoom {
 		return current;
 	}
 
-	/** The world FOV used for the last frame (after zoom), for projecting waypoints. */
 	public static float lastFov() { return lastFov; }
 
 	public static void recordFov(float fov) { lastFov = fov; }

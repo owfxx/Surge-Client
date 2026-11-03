@@ -22,11 +22,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-/**
- * Friends, requests, blocks, mutes, chat and status, through the Surge online service.
- * Signed in by the launcher (it passes -Dsurge.token). Everything here runs off-thread and
- * hands results back on the game thread.
- */
 public final class Social {
 	public record Friend(String uuid, String name, String status, String server) {}
 
@@ -43,7 +38,6 @@ public final class Social {
 	public static final Map<String, List<Message>> CHATS = new HashMap<>();
 	public static final Map<String, Integer> UNREAD = new HashMap<>();
 	public static final List<Toast> TOASTS = new ArrayList<>();
-	/** Set while the Social screen is open: polls faster and doesn't count messages in the open chat as unread. */
 	public static volatile String openChat;
 	public static volatile boolean screenOpen;
 	public static volatile String lastError = "";
@@ -66,14 +60,11 @@ public final class Social {
 		return SurgeNet.online() && !token().isEmpty();
 	}
 
-	/** Why social features are off, for the UI. */
 	public static String unavailableReason() {
 		if (!SurgeNet.online()) return "Friends and chat need the Surge online service. Ask the server owner to set it up.";
 		return "Start the game from the Surge launcher, signed in with your Microsoft account, to use friends and chat.";
 	}
 
-	// ---------- status ----------
-	/** What others see: online, idle, busy or invisible (shown to them as offline). */
 	public static String status() {
 		String s = Mods.STATUS.get();
 		if (s.equals("Busy")) return "busy";
@@ -102,16 +93,13 @@ public final class Social {
 		};
 	}
 
-	/** Server shown to friends ("" when hidden or not on a server). */
 	public static String server(Minecraft mc) {
 		if (!Mods.SHOW_SERVER.on() || mc.level == null) return "";
 		if (mc.getCurrentServer() != null) return mc.getCurrentServer().ip;
 		return "Singleplayer";
 	}
 
-	// ---------- polling ----------
 	public static void tick(Minecraft mc) {
-		// any mouse movement, key or screen change counts as activity (for auto-idle)
 		double mx = mc.mouseHandler.xpos(), my = mc.mouseHandler.ypos();
 		var o = mc.options;
 		if (mx != lastMx || my != lastMy || mc.screen != lastScreen || o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown()
@@ -177,7 +165,6 @@ public final class Social {
 			Set<String> mu = new HashSet<>();
 			JsonArray m = o.getAsJsonArray("muted");
 			if (m != null) for (JsonElement e : m) mu.add(e.getAsString());
-			// toasts: new requests, friends coming online
 			if (loadedOnce) {
 				for (Person p : in) if (!knownIncoming.contains(p.uuid())) toast("Friend request", p.name() + " wants to be friends");
 				for (Friend f : fr) {
@@ -243,7 +230,6 @@ public final class Social {
 		gg.surge.client.gui.Ui.toggleSound(true);
 	}
 
-	// ---------- actions ----------
 	private static void post(String path, JsonObject body, Consumer<JsonObject> done) {
 		send(req(path).POST(HttpRequest.BodyPublishers.ofString(body.toString())).build())
 			.thenAccept(o -> Minecraft.getInstance().execute(() -> { if (done != null) done.accept(o); refresh(); }));
@@ -293,7 +279,6 @@ public final class Social {
 		return n + incoming.size();
 	}
 
-	/** Opens the social screen from anywhere. */
 	public static Screen screen(Screen parent) {
 		return new gg.surge.client.gui.SocialScreen(parent);
 	}

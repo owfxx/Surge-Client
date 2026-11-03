@@ -12,10 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Surge's main menu: the game's panorama under a soft shade, the crystal logo,
- * glassy buttons and your account in the corner. One intro animation on open.
- */
 public class SurgeTitleScreen extends Screen {
 	private static final ItemStack COIN = new ItemStack(Items.GOLD_NUGGET);
 	private static final ItemStack SHIRT = new ItemStack(Items.LEATHER_CHESTPLATE);
@@ -54,7 +50,6 @@ public class SurgeTitleScreen extends Screen {
 		return 1f - (1f - t) * (1f - t) * (1f - t);
 	}
 
-	/** Glassy button: dark translucent fill, thin light border; purple when primary. Returns hovered. */
 	private boolean glass(GuiGraphics g, int mx, int my, int x, int y, int w, int h, String label, boolean primary, float alpha) {
 		boolean hov = Ui.hover(mx, my, x, y, w, h) && alpha > 0.95f;
 		float a = Ui.anim("title:" + label, hov);
@@ -77,7 +72,6 @@ public class SurgeTitleScreen extends Screen {
 		Runnable action = null;
 		int cx = this.width / 2;
 
-		// logo: fades in and settles, then floats gently
 		float logoIn = since(100, 600);
 		int size = this.height >= 320 ? 64 : 48;
 		float bob = (float) Math.sin((System.currentTimeMillis() - openedAt) / 900.0) * 2f;
@@ -92,7 +86,6 @@ public class SurgeTitleScreen extends Screen {
 			if (logoIn < 1) g.fill(cx - size / 2, logoY, cx + size / 2, logoY + size, Colors.alpha(0xFF000000, 1 - logoIn));
 		}
 
-		// buttons rise in one after another
 		int by = top + size + 18;
 		String[] labels = {"Singleplayer", "Multiplayer"};
 		for (int i = 0; i < labels.length; i++) {
@@ -108,7 +101,6 @@ public class SurgeTitleScreen extends Screen {
 		if (glass(g, mx, my, cx - bw / 2, y3, half, bh, "Options", false, k3) && click) action = () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options));
 		if (glass(g, mx, my, cx - bw / 2 + half + gap, y3, half, bh, "Quit", false, k3) && click) action = minecraft::stop;
 
-		// top right: wardrobe, Surge menu, coins (hover for a moment to see where they lead)
 		float kc = since(450, 400);
 		int ty = 8 - Math.round((1 - kc) * 8);
 		int x = this.width - 8 - 24;
@@ -123,7 +115,6 @@ public class SurgeTitleScreen extends Screen {
 		if (Ui.tile(g, font, mx, my, x, ty, 24, SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
 		MenuOverlay.unreadBadge(g, minecraft, x, ty, 24);
 
-		// account, top left
 		String name = minecraft.getUser().getName();
 		g.drawString(font, name, 10, ty + 3, Colors.alpha(0xFFFFFFFF, kc), true);
 		String st = gg.surge.client.net.Social.status();
@@ -134,13 +125,11 @@ public class SurgeTitleScreen extends Screen {
 		String sub = gg.surge.client.net.Social.statusLabel(st) + (gg.surge.client.net.Social.available() ? "  " + on + " friend" + (on == 1 ? "" : "s") + " online" : "");
 		g.drawString(font, sub, 19, ty + 14, Colors.alpha(0xFFA9AAAE, kc), true);
 
-		// footer
 		float kf = since(500, 400);
 		g.drawString(font, "Minecraft 1.21.11", 8, this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);
 		String brand = "Surge Client";
 		g.drawString(font, brand, this.width - 8 - font.width(brand), this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);
 
-		// fade in from black the first time the game opens
 		if (!playedIntro) {
 			float f = since(0, 700);
 			if (f < 1) g.fill(0, 0, this.width, this.height, Colors.alpha(0xFF000000, 1 - f));

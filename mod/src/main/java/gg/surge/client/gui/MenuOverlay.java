@@ -10,7 +10,6 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import org.lwjgl.glfw.GLFW;
 
-/** Essential-style extras on the title and pause screens: icon column + player preview. */
 public final class MenuOverlay {
 	private static final net.minecraft.world.item.ItemStack SHIRT = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_CHESTPLATE);
 	private static final net.minecraft.world.item.ItemStack MODS = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPARATOR);
@@ -47,7 +46,6 @@ public final class MenuOverlay {
 		Runnable action = null;
 		int w = screen.width, h = screen.height;
 
-		// Right icon column: hover for a white outline, keep hovering to see where it leads
 		Ui.frame();
 		int size = 22, x = w - size - 8, y = h / 2 - 76;
 		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
@@ -59,7 +57,6 @@ public final class MenuOverlay {
 		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, COIN, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
 		if (mc.player != null && Ui.tile(g, mc.font, mx, my, x, y + 78, size, EMOTE, "Emotes", true, 1f) && click) action = () -> mc.setScreen(new EmoteWheelScreen());
 
-		// Player preview on the pause screen, wardrobe button under it
 		if (screen instanceof PauseScreen && mc.player != null) {
 			int x2 = w / 2 - 112;
 			int x1 = Math.max(8, x2 - 90);
@@ -78,7 +75,6 @@ public final class MenuOverlay {
 		return n > 0 ? "Social (" + n + " new)" : "Social";
 	}
 
-	/** Small red count on the Social icon. */
 	static void unreadBadge(GuiGraphics g, Minecraft mc, int x, int y, int size) {
 		int n = gg.surge.client.net.Social.totalUnread();
 		if (n <= 0) return;

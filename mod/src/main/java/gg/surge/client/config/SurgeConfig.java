@@ -13,13 +13,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Everything the Surge menu changes, saved to config/surge.json. */
 public class SurgeConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("surge.json");
 	private static SurgeConfig instance;
 
-	/** Per mod: on/off, HUD position as a fraction of the screen (0..1), scale and the mod's own settings. */
 	public static class ModuleState {
 		public boolean enabled;
 		public float x;
@@ -36,7 +34,6 @@ public class SurgeConfig {
 		}
 	}
 
-	/** A key that sends a chat message or command. */
 	public static class CommandKey {
 		public int key = -1;
 		public String text = "";
@@ -54,28 +51,21 @@ public class SurgeConfig {
 	public List<CommandKey> commandKeys = new ArrayList<>();
 	public List<Waypoint> waypoints = new ArrayList<>();
 
-	// Performance
-	/** FPS feature switches by key (see Performance.FEATURES); missing = default. */
 	public Map<String, Boolean> boost = new LinkedHashMap<>();
 	public int boostVersion = 0;
-	/** Culling distances in blocks (FPS boost settings). */
 	public int cullItems = 40, cullBlockEntities = 64, cullParticles = 32, nametagDistance = 48;
-	/** The player's own option values, restored when a feature or mod is switched off. */
 	public Map<String, Object> saved = new LinkedHashMap<>();
 
-	// Cosmetics (client-side, visible to you)
 	public String halo = "none";
 	public String wings = "none";
 	public String cape = "none";
 
-	/** Saved cosmetic loadouts: wings, halo, cape. */
 	public static class Outfit {
 		public String halo = "none", wings = "none", cape = "none";
 	}
 
 	public Outfit[] outfits = {null, null, null};
 
-	/** Emote wheel layout: up to 9 pages of 8 slots (emote names, "" = empty). null = automatic. */
 	public List<List<String>> emotePages = null;
 
 	public static SurgeConfig get() {
@@ -112,13 +102,11 @@ public class SurgeConfig {
 	private static boolean dirty;
 	private static long dirtyAt;
 
-	/** Save soon (used while dragging sliders so we don't write the file every frame). */
 	public static void markDirty() {
 		dirty = true;
 		dirtyAt = System.currentTimeMillis();
 	}
 
-	/** Called every tick: writes pending changes once things settle. */
 	public static void flush() {
 		if (dirty && System.currentTimeMillis() - dirtyAt > 400) save();
 	}

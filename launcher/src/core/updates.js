@@ -1,5 +1,3 @@
-// Mod updates via Modrinth: looks up every mod jar by its SHA-1 hash and finds the
-// newest version for the pack's Minecraft version.
 const fs = require('fs');
 const path = require('path');
 const instances = require('./instances');

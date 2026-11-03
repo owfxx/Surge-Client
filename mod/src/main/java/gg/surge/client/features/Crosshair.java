@@ -4,7 +4,6 @@ import gg.surge.client.mods.Mods;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
-/** Custom crosshair: style, color, length, gap, thickness, outline and a center dot. */
 public final class Crosshair {
 	private static final int OUTLINE = 0xC0000000;
 
@@ -22,7 +21,7 @@ public final class Crosshair {
 		int col = Mods.CROSS_COLOR.rgb(0);
 		int len = Mods.CROSS_SIZE.asInt(), gap = Mods.CROSS_GAP.asInt(), t = Mods.CROSS_THICK.asInt();
 		boolean ol = Mods.CROSS_OUTLINE.on();
-		int h0 = -(t / 2), h1 = h0 + t; // thickness span around the center pixel
+		int h0 = -(t / 2), h1 = h0 + t;
 		switch (Mods.CROSS_STYLE.get()) {
 			case "Dot" -> bar(g, cx + h0 - 1, cy + h0 - 1, cx + h1 + 1, cy + h1 + 1, col, ol);
 			case "Circle" -> {
@@ -39,7 +38,6 @@ public final class Crosshair {
 				}
 			}
 			case "Cross" -> {
-				// joined plus: gap ignored
 				if (ol) {
 					g.fill(cx - len - 1, cy + h0 - 1, cx + len + 2, cy + h1 + 1, OUTLINE);
 					g.fill(cx + h0 - 1, cy - len - 1, cx + h1 + 1, cy + len + 2, OUTLINE);
@@ -47,12 +45,12 @@ public final class Crosshair {
 				g.fill(cx - len, cy + h0, cx + len + 1, cy + h1, col);
 				g.fill(cx + h0, cy - len, cx + h1, cy + len + 1, col);
 			}
-			default -> { // Gap and T
+			default -> {
 				int g1 = gap + 1;
-				bar(g, cx - g1 - len + 1, cy + h0, cx - g1 + 1, cy + h1, col, ol);      // left
-				bar(g, cx + g1, cy + h0, cx + g1 + len, cy + h1, col, ol);              // right
-				bar(g, cx + h0, cy + g1, cx + h1, cy + g1 + len, col, ol);              // down
-				if (!Mods.CROSS_STYLE.is("T")) bar(g, cx + h0, cy - g1 - len + 1, cx + h1, cy - g1 + 1, col, ol); // up
+				bar(g, cx - g1 - len + 1, cy + h0, cx - g1 + 1, cy + h1, col, ol);
+				bar(g, cx + g1, cy + h0, cx + g1 + len, cy + h1, col, ol);
+				bar(g, cx + h0, cy + g1, cx + h1, cy + g1 + len, col, ol);
+				if (!Mods.CROSS_STYLE.is("T")) bar(g, cx + h0, cy - g1 - len + 1, cx + h1, cy - g1 + 1, col, ol);
 			}
 		}
 		if (Mods.CROSS_DOT.on() && !Mods.CROSS_STYLE.is("Dot") && !Mods.CROSS_STYLE.is("Cross")) bar(g, cx + h0, cy + h0, cx + h1, cy + h1, col, ol);

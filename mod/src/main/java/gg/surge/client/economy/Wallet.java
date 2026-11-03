@@ -24,11 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Surge Coins. Stored in the shared Surge folder so every modpack sees the same
- * balance. Codes are checked against codes.json (hashes only) from the URL the
- * launcher passes in, plus a local codes.json made by the admin panel.
- */
 public final class Wallet {
 	public static final int STARTING_COINS = 1000;
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -69,7 +64,6 @@ public final class Wallet {
 
 	public boolean owns(String itemId) { return owned.contains(itemId); }
 
-	/** Returns null on success, or a short reason. */
 	public String buy(Shop.Item item) {
 		if (owns(item.id())) return null;
 		int price = Shop.price(item);
@@ -80,7 +74,6 @@ public final class Wallet {
 		return null;
 	}
 
-	// ---------- codes ----------
 	public static String normalize(String code) {
 		return code.toUpperCase().replaceAll("[^A-Z0-9]", "");
 	}
@@ -93,7 +86,6 @@ public final class Wallet {
 		}
 	}
 
-	/** Reads codes.json from the codes URL (used for sales too). Blocking; call off-thread. */
 	public static JsonElement fetchRemote() {
 		String url = System.getProperty("surge.codesUrl", "");
 		if (url.isBlank()) return null;
@@ -105,14 +97,12 @@ public final class Wallet {
 		return null;
 	}
 
-	/** What a code gives: coins and/or items. error: 0 ok, 1 invalid, 2 already redeemed, 3 you already have everything it gives. */
 	public record Reward(int coins, java.util.List<String> items, int error) {
 		public boolean ok() { return error == 0; }
 	}
 
 	private record Found(int coins, java.util.List<String> items) {}
 
-	/** Folders that may hold codes.json / admin.json (the launcher's folder, the default one, the game's). */
 	private static java.util.List<Path> codeDirs() {
 		java.util.List<Path> dirs = new java.util.ArrayList<>();
 		dirs.add(home());
@@ -130,7 +120,6 @@ public final class Wallet {
 		return new Found(c, items);
 	}
 
-	/** Looks the code up in a codes.json (hashes) or admin.json (plain codes). */
 	private static Found find(JsonElement root, String hash, String code) {
 		if (root == null || !root.isJsonObject()) return null;
 		JsonArray codes = root.getAsJsonObject().getAsJsonArray("codes");
@@ -144,7 +133,6 @@ public final class Wallet {
 		return null;
 	}
 
-	/** Async. Checks the shared codes link and every local codes file. */
 	public CompletableFuture<Reward> redeem(String rawCode) {
 		String code = normalize(rawCode);
 		if (code.isEmpty()) return CompletableFuture.completedFuture(new Reward(0, java.util.List.of(), 1));

@@ -1,5 +1,3 @@
-// CurseForge: needs a free API key from https://console.curseforge.com
-// (CurseForge requires every app to use its own key). Paste it in Settings.
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -67,7 +65,7 @@ async function installProject(instanceId, modId, type = 'mod', onProgress = () =
   instances.addContent(instanceId, { type: contentType, file: file.fileName, source: 'curseforge', projectId: mod.id, versionId: file.id, title: mod.name, iconUrl: mod.logo?.thumbnailUrl });
   const installed = [mod.name];
   for (const dep of file.dependencies || []) {
-    if (dep.relationType !== 3) continue; // 3 = required
+    if (dep.relationType !== 3) continue;
     try { installed.push(...await installProject(instanceId, dep.modId, 'mod', onProgress, seen)); } catch (e) { onProgress({ stage: `Skipped dependency: ${e.message}` }); }
   }
   return installed;

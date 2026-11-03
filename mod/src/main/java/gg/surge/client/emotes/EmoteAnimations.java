@@ -3,11 +3,6 @@ package gg.surge.client.emotes;
 import gg.surge.client.emotes.Emotes.Emote;
 import gg.surge.client.emotes.Emotes.Pose;
 
-/**
- * The keyframes of every emote, written as smooth functions of time (seconds).
- * Angles are degrees. Arms: x -90 points forward, -180 straight up; z +90 lifts the
- * right arm out to the side (-90 for the left). Head: x + looks down.
- */
 final class EmoteAnimations {
 	private EmoteAnimations() {}
 
@@ -137,7 +132,6 @@ final class EmoteAnimations {
 					.rLeg(10 * nod, 0, 3).lLeg(-6, 0, -3);
 			}
 			case ROBOT -> {
-				// stepped, mechanical moves: snap between poses
 				int step = (int) (t * 3f) % 4;
 				float ra = step == 0 ? -90 : step == 1 ? 0 : step == 2 ? -90 : -45;
 				float la = step == 0 ? 0 : step == 1 ? -90 : step == 2 ? -45 : -90;

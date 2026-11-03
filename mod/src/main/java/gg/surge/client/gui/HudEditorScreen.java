@@ -9,11 +9,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Edit the HUD. Drag mods anywhere. Hold Alt to snap to the grid, the screen edges and
- * the center; hold Ctrl to line up with other mods. Drag the corner (or scroll) to resize,
- * right click for the mod's settings.
- */
 public class HudEditorScreen extends Screen {
 	private static final int GRID = 16, SNAP = 5;
 	private final Screen parent;
@@ -70,14 +65,12 @@ public class HudEditorScreen extends Screen {
 		boolean ctrl = key(GLFW.GLFW_KEY_LEFT_CONTROL) || key(GLFW.GLFW_KEY_RIGHT_CONTROL);
 		int W = g.guiWidth(), H = g.guiHeight();
 
-		// toolbar (slides out of the way while you drag or resize)
 		boolean busy = dragging != null || resizing != null;
 		float ui = Ui.approach("hudedit:ui", busy ? 0f : 1f, 12f);
 		int tw = 200, tx = (W - tw) / 2, ty = H - 34 + Math.round((1 - ui) * 46);
 		boolean onToolbar = Ui.hover(mx, my, tx, ty, tw, 22);
 		Runnable action = null;
 
-		// grid while Alt is held
 		if (alt) {
 			for (int x = 0; x < W; x += GRID) g.fill(x, 0, x + 1, H, 0x14FFFFFF);
 			for (int y = 0; y < H; y += GRID) g.fill(0, y, W, y + 1, 0x14FFFFFF);
@@ -85,7 +78,6 @@ public class HudEditorScreen extends Screen {
 			g.fill(0, H / 2, W, H / 2 + 1, 0x40B483FF);
 		}
 
-		// hovered module (topmost first) and its resize corner
 		hovered = null;
 		boolean onCorner = false;
 		if (dragging == null && resizing == null && !onToolbar) {
@@ -196,7 +188,6 @@ public class HudEditorScreen extends Screen {
 		SurgeConfig.save();
 	}
 
-	// Alt: grid, edges and center
 	private int snapGridX(int x, int w, int W) {
 		if (Math.abs(x + w / 2 - W / 2) <= SNAP) { guideX = W / 2; return W / 2 - w / 2; }
 		if (x <= SNAP) { guideX = 0; return 0; }
@@ -215,7 +206,6 @@ public class HudEditorScreen extends Screen {
 		return g;
 	}
 
-	// Ctrl: other mods' edges and centers
 	private int snapModX(GuiGraphics g, int x, int w) {
 		int best = x, bestD = SNAP + 1;
 		for (HudModule o : HudModules.ALL) {

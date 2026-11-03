@@ -1,4 +1,3 @@
-// Fabric loader metadata + installing the Fabric version profile MCLC launches.
 const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
@@ -17,7 +16,6 @@ async function latestLoader(mcVersion) {
   return (list.find(l => l.loader.stable) || list[0]).loader.version;
 }
 
-// Writes versions/<id>/<id>.json so MCLC can launch it as a "custom" version.
 async function ensureProfile(mcVersion, loaderVersion) {
   const id = `fabric-loader-${loaderVersion}-${mcVersion}`;
   const dir = path.join(paths.versions, id);

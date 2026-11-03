@@ -1,5 +1,3 @@
-// Downloads the exact Java runtime Mojang ships for a Minecraft version
-// (e.g. Java 21 for 1.21.x), so players never have to install Java themselves.
 const fs = require('fs');
 const path = require('path');
 const paths = require('./paths');
@@ -60,7 +58,7 @@ async function ensureJava(mcVersion, onProgress = () => {}) {
   for (const [rel, info] of Object.entries(manifest.files)) {
     if (info.type === 'link' && process.platform !== 'win32') {
       const target = path.join(dir, rel);
-      try { fs.symlinkSync(info.target, target); } catch { /* already exists */ }
+      try { fs.symlinkSync(info.target, target); } catch { }
     }
   }
   fs.writeFileSync(marker, new Date().toISOString());

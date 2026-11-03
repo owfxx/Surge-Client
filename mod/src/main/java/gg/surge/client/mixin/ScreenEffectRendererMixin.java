@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Low Fire: the burning overlay is pushed down so it doesn't cover the screen. Totem Tweaks: smaller or hidden totem animation. */
 @Mixin(ScreenEffectRenderer.class)
 public abstract class ScreenEffectRendererMixin {
 	@Inject(method = "renderItemActivationAnimation", at = @At("HEAD"), cancellable = true)

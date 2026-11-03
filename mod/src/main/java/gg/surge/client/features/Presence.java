@@ -6,10 +6,6 @@ import net.minecraft.client.Minecraft;
 import java.nio.file.Files;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Tells the launcher what you're doing (menus, singleplayer, which server) so it can
- * show it on Discord. Written to presence.json in the Surge folder when it changes.
- */
 public final class Presence {
 	private static String last = "";
 	private static long since = System.currentTimeMillis();

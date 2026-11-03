@@ -1,4 +1,3 @@
-// Small fetch helpers: JSON requests, verified file downloads and a concurrency pool.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -28,7 +27,6 @@ function hashFile(file, algo = 'sha1') {
   return crypto.createHash(algo).update(fs.readFileSync(file)).digest('hex');
 }
 
-// Downloads to a temp name, checks sha1 if given, then moves into place.
 async function download(url, dest, sha1) {
   if (sha1 && fs.existsSync(dest) && hashFile(dest) === sha1) return dest;
   fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -45,7 +43,6 @@ async function download(url, dest, sha1) {
   return dest;
 }
 
-// Runs async jobs with at most `limit` in flight; reports progress.
 async function pool(items, limit, worker, onProgress) {
   let done = 0;
   let i = 0;

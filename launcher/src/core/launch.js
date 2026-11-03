@@ -1,5 +1,3 @@
-// Prepares and launches a modpack: Fabric profile, Java, the bundled Surge mod,
-// tuned JVM flags, then hands off to minecraft-launcher-core.
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
@@ -11,9 +9,6 @@ const java = require('./java');
 const auth = require('./auth');
 const modrinth = require('./modrinth');
 
-// Tuned G1GC flags (based on Aikar's widely used flags, adjusted for clients):
-// short, predictable GC pauses = fewer stutters.
-// Generational ZGC (Java 21): tiny GC pauses, so frame times stay smooth. Needs some headroom.
 const release = require('./release');
 const social = require('./social');
 
@@ -33,7 +28,6 @@ const SURGE_JVM = [
 
 let running = null;
 
-// The in-game Surge mod ships inside the launcher at resources/mods/<mcVersion>/.
 function bundledModsDir(mcVersion) {
   const base = process.resourcesPath && fs.existsSync(path.join(process.resourcesPath, 'mods'))
     ? path.join(process.resourcesPath, 'mods')
@@ -46,7 +40,6 @@ function surgeModAvailable(mcVersion) {
   return fs.existsSync(dir) && fs.readdirSync(dir).some(f => f.endsWith('.jar'));
 }
 
-// Applies performance-mod switches made in the in-game menu (surge-mods.json).
 function applyPendingModToggles(inst) {
   const file = path.join(instances.dirOf(inst.id), 'surge-mods.json');
   if (!fs.existsSync(file)) return;
@@ -60,11 +53,10 @@ function applyPendingModToggles(inst) {
       if (on && fs.existsSync(off)) fs.renameSync(off, jar);
       if (!on && fs.existsSync(jar)) fs.renameSync(jar, off);
     }
-  } catch { /* ignore a broken file */ }
+  } catch { }
   fs.rmSync(file, { force: true });
 }
 
-/** The newest Surge mod jar we have for this version: bundled with the launcher or downloaded as an update. */
 function bestSurgeJar(mcVersion) {
   const cands = [];
   const dir = bundledModsDir(mcVersion);
@@ -75,14 +67,9 @@ function bestSurgeJar(mcVersion) {
   return cands[0] || null;
 }
 
-/**
- * The Surge mod isn't copied into the pack's mods folder: Fabric loads it straight from
- * Surge's own folder (-Dfabric.addMods), so it never shows up there. Returns the jar path or null.
- */
 async function syncSurgeMod(inst, onProgress) {
   const modsDir = path.join(instances.dirOf(inst.id), 'mods');
   fs.mkdirSync(modsDir, { recursive: true });
-  // Old versions copied the jar into the pack: clean those up.
   for (const f of fs.readdirSync(modsDir)) if (/^surge-client-.*\.jar(\.disabled)?$/.test(f)) fs.rmSync(path.join(modsDir, f), { force: true });
   if (inst.surgeMod === false) return null;
   try {
@@ -91,16 +78,14 @@ async function syncSurgeMod(inst, onProgress) {
       release.updateMod(inst.mcVersion, have ? release.jarVersion(path.basename(have)) : '0', onProgress),
       new Promise(r => setTimeout(r, 8000)),
     ]);
-  } catch { /* offline or no repo set */ }
+  } catch { }
   const jar = bestSurgeJar(inst.mcVersion);
   if (!jar) return null;
-  // Keep a private copy outside the app (paths inside the app can change between updates).
   const hidden = path.join(paths.root, 'core', inst.mcVersion);
   fs.mkdirSync(hidden, { recursive: true });
   const dest = path.join(hidden, 'surge-core.jar');
   fs.copyFileSync(jar, dest);
-  // Surge needs Fabric API.
-  try { await modrinth.installProject(inst.id, 'fabric-api', 'mod', onProgress, new Set(), { optional: true, locked: true }); } catch { /* offline */ }
+  try { await modrinth.installProject(inst.id, 'fabric-api', 'mod', onProgress, new Set(), { optional: true, locked: true }); } catch { }
   return dest;
 }
 
@@ -120,10 +105,9 @@ async function launch(instanceId, { onProgress, onLog, onExit, server, world }) 
 
   onProgress({ stage: 'Syncing Surge mod…' });
   applyPendingModToggles(inst);
-  // First launch of a Fabric pack: add the FPS mods (Sodium, Lithium…) once, unless the player opted out.
   if (inst.loader === 'fabric' && !inst.perfChecked && inst.autoPerf !== false) {
     onProgress({ stage: 'Adding performance mods…' });
-    try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { /* offline: try next time */ }
+    try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
     instances.update(inst.id, { perfChecked: true });
   }
   const surgeJar = await syncSurgeMod(inst, onProgress);
@@ -156,7 +140,6 @@ async function launch(instanceId, { onProgress, onLog, onExit, server, world }) 
     authorization,
     root: paths.root,
     version: { number: inst.mcVersion, type: 'release', custom: customId },
-    // With ZGC + AlwaysPreTouch the heap is reserved up front, so the game never stalls growing it.
     memory: { max: ram, min: cfg.jvmPreset === 'surge' && useZgc ? ram : Math.min(1024, ram) },
     javaPath,
     customArgs: jvm,

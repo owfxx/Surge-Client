@@ -12,12 +12,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Emote wheel (B by default): a ring of eight slots around your character. Point at a slot
- * (the direction from the center is enough) and your character previews it; click or press
- * 1-8 to play it. Up to 9 pages: scroll, use the page numbers or press 0 to flip.
- * "Edit wheel" lets you put any emote you own in any slot, on any page.
- */
 public class EmoteWheelScreen extends Screen {
 	private static final int PER_PAGE = 8, MAX_PAGES = 9;
 	private static int page;
@@ -61,7 +55,6 @@ public class EmoteWheelScreen extends Screen {
 		return out;
 	}
 
-	/** The saved layout, or (until you edit it) your emotes in order. */
 	private static List<List<String>> layout() {
 		SurgeConfig c = SurgeConfig.get();
 		if (c.emotePages != null && !c.emotePages.isEmpty()) {
@@ -79,7 +72,6 @@ public class EmoteWheelScreen extends Screen {
 		return auto;
 	}
 
-	/** Turns the automatic layout into a saved one so it can be edited. */
 	private static List<List<String>> editable() {
 		SurgeConfig c = SurgeConfig.get();
 		if (c.emotePages == null || c.emotePages.isEmpty()) {
@@ -120,10 +112,6 @@ public class EmoteWheelScreen extends Screen {
 		return true;
 	}
 
-	/**
-	 * Draws the ring row by row: each pixel belongs to a slot by its angle; neighbouring pixels of the
-	 * same slot are merged into one fill, so it's cheap and has no overlapping transparency.
-	 */
 	private static void ring(GuiGraphics g, int cx, int cy, int r0, int r1, double start, int n, int[] colors, int[] grow) {
 		int maxR = r1 + 8;
 		double seg = Math.PI * 2 / n;
@@ -198,11 +186,9 @@ public class EmoteWheelScreen extends Screen {
 		int r = Math.round(R * 0.55f);
 		double seg = Math.PI * 2 / PER_PAGE;
 		double start = -Math.PI / 2 - seg / 2;
-		// flipping pages: a quick turn of the ring
 		float flip = Math.min(1f, (System.currentTimeMillis() - pageChangedAt) / 160f);
 		start += (1f - flip) * (1f - flip) * 0.35;
 
-		// which slot the mouse points at (direction from the center, outside the middle)
 		double dx = mx - cx, dy = my - cy;
 		int hov = -1;
 		double dist2 = dx * dx + dy * dy;
@@ -259,7 +245,6 @@ public class EmoteWheelScreen extends Screen {
 			}
 		}
 
-		// center: your character previewing the hovered emote
 		Emotes.Emote show = hovered;
 		Emotes.setPreview(show);
 		disc(g, cx, cy, r - 4, Colors.alpha(0xD0141418, k));
@@ -267,7 +252,6 @@ public class EmoteWheelScreen extends Screen {
 		String title = editing ? (editSlot >= 0 ? "Pick an emote for slot " + (editSlot + 1) : "Click a slot to fill it") : hovered != null ? hovered.label : "Pick an emote";
 		Ui.centeredShadow(g, font, Ui.fit(font, title, r * 2 - 10), cx, cy + r - 14, hovered != null || editing ? Ui.TEXT : Ui.MUTED);
 
-		// pages: numbered, click to jump
 		int pw = 14, totalW = pages * (pw + 3) + (editing && pages < MAX_PAGES ? pw + 3 : 0);
 		int px0 = cx - totalW / 2, py0 = cy + R + 12;
 		for (int p = 0; p < pages; p++) {
@@ -294,7 +278,6 @@ public class EmoteWheelScreen extends Screen {
 		String hint = editing ? "Right click a slot to empty it" : pages > 1 ? "Scroll or press 0 for the next page" : "";
 		if (!hint.isEmpty()) Ui.centered(g, font, hint, cx, py0 + 19, 0x80FFFFFF);
 
-		// edit toggle and page tools
 		int by = Math.max(6, cy - R - 30);
 		if (Ui.pill(g, font, mx, my, cx - 40, by, 80, 16, editing ? "Done" : "Edit wheel", editing) && click) action = () -> { editing = !editing; editSlot = -1; };
 		if (editing) {
@@ -306,7 +289,6 @@ public class EmoteWheelScreen extends Screen {
 		if (action != null) { Ui.click(); action.run(); }
 	}
 
-	/** The list of your emotes on the right while editing: click one to put it in the picked slot. */
 	private Runnable emoteList(GuiGraphics g, int mx, int my, boolean click, List<Emotes.Emote> all, Runnable action) {
 		int x = this.width - 146, w = 140, top = 24, bottom = this.height - 10;
 		Ui.box(g, x, top - 18, w, bottom - top + 18, 0xE0141418, Ui.EDGE);

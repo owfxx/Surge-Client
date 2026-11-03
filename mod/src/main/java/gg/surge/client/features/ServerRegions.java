@@ -13,14 +13,12 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Looks up where a server is (continent and country) once per address, in the background. */
 public final class ServerRegions {
 	private static final Map<String, String> CACHE = new ConcurrentHashMap<>();
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
 	private ServerRegions() {}
 
-	/** "Europe, DE" style text, "" while unknown. */
 	public static String get(String address) {
 		if (address == null || address.isBlank()) return "";
 		String host = address.trim();

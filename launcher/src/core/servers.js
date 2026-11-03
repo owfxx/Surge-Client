@@ -1,5 +1,3 @@
-// Server list ping: asks a Minecraft server for its status (MOTD, players,
-// version, icon) the same way the game's multiplayer screen does, and measures ping.
 const net = require('net');
 const dns = require('dns').promises;
 
@@ -30,11 +28,10 @@ async function resolve(address) {
   try {
     const srv = await dns.resolveSrv(`_minecraft._tcp.${host}`);
     if (srv.length) return { host: srv[0].name, port: srv[0].port, display: host };
-  } catch { /* no SRV record */ }
+  } catch { }
   return { host, port: 25565 };
 }
 
-// Turns a chat component (or plain string) into text with § color codes.
 const COLORS = { black: '0', dark_blue: '1', dark_green: '2', dark_aqua: '3', dark_red: '4', dark_purple: '5', gold: '6', gray: '7', dark_gray: '8', blue: '9', green: 'a', aqua: 'b', red: 'c', light_purple: 'd', yellow: 'e', white: 'f' };
 function flatten(c) {
   if (c == null) return '';

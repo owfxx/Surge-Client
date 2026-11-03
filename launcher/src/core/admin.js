@@ -1,6 +1,3 @@
-// Admin panel backend: password-protected coin code generator.
-// Plain codes stay in admin.json (only on the admin's PC). codes.json holds only
-// SHA-256 hashes + coin amounts, so it's safe to publish (e.g. a GitHub repo).
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -10,7 +7,6 @@ const ADMIN = path.join(paths.root, 'admin.json');
 const PUBLIC = path.join(paths.root, 'codes.json');
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 let unlocked = false;
-// The owner's admin password, stored only as a salted scrypt hash.
 const MASTER = { salt: '5urge-adm1n-0f6c2a', hash: '57a793b7fca657d22e4fc5cc2c4185c4237c83253bebaa34991efb5a5e421df4' };
 
 const read = () => { try { return JSON.parse(fs.readFileSync(ADMIN, 'utf8')); } catch { return { pass: null, codes: [] }; } };
@@ -18,7 +14,6 @@ const write = d => { fs.writeFileSync(ADMIN, JSON.stringify(d, null, 2)); writeP
 const normalize = c => c.toUpperCase().replace(/[^A-Z0-9]/g, '');
 const sha256 = s => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
 
-// Sales made in the in-game admin panel (Ctrl+Shift+F4) live in sales.json and are published with the codes.
 function sales() {
   return readSales().filter(s => !s.until || s.until > Date.now());
 }
@@ -58,7 +53,6 @@ function unlock(pw) {
 
 function lock() { unlocked = false; }
 
-// ---------- sales (shared with the in-game admin panel through sales.json) ----------
 const SALES = path.join(paths.root, 'sales.json');
 function readSales() { try { return JSON.parse(fs.readFileSync(SALES, 'utf8')).sales || []; } catch { return []; } }
 function writeSales(list) { fs.writeFileSync(SALES, JSON.stringify({ sales: list }, null, 2)); writePublic(read()); }
@@ -73,7 +67,6 @@ function addSale({ target = 'all', percent = 20, hours = 0 }) {
 }
 function removeSale(i) { guard(); const list = salesList(); list.splice(i, 1); writeSales(list); return salesList(); }
 
-// ---------- GitHub token for publishing (encrypted with the OS keychain) ----------
 function tokenFile() { return path.join(paths.root, 'admin-token.bin'); }
 function setToken(token) {
   guard();
@@ -96,7 +89,6 @@ function guard() { if (!unlocked) throw new Error('Locked'); }
 
 function list() { guard(); return read().codes; }
 
-// Random codes (count of them), or one code with your own text. Each gives coins and/or unlocks items.
 function create({ coins = 0, count = 1, code = '', items = [] }) {
   guard();
   coins = Math.max(0, Math.floor(Number(coins) || 0));
@@ -128,7 +120,6 @@ function remove(code) {
 
 function exportPublic(dest) { guard(); fs.writeFileSync(dest, JSON.stringify(publicJson(), null, 2)); return dest; }
 
-// ---------- Discover (partnered servers shown in game) ----------
 const DISCOVER = path.join(paths.root, 'discover.json');
 function discoverList() { guard(); try { return JSON.parse(fs.readFileSync(DISCOVER, 'utf8')).servers || []; } catch { return []; } }
 function addDiscover({ name = '', ip = '', description = '', tag = '' }) {

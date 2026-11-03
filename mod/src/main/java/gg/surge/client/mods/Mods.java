@@ -13,7 +13,6 @@ import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Every mod in the Right Shift menu: the HUD mods plus the feature mods below. */
 public final class Mods {
 	private static final List<SurgeMod> FEATURES = new ArrayList<>();
 
@@ -29,7 +28,6 @@ public final class Mods {
 		return Minecraft.getInstance();
 	}
 
-	// ------------------------------------------------------------------ Settings (not a card; its own tab)
 	public static final SurgeMod GENERAL = new SurgeMod("general", "Settings", SurgeMod.Category.UTILITY, Items.COMPARATOR,
 		"Settings for the whole client", true);
 	static { GENERAL.toggleable = false; }
@@ -53,7 +51,6 @@ public final class Mods {
 	public static final Setting.Toggle UI_ANIM = GENERAL.toggle("animations", "Smooth animations", true);
 	public static final Setting.Slider UI_ANIM_SPEED = GENERAL.slider("animSpeed", "Animation speed", 100, 50, 200, 10, "%").showIf(() -> Mods.UI_ANIM.on());
 
-	// ------------------------------------------------------------------ PvP
 	public static final SurgeMod TOGGLE_SPRINT = mod("toggle_sprint", "Toggle Sprint", Category.PVP, Items.SUGAR,
 		"Sprint without holding the key. Tap your sprint key to switch it on or off.", false);
 	private static boolean sprintToggled = true;
@@ -99,7 +96,6 @@ public final class Mods {
 		"Change how much your screen shakes when you take damage", false);
 	public static final Setting.Slider HURT_STRENGTH = HURT_CAM.slider("strength", "Shake", 0, 0, 100, 5, "%");
 
-	// ------------------------------------------------------------------ Visual
 	public static final SurgeMod CROSSHAIR = mod("crosshair", "Crosshair", Category.VISUAL, Items.TRIPWIRE_HOOK,
 		"A clean custom crosshair with your own style and color", false);
 	public static final Setting.Choice CROSS_STYLE = CROSSHAIR.choice("style", "Style", "Cross", "Cross", "Gap", "Dot", "Circle", "T");
@@ -208,7 +204,6 @@ public final class Mods {
 	public static final SurgeMod MAIN_MENU = mod("main_menu", "Surge Main Menu", Category.VISUAL, Items.PAINTING,
 		"Use Surge's main menu instead of the vanilla one", true);
 
-	// ------------------------------------------------------------------ Utility
 	public static final SurgeMod ZOOM = mod("zoom", "Zoom", Category.UTILITY, Items.SPYGLASS,
 		"Hold your zoom key (C) to zoom in. Scroll while zooming to adjust.", true);
 	public static final Setting.Slider ZOOM_LEVEL = ZOOM.slider("level", "Zoom", 4, 2, 16, 0.5f, "x");
@@ -268,7 +263,6 @@ public final class Mods {
 		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
 	}
 
-	/** Every mod, HUD mods first. */
 	public static List<SurgeMod> all() {
 		List<SurgeMod> out = new ArrayList<>(HudModules.ALL);
 		out.addAll(FEATURES);

@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/** Damage Tint "apply to armor": armor normally never flashes; this gives it the hurt overlay too. */
 @Mixin(EquipmentLayerRenderer.class)
 public abstract class EquipmentLayerRendererMixin {
 	@ModifyExpressionValue(

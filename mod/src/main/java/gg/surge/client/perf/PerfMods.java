@@ -14,11 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The performance mods the launcher installed into this modpack (Sodium, Lithium, …).
- * Mods can't be loaded or unloaded while the game runs, so switching one writes
- * surge-mods.json; the launcher applies it the next time you press Play.
- */
 public final class PerfMods {
 	public record Mod(String file, String title, boolean loaded) {}
 
@@ -40,12 +35,11 @@ public final class PerfMods {
 				if (!c.has("locked") || !c.get("locked").getAsBoolean() || !"mod".equals(c.get("type").getAsString())) continue;
 				String file = c.get("file").getAsString();
 				String title = c.has("title") ? c.get("title").getAsString() : file;
-				if (title.equalsIgnoreCase("Fabric API")) continue; // required, not optional
+				if (title.equalsIgnoreCase("Fabric API")) continue;
 				boolean loaded = Files.exists(gameDir().resolve("mods").resolve(file));
 				mods.add(new Mod(file, title, loaded));
 			}
 		} catch (Exception ignored) {
-			// not started from the Surge launcher
 		}
 		return mods;
 	}
@@ -60,7 +54,6 @@ public final class PerfMods {
 		return pending;
 	}
 
-	/** What the mod will be after the next launch. */
 	public static boolean wanted(Mod m) {
 		return pending().getOrDefault(m.file(), m.loaded());
 	}

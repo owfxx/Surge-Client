@@ -5,7 +5,6 @@ import gg.surge.client.mixin.OptionInstanceAccessor;
 import gg.surge.client.mods.Mods;
 import net.minecraft.client.Minecraft;
 
-/** Gamma: brightness past the normal maximum. Turning it off puts your brightness back. */
 public final class Fullbright {
 	private static double level() {
 		return Mods.GAMMA_LEVEL.get() / 100.0;
@@ -13,7 +12,6 @@ public final class Fullbright {
 
 	private Fullbright() {}
 
-	/** Options get saved and reloaded (and other mods touch brightness), so keep it applied. */
 	public static void tick(Minecraft mc) {
 		if (!Mods.FULLBRIGHT.enabled()) return;
 		var gamma = mc.options.gamma();

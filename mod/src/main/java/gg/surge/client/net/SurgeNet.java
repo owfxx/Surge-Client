@@ -18,13 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Talks to the Surge online service (see /server in the source). Sends what you wear
- * and which emote you're playing, and fetches the same for players around you. Without
- * a service URL everything still works, just only for you.
- */
 public final class SurgeNet {
-	/** What another Surge player wears. emoteStart is local time (ms) when we first saw the emote. */
 	public static final class Remote {
 		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none";
 		public volatile long emoteAt, emoteStart;
@@ -49,7 +43,6 @@ public final class SurgeNet {
 		return !url().isEmpty();
 	}
 
-	/** Surge player? You always are; others only when the service says so. */
 	public static boolean isSurge(UUID id) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player != null && mc.player.getUUID().equals(id)) return true;
@@ -60,12 +53,10 @@ public final class SurgeNet {
 		return PLAYERS.get(id);
 	}
 
-	/** Your flag's country code if you show it, else "none". */
 	public static String myFlag() {
 		return gg.surge.client.mods.Mods.NAMETAGS.enabled() && gg.surge.client.mods.Mods.TAG_FLAG.on() ? gg.surge.client.mods.Mods.TAG_COUNTRY.get() : "none";
 	}
 
-	/** A player's flag glyph for nametags, or "" (yours and other Surge players'). */
 	public static String flagGlyph(UUID id) {
 		if (!gg.surge.client.mods.Mods.NAMETAGS.enabled()) return "";
 		Minecraft mc = Minecraft.getInstance();
@@ -75,7 +66,6 @@ public final class SurgeNet {
 		return r == null ? "" : gg.surge.client.features.Flags.glyph(r.flag);
 	}
 
-	/** Called when you start an emote so others see it right away. */
 	public static void playedEmote(String name) {
 		emote = name;
 		emoteAt = System.currentTimeMillis();
@@ -84,7 +74,6 @@ public final class SurgeNet {
 
 	public static void tick(Minecraft mc) {
 		if (!online()) return;
-		// in the menus only the signed-in heartbeat runs (so friends see you're online)
 		if (mc.player == null && Social.token().isEmpty()) return;
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
@@ -154,7 +143,6 @@ public final class SurgeNet {
 						boolean firstSight = rem.emoteAt == 0 && !PLAYERS.containsKey(id);
 						rem.emoteAt = at;
 						rem.emote = em;
-						// don't replay old emotes the first time we see someone
 						rem.emoteStart = firstSight && System.currentTimeMillis() - at > 15_000 ? 0 : System.currentTimeMillis();
 					}
 					fresh.put(id, rem);
@@ -178,7 +166,6 @@ public final class SurgeNet {
 		}
 	}
 
-	/** Emote another player is doing right now, or null. */
 	public static Emotes.Emote remoteEmote(UUID id, long[] startOut) {
 		Remote r = PLAYERS.get(id);
 		if (r == null || r.emoteStart == 0) return null;

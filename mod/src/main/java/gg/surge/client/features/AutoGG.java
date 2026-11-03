@@ -3,7 +3,6 @@ package gg.surge.client.features;
 import gg.surge.client.mods.Mods;
 import net.minecraft.client.Minecraft;
 
-/** AutoGG: says gg once when a game-over line shows up in chat. */
 public final class AutoGG {
 	private static final String[] TRIGGERS = {"1st Killer -", "Winner:", "Winners:", "WINNER!", "VICTORY!", "Victory!", "won the game", "You won",
 		"Top Survivors", "1st Place -", "Game Over!", "has won the", "won the match", "Winning Team"};

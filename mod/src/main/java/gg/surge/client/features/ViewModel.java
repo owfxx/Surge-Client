@@ -9,10 +9,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-/**
- * View Model and Shield Fix: move, turn and resize the items you hold in first person.
- * Applied right before the item is drawn (after vanilla positioned it), so the arm stays put.
- */
 public final class ViewModel {
 	private ViewModel() {}
 

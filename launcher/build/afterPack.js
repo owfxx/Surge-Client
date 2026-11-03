@@ -1,5 +1,3 @@
-// Stamps the Surge icon and version info into "Surge Client.exe" with resedit,
-// so Windows builds work from any OS (electron-builder would otherwise need Wine).
 const fs = require('fs');
 const path = require('path');
 const ResEdit = require('resedit');

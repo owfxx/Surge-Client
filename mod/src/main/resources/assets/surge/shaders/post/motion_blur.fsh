@@ -1,6 +1,5 @@
 #version 330
 
-// Surge motion blur: blends this frame with the previous (already blurred) frame.
 uniform sampler2D InSampler;
 uniform sampler2D PrevSampler;
 

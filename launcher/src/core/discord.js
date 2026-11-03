@@ -1,6 +1,3 @@
-// Discord Rich Presence over Discord's local IPC pipe (no extra dependencies).
-// Needs a Discord application ID (discord.com/developers > New Application). Upload
-// the Surge icon there under Rich Presence > Art Assets with the name "surge".
 const net = require('net');
 const path = require('path');
 const os = require('os');
@@ -34,13 +31,12 @@ function tryConnect(i = 0) {
     s.write(frame(0, { v: 1, client_id: clientId }));
   });
   s.on('data', buf => {
-    // op 1 = frame; the first one is the READY dispatch
     try {
       const op = buf.readInt32LE(0);
       const body = JSON.parse(buf.slice(8).toString('utf8'));
       if (op === 1 && body.evt === 'READY') { ready = true; if (pending) push(pending); }
-      if (op === 2) { s.destroy(); } // close
-    } catch { /* partial frame, ignore */ }
+      if (op === 2) { s.destroy(); }
+    } catch { }
   });
   s.once('error', () => { s.destroy(); if (!sock) tryConnect(i + 1); });
   s.once('close', () => { if (sock === s) { sock = null; ready = false; scheduleRetry(); } });
@@ -57,7 +53,6 @@ function push(activity) {
   sock.write(frame(1, { cmd: 'SET_ACTIVITY', args: { pid: process.pid, activity }, nonce: String(Date.now()) + Math.random() }));
 }
 
-/** Starts (or restarts with a new app ID). Empty ID turns presence off. */
 function start(id) {
   if (id === clientId && sock) return;
   stop();
@@ -67,13 +62,12 @@ function start(id) {
 
 function stop() {
   clearTimeout(retryTimer);
-  if (sock) { try { push(null); sock.destroy(); } catch { /* already gone */ } }
+  if (sock) { try { push(null); sock.destroy(); } catch { } }
   sock = null;
   ready = false;
   clientId = '';
 }
 
-/** details/state lines plus an optional start time (ms). */
 function set({ details, state, since } = {}) {
   const activity = {
     details: details || undefined,
