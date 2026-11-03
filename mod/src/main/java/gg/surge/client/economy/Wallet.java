@@ -150,6 +150,11 @@ public final class Wallet {
 					} catch (Exception ignored) { }
 				}
 			}
+			if (f == null) {
+				try (var in = Wallet.class.getResourceAsStream("/assets/surge/codes.json")) {
+					if (in != null) f = find(JsonParser.parseString(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)), hash, code);
+				} catch (Exception ignored) { }
+			}
 			if (f == null) f = find(fetchRemote(), hash, code);
 			return f;
 		}).thenApply(f -> {
