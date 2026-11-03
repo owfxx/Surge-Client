@@ -26,8 +26,9 @@ Or push to GitHub — the workflow builds both and uploads the exes.
    git remote add origin https://github.com/YOUR-NAME/surge-client.git
    git push -u origin main
    ```
-3. Double-click **release.bat** and type a version like `0.9.0`.
-   GitHub builds the mod and the launcher (Actions tab, ~10 minutes) and publishes a Release.
+3. Double-click **release.bat** and type a new version like `1.0.1`.
+   GitHub builds the mod and the launcher (Actions tab, ~10 minutes) and publishes a Release
+   automatically whenever the version is new.
 4. Give players the `.exe` from that first Release. From then on, every new `release.bat`:
    - new mod jar: downloaded automatically the next time they press Play
    - new launcher: they get an "Update available" popup and it updates itself

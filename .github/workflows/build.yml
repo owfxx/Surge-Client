@@ -1,7 +1,8 @@
 name: Build Surge Client
-# Every push: builds the mod and launcher and keeps them as a download on the run page.
-# Push a tag like v0.9.0: also publishes a GitHub Release, and every Surge launcher
-# picks up the new mod (next time Play is pressed) and offers the new launcher.
+# Every push builds the mod and launcher. When the version in launcher/package.json is new
+# (no release for it yet), a GitHub Release is published automatically, and every Surge
+# launcher picks up the new mod (next time Play is pressed) and offers the new launcher.
+# To release: run release.bat (or node scripts/set-version.js X.Y.Z, commit, push).
 on:
   push:
     branches: ['**']
@@ -28,6 +29,20 @@ jobs:
           VER="${GITHUB_REF_NAME#v}"
           sed -i "s/^version=.*/version=${VER}+mc1.21.11/" mod/gradle.properties
           node -e "const f='launcher/package.json';const p=require('./'+f);p.version='${VER}';require('fs').writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+
+      - name: Is this a new version?
+        id: ver
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=$(node -p "require('./launcher/package.json').version")
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF}" = "refs/heads/main" ] && ! gh release view "v$VER" >/dev/null 2>&1; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Point the launcher at this repo for updates
         shell: bash
@@ -59,9 +74,19 @@ jobs:
           name: surge-client
           path: out/*
 
-      - name: Publish release
+      - name: Publish release (tag push)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          files: out/*
+          generate_release_notes: true
+
+      - name: Publish release (new version on main)
+        if: steps.ver.outputs.release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: Surge Client ${{ steps.ver.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: out/*
           generate_release_notes: true
