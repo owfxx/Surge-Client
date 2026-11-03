@@ -23,7 +23,10 @@ public final class Emotes {
 		ZOMBIE("Zombie", 4.0f, true), TPOSE("T-Pose", 3.0f, false), CRY("Cry", 4.0f, false),
 		SIT("Sit", 6.0f, true), POINT("Point", 2.5f, false), PEACE("Peace", 2.5f, false), STRETCH("Stretch", 3.2f, false),
 		TWIRL("Twirl", 1.6f, false), JUMP("Jump for Joy", 3.0f, false), MEDITATE("Meditate", 6.0f, true),
-		HEADBANG("Headbang", 4.0f, true), YAWN("Yawn", 3.2f, false);
+		HEADBANG("Headbang", 4.0f, true), YAWN("Yawn", 3.2f, false),
+		GUITAR("Air Guitar", 4.0f, true), ROBOT("Robot", 4.0f, true), CHICKEN("Chicken Dance", 4.0f, true),
+		WAVE_BOTH("Big Wave", 3.0f, false), VICTORY("Victory", 3.0f, false), SHY("Shy", 3.5f, false),
+		KICK("Kick", 1.8f, false), SALSA("Salsa", 4.0f, true), DRUMS("Drums", 4.0f, true), SWIM("Swim", 4.0f, true);
 
 		public final String label;
 		public final float seconds;

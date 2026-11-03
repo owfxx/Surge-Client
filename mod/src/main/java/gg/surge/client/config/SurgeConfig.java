@@ -75,6 +75,9 @@ public class SurgeConfig {
 
 	public Outfit[] outfits = {null, null, null};
 
+	/** Emote wheel layout: up to 9 pages of 8 slots (emote names, "" = empty). null = automatic. */
+	public List<List<String>> emotePages = null;
+
 	public static SurgeConfig get() {
 		if (instance == null) load();
 		return instance;

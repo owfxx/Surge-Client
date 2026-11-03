@@ -205,6 +205,7 @@ public class SurgeClient implements ClientModInitializer {
 		gg.surge.client.features.MotionBlur.tick(mc);
 		Waypoints.tick(mc);
 		gg.surge.client.net.SurgeNet.tick(mc);
+		gg.surge.client.net.Social.tick(mc);
 
 		LocalPlayer p = mc.player;
 		if (p == null) return;
@@ -234,5 +235,6 @@ public class SurgeClient implements ClientModInitializer {
 		for (HudModule m : HudModules.ALL) {
 			if (m.enabled()) m.draw(g, mc);
 		}
+		if (mc.screen == null) gg.surge.client.gui.SocialToasts.render(g, mc, g.guiWidth());
 	}
 }

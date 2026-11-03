@@ -41,6 +41,12 @@ public final class Mods {
 	public static final Setting.Color HUD_TEXT = GENERAL.color("hudText", "Text color", "FFFFFF").showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Toggle HUD_SHADOW = GENERAL.toggle("hudShadow", "Text shadow", true).showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Choice HUD_BRACKETS = GENERAL.choice("hudBrackets", "Brackets", "None", "None", "[ ]", "( )", "< >").showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Header H_SOCIAL = GENERAL.header("Status and friends");
+	public static final Setting.Choice STATUS = GENERAL.choice("status", "Your status", "Online", "Online", "Idle", "Busy", "Offline");
+	public static final Setting.Toggle AUTO_IDLE = GENERAL.toggle("autoIdle", "Go idle after 5 minutes away", true);
+	public static final Setting.Toggle SHOW_SERVER = GENERAL.toggle("showServer", "Show friends which server you're on", true);
+	public static final Setting.Toggle SOCIAL_TOASTS = GENERAL.toggle("toasts", "Message and request pop-ups", true);
+	public static final Setting.Toggle SOCIAL_ONLINE_TOASTS = GENERAL.toggle("onlineToasts", "Pop-up when a friend comes online", true).showIf(() -> Mods.SOCIAL_TOASTS.on());
 	public static final Setting.Header H_MENUS = GENERAL.header("Menus");
 	public static final Setting.Toggle UI_CLICKS = GENERAL.toggle("clicks", "Click sounds", true);
 	public static final Setting.Toggle UI_HOVER = GENERAL.toggle("hoverSounds", "Hover sounds", false);
@@ -105,8 +111,9 @@ public final class Mods {
 	public static final Setting.Toggle CROSS_DOT = CROSSHAIR.toggle("dot", "Center dot", false);
 	public static final Setting.Toggle CROSS_THIRD = CROSSHAIR.toggle("thirdPerson", "Show in third person", false);
 
-	public static final SurgeMod FULLBRIGHT = mod("fullbright", "Fullbright", Category.VISUAL, Items.GLOWSTONE,
-		"See clearly in caves and at night", false);
+	public static final SurgeMod FULLBRIGHT = mod("fullbright", "Gamma", Category.VISUAL, Items.GLOWSTONE,
+		"Turn brightness past the normal maximum to see in caves and at night", false);
+	public static final Setting.Slider GAMMA_LEVEL = FULLBRIGHT.slider("level", "Brightness", 1000, 100, 1500, 50, "%");
 
 	public static final SurgeMod LOW_FIRE = mod("low_fire", "Low Fire", Category.VISUAL, Items.FIRE_CHARGE,
 		"Lower the fire overlay when you're burning", true);
@@ -130,6 +137,25 @@ public final class Mods {
 	public static final Setting.Slider VM_OFF_RY = VIEW_MODEL.slider("offRY", "Turn", 0, -180, 180, 5, "°");
 	public static final Setting.Slider VM_OFF_RZ = VIEW_MODEL.slider("offRZ", "Roll", 0, -180, 180, 5, "°");
 	public static final Setting.Slider VM_OFF_SCALE = VIEW_MODEL.slider("offScale", "Size", 100, 30, 150, 5, "%");
+
+	public static final SurgeMod NAMETAGS = mod("nametags", "Nametags", Category.VISUAL, Items.NAME_TAG,
+		"Show your own nametag in third person, and your country's flag if you want", false);
+	public static final Setting.Toggle TAG_OWN = NAMETAGS.toggle("own", "Show your own nametag", true);
+	public static final Setting.Toggle TAG_FLAG = NAMETAGS.toggle("flag", "Show your flag", false);
+	public static final Setting.Choice TAG_COUNTRY = NAMETAGS.choice("country", "Country", "DE", gg.surge.client.features.Flags.CODES).showIf(() -> Mods.TAG_FLAG.on());
+	public static final Setting.Toggle TAG_OTHERS_FLAGS = NAMETAGS.toggle("othersFlags", "Show other players' flags", true);
+
+	public static final SurgeMod TNT_TIMER = mod("tnt_timer", "TNT Timer", Category.VISUAL, Items.TNT,
+		"Shows how long until lit TNT explodes", false);
+
+	public static final SurgeMod TAB_LIST = mod("tab_list", "Tab List", Category.VISUAL, Items.BOOK,
+		"Ping as a number instead of bars, and an optional see-through tab list", false);
+	public static final Setting.Toggle TAB_PING_NUMBER = TAB_LIST.toggle("pingNumber", "Ping as a number", true);
+	public static final Setting.Toggle TAB_PING_COLOR = TAB_LIST.toggle("pingColor", "Color by ping", true).showIf(() -> Mods.TAB_PING_NUMBER.on());
+	public static final Setting.Toggle TAB_NO_BG = TAB_LIST.toggle("noBackground", "Remove the background", false);
+
+	public static final SurgeMod SERVER_REGION = mod("server_region", "Server Region", Category.UTILITY, Items.FILLED_MAP,
+		"Shows where each server is (continent and country) in the server list", true);
 
 	public static final SurgeMod MOTION_BLUR = mod("motion_blur", "Motion Blur", Category.VISUAL, Items.PHANTOM_MEMBRANE,
 		"Smooth, cinematic blur when you move and turn", false);
@@ -221,12 +247,18 @@ public final class Mods {
 	public static final Setting.Toggle DISCORD_SERVER = DISCORD.toggle("server", "Show the server address", true);
 	public static final Setting.Toggle DISCORD_PACK = DISCORD.toggle("pack", "Show the modpack name", true);
 
+	public static final SurgeMod AUTO_GG = mod("auto_gg", "AutoGG", Category.UTILITY, Items.CAKE,
+		"Says gg in chat when a game ends (works on most minigame servers)", false);
+	public static final Setting.Choice GG_TEXT = AUTO_GG.choice("text", "Message", "gg", "gg", "GG", "gg wp", "Good game");
+	public static final Setting.Slider GG_DELAY = AUTO_GG.slider("delay", "Delay", 1, 0, 5, 0.5f, "s");
+
 	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
 		"Bind keys that send a chat message or command, like /home or gg", true);
 
 	static {
+		TAG_COUNTRY.label = gg.surge.client.features.Flags::name;
 		DAMAGE_TINT.onToggle(on -> DamageTint.apply(mc())).onChange(() -> DamageTint.apply(mc()));
-		FULLBRIGHT.onToggle(on -> Fullbright.apply(mc()));
+		FULLBRIGHT.onToggle(on -> Fullbright.apply(mc())).onChange(() -> Fullbright.apply(mc()));
 		TOGGLE_SNEAK.onToggle(on -> OptionTweaks.apply(mc()));
 		HURT_CAM.onToggle(on -> OptionTweaks.apply(mc())).onChange(() -> OptionTweaks.apply(mc()));
 		NO_BOBBING.onToggle(on -> OptionTweaks.apply(mc()));

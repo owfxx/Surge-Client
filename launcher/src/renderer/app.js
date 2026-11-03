@@ -407,9 +407,16 @@ function renderHome() {
         </div>
         <div class="launch-status" id="launchStatus"></div>
       </div>
+      <aside class="home-side" id="homeSide">
+        <div class="greet" id="greet"></div>
+        <div class="side-card" id="friendsCard"><div class="side-head">Friends</div><div class="muted small">Loading…</div></div>
+        <div class="side-card news"><div class="side-head">New in 1.1</div>
+          <ul><li>Social: chat with friends, status and requests</li><li>Friends and Discover tabs on the server list</li><li>10 new emotes and an editable wheel with up to 9 pages</li><li>Gamma, Tab List, Pack Display, TNT Timer and more</li></ul></div>
+      </aside>
       <div class="panel log ${state.launch.showLog ? '' : 'hidden'}" id="log"></div>
     </section>`;
   updateHeroText();
+  homeSide();
   mountScene();
   if (state.launch.showLog) { const lg = $('#log'); lg.textContent = state.launch.log.join('\n'); lg.scrollTop = lg.scrollHeight; }
   $('#packTitle').onclick = pickPack;
@@ -417,6 +424,30 @@ function renderHome() {
   view.querySelectorAll('[data-quick]').forEach(b => b.onclick = () => play({ server: state.cfg.servers[+b.dataset.quick].address }));
   addContinueButton();
   updateLaunchUI();
+}
+
+// Right side of home: a greeting and your friends, live from the Surge online service.
+const STATUS_COL = { online: '#4ade80', idle: '#facc15', busy: '#f87171', offline: '#71717a' };
+async function homeSide() {
+  const h = new Date().getHours();
+  const name = activeAccount()?.name;
+  const g = $('#greet');
+  if (g) g.innerHTML = `<div class="greet-time">${h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}${name ? ',' : ''}</div>${name ? `<div class="greet-name">${esc(name)}</div>` : ''}`;
+  const card = $('#friendsCard');
+  if (!card) return;
+  if (!state.cfg.apiUrl) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Turn on online features in Settings to see your friends here.</div>'; return; }
+  const data = await S.social().catch(() => null);
+  if (!$('#friendsCard')) return;
+  if (!data) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Sign in with a Microsoft account to see your friends.</div>'; return; }
+  const fr = (data.friends || []).slice().sort((a, b) => (a.status === 'offline') - (b.status === 'offline'));
+  const on = fr.filter(f => f.status !== 'offline').length;
+  const req = (data.incoming || []).length;
+  card.innerHTML = `<div class="side-head">Friends <span class="muted small">${on} online${req ? ` · ${req} request${req > 1 ? 's' : ''}` : ''}</span></div>
+    ${fr.slice(0, 7).map(f => `<div class="friend"><img src="https://mc-heads.net/avatar/${esc(f.uuid)}/24" alt=""><span class="dot" style="background:${STATUS_COL[f.status] || STATUS_COL.offline}"></span>
+      <div class="grow"><div>${esc(f.name)}</div><div class="muted small">${f.status === 'offline' ? 'Offline' : esc(f.server || (f.status[0].toUpperCase() + f.status.slice(1)))}</div></div>
+      ${f.server && f.server !== 'Singleplayer' && f.status !== 'offline' ? `<button class="btn sm" data-join="${esc(f.server)}">Join</button>` : ''}</div>`).join('')
+      || '<div class="muted small">No friends yet. Add them in game: pause menu, Social.</div>'}`;
+  card.querySelectorAll('[data-join]').forEach(b => b.onclick = () => play({ server: b.dataset.join }));
 }
 
 // "Continue <world>" next to Play for the selected pack's most recent world.
@@ -1106,14 +1137,14 @@ async function openAdmin() {
   });
 }
 
-const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FLUSTERED", "name": "Flustered (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:THINKING", "name": "Thinking (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:BOXING", "name": "Boxing (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:GROOVE", "name": "Groove (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:POINT", "name": "Point (emote)"}, {"id": "emote:PEACE", "name": "Peace (emote)"}, {"id": "emote:STRETCH", "name": "Stretch (emote)"}, {"id": "emote:TWIRL", "name": "Twirl (emote)"}, {"id": "emote:JUMP", "name": "Jump for Joy (emote)"}, {"id": "emote:MEDITATE", "name": "Meditate (emote)"}, {"id": "emote:HEADBANG", "name": "Headbang (emote)"}, {"id": "emote:YAWN", "name": "Yawn (emote)"}];
+const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FLUSTERED", "name": "Flustered (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:THINKING", "name": "Thinking (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:BOXING", "name": "Boxing (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:GROOVE", "name": "Groove (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:POINT", "name": "Point (emote)"}, {"id": "emote:PEACE", "name": "Peace (emote)"}, {"id": "emote:STRETCH", "name": "Stretch (emote)"}, {"id": "emote:TWIRL", "name": "Twirl (emote)"}, {"id": "emote:JUMP", "name": "Jump for Joy (emote)"}, {"id": "emote:MEDITATE", "name": "Meditate (emote)"}, {"id": "emote:HEADBANG", "name": "Headbang (emote)"}, {"id": "emote:YAWN", "name": "Yawn (emote)"}, {"id": "emote:GUITAR", "name": "Air Guitar (emote)"}, {"id": "emote:ROBOT", "name": "Robot (emote)"}, {"id": "emote:CHICKEN", "name": "Chicken Dance (emote)"}, {"id": "emote:WAVE_BOTH", "name": "Big Wave (emote)"}, {"id": "emote:VICTORY", "name": "Victory (emote)"}, {"id": "emote:SHY", "name": "Shy (emote)"}, {"id": "emote:KICK", "name": "Kick (emote)"}, {"id": "emote:SALSA", "name": "Salsa (emote)"}, {"id": "emote:DRUMS", "name": "Drums (emote)"}, {"id": "emote:SWIM", "name": "Swim (emote)"}];
 const shopName = id => (SHOP_ITEMS.find(i => i.id === id) || { name: id }).name;
 
 const SALE_TARGETS = [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...SHOP_ITEMS.map(i => [i.id, i.name])];
 const saleName = t => (SALE_TARGETS.find(x => x[0] === t) || [t, t])[1];
 
 async function adminPanel(tab = 'codes') {
-  const tabs = `<div class="seg" id="aTabs" style="margin-bottom:12px">${[['codes', 'Codes'], ['sales', 'Sales'], ['updates', 'Updates']]
+  const tabs = `<div class="seg" id="aTabs" style="margin-bottom:12px">${[['codes', 'Codes'], ['sales', 'Sales'], ['discover', 'Discover'], ['updates', 'Updates']]
     .map(([v, l]) => `<button data-v="${v}" class="${tab === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const wire = (card, close) => {
     card.querySelectorAll('#aTabs [data-v]').forEach(b => b.onclick = () => { close(); adminPanel(b.dataset.v); });
@@ -1186,6 +1217,35 @@ async function adminPanel(tab = 'codes') {
       };
       $('#aPub', card).onclick = async () => { const u = await safe(() => S.admin.publishCodes()); if (u) toast('Sales published'); };
       card.querySelectorAll('[data-end]').forEach(b => b.onclick = async e => { e.stopPropagation(); const r = await safe(() => S.admin.removeSale(+b.dataset.end)); if (r) { close(); adminPanel('sales'); } });
+    });
+    return;
+  }
+
+  if (tab === 'discover') {
+    const list = (await safe(() => S.admin.discover())) || [];
+    modal(`<h2>Admin</h2>${tabs}
+      <div class="form">
+        <p class="muted small" style="margin:0">Partnered servers on the in-game Discover tab (next to Friends on the server list).</p>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <label style="flex:1">Name<input class="input" id="dName" maxlength="32" placeholder="Example Network"></label>
+          <label style="flex:1">Address<input class="input" id="dIp" placeholder="play.example.net"></label>
+          <label style="width:100px">Tag<input class="input" id="dTag" maxlength="16" placeholder="Partner"></label>
+        </div>
+        <label>Short description<input class="input" id="dDesc" maxlength="80" placeholder="Bedwars, Skywars and Duels"></label>
+        <div class="modal-actions" style="margin:0"><button class="btn primary" id="dAdd">Add server</button><button class="btn" id="dPub" data-tip="Upload the list so every player sees it">Publish</button></div>
+        <div class="pick-list" style="max-height:240px;overflow:auto">${list.map((x, i) => `
+          <button data-i="${i}"><div class="grow"><b>${esc(x.name)}</b> <span class="muted small">${esc(x.ip)}${x.tag ? ' · ' + esc(x.tag) : ''}</span><div class="muted small">${esc(x.description || '')}</div></div>
+            <span class="btn sm" data-up="${i}" data-tip="Move up">&uarr;</span><span class="btn sm x-btn" data-rm="${i}" data-tip="Remove">&times;</span></button>`).join('') || '<div class="muted small">No servers yet</div>'}</div>
+      </div>${foot}`,
+    (card, close) => {
+      wire(card, close);
+      $('#dAdd', card).onclick = async () => {
+        const r = await safe(() => S.admin.addDiscover({ name: $('#dName', card).value, ip: $('#dIp', card).value, tag: $('#dTag', card).value, description: $('#dDesc', card).value }));
+        if (r) { close(); adminPanel('discover'); toast('Server added. Press Publish so players see it.'); }
+      };
+      $('#dPub', card).onclick = async () => { const u = await safe(() => S.admin.publishDiscover()); if (u) toast('Discover list published'); };
+      card.querySelectorAll('[data-rm]').forEach(b => b.onclick = async e => { e.stopPropagation(); if (await safe(() => S.admin.removeDiscover(+b.dataset.rm))) { close(); adminPanel('discover'); } });
+      card.querySelectorAll('[data-up]').forEach(b => b.onclick = async e => { e.stopPropagation(); if (await safe(() => S.admin.moveDiscover(+b.dataset.up, -1))) { close(); adminPanel('discover'); } });
     });
     return;
   }

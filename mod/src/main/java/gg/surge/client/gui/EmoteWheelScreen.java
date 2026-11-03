@@ -1,5 +1,6 @@
 package gg.surge.client.gui;
 
+import gg.surge.client.config.SurgeConfig;
 import gg.surge.client.cosmetics.Preview;
 import gg.surge.client.emotes.Emotes;
 import gg.surge.client.mods.Colors;
@@ -14,14 +15,21 @@ import java.util.List;
 /**
  * Emote wheel (B by default): a ring of eight slots around your character. Point at a slot
  * (the direction from the center is enough) and your character previews it; click or press
- * 1-8 to play it. Scroll for more pages.
+ * 1-8 to play it. Up to 9 pages: scroll, use the page numbers or press 0 to flip.
+ * "Edit wheel" lets you put any emote you own in any slot, on any page.
  */
 public class EmoteWheelScreen extends Screen {
-	private static final int PER_PAGE = 8;
+	private static final int PER_PAGE = 8, MAX_PAGES = 9;
 	private static int page;
-	private boolean wasDown = true;
+	private boolean wasDown = true, wasRight = true;
+	private final boolean[] keyWas = new boolean[11];
 	private long openedAt;
 	private int hoveredSlot = -1;
+	private boolean editing;
+	private int editSlot = -1;
+	private float listScroll, listScrollTarget;
+	private int listMax;
+	private long pageChangedAt;
 
 	public EmoteWheelScreen() {
 		super(Component.literal("Emotes"));
@@ -47,23 +55,74 @@ public class EmoteWheelScreen extends Screen {
 		return 1f - (1f - t) * (1f - t) * (1f - t);
 	}
 
-	private List<Emotes.Emote> owned() {
+	private static List<Emotes.Emote> owned() {
 		List<Emotes.Emote> out = new ArrayList<>();
 		for (Emotes.Emote e : Emotes.Emote.values()) if (Emotes.owned(e)) out.add(e);
 		return out;
 	}
 
+	/** The saved layout, or (until you edit it) your emotes in order. */
+	private static List<List<String>> layout() {
+		SurgeConfig c = SurgeConfig.get();
+		if (c.emotePages != null && !c.emotePages.isEmpty()) {
+			for (List<String> p : c.emotePages) while (p.size() < PER_PAGE) p.add("");
+			return c.emotePages;
+		}
+		List<List<String>> auto = new ArrayList<>();
+		List<Emotes.Emote> all = owned();
+		for (int i = 0; i < Math.max(1, all.size()); i += PER_PAGE) {
+			List<String> p = new ArrayList<>();
+			for (int j = 0; j < PER_PAGE; j++) p.add(i + j < all.size() ? all.get(i + j).name() : "");
+			auto.add(p);
+			if (auto.size() == MAX_PAGES) break;
+		}
+		return auto;
+	}
+
+	/** Turns the automatic layout into a saved one so it can be edited. */
+	private static List<List<String>> editable() {
+		SurgeConfig c = SurgeConfig.get();
+		if (c.emotePages == null || c.emotePages.isEmpty()) {
+			List<List<String>> copy = new ArrayList<>();
+			for (List<String> p : layout()) copy.add(new ArrayList<>(p));
+			c.emotePages = copy;
+		}
+		return c.emotePages;
+	}
+
+	private static Emotes.Emote at(List<String> p, int i) {
+		if (i >= p.size()) return null;
+		Emotes.Emote e = Emotes.Emote.byName(p.get(i));
+		return e != null && Emotes.owned(e) ? e : null;
+	}
+
+	private void setPage(int p) {
+		if (p == page) return;
+		page = p;
+		pageChangedAt = System.currentTimeMillis();
+		editSlot = -1;
+		Ui.click();
+	}
+
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		int pages = Math.max(1, (owned().size() + PER_PAGE - 1) / PER_PAGE);
-		if (scrollY != 0 && pages > 1) { page = (page + (scrollY < 0 ? 1 : -1) + pages) % pages; Ui.click(); return true; }
+		if (editing && mouseX > this.width - 150) {
+			listScrollTarget = Math.max(0, Math.min(listMax, listScrollTarget - (float) scrollY * 20f));
+			return true;
+		}
+		int pages = layout().size();
+		if (scrollY != 0 && pages > 1) { setPage((page + (scrollY < 0 ? 1 : -1) + pages) % pages); return true; }
 		return false;
+	}
+
+	@Override
+	public boolean shouldCloseOnEsc() {
+		return true;
 	}
 
 	/**
 	 * Draws the ring row by row: each pixel belongs to a slot by its angle; neighbouring pixels of the
 	 * same slot are merged into one fill, so it's cheap and has no overlapping transparency.
-	 * grow[i] pushes slot i outward (hover), colors[i] is its color, gaps keep 1.5px between slots.
 	 */
 	private static void ring(GuiGraphics g, int cx, int cy, int r0, int r1, double start, int n, int[] colors, int[] grow) {
 		int maxR = r1 + 8;
@@ -98,16 +157,27 @@ public class EmoteWheelScreen extends Screen {
 		}
 	}
 
+	private boolean key(int idx, int glfwKey) {
+		boolean d = GLFW.glfwGetKey(minecraft.getWindow().handle(), glfwKey) == GLFW.GLFW_PRESS;
+		boolean pressed = d && !keyWas[idx];
+		keyWas[idx] = d;
+		return pressed;
+	}
+
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
 		Ui.frame();
-		boolean down = GLFW.glfwGetMouseButton(minecraft.getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
-		boolean click = down && !wasDown;
+		long win = minecraft.getWindow().handle();
+		boolean down = GLFW.glfwGetMouseButton(win, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+		boolean right = GLFW.glfwGetMouseButton(win, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+		boolean click = down && !wasDown, rclick = right && !wasRight;
 		wasDown = down;
+		wasRight = right;
 		Runnable action = null;
 
 		List<Emotes.Emote> all = owned();
 		int cx = this.width / 2, cy = this.height / 2;
+		if (editing) cx = Math.min(cx, (this.width - 150) / 2 + 4);
 		float k = openProgress();
 
 		if (all.isEmpty()) {
@@ -119,68 +189,154 @@ public class EmoteWheelScreen extends Screen {
 			if (action != null) { Ui.click(); action.run(); }
 			return;
 		}
-		int pages = Math.max(1, (all.size() + PER_PAGE - 1) / PER_PAGE);
+		List<List<String>> pagesList = layout();
+		int pages = pagesList.size();
 		if (page >= pages) page = 0;
-		List<Emotes.Emote> slots = all.subList(page * PER_PAGE, Math.min(all.size(), (page + 1) * PER_PAGE));
+		List<String> slots = pagesList.get(page);
 
-		int R = Math.round(Math.min(110, Math.min(this.width, this.height) / 2 - 24) * (0.9f + 0.1f * k));
+		int R = Math.round(Math.min(110, Math.min(this.width - (editing ? 150 : 0), this.height) / 2 - 30) * (0.9f + 0.1f * k));
 		int r = Math.round(R * 0.55f);
 		double seg = Math.PI * 2 / PER_PAGE;
 		double start = -Math.PI / 2 - seg / 2;
+		// flipping pages: a quick turn of the ring
+		float flip = Math.min(1f, (System.currentTimeMillis() - pageChangedAt) / 160f);
+		start += (1f - flip) * (1f - flip) * 0.35;
 
 		// which slot the mouse points at (direction from the center, outside the middle)
 		double dx = mx - cx, dy = my - cy;
 		int hov = -1;
-		if (dx * dx + dy * dy > (r * 0.5) * (r * 0.5)) {
+		double dist2 = dx * dx + dy * dy;
+		if (dist2 > (r * 0.5) * (r * 0.5) && (!editing || dist2 < (R + 14) * (R + 14))) {
 			double ang = Math.atan2(dy, dx) - start;
 			ang = (ang % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 			hov = (int) (ang / seg);
-			if (hov >= slots.size()) hov = -1;
+			if (!editing && at(slots, hov) == null) hov = -1;
 		}
 		if (hov != hoveredSlot) { hoveredSlot = hov; if (hov >= 0) Ui.hoverTick("wheel:" + hov + ":" + page, true); }
 
 		int[] colors = new int[PER_PAGE], grow = new int[PER_PAGE];
 		float[] has = new float[PER_PAGE];
 		for (int i = 0; i < PER_PAGE; i++) {
-			float ha = Ui.anim("wheelseg:" + i, i == hov);
+			float ha = Ui.anim("wheelseg:" + i, i == hov || (editing && i == editSlot));
 			has[i] = ha;
-			colors[i] = Colors.alpha(i < slots.size() ? Colors.lerp(0xC8181820, 0xF04A2E8A, ha) : 0x70101014, k);
+			boolean filled = at(slots, i) != null;
+			int base = filled ? 0xC8181820 : 0x70101014;
+			int hi = editing && i == editSlot ? 0xF06A3FCC : filled ? 0xF04A2E8A : 0xA0303040;
+			colors[i] = Colors.alpha(Colors.lerp(base, hi, ha), k * (0.6f + 0.4f * flip));
 			grow[i] = Math.round(ha * 6);
 		}
 		ring(g, cx, cy, r, R, start, PER_PAGE, colors, grow);
-		for (int i = 0; i < slots.size(); i++) {
+		for (int i = 0; i < PER_PAGE; i++) {
+			Emotes.Emote e = at(slots, i);
 			float ha = has[i];
 			double mid = start + (i + 0.5) * seg;
 			int lr = (r + R) / 2 + Math.round(ha * 3);
 			int lx = cx + (int) Math.round(Math.cos(mid) * lr), ly = cy + (int) Math.round(Math.sin(mid) * lr);
-			String label = Ui.fit(font, slots.get(i).label, (R - r) + 24);
-			g.drawString(font, label, lx - font.width(label) / 2, ly - 4, Colors.alpha(Colors.lerp(0xFFD8D8DC, 0xFFFFFFFF, ha), k), true);
-			g.drawString(font, String.valueOf(i + 1), lx - 2, ly + 6, Colors.alpha(0x60FFFFFF, k), false);
+			if (e == null) {
+				if (editing) Ui.centered(g, font, "+", lx, ly - 4, Colors.alpha(0x80FFFFFF, k));
+				continue;
+			}
+			String label = Ui.fit(font, e.label, (R - r) + 24);
+			g.drawString(font, label, lx - font.width(label) / 2, ly - 4, Colors.alpha(Colors.lerp(0xFFD8D8DC, 0xFFFFFFFF, ha), k * flip), true);
+			g.drawString(font, String.valueOf(i + 1), lx - 2, ly + 6, Colors.alpha(0x60FFFFFF, k * flip), false);
 		}
 
-		Emotes.Emote hovered = hov >= 0 ? slots.get(hov) : null;
-		if (hovered != null && click) action = () -> { onClose(); Emotes.play(minecraft, hovered); };
-		for (int i = 0; i < slots.size(); i++) {
-			if (GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_1 + i) == GLFW.GLFW_PRESS) {
-				Emotes.Emote play = slots.get(i);
-				action = () -> { onClose(); Emotes.play(minecraft, play); };
+		Emotes.Emote hovered = hov >= 0 ? at(slots, hov) : null;
+		if (!editing) {
+			if (hovered != null && click) action = () -> { onClose(); Emotes.play(minecraft, hovered); };
+			for (int i = 0; i < PER_PAGE; i++) {
+				if (key(i, GLFW.GLFW_KEY_1 + i)) {
+					Emotes.Emote play = at(slots, i);
+					if (play != null) action = () -> { onClose(); Emotes.play(minecraft, play); };
+				}
+			}
+			if (key(8, GLFW.GLFW_KEY_0) && pages > 1) setPage((page + 1) % pages);
+		} else {
+			if (hov >= 0 && click) { editSlot = hov == editSlot ? -1 : hov; Ui.click(); }
+			if (hov >= 0 && rclick) {
+				int slot = hov;
+				action = () -> { editable().get(page).set(slot, ""); SurgeConfig.save(); };
 			}
 		}
 
 		// center: your character previewing the hovered emote
-		Emotes.setPreview(hovered);
+		Emotes.Emote show = hovered;
+		Emotes.setPreview(show);
 		disc(g, cx, cy, r - 4, Colors.alpha(0xD0141418, k));
 		if (minecraft.player != null) Preview.draw(g, cx - r + 10, cy - r + 6, cx + r - 10, cy + r - 16, Math.round(r * 0.55f));
-		String title = hovered != null ? hovered.label : "Pick an emote";
-		Ui.centeredShadow(g, font, title, cx, cy + r - 14, hovered != null ? Ui.TEXT : Ui.MUTED);
+		String title = editing ? (editSlot >= 0 ? "Pick an emote for slot " + (editSlot + 1) : "Click a slot to fill it") : hovered != null ? hovered.label : "Pick an emote";
+		Ui.centeredShadow(g, font, Ui.fit(font, title, r * 2 - 10), cx, cy + r - 14, hovered != null || editing ? Ui.TEXT : Ui.MUTED);
 
-		if (pages > 1) {
-			int dotsW = pages * 8;
-			for (int p = 0; p < pages; p++) g.fill(cx - dotsW / 2 + p * 8, cy + R + 14, cx - dotsW / 2 + p * 8 + 5, cy + R + 16, p == page ? Ui.ACCENT_2 : 0x60FFFFFF);
-			Ui.centered(g, font, "Scroll for more", cx, cy + R + 20, 0x80FFFFFF);
+		// pages: numbered, click to jump
+		int pw = 14, totalW = pages * (pw + 3) + (editing && pages < MAX_PAGES ? pw + 3 : 0);
+		int px0 = cx - totalW / 2, py0 = cy + R + 12;
+		for (int p = 0; p < pages; p++) {
+			int x = px0 + p * (pw + 3);
+			boolean ph = Ui.hover(mx, my, x, py0, pw, 14);
+			Ui.box(g, x, py0, pw, 14, p == page ? Ui.ACCENT : ph ? 0xE0303036 : 0xB0181820, p == page ? Ui.ACCENT_2 : Ui.EDGE);
+			Ui.centered(g, font, String.valueOf(p + 1), x + pw / 2 + 1, py0 + 3, 0xFFFFFFFF);
+			if (ph && click) { int to = p; action = () -> setPage(to); }
+		}
+		if (editing && pages < MAX_PAGES) {
+			int x = px0 + pages * (pw + 3);
+			boolean ph = Ui.hover(mx, my, x, py0, pw, 14);
+			Ui.box(g, x, py0, pw, 14, ph ? 0xE0303036 : 0xB0181820, Ui.EDGE);
+			Ui.centered(g, font, "+", x + pw / 2 + 1, py0 + 3, Ui.ACCENT_2);
+			if (ph && click) action = () -> {
+				List<String> np = new ArrayList<>();
+				for (int i = 0; i < PER_PAGE; i++) np.add("");
+				List<List<String>> l = editable();
+				l.add(np);
+				SurgeConfig.save();
+				setPage(l.size() - 1);
+			};
+		}
+		String hint = editing ? "Right click a slot to empty it" : pages > 1 ? "Scroll or press 0 for the next page" : "";
+		if (!hint.isEmpty()) Ui.centered(g, font, hint, cx, py0 + 19, 0x80FFFFFF);
+
+		// edit toggle and page tools
+		int by = Math.max(6, cy - R - 30);
+		if (Ui.pill(g, font, mx, my, cx - 40, by, 80, 16, editing ? "Done" : "Edit wheel", editing) && click) action = () -> { editing = !editing; editSlot = -1; };
+		if (editing) {
+			if (Ui.pill(g, font, mx, my, cx + 46, by, 80, 16, "Clear page", false) && click) action = () -> { List<String> p = editable().get(page); for (int i = 0; i < p.size(); i++) p.set(i, ""); SurgeConfig.save(); };
+			if (pages > 1 && Ui.pill(g, font, mx, my, cx - 126, by, 80, 16, "Delete page", false) && click) action = () -> { editable().remove(page); SurgeConfig.save(); page = Math.max(0, page - 1); };
+			action = emoteList(g, mx, my, click, all, action);
 		}
 
 		if (action != null) { Ui.click(); action.run(); }
+	}
+
+	/** The list of your emotes on the right while editing: click one to put it in the picked slot. */
+	private Runnable emoteList(GuiGraphics g, int mx, int my, boolean click, List<Emotes.Emote> all, Runnable action) {
+		int x = this.width - 146, w = 140, top = 24, bottom = this.height - 10;
+		Ui.box(g, x, top - 18, w, bottom - top + 18, 0xE0141418, Ui.EDGE);
+		g.drawString(font, "Your emotes", x + 8, top - 12, Ui.ACCENT_2, false);
+		listMax = Math.max(0, all.size() * 18 - (bottom - top));
+		listScrollTarget = Math.min(listScrollTarget, listMax);
+		listScroll += (listScrollTarget - listScroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
+		List<String> slots = layout().get(page);
+		g.enableScissor(x, top, x + w, bottom);
+		int y = top - Math.round(listScroll);
+		for (Emotes.Emote e : all) {
+			boolean onPage = slots.contains(e.name());
+			boolean h = Ui.hover(mx, my, x + 3, y, w - 6, 17) && my >= top && my < bottom;
+			if (h) { g.fill(x + 3, y, x + w - 3, y + 17, 0xFF2E2E33); Emotes.setPreview(e); }
+			g.drawString(font, e.label, x + 9, y + 5, onPage ? Ui.FAINT : Ui.TEXT, false);
+			if (onPage) g.drawString(font, "✔", x + w - 14, y + 5, Ui.ACCENT_2, false);
+			if (h && click) {
+				int slot = editSlot >= 0 ? editSlot : slots.indexOf("");
+				if (slot < 0) action = () -> {};
+				else action = () -> {
+					List<String> p = editable().get(page);
+					p.set(slot, e.name());
+					SurgeConfig.save();
+					editSlot = p.indexOf("");
+				};
+			}
+			y += 18;
+		}
+		g.disableScissor();
+		return action;
 	}
 
 	@Override

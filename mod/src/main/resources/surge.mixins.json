@@ -23,7 +23,9 @@
 		"AvatarRendererMixin",
 		"GameRendererAccessor",
 		"ItemInHandRendererMixin",
-		"TotemPopMixin"
+		"TotemPopMixin",
+		"AvatarNameMixin",
+		"ServerEntryMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0

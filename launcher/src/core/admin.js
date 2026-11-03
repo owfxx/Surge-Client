@@ -128,4 +128,19 @@ function remove(code) {
 
 function exportPublic(dest) { guard(); fs.writeFileSync(dest, JSON.stringify(publicJson(), null, 2)); return dest; }
 
-module.exports = { status, setup, unlock, lock, list, create, remove, exportPublic, publicJson, salesList, addSale, removeSale, setToken, getToken, hasToken };
+// ---------- Discover (partnered servers shown in game) ----------
+const DISCOVER = path.join(paths.root, 'discover.json');
+function discoverList() { guard(); try { return JSON.parse(fs.readFileSync(DISCOVER, 'utf8')).servers || []; } catch { return []; } }
+function addDiscover({ name = '', ip = '', description = '', tag = '' }) {
+  guard();
+  ip = String(ip).trim();
+  if (!/^[a-zA-Z0-9.\-]+(:\d{1,5})?$/.test(ip)) throw new Error('Enter a server address like play.example.net');
+  const list = discoverList().filter(s => s.ip.toLowerCase() !== ip.toLowerCase());
+  list.push({ name: String(name).trim().slice(0, 32) || ip, ip, description: String(description).trim().slice(0, 80), tag: String(tag).trim().slice(0, 16) });
+  fs.writeFileSync(DISCOVER, JSON.stringify({ servers: list }, null, 2));
+  return list;
+}
+function removeDiscover(i) { const list = discoverList(); list.splice(i, 1); fs.writeFileSync(DISCOVER, JSON.stringify({ servers: list }, null, 2)); return list; }
+function moveDiscover(i, d) { const list = discoverList(); const j = i + d; if (j < 0 || j >= list.length) return list; [list[i], list[j]] = [list[j], list[i]]; fs.writeFileSync(DISCOVER, JSON.stringify({ servers: list }, null, 2)); return list; }
+
+module.exports = { discoverList, addDiscover, removeDiscover, moveDiscover, status, setup, unlock, lock, list, create, remove, exportPublic, publicJson, salesList, addSale, removeSale, setToken, getToken, hasToken };

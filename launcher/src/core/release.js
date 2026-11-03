@@ -194,4 +194,15 @@ async function publishCodes({ token, json }) {
   return codesUrl();
 }
 
-module.exports = { repo, codesUrl, releases, updateMod, downloadedMod, checkLauncher, applyLauncher, publishFile, publishCodes, newer, jarVersion };
+/** Publishes discover.json (partnered servers on the in-game Discover tab) to the "data" release. */
+async function publishDiscover({ token, servers }) {
+  const r = repo();
+  if (!r) throw new Error('Set the update repo first (owner/name)');
+  if (!token) throw new Error('Add a GitHub token first');
+  let rel = await releaseByTag(r, 'data', token);
+  if (!rel) rel = await gh('POST', `/repos/${r}/releases`, token, JSON.stringify({ tag_name: 'data', name: 'Codes and sales', body: 'Used by Surge Client for codes, sales and Discover. Don\'t delete.', make_latest: 'false' }), { 'Content-Type': 'application/json' });
+  await uploadAsset(r, rel, token, 'discover.json', Buffer.from(JSON.stringify({ servers })), 'application/json');
+  return `https://github.com/${r}/releases/download/data/discover.json`;
+}
+
+module.exports = { publishDiscover, repo, codesUrl, releases, updateMod, downloadedMod, checkLauncher, applyLauncher, publishFile, publishCodes, newer, jarVersion };

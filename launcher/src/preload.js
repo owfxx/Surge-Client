@@ -12,6 +12,7 @@ const on = (ch, fn) => {
 };
 
 contextBridge.exposeInMainWorld('surge', {
+  social: () => call('social:get'),
   win: { min: () => ipcRenderer.send('win:min'), max: () => ipcRenderer.send('win:max'), close: () => ipcRenderer.send('win:close') },
   config: { get: () => call('config:get'), set: p => call('config:set', p), pickJava: () => call('dialog:java'), openDataDir: () => call('shell:dataDir') },
   open: url => call('shell:open', url),
@@ -43,6 +44,8 @@ contextBridge.exposeInMainWorld('surge', {
     lock: () => call('admin:lock'), sales: () => call('admin:sales'), addSale: o => call('admin:addSale', o), removeSale: i => call('admin:removeSale', i),
     release: () => call('admin:release'), setRepo: r => call('admin:setRepo', r), setToken: t => call('admin:setToken', t),
     publishFile: notes => call('admin:publishFile', notes), publishCodes: () => call('admin:publishCodes'),
+    discover: () => call('admin:discover'), addDiscover: o => call('admin:addDiscover', o), removeDiscover: i => call('admin:removeDiscover', i),
+    moveDiscover: (i, d) => call('admin:moveDiscover', [i, d]), publishDiscover: () => call('admin:publishDiscover'),
   },
   selfUpdate: { check: () => call('selfupdate:check'), apply: url => call('selfupdate:apply', url) },
   launch: { start: (id, target) => call('launch:start', id, target), running: () => call('launch:running') },

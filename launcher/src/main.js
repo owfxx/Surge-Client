@@ -158,6 +158,7 @@ handle('browse:installPack', async ({ source, id, title }) => {
 });
 
 // Admin
+handle('social:get', () => require('./core/social').social().catch(() => null));
 handle('admin:status', () => admin.status());
 handle('admin:setup', pw => admin.setup(pw));
 handle('admin:unlock', pw => admin.unlock(pw));
@@ -177,6 +178,11 @@ handle('admin:publishFile', async notes => {
   if (r.canceled || !r.filePaths[0]) return null;
   return release.publishFile({ token: admin.getToken(), file: r.filePaths[0], notes });
 });
+handle('admin:discover', () => admin.discoverList());
+handle('admin:addDiscover', o => admin.addDiscover(o));
+handle('admin:removeDiscover', i => admin.removeDiscover(i));
+handle('admin:moveDiscover', ([i, d]) => admin.moveDiscover(i, d));
+handle('admin:publishDiscover', async () => release.publishDiscover({ token: admin.getToken(), servers: admin.discoverList() }));
 handle('admin:publishCodes', async () => release.publishCodes({ token: admin.getToken(), json: admin.publicJson() }));
 handle('admin:export', async () => {
   const r = await dialog.showSaveDialog(win, { defaultPath: 'codes.json', filters: [{ name: 'JSON', extensions: ['json'] }] });

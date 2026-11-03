@@ -111,6 +111,8 @@ public abstract class Setting<T> {
 
 	public static class Choice extends Setting<String> {
 		public final String[] values;
+		/** How a value is shown in the menu (e.g. a country code as its name). */
+		public java.util.function.Function<String, String> label = v -> v;
 
 		public Choice(SurgeMod mod, String key, String name, String def, String... values) {
 			super(mod, key, name, def);

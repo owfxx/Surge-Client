@@ -164,6 +164,7 @@ public final class HudModules {
 
 		ALL.add(new Coordinates());
 		ALL.add(new Compass());
+		ALL.add(new PackDisplay());
 
 		ALL.add(new TextModule("ping", "Ping", Items.REPEATER, "Your latency to the server", false, 0.005f, 0.19f, "ms", "After", "32",
 			mc -> {
@@ -317,6 +318,44 @@ public final class HudModules {
 	}
 
 	// ---------- compass ----------
+	/** Lists the resource packs you have turned on (top first), like Lunar's Pack Display. */
+	static final class PackDisplay extends HudModule {
+		final Setting.Toggle header = toggle("header", "Show \"Packs\" title", true);
+		final Setting.Slider max = slider("max", "Most packs shown", 3, 1, 8, 1, "");
+		private List<String> cache = List.of();
+		private long cachedAt;
+
+		PackDisplay() { super("packs", "Pack Display", Items.PAINTING, "Shows the resource packs you're using", false, 0.005f, 0.45f); }
+
+		private List<String> packs(Minecraft mc) {
+			if (System.currentTimeMillis() - cachedAt > 2000) {
+				cachedAt = System.currentTimeMillis();
+				List<String> out = new ArrayList<>();
+				for (var p : mc.getResourcePackRepository().getSelectedPacks()) {
+					if (p.isRequired() || p.getId().equals("vanilla") || p.getId().startsWith("fabric") || p.getId().equals("surge")) continue;
+					out.add(0, net.minecraft.ChatFormatting.stripFormatting(p.getTitle().getString()));
+				}
+				cache = out;
+			}
+			return cache.isEmpty() ? List.of("Default") : cache.subList(0, Math.min(cache.size(), max.asInt()));
+		}
+
+		@Override public int width(Minecraft mc) {
+			int w = header.on() ? mc.font.width("Packs") : 0;
+			for (String s : packs(mc)) w = Math.max(w, mc.font.width(s));
+			return w + 8;
+		}
+
+		@Override public int height(Minecraft mc) { return packs(mc).size() * 10 + (header.on() ? 11 : 0) + 3; }
+
+		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
+			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			int yy = y + 2;
+			if (header.on()) { g.drawString(mc.font, "Packs", x + 4, yy, Colors.alpha(fg(), 0.7f), shadowOn()); yy += 11; }
+			for (String s : packs(mc)) { g.drawString(mc.font, s, x + 4, yy, fg(), shadowOn()); yy += 10; }
+		}
+	}
+
 	static final class Compass extends HudModule {
 		final Setting.Slider widthSetting = slider("width", "Width", 160, 100, 280, 10, "px");
 		final Setting.Toggle degrees = toggle("degrees", "Show degrees", true);

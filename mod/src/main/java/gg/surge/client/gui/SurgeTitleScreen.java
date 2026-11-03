@@ -19,6 +19,8 @@ import org.lwjgl.glfw.GLFW;
 public class SurgeTitleScreen extends Screen {
 	private static final ItemStack COIN = new ItemStack(Items.GOLD_NUGGET);
 	private static final ItemStack SHIRT = new ItemStack(Items.LEATHER_CHESTPLATE);
+	private static final ItemStack GEAR = new ItemStack(Items.REPEATER);
+	private static final ItemStack SOCIAL = new ItemStack(Items.WRITABLE_BOOK);
 	private static final ItemStack MODS = new ItemStack(Items.COMPARATOR);
 	private static boolean playedIntro;
 	private long openedAt;
@@ -115,10 +117,22 @@ public class SurgeTitleScreen extends Screen {
 		if (Ui.tile(g, font, mx, my, x, ty, 24, MODS, "Surge mods", true, kc) && click) action = () -> minecraft.setScreen(new SurgeMenuScreen(this));
 		x -= 30;
 		if (Ui.tile(g, font, mx, my, x, ty, 24, SHIRT, "Wardrobe", true, kc) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+		x -= 30;
+		if (Ui.tile(g, font, mx, my, x, ty, 24, GEAR, "Settings", true, kc) && click) action = () -> minecraft.setScreen(SurgeMenuScreen.general(this));
+		x -= 30;
+		if (Ui.tile(g, font, mx, my, x, ty, 24, SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
+		MenuOverlay.unreadBadge(g, minecraft, x, ty, 24);
 
 		// account, top left
 		String name = minecraft.getUser().getName();
-		g.drawString(font, name, 10, ty + 8, Colors.alpha(0xFFFFFFFF, kc), true);
+		g.drawString(font, name, 10, ty + 3, Colors.alpha(0xFFFFFFFF, kc), true);
+		String st = gg.surge.client.net.Social.status();
+		int sc = gg.surge.client.net.Social.statusColor(st.equals("invisible") ? "offline" : st);
+		g.fill(10, ty + 15, 15, ty + 20, Colors.alpha(sc, kc));
+		int on = 0;
+		for (var f : gg.surge.client.net.Social.friends) if (!"offline".equals(f.status())) on++;
+		String sub = gg.surge.client.net.Social.statusLabel(st) + (gg.surge.client.net.Social.available() ? "  " + on + " friend" + (on == 1 ? "" : "s") + " online" : "");
+		g.drawString(font, sub, 19, ty + 14, Colors.alpha(0xFFA9AAAE, kc), true);
 
 		// footer
 		float kf = since(500, 400);
@@ -133,6 +147,7 @@ public class SurgeTitleScreen extends Screen {
 			else playedIntro = true;
 		}
 
+		SocialToasts.render(g, minecraft, this.width);
 		if (action != null) { Ui.click(); action.run(); }
 	}
 }

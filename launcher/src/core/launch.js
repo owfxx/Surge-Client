@@ -15,6 +15,7 @@ const modrinth = require('./modrinth');
 // short, predictable GC pauses = fewer stutters.
 // Generational ZGC (Java 21): tiny GC pauses, so frame times stay smooth. Needs some headroom.
 const release = require('./release');
+const social = require('./social');
 
 const SURGE_ZGC = [
   '-XX:+UseZGC', '-XX:+ZGenerational', '-XX:+AlwaysPreTouch', '-XX:+DisableExplicitGC',
@@ -74,16 +75,16 @@ function bestSurgeJar(mcVersion) {
   return cands[0] || null;
 }
 
+/**
+ * The Surge mod isn't copied into the pack's mods folder: Fabric loads it straight from
+ * Surge's own folder (-Dfabric.addMods), so it never shows up there. Returns the jar path or null.
+ */
 async function syncSurgeMod(inst, onProgress) {
   const modsDir = path.join(instances.dirOf(inst.id), 'mods');
   fs.mkdirSync(modsDir, { recursive: true });
-  const existing = fs.readdirSync(modsDir).filter(f => /^surge-client-.*\.jar(\.disabled)?$/.test(f));
-  // Pack set to not use the Surge mod: disable (never delete) any copy that's there.
-  if (inst.surgeMod === false) {
-    for (const f of existing) if (f.endsWith('.jar')) fs.renameSync(path.join(modsDir, f), path.join(modsDir, `${f}.disabled`));
-    return false;
-  }
-  // Grab a newer mod from the update repo if there is one (never blocks the launch for long).
+  // Old versions copied the jar into the pack: clean those up.
+  for (const f of fs.readdirSync(modsDir)) if (/^surge-client-.*\.jar(\.disabled)?$/.test(f)) fs.rmSync(path.join(modsDir, f), { force: true });
+  if (inst.surgeMod === false) return null;
   try {
     const have = bestSurgeJar(inst.mcVersion);
     await Promise.race([
@@ -92,16 +93,15 @@ async function syncSurgeMod(inst, onProgress) {
     ]);
   } catch { /* offline or no repo set */ }
   const jar = bestSurgeJar(inst.mcVersion);
-  // Nothing bundled or downloaded: keep whatever Surge mod the player put in.
-  if (!jar) {
-    for (const f of existing) if (f.endsWith('.disabled')) fs.renameSync(path.join(modsDir, f), path.join(modsDir, f.slice(0, -'.disabled'.length)));
-    return existing.length > 0;
-  }
-  for (const f of existing) fs.rmSync(path.join(modsDir, f));
-  fs.copyFileSync(jar, path.join(modsDir, path.basename(jar)));
-  // Surge mod needs Fabric API.
+  if (!jar) return null;
+  // Keep a private copy outside the app (paths inside the app can change between updates).
+  const hidden = path.join(paths.root, 'core', inst.mcVersion);
+  fs.mkdirSync(hidden, { recursive: true });
+  const dest = path.join(hidden, 'surge-core.jar');
+  fs.copyFileSync(jar, dest);
+  // Surge needs Fabric API.
   try { await modrinth.installProject(inst.id, 'fabric-api', 'mod', onProgress, new Set(), { optional: true, locked: true }); } catch { /* offline */ }
-  return true;
+  return dest;
 }
 
 async function launch(instanceId, { onProgress, onLog, onExit, server, world }) {
@@ -126,12 +126,18 @@ async function launch(instanceId, { onProgress, onLog, onExit, server, world }) 
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { /* offline: try next time */ }
     instances.update(inst.id, { perfChecked: true });
   }
-  await syncSurgeMod(inst, onProgress);
+  const surgeJar = await syncSurgeMod(inst, onProgress);
+  let surgeToken = '';
+  try {
+    const sess = await Promise.race([social.signIn(authorization), new Promise(r => setTimeout(() => r(null), 8000))]);
+    if (sess) surgeToken = sess.token;
+  } catch (e) { onLog(`[Surge] Online features off: ${e.message}`); }
 
   const ram = inst.ramMb || cfg.ramMb;
   const useZgc = ram >= 6144;
   const jvm = (cfg.jvmPreset === 'surge' ? (useZgc ? SURGE_ZGC : SURGE_JVM) : [])
-    .concat([`-Dsurge.home=${paths.root}`, `-Dsurge.codesUrl=${cfg.codesUrl || release.codesUrl()}`, `-Dsurge.apiUrl=${cfg.apiUrl || ''}`])
+    .concat([`-Dsurge.home=${paths.root}`, `-Dsurge.codesUrl=${cfg.codesUrl || release.codesUrl()}`, `-Dsurge.apiUrl=${cfg.apiUrl || ''}`, `-Dsurge.token=${surgeToken}`, `-Dsurge.repo=${release.repo()}`])
+    .concat(surgeJar ? [`-Dfabric.addMods=${surgeJar}`] : [])
     .concat(cfg.extraJvmArgs.split(/\s+/).filter(Boolean));
 
   const client = new Client();

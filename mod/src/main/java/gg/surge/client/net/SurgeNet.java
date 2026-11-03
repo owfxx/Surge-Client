@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class SurgeNet {
 	/** What another Surge player wears. emoteStart is local time (ms) when we first saw the emote. */
 	public static final class Remote {
-		public volatile String wings = "none", halo = "none", cape = "none", emote = "none";
+		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none";
 		public volatile long emoteAt, emoteStart;
 	}
 
@@ -60,6 +60,21 @@ public final class SurgeNet {
 		return PLAYERS.get(id);
 	}
 
+	/** Your flag's country code if you show it, else "none". */
+	public static String myFlag() {
+		return gg.surge.client.mods.Mods.NAMETAGS.enabled() && gg.surge.client.mods.Mods.TAG_FLAG.on() ? gg.surge.client.mods.Mods.TAG_COUNTRY.get() : "none";
+	}
+
+	/** A player's flag glyph for nametags, or "" (yours and other Surge players'). */
+	public static String flagGlyph(UUID id) {
+		if (!gg.surge.client.mods.Mods.NAMETAGS.enabled()) return "";
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player != null && mc.player.getUUID().equals(id)) return gg.surge.client.features.Flags.glyph(myFlag());
+		if (!gg.surge.client.mods.Mods.TAG_OTHERS_FLAGS.on()) return "";
+		Remote r = PLAYERS.get(id);
+		return r == null ? "" : gg.surge.client.features.Flags.glyph(r.flag);
+	}
+
 	/** Called when you start an emote so others see it right away. */
 	public static void playedEmote(String name) {
 		emote = name;
@@ -68,16 +83,19 @@ public final class SurgeNet {
 	}
 
 	public static void tick(Minecraft mc) {
-		if (!online() || mc.player == null || mc.level == null) return;
+		if (!online()) return;
+		// in the menus only the signed-in heartbeat runs (so friends see you're online)
+		if (mc.player == null && Social.token().isEmpty()) return;
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
-		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.equipped("cape", c.cape) + "|" + emote + emoteAt;
-		if (!busyPush && (now - lastPush > 90_000 || !wear.equals(lastSent))) {
+		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.equipped("cape", c.cape) + "|" + emote + emoteAt
+			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + myFlag();
+		if (!busyPush && (now - lastPush > 60_000 || !wear.equals(lastSent))) {
 			lastPush = now;
 			lastSent = wear;
 			push(mc);
 		}
-		if (!busyPull && now - lastPull > 6_000) {
+		if (!busyPull && mc.level != null && now - lastPull > 6_000) {
 			lastPull = now;
 			pull(mc);
 		}
@@ -86,16 +104,21 @@ public final class SurgeNet {
 	private static void push(Minecraft mc) {
 		SurgeConfig c = SurgeConfig.get();
 		JsonObject o = new JsonObject();
-		o.addProperty("uuid", mc.player.getUUID().toString());
-		o.addProperty("name", mc.player.getName().getString());
+		o.addProperty("uuid", mc.player != null ? mc.player.getUUID().toString() : "");
+		o.addProperty("name", mc.getUser().getName());
 		o.addProperty("wings", Cosmetics.equipped("wings", c.wings));
 		o.addProperty("halo", Cosmetics.equipped("halo", c.halo));
 		o.addProperty("cape", Cosmetics.equipped("cape", c.cape));
 		o.addProperty("emote", emote);
 		o.addProperty("emoteAt", emoteAt);
+		o.addProperty("flag", myFlag());
+		o.addProperty("status", Social.status());
+		o.addProperty("server", Social.server(mc));
 		busyPush = true;
-		HttpRequest req = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(8))
-			.header("content-type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(o.toString())).build();
+		HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(8))
+			.header("content-type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(o.toString()));
+		if (!Social.token().isEmpty()) b.header("Authorization", "Bearer " + Social.token());
+		HttpRequest req = b.build();
 		HTTP.sendAsync(req, HttpResponse.BodyHandlers.discarding()).whenComplete((r, e) -> busyPush = false);
 	}
 
@@ -124,6 +147,7 @@ public final class SurgeNet {
 					rem.wings = str(d, "wings");
 					rem.halo = str(d, "halo");
 					rem.cape = str(d, "cape");
+					rem.flag = str(d, "flag");
 					String em = str(d, "emote");
 					long at = d.has("emoteAt") ? d.get("emoteAt").getAsLong() : 0;
 					if (at != rem.emoteAt) {

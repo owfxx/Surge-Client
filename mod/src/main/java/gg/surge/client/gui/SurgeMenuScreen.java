@@ -95,6 +95,13 @@ public class SurgeMenuScreen extends Screen {
 		this.parent = parent;
 	}
 
+	/** Opens on the Settings tab (status, friends, FPS options). */
+	public static SurgeMenuScreen general(Screen parent) {
+		tab = Tab.FPS;
+		query = "";
+		return new SurgeMenuScreen(parent);
+	}
+
 	/** Opens straight into a mod's settings page. */
 	public static SurgeMenuScreen settings(SurgeMod mod, Screen parent) {
 		SurgeMenuScreen s = new SurgeMenuScreen(parent);
@@ -217,7 +224,7 @@ public class SurgeMenuScreen extends Screen {
 					public String text() { return sl.format(); }
 				}).when(s::visible));
 			} else if (s instanceof Setting.Choice c) {
-				rows.add(new ChoiceRow(c.name, c::get, c::cycle).when(s::visible));
+				rows.add(new ChoiceRow(c.name, () -> c.label.apply(c.get()), c::cycle).when(s::visible));
 			} else if (s instanceof Setting.Color c) {
 				rows.add(new ColorRow(c).when(s::visible));
 			} else if (s instanceof Setting.Button b) {
