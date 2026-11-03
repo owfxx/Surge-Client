@@ -18,8 +18,21 @@ function sales() {
   return readSales().filter(s => !s.until || s.until > Date.now());
 }
 
+const LOCKS = path.join(paths.root, 'locks.json');
+function readLocks() { try { return JSON.parse(fs.readFileSync(LOCKS, 'utf8')).locked || []; } catch { return ['cape:beta']; } }
+function locksList() { guard(); return readLocks(); }
+function toggleLock(id) {
+  guard();
+  const list = readLocks();
+  const i = list.indexOf(id);
+  if (i >= 0) list.splice(i, 1); else list.push(id);
+  fs.writeFileSync(LOCKS, JSON.stringify({ locked: list }, null, 2));
+  writePublic(read());
+  return list;
+}
+
 function publicJson(d = read()) {
-  return { codes: d.codes.map(c => ({ hash: sha256(normalize(c.code)), coins: c.coins || 0, items: c.items || [] })), sales: sales() };
+  return { codes: d.codes.map(c => ({ hash: sha256(normalize(c.code)), coins: c.coins || 0, items: c.items || [] })), sales: sales(), locked: readLocks() };
 }
 function writePublic(d) { fs.writeFileSync(PUBLIC, JSON.stringify(publicJson(d), null, 2)); }
 
@@ -134,4 +147,4 @@ function addDiscover({ name = '', ip = '', description = '', tag = '' }) {
 function removeDiscover(i) { const list = discoverList(); list.splice(i, 1); fs.writeFileSync(DISCOVER, JSON.stringify({ servers: list }, null, 2)); return list; }
 function moveDiscover(i, d) { const list = discoverList(); const j = i + d; if (j < 0 || j >= list.length) return list; [list[i], list[j]] = [list[j], list[i]]; fs.writeFileSync(DISCOVER, JSON.stringify({ servers: list }, null, 2)); return list; }
 
-module.exports = { discoverList, addDiscover, removeDiscover, moveDiscover, status, setup, unlock, lock, list, create, remove, exportPublic, publicJson, salesList, addSale, removeSale, setToken, getToken, hasToken };
+module.exports = { locksList, toggleLock, discoverList, addDiscover, removeDiscover, moveDiscover, status, setup, unlock, lock, list, create, remove, exportPublic, publicJson, salesList, addSale, removeSale, setToken, getToken, hasToken };

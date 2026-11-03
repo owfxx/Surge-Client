@@ -22,6 +22,13 @@ public final class Cosmetics {
 		return key != null && !"none".equals(key) && Wallet.get().owns(type + ":" + key) ? key : "none";
 	}
 
+	public static String wire(String type, String key) {
+		String eq = equipped(type, key);
+		if (!"cape".equals(type) || !"beta".equals(eq)) return eq;
+		var b = gg.surge.client.config.SurgeConfig.get().betaCape;
+		return "beta_" + b.design + "_" + b.top.toLowerCase() + "_" + b.bottom.toLowerCase() + "_" + (b.shimmer ? 1 : 0) + (b.glow ? 1 : 0);
+	}
+
 	public static String forPlayer(Player p, String type) {
 		Minecraft mc = Minecraft.getInstance();
 		if (p == mc.player) {

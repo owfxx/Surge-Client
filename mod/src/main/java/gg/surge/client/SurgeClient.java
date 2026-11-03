@@ -134,6 +134,7 @@ public class SurgeClient implements ClientModInitializer {
 			DamageTint.apply(mc);
 			OptionTweaks.apply(mc);
 			Sales.load();
+			gg.surge.client.economy.Locks.load();
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(SurgeClient::tick);
 		MenuOverlay.register();

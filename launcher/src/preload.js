@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('surge', {
     lock: () => call('admin:lock'), sales: () => call('admin:sales'), addSale: o => call('admin:addSale', o), removeSale: i => call('admin:removeSale', i),
     release: () => call('admin:release'), setRepo: r => call('admin:setRepo', r), setToken: t => call('admin:setToken', t),
     publishFile: notes => call('admin:publishFile', notes), publishCodes: () => call('admin:publishCodes'),
+    locks: () => call('admin:locks'), toggleLock: id => call('admin:toggleLock', id),
     discover: () => call('admin:discover'), addDiscover: o => call('admin:addDiscover', o), removeDiscover: i => call('admin:removeDiscover', i),
     moveDiscover: (i, d) => call('admin:moveDiscover', [i, d]), publishDiscover: () => call('admin:publishDiscover'),
   },

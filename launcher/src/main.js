@@ -171,6 +171,8 @@ handle('admin:publishFile', async notes => {
   if (r.canceled || !r.filePaths[0]) return null;
   return release.publishFile({ token: admin.getToken(), file: r.filePaths[0], notes });
 });
+handle('admin:locks', () => admin.locksList());
+handle('admin:toggleLock', id => admin.toggleLock(id));
 handle('admin:discover', () => admin.discoverList());
 handle('admin:addDiscover', o => admin.addDiscover(o));
 handle('admin:removeDiscover', i => admin.removeDiscover(i));

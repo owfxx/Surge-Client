@@ -77,7 +77,7 @@ public final class SurgeNet {
 		if (mc.player == null && Social.token().isEmpty()) return;
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
-		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.equipped("cape", c.cape) + "|" + emote + emoteAt
+		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + emote + emoteAt
 			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + myFlag();
 		if (!busyPush && (now - lastPush > 60_000 || !wear.equals(lastSent))) {
 			lastPush = now;
@@ -97,7 +97,7 @@ public final class SurgeNet {
 		o.addProperty("name", mc.getUser().getName());
 		o.addProperty("wings", Cosmetics.equipped("wings", c.wings));
 		o.addProperty("halo", Cosmetics.equipped("halo", c.halo));
-		o.addProperty("cape", Cosmetics.equipped("cape", c.cape));
+		o.addProperty("cape", Cosmetics.wire("cape", c.cape));
 		o.addProperty("emote", emote);
 		o.addProperty("emoteAt", emoteAt);
 		o.addProperty("flag", myFlag());

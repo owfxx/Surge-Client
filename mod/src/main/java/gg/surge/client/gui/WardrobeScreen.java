@@ -310,6 +310,8 @@ public class WardrobeScreen extends Screen {
 		boolean isEmote = item.category().equals("emote");
 		boolean equipped = !isEmote && owned && item.key().equals(equippedKey(typeOf(item)));
 		boolean asking = item.id().equals(pendingBuy) && System.currentTimeMillis() < pendingUntil;
+		boolean locked = !owned && gg.surge.client.economy.Locks.locked(item);
+		boolean beta = item.id().equals("cape:beta");
 		float a = Ui.anim("wcard:" + item.id(), hov);
 		float eq = Ui.anim("weq:" + item.id(), equipped);
 		int yy = y - Math.round(a);
@@ -320,7 +322,7 @@ public class WardrobeScreen extends Screen {
 		g.drawString(font, Ui.fit(font, item.name(), w - 30), x + 26, yy + 11, Ui.TEXT, true);
 
 		int sale = Sales.discount(item);
-		if (sale > 0 && !owned) {
+		if (sale > 0 && !owned && !locked) {
 			String tag = "-" + sale + "%";
 			int tw = font.width(tag) + 6;
 			g.fill(x + w - tw - 3, yy + 3, x + w - 3, yy + 13, 0xFFE0A21A);
@@ -331,7 +333,15 @@ public class WardrobeScreen extends Screen {
 		int fill, lip;
 		String label;
 		boolean coin = false;
-		if (owned) {
+		if (locked) {
+			label = beta ? "Beta testers" : "Locked";
+			fill = Ui.NEUTRAL;
+			lip = Ui.BUTTON_LIP;
+		} else if (owned && beta) {
+			label = "Customize";
+			fill = equipped ? Ui.ON : Ui.ACCENT;
+			lip = equipped ? Ui.ON_LIP : Ui.ACCENT_DIM;
+		} else if (owned) {
 			if (isEmote) { label = "Play"; fill = Ui.ACCENT; lip = Ui.ACCENT_DIM; }
 			else if (equipped) { label = "Equipped"; fill = Ui.ON; lip = Ui.ON_LIP; }
 			else { label = "Equip"; fill = Ui.BUTTON; lip = Ui.BUTTON_LIP; }
@@ -351,7 +361,7 @@ public class WardrobeScreen extends Screen {
 		int tx = bx + (bw - tw) / 2;
 		if (coin) { Ui.icon(g, Ui.COIN, tx, by + 3, 1, Ui.YELLOW); tx += 11; }
 		g.drawString(font, label, tx, by + 3, Ui.TEXT, true);
-		if (sale > 0 && !owned && !asking) {
+		if (sale > 0 && !owned && !asking && !locked) {
 			String old = String.valueOf(item.price());
 			int ox = bx + bw - font.width(old) - 4;
 			g.drawString(font, old, ox, by + 3, 0xA0FFFFFF, false);
@@ -359,6 +369,8 @@ public class WardrobeScreen extends Screen {
 		}
 
 		return () -> {
+			if (locked) { toast(beta ? "This cape is only for beta testers" : "This can't be bought right now", Ui.MUTED); return; }
+			if (beta) { minecraft.setScreen(new BetaCapeScreen(this)); return; }
 			if (!owned) { buyFlow(item); return; }
 			if (isEmote) {
 				Emotes.Emote e = Emotes.Emote.byName(item.key());

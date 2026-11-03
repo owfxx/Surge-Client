@@ -66,6 +66,7 @@ public final class Wallet {
 
 	public String buy(Shop.Item item) {
 		if (owns(item.id())) return null;
+		if (Locks.locked(item)) return "You can't buy this";
 		int price = Shop.price(item);
 		if (coins < price) return "Not enough coins";
 		coins -= price;

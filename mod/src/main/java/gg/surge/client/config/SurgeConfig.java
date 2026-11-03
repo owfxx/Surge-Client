@@ -66,6 +66,14 @@ public class SurgeConfig {
 
 	public Outfit[] outfits = {null, null, null};
 
+	public static class BetaCape {
+		public String design = "logo";
+		public String top = "8F50F2", bottom = "EC68B0";
+		public boolean shimmer = true, glow = true;
+	}
+
+	public BetaCape betaCape = new BetaCape();
+
 	public List<List<String>> emotePages = null;
 
 	public static SurgeConfig get() {
@@ -97,6 +105,7 @@ public class SurgeConfig {
 		if (instance.halo == null) instance.halo = "none";
 		if (instance.wings == null) instance.wings = "none";
 		if (instance.cape == null) instance.cape = "none";
+		if (instance.betaCape == null) instance.betaCape = new BetaCape();
 	}
 
 	private static boolean dirty;

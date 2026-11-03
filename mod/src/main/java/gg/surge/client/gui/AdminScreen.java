@@ -116,7 +116,7 @@ public class AdminScreen extends Screen {
 			setFocused(over ? customBox : null);
 		}
 		g.drawString(font, "Unlocks", lx, top + 92, Ui.MUTED, false);
-		int rbx = lx + 46, rbw = colW - 46 - 34;
+		int rbx = lx + 46, rbw = colW - 46 - 76;
 		boolean rHov = Ui.hover(mx, my, rbx, top + 88, rbw, 16);
 		Ui.chunky(g, rbx, top + 88, rbw, 16, rHov ? Ui.BUTTON_HOVER : Ui.BUTTON, Ui.BUTTON_LIP);
 		String rname = Ui.fit(font, Shop.ITEMS.get(rewardIdx).name(), rbw - 20);
@@ -124,6 +124,12 @@ public class AdminScreen extends Screen {
 		g.drawString(font, ">", rbx + rbw - 9, top + 92, Ui.FAINT, false);
 		g.drawString(font, rname, rbx + (rbw - font.width(rname)) / 2, top + 92, Ui.TEXT, true);
 		if (rHov && click) { boolean left = mx < rbx + rbw / 2; action = () -> rewardIdx = (rewardIdx + (left ? -1 : 1) + Shop.ITEMS.size()) % Shop.ITEMS.size(); }
+		Shop.Item sel = Shop.ITEMS.get(rewardIdx);
+		boolean isLocked = gg.surge.client.economy.Locks.locked(sel);
+		if (Ui.pill(g, font, mx, my, lx + colW - 72, top + 88, 40, 16, isLocked ? "Unlock" : "Lock", isLocked) && click) action = () -> {
+			gg.surge.client.economy.Locks.toggle(sel.id());
+			toast((isLocked ? "Unlocked " : "Locked ") + sel.name() + ". Publish codes in the launcher to share it.");
+		};
 		if (Ui.pill(g, font, mx, my, lx + colW - 30, top + 88, 30, 16, "Add", false) && click) action = () -> {
 			String id = Shop.ITEMS.get(rewardIdx).id();
 			if (!rewards.contains(id)) rewards.add(id);

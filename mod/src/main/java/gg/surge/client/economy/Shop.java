@@ -26,7 +26,12 @@ public final class Shop {
 			{"cape:surge", "Surge Cape", "1000"}, {"cape:void", "Void Cape", "800"}, {"cape:flame", "Flame Cape", "750"},
 			{"cape:ocean", "Ocean Cape", "700"}, {"cape:aurora", "Aurora Cape", "900"}, {"cape:sakura", "Sakura Cape", "700"},
 			{"cape:midnight", "Midnight Cape", "750"}, {"cape:royal", "Royal Cape", "950"}, {"cape:emerald", "Emerald Cape", "700"},
-			{"cape:galaxy", "Galaxy Cape", "1100"}};
+			{"cape:galaxy", "Galaxy Cape", "1100"},
+			{"cape:classic_red", "Red Cape", "300"}, {"cape:classic_orange", "Orange Cape", "300"}, {"cape:classic_yellow", "Yellow Cape", "300"},
+			{"cape:classic_lime", "Lime Cape", "300"}, {"cape:classic_green", "Green Cape", "300"}, {"cape:classic_cyan", "Cyan Cape", "300"},
+			{"cape:classic_blue", "Blue Cape", "300"}, {"cape:classic_purple", "Purple Cape", "300"}, {"cape:classic_pink", "Pink Cape", "300"},
+			{"cape:classic_white", "White Cape", "300"}, {"cape:classic_gray", "Gray Cape", "300"}, {"cape:classic_black", "Black Cape", "300"},
+			{"cape:beta", "Beta Tester Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
 		String[][] emotes = {

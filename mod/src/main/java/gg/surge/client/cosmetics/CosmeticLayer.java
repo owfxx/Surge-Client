@@ -65,8 +65,39 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (halo != null) halo(ps, q, halo, age);
 	}
 
+	private record CapeLook(Identifier tex, int top, int bottom, boolean shimmer, boolean glow) {}
+
+	private static final Identifier SHINE = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_shine.png");
+
+	private static int hex(String s, int def) {
+		try { return 0xFF000000 | Integer.parseInt(s, 16); } catch (Exception e) { return def; }
+	}
+
+	private static CapeLook look(String style) {
+		if (style.equals("beta") || style.startsWith("beta_")) {
+			String design, top, bottom;
+			boolean shimmer, glow;
+			if (style.equals("beta")) {
+				var b = gg.surge.client.config.SurgeConfig.get().betaCape;
+				design = b.design; top = b.top; bottom = b.bottom; shimmer = b.shimmer; glow = b.glow;
+			} else {
+				String[] p = style.split("_");
+				design = p.length > 1 ? p[1] : "logo";
+				top = p.length > 2 ? p[2] : "8f50f2";
+				bottom = p.length > 3 ? p[3] : "ec68b0";
+				String f = p.length > 4 ? p[4] : "11";
+				shimmer = f.length() > 0 && f.charAt(0) == '1';
+				glow = f.length() > 1 && f.charAt(1) == '1';
+			}
+			if (!BetaCapes.DESIGNS.contains(design)) design = "logo";
+			return new CapeLook(Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_beta_" + design + ".png"), hex(top, 0xFF8F50F2), hex(bottom, 0xFFEC68B0), shimmer, glow);
+		}
+		return new CapeLook(Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_" + style + ".png"), -1, -1, false, false);
+	}
+
 	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float speed, boolean sneaking) {
-		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_" + style + ".png");
+		CapeLook lk = look(style);
+		int lit = lk.glow() ? FULL_BRIGHT : light;
 		float swing = 6f + speed * 55f + (float) Math.sin(age * 0.09f) * (1.5f + speed * 4f) + (sneaking ? 22f : 0f);
 		float side = (float) Math.sin(age * 0.05f) * 2f * (0.3f + speed);
 		ps.pushPose();
@@ -74,26 +105,39 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.translate(0f, 0f, 0.125f);
 		ps.mulPose(Axis.XP.rotationDegrees(swing));
 		ps.mulPose(Axis.ZP.rotationDegrees(side));
-		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
+		int t = lk.top(), b = lk.bottom();
+		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(lk.tex()), (pose, vc) -> {
 			float x0 = -5f / 16, x1 = 5f / 16, y0 = 0f, y1 = 1f, z0 = 0f, z1 = 1f / 16;
-			face(pose, vc, light, 0, 0, 1, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, 1, 1, 11, 17);
-			face(pose, vc, light, 0, 0, -1, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, 12, 1, 22, 17);
-			face(pose, vc, light, -1, 0, 0, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, 0, 1, 1, 17);
-			face(pose, vc, light, 1, 0, 0, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0, 11, 1, 12, 17);
-			face(pose, vc, light, 0, -1, 0, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0, 1, 0, 11, 1);
-			face(pose, vc, light, 0, 1, 0, x0, y1, z1, x0, y1, z0, x1, y1, z0, x1, y1, z1, 11, 0, 21, 1);
+			face(pose, vc, lit, t, b, 0, 0, 1, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, 1, 1, 11, 17);
+			face(pose, vc, lit, t, b, 0, 0, -1, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, 12, 1, 22, 17);
+			face(pose, vc, lit, t, b, -1, 0, 0, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, 0, 1, 1, 17);
+			face(pose, vc, lit, t, b, 1, 0, 0, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0, 11, 1, 12, 17);
+			face(pose, vc, lit, t, t, 0, -1, 0, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0, 1, 0, 11, 1);
+			face(pose, vc, lit, b, b, 0, 1, 0, x0, y1, z1, x0, y1, z0, x1, y1, z0, x1, y1, z1, 11, 0, 21, 1);
 		});
+		if (lk.shimmer()) {
+			float phase = (age % 70f) / 70f;
+			float v0 = 1.1f - phase * 1.9f, v1 = v0 + 0.8f;
+			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(SHINE), (pose, vc) -> {
+				float x0 = -5f / 16, x1 = 5f / 16, z = 1f / 16 + 0.002f;
+				int c = 0xB0FFFFFF;
+				vc.addVertex(pose, x1, 0f, z).setColor(c).setUv(0f, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+				vc.addVertex(pose, x1, 1f, z).setColor(c).setUv(0f, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+				vc.addVertex(pose, x0, 1f, z).setColor(c).setUv(1f, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+				vc.addVertex(pose, x0, 0f, z).setColor(c).setUv(1f, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+			});
+		}
 		ps.popPose();
 	}
 
-	private static void face(PoseStack.Pose pose, VertexConsumer vc, int light, float nx, float ny, float nz,
+	private static void face(PoseStack.Pose pose, VertexConsumer vc, int light, int top, int bottom, float nx, float ny, float nz,
 							 float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, float dx, float dy, float dz,
 							 float u0, float v0, float u1, float v1) {
 		u0 /= 64f; u1 /= 64f; v0 /= 32f; v1 /= 32f;
-		vc.addVertex(pose, ax, ay, az).setColor(-1).setUv(u0, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
-		vc.addVertex(pose, dx, dy, dz).setColor(-1).setUv(u0, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
-		vc.addVertex(pose, cx, cy, cz).setColor(-1).setUv(u1, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
-		vc.addVertex(pose, bx, by, bz).setColor(-1).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
+		vc.addVertex(pose, ax, ay, az).setColor(ay < 0.5f ? top : bottom).setUv(u0, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
+		vc.addVertex(pose, dx, dy, dz).setColor(dy < 0.5f ? top : bottom).setUv(u0, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
+		vc.addVertex(pose, cx, cy, cz).setColor(cy < 0.5f ? top : bottom).setUv(u1, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
+		vc.addVertex(pose, bx, by, bz).setColor(by < 0.5f ? top : bottom).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
 	}
 
 	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving) {
