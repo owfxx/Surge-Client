@@ -1,43 +1,35 @@
+<p align="center"><img src=".github/social-preview.png" alt="Surge Client" width="720"></p>
+
 # Surge Client
 
-- `launcher/` — Windows launcher (Electron)
-- `mod/` — in-game mod, Fabric 1.21.11 (Right Shift menu, B emote wheel)
+A Minecraft launcher and client for **Minecraft 1.21.11** (Fabric), made to be fast and easy to use.
 
-## Build
-Windows with JDK 21 + Node 20+: run `build.bat`.
-Output: `launcher/dist/Surge-Client-Setup-<ver>.exe` and `Surge-Client-<ver>-Standalone.exe`.
+## Download
 
-Or push to GitHub — the workflow builds both and uploads the exes.
+Get **Surge-Client-…-Standalone.exe** from the [latest release](../../releases/latest) and run it. No installation needed.
+The launcher and the in-game mod keep themselves up to date.
 
-## Notes
-- CurseForge needs a free API key (Settings → CurseForge key).
-- Data: `%APPDATA%\.surgeclient`
+Requires Windows 10 or 11 and a Minecraft Java Edition account.
 
+## What's inside
 
-## Updates through GitHub (do this once)
+**Launcher**
+- Modpacks: create, edit, import, and browse Modrinth and CurseForge mods, modpacks and resource packs
+- Performance mods (Sodium, Lithium and more) added automatically, smooth Java settings
+- Your 3D skin on the home screen, a skins page, servers with live ping, worlds and screenshots per pack
+- Discord status, crash help and one-click mod updates
 
-1. Make a free GitHub account and a new **public** repository, e.g. `surge-client` (public so every launcher can download updates without a login).
-2. Install Git (git-scm.com). In this folder run:
-   ```
-   git init
-   git add -A
-   git commit -m "Surge Client"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-NAME/surge-client.git
-   git push -u origin main
-   ```
-3. Double-click **release.bat** and type a new version like `1.0.1`.
-   GitHub builds the mod and the launcher (Actions tab, ~10 minutes) and publishes a Release
-   automatically whenever the version is new.
-4. Give players the `.exe` from that first Release. From then on, every new `release.bat`:
-   - new mod jar: downloaded automatically the next time they press Play
-   - new launcher: they get an "Update available" popup and it updates itself
+**In game** (press **Right Shift**)
+- 40+ mods in one menu, each with its own settings (right click a mod): FPS, CPS, coordinates, compass,
+  keystrokes, armor status, potion effects, AppleSkin, zoom, freelook, waypoints, motion blur,
+  view model, shield fix, totem tweaks, damage tint, custom crosshair, toggle sprint and sneak, and more
+- A HUD editor: drag anything, hold Alt to snap to the grid, Ctrl to line up with other mods
+- FPS boost that doesn't change how the game looks, with extra options if you want even more FPS
+- Command Keys: bind a key to a chat message or command
+- Wardrobe with wings, halos, capes and animated emotes (press **B** for the emote wheel)
 
-## Admin (launcher)
+All keys can be changed in **Options → Controls → Key Binds → Surge Client**.
 
-Press **Ctrl + Shift + F4** in the launcher and enter the admin password.
-- **Codes**: random or your own text, giving coins and/or cosmetics and emotes. Press *Publish codes*.
-- **Sales**: a percentage off one item, a category or everything. Press *Publish*.
-- **Updates**: set the repo (`you/surge-client`) and a GitHub token (fine-grained, this repo only,
-  *Contents: Read and write*). *Publish update…* uploads a mod `.jar` or launcher `.exe` by hand,
-  without waiting for Actions.
+## Building from source
+
+Windows with JDK 25 and Node.js 22: run `build.bat`. The launcher ends up in `launcher/dist/`.
