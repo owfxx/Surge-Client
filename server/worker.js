@@ -38,11 +38,95 @@ async function blocked(db, x, y) {
   return !!(await db.prepare('SELECT 1 FROM blocks WHERE (owner = ?1 AND target = ?2) OR (owner = ?2 AND target = ?1)').bind(x, y).first());
 }
 
+const REPO = env => env.REPO || 'owfxx/Surge-Client';
+let latestCache = null;
+
+async function latest(env) {
+  if (latestCache && Date.now() - latestCache.at < 10 * 60000) return latestCache;
+  const r = await fetch(`https://api.github.com/repos/${REPO(env)}/releases/latest`, { headers: { 'User-Agent': 'surge-client-site', Accept: 'application/vnd.github+json' } });
+  if (!r.ok) return latestCache;
+  const rel = await r.json();
+  const exe = (rel.assets || []).find(a => /Standalone\.exe$/.test(a.name));
+  if (!exe) return latestCache;
+  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url };
+  return latestCache;
+}
+
+async function download(env) {
+  const l = await latest(env);
+  if (!l) return new Response('Download is not available right now. Try again in a minute.', { status: 503 });
+  const r = await fetch(l.url, { redirect: 'follow', headers: { 'User-Agent': 'surge-client-site' } });
+  if (!r.ok) return new Response('Download is not available right now. Try again in a minute.', { status: 502 });
+  const h = new Headers({ 'content-type': 'application/octet-stream', 'content-disposition': 'attachment; filename="Surge Client.exe"', 'cache-control': 'no-store' });
+  const len = r.headers.get('content-length');
+  if (len) h.set('content-length', len);
+  return new Response(r.body, { headers: h });
+}
+
+const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
+
+function page(l) {
+  const ver = l ? `Version ${l.version} · ${Math.round(l.size / 1048576)} MB` : 'Windows 10 and 11';
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Surge Client</title><meta name="description" content="A fast Minecraft launcher and client for 1.21.11.">
+<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(MARK.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120a24;--deep:#2a1160;--violet:#8f50f2;--lilac:#d9c2ff;--text:#f5f0ff;--muted:#b9a9d8}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+.sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 50% -10%,#6a32d6 0%,#3a1890 35%,var(--bg) 75%)}
+.sky::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8,transparent),radial-gradient(1px 1px at 70% 20%,#fff6,transparent),radial-gradient(1.5px 1.5px at 85% 60%,#fff5,transparent),radial-gradient(1px 1px at 35% 75%,#fff4,transparent),radial-gradient(1px 1px at 55% 45%,#fff5,transparent);}
+main{max-width:980px;margin:0 auto;padding:72px 20px 40px;text-align:center}
+.mark{width:96px;height:112px;margin:0 auto;filter:drop-shadow(0 8px 24px #0008);animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
+h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px;letter-spacing:.5px;text-shadow:0 4px 0 #0005}
+.lead{color:var(--lilac);font-size:clamp(17px,2.2vw,20px);max-width:560px;margin:0 auto 34px}
+.dl{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#2a1160;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif;padding:16px 30px;box-shadow:0 6px 0 #b9a9d8,0 18px 40px #0007;transition:transform .12s,box-shadow .12s}
+.dl:hover{transform:translateY(-2px);box-shadow:0 8px 0 #b9a9d8,0 22px 46px #0008}.dl:active{transform:translateY(4px);box-shadow:0 2px 0 #b9a9d8}
+.dl:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
+.dl svg{width:22px;height:22px}
+.meta{color:var(--muted);font-size:14px;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:80px 0 0;text-align:left}
+.f{background:#ffffff0d;border:2px solid #ffffff14;padding:18px 18px 16px}
+.f h3{font:700 19px "Pixelify Sans",sans-serif;margin:0 0 6px;color:#fff}.f p{margin:0;color:var(--muted);font-size:14.5px}
+.steps{margin:64px auto 0;max-width:620px;text-align:left;color:var(--muted)}.steps h2{font:700 24px "Pixelify Sans",sans-serif;color:#fff;margin:0 0 10px;text-align:center}
+.steps ol{margin:0;padding-left:22px}.steps li{margin:6px 0}.steps b{color:#fff}
+footer{color:#8c7cab;font-size:13px;text-align:center;padding:40px 20px}
+@media (prefers-reduced-motion:reduce){.mark{animation:none}.dl{transition:none}}
+</style></head><body><div class="sky"></div>
+<main>
+<div class="mark">${MARK}</div>
+<h1>Surge Client</h1>
+<p class="lead">A fast Minecraft launcher and client for 1.21.11. Mods, friends and cosmetics, ready the moment you press Play.</p>
+<a class="dl" href="/download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v13m-6-6 6 6 6-6M4 21h16"/></svg>Download for Windows</a>
+<div class="meta">${ver} · No install needed</div>
+<section class="grid">
+<div class="f"><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, motion blur and more, each with its own settings.</p></div>
+<div class="f"><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
+<div class="f"><h3>More FPS</h3><p>Sodium, Lithium and friends are added for you, with smooth Java settings.</p></div>
+<div class="f"><h3>Friends</h3><p>Chat, set your status and join the server your friends are playing on.</p></div>
+<div class="f"><h3>Wardrobe</h3><p>Wings, halos, capes and animated emotes that other Surge players see.</p></div>
+<div class="f"><h3>Always up to date</h3><p>The launcher and the mod update themselves. Nothing to download twice.</p></div>
+</section>
+<section class="steps"><h2>Getting started</h2><ol>
+<li>Press <b>Download for Windows</b> and open <b>Surge Client.exe</b>. If Windows warns you, choose <b>More info</b>, then <b>Run anyway</b>.</li>
+<li>Sign in with your Microsoft account.</li>
+<li>Press <b>Play</b>. In game, <b>Right Shift</b> opens the mods and <b>B</b> opens emotes.</li>
+</ol></section>
+</main>
+<footer>Surge Client by owfx · Not affiliated with Mojang or Microsoft</footer>
+</body></html>`;
+}
+
 export default {
   async fetch(req, env) {
-    const db = env.DB;
     const url = new URL(req.url);
     const p = url.pathname;
+    if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
+      return new Response(page(await latest(env).catch(() => null)), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
+    }
+    if (req.method === 'GET' && p === '/download') return download(env);
+    const db = env.DB;
     await setup(db);
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }

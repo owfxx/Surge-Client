@@ -12,3 +12,12 @@ Makes cosmetics, emotes and the Surge badge visible to every Surge player, and p
 Everyone who uses your launcher build with that URL now sees each other's wings, halos, capes, emotes and badges.
 
 Updating from an older version: run `npx wrangler deploy` again. New tables are created on their own.
+
+## Download page
+
+The same URL is also the Surge Client website:
+
+- `https://surge-client.yourname.workers.dev/` is the download page
+- `https://surge-client.yourname.workers.dev/download` downloads the newest launcher straight away
+
+Both always give out the latest release.
