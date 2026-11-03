@@ -60,6 +60,7 @@ public class SurgeClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		SurgeConfig.load();
+		gg.surge.client.features.SelfUpdate.start();
 
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "surge"));
 		menuKey = key("menu", GLFW.GLFW_KEY_RIGHT_SHIFT, category);

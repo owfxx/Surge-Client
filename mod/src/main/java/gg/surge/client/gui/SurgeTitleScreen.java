@@ -127,6 +127,11 @@ public class SurgeTitleScreen extends Screen {
 
 		float kf = since(500, 400);
 		g.drawString(font, "Minecraft 1.21.11", 8, this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);
+		String upd = gg.surge.client.features.SelfUpdate.installed;
+		if (upd != null) {
+			String msg = "Surge Client " + upd.split("[+-]")[0] + " is ready. Restart the game to use it.";
+			g.drawString(font, msg, this.width - 8 - font.width(msg), this.height - 26, Colors.alpha(0xFFB483FF, kf), true);
+		}
 		String brand = "Surge Client";
 		g.drawString(font, brand, this.width - 8 - font.width(brand), this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);
 

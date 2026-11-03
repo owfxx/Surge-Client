@@ -48,16 +48,18 @@ async function latest(env) {
   const rel = await r.json();
   const exe = (rel.assets || []).find(a => /Standalone\.exe$/.test(a.name));
   if (!exe) return latestCache;
-  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url };
+  const jar = (rel.assets || []).find(a => /^surge-client-.+\.jar$/.test(a.name));
+  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url, jar: jar ? { name: jar.name, url: jar.browser_download_url } : null };
   return latestCache;
 }
 
-async function download(env) {
+async function download(env, mod) {
   const l = await latest(env);
-  if (!l) return new Response('Download is not available right now. Try again in a minute.', { status: 503 });
-  const r = await fetch(l.url, { redirect: 'follow', headers: { 'User-Agent': 'surge-client-site' } });
+  const src = l && (mod ? l.jar : { url: l.url, name: 'Surge Client.exe' });
+  if (!src) return new Response('Download is not available right now. Try again in a minute.', { status: 503 });
+  const r = await fetch(src.url, { redirect: 'follow', headers: { 'User-Agent': 'surge-client-site' } });
   if (!r.ok) return new Response('Download is not available right now. Try again in a minute.', { status: 502 });
-  const h = new Headers({ 'content-type': 'application/octet-stream', 'content-disposition': 'attachment; filename="Surge Client.exe"', 'cache-control': 'no-store' });
+  const h = new Headers({ 'content-type': mod ? 'application/java-archive' : 'application/octet-stream', 'content-disposition': `attachment; filename="${src.name}"`, 'cache-control': 'no-store' });
   const len = r.headers.get('content-length');
   if (len) h.set('content-length', len);
   return new Response(r.body, { headers: h });
@@ -86,6 +88,7 @@ h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px
 .dl:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
 .dl svg{width:22px;height:22px}
 .meta{color:var(--muted);font-size:14px;margin-top:14px}
+.alt{color:var(--muted);font-size:14px;margin:18px auto 0;max-width:520px}.alt a{color:#fff;text-underline-offset:3px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:80px 0 0;text-align:left}
 .f{background:#ffffff0d;border:2px solid #ffffff14;padding:18px 18px 16px}
 .f h3{font:700 19px "Pixelify Sans",sans-serif;margin:0 0 6px;color:#fff}.f p{margin:0;color:var(--muted);font-size:14.5px}
@@ -100,6 +103,7 @@ footer{color:#8c7cab;font-size:13px;text-align:center;padding:40px 20px}
 <p class="lead">A fast Minecraft launcher and client for 1.21.11. Mods, friends and cosmetics, ready the moment you press Play.</p>
 <a class="dl" href="/download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v13m-6-6 6 6 6-6M4 21h16"/></svg>Download for Windows</a>
 <div class="meta">${ver} · No install needed</div>
+<p class="alt">Using your own launcher? <a href="/download/mod">Get the mod on its own</a> for Fabric 1.21.11. It needs <a href="https://modrinth.com/mod/fabric-api" rel="noopener">Fabric API</a> and updates itself.</p>
 <section class="grid">
 <div class="f"><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, motion blur and more, each with its own settings.</p></div>
 <div class="f"><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
@@ -125,7 +129,8 @@ export default {
     if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
       return new Response(page(await latest(env).catch(() => null)), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
     }
-    if (req.method === 'GET' && p === '/download') return download(env);
+    if (req.method === 'GET' && p === '/download') return download(env, false);
+    if (req.method === 'GET' && p === '/download/mod') return download(env, true);
     const db = env.DB;
     await setup(db);
     let body = {};
