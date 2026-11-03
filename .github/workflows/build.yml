@@ -1,0 +1,67 @@
+name: Build Surge Client
+# Every push: builds the mod and launcher and keeps them as a download on the run page.
+# Push a tag like v0.9.0: also publishes a GitHub Release, and every Surge launcher
+# picks up the new mod (next time Play is pressed) and offers the new launcher.
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version=.*/version=${VER}+mc1.21.11/" mod/gradle.properties
+          node -e "const f='launcher/package.json';const p=require('./'+f);p.version='${VER}';require('fs').writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
+
+      - name: Point the launcher at this repo for updates
+        shell: bash
+        run: echo "{\"repo\":\"${GITHUB_REPOSITORY}\"}" > launcher/resources/update-source.json
+
+      - name: Build mod
+        working-directory: mod
+        run: ./gradlew.bat build
+
+      - name: Build launcher
+        working-directory: launcher
+        run: |
+          npm ci
+          npx electron-builder --win portable --x64
+
+      - name: Collect files
+        shell: bash
+        run: |
+          mkdir -p out
+          cp launcher/dist/*-Standalone.exe out/
+          for f in mod/build/libs/surge-client-*.jar; do
+            case "$f" in *-sources.jar) continue;; esac
+            cp "$f" "out/$(basename "$f" | sed 's/+/-/')"
+          done
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: surge-client
+          path: out/*
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true

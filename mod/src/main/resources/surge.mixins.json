@@ -1,0 +1,31 @@
+{
+	"required": true,
+	"package": "gg.surge.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"BlockStateBaseMixin",
+		"EntityRendererMixin",
+		"BlockEntityRenderDispatcherMixin",
+		"ParticleAccessor",
+		"ParticleEngineMixin",
+		"PlayerTabOverlayMixin",
+		"GameRendererMixin",
+		"MouseHandlerMixin",
+		"ScreenEffectRendererMixin",
+		"OptionInstanceAccessor",
+		"EquipmentLayerRendererMixin",
+		"MinecraftMixin",
+		"EntityTurnMixin",
+		"CameraMixin",
+		"LevelWeatherMixin",
+		"ChatComponentMixin",
+		"PlayerModelMixin",
+		"AvatarRendererMixin",
+		"GameRendererAccessor",
+		"ItemInHandRendererMixin",
+		"TotemPopMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

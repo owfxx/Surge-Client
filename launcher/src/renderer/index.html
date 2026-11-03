@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self' https:">
+  <title>Surge Client</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="titlebar">
+    <img src="assets/icon.png" alt="" class="brand-icon">
+    <div class="win-buttons">
+      <button data-win="min" aria-label="Minimize"><svg viewBox="0 0 12 12"><path d="M2.5 6h7"/></svg></button>
+      <button data-win="max" aria-label="Maximize"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg></button>
+      <button data-win="close" class="close" aria-label="Close"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <button class="nav active" data-view="home" data-tip="Play" aria-label="Play"><img src="assets/icons/play.png" alt=""></button>
+      <button class="nav" data-view="packs" data-tip="Modpacks" aria-label="Modpacks"><img src="assets/icons/packs.png" alt=""></button>
+      <button class="nav" data-view="skins" data-tip="Skins" aria-label="Skins"><img src="assets/icons/skins.png" alt=""></button>
+      <button class="nav" data-view="servers" data-tip="Servers" aria-label="Servers"><img src="assets/icons/servers.png" alt=""></button>
+      <button class="nav" data-view="browse" data-tip="Browse" aria-label="Browse"><img src="assets/icons/browse.png" alt=""></button>
+      <button class="nav" data-view="settings" data-tip="Settings" aria-label="Settings"><img src="assets/icons/settings.png" alt=""></button>
+      <div class="spacer"></div>
+      <button class="account" id="accountBtn" data-tip="Sign in" aria-label="Account">
+        <img id="accountHead" src="assets/icon.png" alt="">
+        <span id="accountName" hidden>Sign in</span>
+      </button>
+    </nav>
+
+    <main id="view"></main>
+  </div>
+
+  <div id="tasks" class="tasks"></div>
+  <div id="toasts" class="toasts"></div>
+  <div id="tip" class="tip hidden"></div>
+  <div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/skinview3d.bundle.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

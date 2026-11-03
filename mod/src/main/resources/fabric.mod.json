@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "surge",
+	"version": "${version}",
+	"name": "Surge Client",
+	"description": "Surge Client in-game menu: HUD mods, performance options, cosmetics and emotes. Press Right Shift.",
+	"authors": ["Surge"],
+	"license": "MIT",
+	"icon": "assets/surge/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["gg.surge.client.SurgeClient"]
+	},
+	"mixins": ["surge.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.17.0",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

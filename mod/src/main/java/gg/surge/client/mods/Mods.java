@@ -1,0 +1,254 @@
+package gg.surge.client.mods;
+
+import gg.surge.client.features.DamageTint;
+import gg.surge.client.features.Fullbright;
+import gg.surge.client.features.OptionTweaks;
+import gg.surge.client.features.Waypoints;
+import gg.surge.client.hud.HudModule;
+import gg.surge.client.hud.HudModules;
+import gg.surge.client.mods.SurgeMod.Category;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.Items;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/** Every mod in the Right Shift menu: the HUD mods plus the feature mods below. */
+public final class Mods {
+	private static final List<SurgeMod> FEATURES = new ArrayList<>();
+
+	private Mods() {}
+
+	private static SurgeMod mod(String id, String name, Category cat, net.minecraft.world.item.Item icon, String desc, boolean def) {
+		SurgeMod m = new SurgeMod(id, name, cat, icon, desc, def);
+		FEATURES.add(m);
+		return m;
+	}
+
+	private static Minecraft mc() {
+		return Minecraft.getInstance();
+	}
+
+	// ------------------------------------------------------------------ Settings (not a card; its own tab)
+	public static final SurgeMod GENERAL = new SurgeMod("general", "Settings", SurgeMod.Category.UTILITY, Items.COMPARATOR,
+		"Settings for the whole client", true);
+	static { GENERAL.toggleable = false; }
+	public static final Setting.Header H_STYLE = GENERAL.header("HUD style");
+	public static final Setting.Toggle HUD_OVERRIDE = GENERAL.toggle("hudOverride", "Same style for every HUD mod", false);
+	public static final Setting.Toggle HUD_BG = GENERAL.toggle("hudBg", "Background", true).showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Color HUD_BG_COLOR = GENERAL.color("hudBgColor", "Background color", "000000").showIf(() -> Mods.HUD_OVERRIDE.on() && Mods.HUD_BG.on());
+	public static final Setting.Slider HUD_BG_OPACITY = GENERAL.slider("hudBgOpacity", "Background opacity", 45, 0, 100, 5, "%").showIf(() -> Mods.HUD_OVERRIDE.on() && Mods.HUD_BG.on());
+	public static final Setting.Color HUD_TEXT = GENERAL.color("hudText", "Text color", "FFFFFF").showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Toggle HUD_SHADOW = GENERAL.toggle("hudShadow", "Text shadow", true).showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Choice HUD_BRACKETS = GENERAL.choice("hudBrackets", "Brackets", "None", "None", "[ ]", "( )", "< >").showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Header H_MENUS = GENERAL.header("Menus");
+	public static final Setting.Toggle UI_CLICKS = GENERAL.toggle("clicks", "Click sounds", true);
+	public static final Setting.Toggle UI_HOVER = GENERAL.toggle("hoverSounds", "Hover sounds", false);
+	public static final Setting.Toggle UI_ANIM = GENERAL.toggle("animations", "Smooth animations", true);
+	public static final Setting.Slider UI_ANIM_SPEED = GENERAL.slider("animSpeed", "Animation speed", 100, 50, 200, 10, "%").showIf(() -> Mods.UI_ANIM.on());
+
+	// ------------------------------------------------------------------ PvP
+	public static final SurgeMod TOGGLE_SPRINT = mod("toggle_sprint", "Toggle Sprint", Category.PVP, Items.SUGAR,
+		"Sprint without holding the key. Tap your sprint key to switch it on or off.", false);
+	private static boolean sprintToggled = true;
+
+	public static boolean sprintToggled() { return sprintToggled; }
+
+	public static void flipSprint() { sprintToggled = !sprintToggled; }
+
+	public static final SurgeMod TOGGLE_SNEAK = mod("toggle_sneak", "Toggle Sneak", Category.PVP, Items.LEATHER_BOOTS,
+		"Tap sneak to start sneaking, tap again to stop", false);
+
+	public static final SurgeMod DAMAGE_TINT = mod("damage_tint", "Damage Tint", Category.PVP, Items.RED_DYE,
+		"Recolor the flash players and mobs get when they're hit", false);
+	public static final Setting.Color TINT_COLOR = DAMAGE_TINT.color("color", "Color", "FF0000");
+	public static final Setting.Slider TINT_OPACITY = DAMAGE_TINT.slider("opacity", "Opacity", 30, 5, 95, 5, "%");
+	public static final Setting.Toggle TINT_ARMOR = DAMAGE_TINT.toggle("armor", "Tint armor too", true);
+
+	public static final SurgeMod APPLESKIN = mod("appleskin", "AppleSkin", Category.PVP, Items.GOLDEN_APPLE,
+		"Shows saturation on your hunger bar and how much the food you hold will fill", true);
+	public static final Setting.Toggle APPLE_SAT = APPLESKIN.toggle("saturation", "Saturation on the hunger bar", true);
+	public static final Setting.Toggle APPLE_PREVIEW = APPLESKIN.toggle("preview", "Preview food you're holding", true);
+	public static final Setting.Toggle APPLE_TEXT = APPLESKIN.toggle("numbers", "Numbers next to the bar", false);
+
+	public static final SurgeMod HIT_SOUND = mod("hit_sound", "Hit Sounds", Category.PVP, Items.NOTE_BLOCK,
+		"A satisfying sound when you hit a player or mob", false);
+	public static final Setting.Choice HIT_SOUND_TYPE = HIT_SOUND.choice("sound", "Sound", "Ding", "Ding", "Pop", "Click");
+	public static final Setting.Slider HIT_SOUND_VOL = HIT_SOUND.slider("volume", "Volume", 60, 10, 100, 5, "%");
+
+	public static final SurgeMod SHIELD_FIX = mod("shield_fix", "Shield Fix", Category.PVP, Items.SHIELD,
+		"Lower and shrink your shield so it doesn't block your view", false);
+	public static final Setting.Slider SHIELD_LOWER = SHIELD_FIX.slider("lower", "Lower by", 60, 0, 100, 5, "%");
+	public static final Setting.Slider SHIELD_BLOCKING = SHIELD_FIX.slider("blocking", "While blocking", 50, 0, 100, 5, "%");
+	public static final Setting.Slider SHIELD_SCALE = SHIELD_FIX.slider("scale", "Size", 85, 40, 100, 5, "%");
+
+	public static final SurgeMod TOTEMS = mod("totems", "Totem Tweaks", Category.PVP, Items.TOTEM_OF_UNDYING,
+		"A pop counter in chat and a smaller (or no) totem animation", false);
+	public static final Setting.Toggle TOTEM_CHAT = TOTEMS.toggle("chat", "Pop counter in chat", true);
+	public static final Setting.Toggle TOTEM_CHAT_SELF = TOTEMS.toggle("chatSelf", "Count your own pops", true).showIf(() -> Mods.TOTEM_CHAT.on());
+	public static final Setting.Toggle TOTEM_HIDE = TOTEMS.toggle("hide", "Hide the totem animation", false);
+	public static final Setting.Slider TOTEM_SCALE = TOTEMS.slider("scale", "Animation size", 50, 20, 100, 5, "%").showIf(() -> !Mods.TOTEM_HIDE.on());
+
+	public static final SurgeMod HURT_CAM = mod("hurt_cam", "Hurt Cam", Category.PVP, Items.IRON_SWORD,
+		"Change how much your screen shakes when you take damage", false);
+	public static final Setting.Slider HURT_STRENGTH = HURT_CAM.slider("strength", "Shake", 0, 0, 100, 5, "%");
+
+	// ------------------------------------------------------------------ Visual
+	public static final SurgeMod CROSSHAIR = mod("crosshair", "Crosshair", Category.VISUAL, Items.TRIPWIRE_HOOK,
+		"A clean custom crosshair with your own style and color", false);
+	public static final Setting.Choice CROSS_STYLE = CROSSHAIR.choice("style", "Style", "Cross", "Cross", "Gap", "Dot", "Circle", "T");
+	public static final Setting.Color CROSS_COLOR = CROSSHAIR.color("color", "Color", "FFFFFF");
+	public static final Setting.Slider CROSS_SIZE = CROSSHAIR.slider("size", "Length", 4, 1, 10, 1, "px");
+	public static final Setting.Slider CROSS_GAP = CROSSHAIR.slider("gap", "Gap", 2, 0, 8, 1, "px");
+	public static final Setting.Slider CROSS_THICK = CROSSHAIR.slider("thickness", "Thickness", 1, 1, 4, 1, "px");
+	public static final Setting.Toggle CROSS_OUTLINE = CROSSHAIR.toggle("outline", "Outline", true);
+	public static final Setting.Toggle CROSS_DOT = CROSSHAIR.toggle("dot", "Center dot", false);
+	public static final Setting.Toggle CROSS_THIRD = CROSSHAIR.toggle("thirdPerson", "Show in third person", false);
+
+	public static final SurgeMod FULLBRIGHT = mod("fullbright", "Fullbright", Category.VISUAL, Items.GLOWSTONE,
+		"See clearly in caves and at night", false);
+
+	public static final SurgeMod LOW_FIRE = mod("low_fire", "Low Fire", Category.VISUAL, Items.FIRE_CHARGE,
+		"Lower the fire overlay when you're burning", true);
+	public static final Setting.Slider FIRE_HEIGHT = LOW_FIRE.slider("lower", "Lower by", 32, 0, 60, 2, "%");
+
+	public static final SurgeMod VIEW_MODEL = mod("view_model", "View Model", Category.VISUAL, Items.DIAMOND_PICKAXE,
+		"Move, turn and resize the items in your hands", false);
+	public static final Setting.Header VM_H1 = VIEW_MODEL.header("Main hand");
+	public static final Setting.Slider VM_MAIN_X = VIEW_MODEL.slider("mainX", "Left / right", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_MAIN_Y = VIEW_MODEL.slider("mainY", "Up / down", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_MAIN_Z = VIEW_MODEL.slider("mainZ", "Forward / back", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_MAIN_RX = VIEW_MODEL.slider("mainRX", "Tilt", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_MAIN_RY = VIEW_MODEL.slider("mainRY", "Turn", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_MAIN_RZ = VIEW_MODEL.slider("mainRZ", "Roll", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_MAIN_SCALE = VIEW_MODEL.slider("mainScale", "Size", 100, 30, 150, 5, "%");
+	public static final Setting.Header VM_H2 = VIEW_MODEL.header("Off hand");
+	public static final Setting.Slider VM_OFF_X = VIEW_MODEL.slider("offX", "Left / right", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_OFF_Y = VIEW_MODEL.slider("offY", "Up / down", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_OFF_Z = VIEW_MODEL.slider("offZ", "Forward / back", 0, -1, 1, 0.02f, "");
+	public static final Setting.Slider VM_OFF_RX = VIEW_MODEL.slider("offRX", "Tilt", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_OFF_RY = VIEW_MODEL.slider("offRY", "Turn", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_OFF_RZ = VIEW_MODEL.slider("offRZ", "Roll", 0, -180, 180, 5, "°");
+	public static final Setting.Slider VM_OFF_SCALE = VIEW_MODEL.slider("offScale", "Size", 100, 30, 150, 5, "%");
+
+	public static final SurgeMod MOTION_BLUR = mod("motion_blur", "Motion Blur", Category.VISUAL, Items.PHANTOM_MEMBRANE,
+		"Smooth, cinematic blur when you move and turn", false);
+	public static final Setting.Slider BLUR_STRENGTH = MOTION_BLUR.slider("strength", "Strength", 50, 20, 80, 15, "%");
+
+	public static final SurgeMod HIT_PARTICLES = mod("hit_particles", "Hit Particles", Category.PVP, Items.NETHERITE_SWORD,
+		"More hit particles every time you land a hit", false);
+	public static final Setting.Slider HIT_PARTICLE_COUNT = HIT_PARTICLES.slider("amount", "Amount", 2, 1, 5, 1, "x");
+	public static final Setting.Toggle HIT_PARTICLE_ALWAYS = HIT_PARTICLES.toggle("always", "Always show crits", true);
+
+	public static final SurgeMod NO_BOBBING = mod("no_bobbing", "No View Bobbing", Category.VISUAL, Items.FEATHER,
+		"Stop the camera bouncing while you walk", false);
+
+	public static final SurgeMod FOV_EFFECTS = mod("fov_effects", "Static FOV", Category.VISUAL, Items.ENDER_PEARL,
+		"Stop sprinting and speed effects from zooming your view", false);
+	public static final Setting.Slider FOV_AMOUNT = FOV_EFFECTS.slider("amount", "FOV effects", 0, 0, 100, 5, "%");
+
+	public static final SurgeMod WEATHER = mod("weather", "Weather Changer", Category.VISUAL, Items.LIGHTNING_ROD,
+		"Pick the weather you see. Only changes it for you.", false);
+	public static final Setting.Choice WEATHER_TYPE = WEATHER.choice("type", "Weather", "Clear", "Clear", "Rain", "Thunder");
+
+	public static final SurgeMod OVERLAYS = mod("overlays", "Clean Overlays", Category.VISUAL, Items.CARVED_PUMPKIN,
+		"Hide the pumpkin blur and the dark screen edges", false);
+	public static final Setting.Toggle HIDE_PUMPKIN = OVERLAYS.toggle("pumpkin", "Hide pumpkin blur", true);
+	public static final Setting.Toggle HIDE_VIGNETTE = OVERLAYS.toggle("vignette", "Hide vignette", true);
+
+	public static final SurgeMod SCOREBOARD = mod("scoreboard", "Scoreboard", Category.VISUAL, Items.OAK_SIGN,
+		"Resize or hide the sidebar scoreboard", false);
+	public static final Setting.Toggle SCORE_HIDE = SCOREBOARD.toggle("hide", "Hide scoreboard", false);
+	public static final Setting.Slider SCORE_SCALE = SCOREBOARD.slider("scale", "Scale", 100, 50, 150, 5, "%").showIf(() -> !Mods.SCORE_HIDE.on());
+
+	public static final SurgeMod BOSSBAR = mod("bossbar", "Boss Bar", Category.VISUAL, Items.DRAGON_HEAD,
+		"Resize or hide boss bars", false);
+	public static final Setting.Toggle BOSS_HIDE = BOSSBAR.toggle("hide", "Hide boss bars", false);
+	public static final Setting.Slider BOSS_SCALE = BOSSBAR.slider("scale", "Scale", 100, 50, 150, 5, "%").showIf(() -> !Mods.BOSS_HIDE.on());
+
+	public static final SurgeMod TITLES = mod("titles", "Title Scale", Category.VISUAL, Items.NAME_TAG,
+		"Shrink the big titles servers put on your screen", false);
+	public static final Setting.Slider TITLE_SCALE = TITLES.slider("scale", "Scale", 60, 30, 150, 5, "%");
+
+	public static final SurgeMod BADGE = mod("badge", "Surge Badge", Category.VISUAL, Items.AMETHYST_SHARD,
+		"The Surge cloud before the names of Surge players in the tab list and on nametags", true);
+	public static final Setting.Choice BADGE_WHO = BADGE.choice("who", "Show for", "Everyone", "Everyone", "Only me");
+
+	public static final SurgeMod COSMETICS = mod("cosmetics", "Cosmetics", Category.VISUAL, Items.ELYTRA,
+		"Wings, halos and capes from the wardrobe", true);
+	public static final Setting.Toggle COS_OTHERS = COSMETICS.toggle("others", "Show other players' cosmetics", true);
+	public static final Setting.Toggle COS_WINGS_ELYTRA = COSMETICS.toggle("hideWithElytra", "Hide wings while wearing an elytra", true);
+
+	public static final SurgeMod MAIN_MENU = mod("main_menu", "Surge Main Menu", Category.VISUAL, Items.PAINTING,
+		"Use Surge's main menu instead of the vanilla one", true);
+
+	// ------------------------------------------------------------------ Utility
+	public static final SurgeMod ZOOM = mod("zoom", "Zoom", Category.UTILITY, Items.SPYGLASS,
+		"Hold your zoom key (C) to zoom in. Scroll while zooming to adjust.", true);
+	public static final Setting.Slider ZOOM_LEVEL = ZOOM.slider("level", "Zoom", 4, 2, 16, 0.5f, "x");
+	public static final Setting.Toggle ZOOM_SCROLL = ZOOM.toggle("scroll", "Scroll to adjust", true);
+	public static final Setting.Toggle ZOOM_SMOOTH_CAM = ZOOM.toggle("smoothCam", "Smooth camera", true);
+	public static final Setting.Toggle ZOOM_ANIMATE = ZOOM.toggle("animate", "Smooth zoom animation", true);
+
+	public static final SurgeMod FREELOOK = mod("freelook", "Freelook", Category.UTILITY, Items.ENDER_EYE,
+		"Hold your freelook key (Left Alt) to look around without turning", true);
+	public static final Setting.Choice FREELOOK_MODE = FREELOOK.choice("mode", "Key mode", "Hold", "Hold", "Toggle");
+	public static final Setting.Choice FREELOOK_VIEW = FREELOOK.choice("view", "Camera", "Behind", "Behind", "Front");
+	public static final Setting.Toggle FREELOOK_INVERT = FREELOOK.toggle("invert", "Invert up and down", false);
+
+	public static final SurgeMod CHAT = mod("chat", "Chat", Category.UTILITY, Items.WRITABLE_BOOK,
+		"Timestamps in front of chat messages", false);
+	public static final Setting.Toggle CHAT_TIME = CHAT.toggle("timestamps", "Timestamps", true);
+	public static final Setting.Toggle CHAT_24H = CHAT.toggle("24h", "24-hour time", true).showIf(() -> Mods.CHAT_TIME.on());
+	public static final Setting.Toggle CHAT_SECONDS = CHAT.toggle("seconds", "Show seconds", false).showIf(() -> Mods.CHAT_TIME.on());
+
+	public static final SurgeMod WAYPOINTS = mod("waypoints", "Waypoints", Category.UTILITY, Items.LODESTONE,
+		"Mark places and see them through walls with their distance. Add one with the Waypoint key.", true);
+	public static final Setting.Toggle WP_WORLD = WAYPOINTS.toggle("world", "Show markers in the world", true);
+	public static final Setting.Choice WP_MARKER = WAYPOINTS.choice("marker", "Marker", "Diamond", "Diamond", "Dot", "Pin", "None").showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Choice WP_LABEL = WAYPOINTS.choice("label", "Name and distance", "When near", "Always", "When near", "When looking", "Never").showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Slider WP_NEAR = WAYPOINTS.slider("near", "Near means within", 75, 10, 500, 5, " blocks").showIf(() -> Mods.WP_WORLD.on() && Mods.WP_LABEL.is("When near"));
+	public static final Setting.Toggle WP_DISTANCE = WAYPOINTS.toggle("distance", "Show distance", true).showIf(() -> Mods.WP_WORLD.on() && !Mods.WP_LABEL.is("Never"));
+	public static final Setting.Toggle WP_GLOW = WAYPOINTS.toggle("glow", "Glowing block outline", true).showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Slider WP_GLOW_RANGE = WAYPOINTS.slider("glowRange", "Outline within", 75, 10, 300, 5, " blocks").showIf(() -> Mods.WP_WORLD.on() && Mods.WP_GLOW.on());
+	public static final Setting.Toggle WP_BEAM = WAYPOINTS.toggle("beam", "Light beam", true).showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Slider WP_SCALE = WAYPOINTS.slider("scale", "Label size", 100, 50, 200, 10, "%").showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Slider WP_RANGE = WAYPOINTS.slider("range", "Hide farther than", 5000, 100, 30000, 100, " blocks").showIf(() -> Mods.WP_WORLD.on());
+	public static final Setting.Toggle WP_DEATH = WAYPOINTS.toggle("death", "Waypoint where you die", true);
+
+	public static final SurgeMod DISCORD = mod("discord", "Discord Status", Category.UTILITY, Items.AMETHYST_CLUSTER,
+		"Show what you're playing on your Discord profile (through the Surge launcher)", true);
+	public static final Setting.Toggle DISCORD_SERVER = DISCORD.toggle("server", "Show the server address", true);
+	public static final Setting.Toggle DISCORD_PACK = DISCORD.toggle("pack", "Show the modpack name", true);
+
+	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
+		"Bind keys that send a chat message or command, like /home or gg", true);
+
+	static {
+		DAMAGE_TINT.onToggle(on -> DamageTint.apply(mc())).onChange(() -> DamageTint.apply(mc()));
+		FULLBRIGHT.onToggle(on -> Fullbright.apply(mc()));
+		TOGGLE_SNEAK.onToggle(on -> OptionTweaks.apply(mc()));
+		HURT_CAM.onToggle(on -> OptionTweaks.apply(mc())).onChange(() -> OptionTweaks.apply(mc()));
+		NO_BOBBING.onToggle(on -> OptionTweaks.apply(mc()));
+		FOV_EFFECTS.onToggle(on -> OptionTweaks.apply(mc())).onChange(() -> OptionTweaks.apply(mc()));
+		OVERLAYS.onToggle(on -> OptionTweaks.apply(mc())).onChange(() -> OptionTweaks.apply(mc()));
+		CHAT.onToggle(on -> OptionTweaks.apply(mc()));
+		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
+	}
+
+	/** Every mod, HUD mods first. */
+	public static List<SurgeMod> all() {
+		List<SurgeMod> out = new ArrayList<>(HudModules.ALL);
+		out.addAll(FEATURES);
+		return out;
+	}
+
+	public static SurgeMod byId(String id) {
+		for (SurgeMod m : all()) if (m.id.equals(id)) return m;
+		return null;
+	}
+
+	public static HudModule hud(String id) {
+		return HudModules.byId(id);
+	}
+}
