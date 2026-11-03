@@ -89,7 +89,14 @@ async function syncSurgeMod(inst, onProgress) {
   return dest;
 }
 
-async function launch(instanceId, { onProgress, onLog, onExit, server, world }) {
+const hide = m => String(m)
+  .replace(/(--accessToken\s+)\S+/g, '$1[hidden]')
+  .replace(/(--xuid\s+)\S+/g, '$1[hidden]')
+  .replace(/(-Dsurge\.token=)\S+/g, '$1[hidden]')
+  .replace(/eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{10,}/g, '[hidden]');
+
+async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, world }) {
+  const onLog = m => rawLog(hide(m));
   if (running) throw new Error('Minecraft is already running');
   const cfg = config.load();
   const inst = instances.get(instanceId);
@@ -120,7 +127,7 @@ async function launch(instanceId, { onProgress, onLog, onExit, server, world }) 
   const ram = inst.ramMb || cfg.ramMb;
   const useZgc = ram >= 6144;
   const jvm = (cfg.jvmPreset === 'surge' ? (useZgc ? SURGE_ZGC : SURGE_JVM) : [])
-    .concat([`-Dsurge.home=${paths.root}`, `-Dsurge.codesUrl=${cfg.codesUrl || release.codesUrl()}`, `-Dsurge.apiUrl=${cfg.apiUrl || ''}`, `-Dsurge.token=${surgeToken}`, `-Dsurge.repo=${release.repo()}`])
+    .concat([`-Dsurge.home=${paths.root}`, `-Dsurge.codesUrl=${cfg.codesUrl || release.codesUrl()}`, `-Dsurge.apiUrl=${social.apiUrl()}`, `-Dsurge.token=${surgeToken}`, `-Dsurge.repo=${release.repo()}`])
     .concat(surgeJar ? [`-Dfabric.addMods=${surgeJar}`] : [])
     .concat(cfg.extraJvmArgs.split(/\s+/).filter(Boolean));
 

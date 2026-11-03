@@ -119,7 +119,20 @@ public final class Social {
 			.header("Authorization", "Bearer " + token()).header("Content-Type", "application/json");
 	}
 
-	private static CompletableFuture<JsonObject> send(HttpRequest r) {
+	private static CompletableFuture<JsonObject> failed(String msg) {
+		JsonObject o = new JsonObject();
+		o.addProperty("error", msg);
+		return CompletableFuture.completedFuture(o);
+	}
+
+	private static CompletableFuture<JsonObject> call(java.util.function.Supplier<HttpRequest> make) {
+		if (!available()) return failed(unavailableReason());
+		HttpRequest r;
+		try {
+			r = make.get();
+		} catch (Exception e) {
+			return failed("The Surge service link in the launcher settings isn't valid");
+		}
 		return HTTP.sendAsync(r, HttpResponse.BodyHandlers.ofString()).thenApply(res -> {
 			JsonObject o;
 			try { o = JsonParser.parseString(res.body()).getAsJsonObject(); } catch (Exception e) { o = new JsonObject(); }
@@ -145,7 +158,7 @@ public final class Social {
 
 	public static void refresh() {
 		busySocial = true;
-		send(req("/v1/social").GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+		call(() -> req("/v1/social").GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
 			busySocial = false;
 			if (o.has("error")) { lastError = s(o, "error"); return; }
 			lastError = "";
@@ -188,7 +201,7 @@ public final class Social {
 	private static void pollMessages() {
 		busyMsg = true;
 		long since = Math.max(0, lastId);
-		send(req("/v1/messages?since=" + since).GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+		call(() -> req("/v1/messages?since=" + since).GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
 			busyMsg = false;
 			if (o.has("error")) return;
 			JsonArray a = o.getAsJsonArray("messages");
@@ -231,7 +244,7 @@ public final class Social {
 	}
 
 	private static void post(String path, JsonObject body, Consumer<JsonObject> done) {
-		send(req(path).POST(HttpRequest.BodyPublishers.ofString(body.toString())).build())
+		call(() -> req(path).POST(HttpRequest.BodyPublishers.ofString(body.toString())).build())
 			.thenAccept(o -> Minecraft.getInstance().execute(() -> { if (done != null) done.accept(o); refresh(); }));
 	}
 
@@ -267,7 +280,7 @@ public final class Social {
 	public static void message(String uuid, String text, Consumer<String> error) {
 		JsonObject b = uuidBody(uuid);
 		b.addProperty("text", text);
-		send(req("/v1/messages").POST(HttpRequest.BodyPublishers.ofString(b.toString())).build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+		call(() -> req("/v1/messages").POST(HttpRequest.BodyPublishers.ofString(b.toString())).build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
 			if (o.has("error")) error.accept(s(o, "error"));
 			else { lastMessages = 0; }
 		}));

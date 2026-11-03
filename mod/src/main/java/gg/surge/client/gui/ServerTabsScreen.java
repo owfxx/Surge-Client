@@ -82,7 +82,14 @@ public class ServerTabsScreen extends Screen {
 		if (repo == null || repo.isBlank()) repo = "owfxx/Surge-Client";
 		String url = System.getProperty("surge.discoverUrl", "https://github.com/" + repo + "/releases/download/data/discover.json");
 		HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).followRedirects(HttpClient.Redirect.NORMAL).build();
-		http.sendAsync(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(10)).GET().build(), HttpResponse.BodyHandlers.ofString())
+		HttpRequest req;
+		try {
+			req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(10)).GET().build();
+		} catch (Exception e) {
+			discoverError = "Couldn't load servers.";
+			return;
+		}
+		http.sendAsync(req, HttpResponse.BodyHandlers.ofString())
 			.thenAccept(r -> {
 				if (r.statusCode() == 404) { discover = List.of(); return; }
 				if (r.statusCode() != 200) { discoverError = "Couldn't load servers (" + r.statusCode() + ")"; return; }

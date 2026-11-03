@@ -4,7 +4,9 @@ const config = require('./config');
 let cached = null;
 
 function apiUrl() {
-  return (config.load().apiUrl || '').trim().replace(/\/$/, '');
+  let u = (config.load().apiUrl || '').trim().replace(/\/+$/, '');
+  if (u && !/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
 }
 
 async function signIn(authorization) {
@@ -41,4 +43,4 @@ async function social() {
 
 function token() { return cached ? cached.token : ''; }
 
-module.exports = { signIn, social, token };
+module.exports = { apiUrl, signIn, social, token };

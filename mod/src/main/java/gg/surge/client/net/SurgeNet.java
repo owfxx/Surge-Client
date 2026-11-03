@@ -36,11 +36,20 @@ public final class SurgeNet {
 
 	public static String url() {
 		String u = System.getProperty("surge.apiUrl", "").trim();
-		return u.endsWith("/") ? u.substring(0, u.length() - 1) : u;
+		while (u.endsWith("/")) u = u.substring(0, u.length() - 1);
+		if (!u.isEmpty() && !u.contains("://")) u = "https://" + u;
+		return u;
 	}
 
 	public static boolean online() {
-		return !url().isEmpty();
+		String u = url();
+		if (u.isEmpty()) return false;
+		try {
+			URI uri = URI.create(u);
+			return uri.getScheme() != null && uri.getHost() != null;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public static boolean isSurge(UUID id) {
@@ -103,11 +112,16 @@ public final class SurgeNet {
 		o.addProperty("flag", myFlag());
 		o.addProperty("status", Social.status());
 		o.addProperty("server", Social.server(mc));
+		HttpRequest req;
+		try {
+			HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(8))
+				.header("content-type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(o.toString()));
+			if (!Social.token().isEmpty()) b.header("Authorization", "Bearer " + Social.token());
+			req = b.build();
+		} catch (Exception e) {
+			return;
+		}
 		busyPush = true;
-		HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(8))
-			.header("content-type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(o.toString()));
-		if (!Social.token().isEmpty()) b.header("Authorization", "Bearer " + Social.token());
-		HttpRequest req = b.build();
 		HTTP.sendAsync(req, HttpResponse.BodyHandlers.discarding()).whenComplete((r, e) -> busyPush = false);
 	}
 
@@ -120,8 +134,13 @@ public final class SurgeNet {
 			ids.append(p.getUUID().toString().replace("-", ""));
 		}
 		if (ids.length() == 0) { PLAYERS.clear(); return; }
+		HttpRequest req;
+		try {
+			req = HttpRequest.newBuilder(URI.create(url() + "/v1/players?ids=" + ids)).timeout(Duration.ofSeconds(8)).GET().build();
+		} catch (Exception e) {
+			return;
+		}
 		busyPull = true;
-		HttpRequest req = HttpRequest.newBuilder(URI.create(url() + "/v1/players?ids=" + ids)).timeout(Duration.ofSeconds(8)).GET().build();
 		HTTP.sendAsync(req, HttpResponse.BodyHandlers.ofString()).whenComplete((r, e) -> {
 			busyPull = false;
 			if (e != null || r == null || r.statusCode() != 200) return;
