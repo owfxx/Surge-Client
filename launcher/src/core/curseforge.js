@@ -52,10 +52,12 @@ async function installProject(instanceId, modId, type = 'mod', onProgress = () =
   const inst = instances.get(instanceId);
   const mod = (await getJson(`${API}/mods/${modId}`, headers())).data;
   const contentType = mod.classId === CLASS.resourcepack ? 'resourcepack' : mod.classId === CLASS.shader ? 'shader' : 'mod';
-  const params = new URLSearchParams({ gameVersion: inst.mcVersion, pageSize: '20' });
+  const params = new URLSearchParams({ gameVersion: inst.mcVersion, pageSize: '50' });
   if (contentType === 'mod') params.set('modLoaderType', String(FABRIC));
-  const files = (await getJson(`${API}/mods/${modId}/files?${params}`, headers())).data;
-  const file = files.find(f => f.releaseType === 1) || files[0];
+  const files = (await getJson(`${API}/mods/${modId}/files?${params}`, headers())).data
+    .filter(f => (f.gameVersions || []).includes(inst.mcVersion))
+    .sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
+  const file = files.find(f => f.releaseType === 1) || files.find(f => f.releaseType === 2) || files[0];
   if (!file) throw new Error(`${mod.name} has no file for Minecraft ${inst.mcVersion}`);
   if (!file.downloadUrl) throw new Error(`${mod.name}'s author blocks third-party downloads. Get it from ${mod.links?.websiteUrl}`);
   onProgress({ stage: `Downloading ${mod.name}` });

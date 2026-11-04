@@ -7,7 +7,7 @@ const META = 'https://meta.fabricmc.net/v2';
 
 async function gameVersions() {
   const list = await getJson(`${META}/versions/game`);
-  return list.filter(v => v.stable && !/^26\.[1-3](\.|$)/.test(v.version)).map(v => v.version);
+  return list.filter(v => v.stable).map(v => v.version);
 }
 
 async function latestLoader(mcVersion) {

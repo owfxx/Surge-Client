@@ -43,8 +43,10 @@ function loadersFor(type) {
 
 async function bestVersion(projectId, mcVersion, type) {
   const params = new URLSearchParams({ loaders: JSON.stringify(loadersFor(type)), game_versions: JSON.stringify([mcVersion]) });
-  const versions = await getJson(`${API}/project/${encodeURIComponent(projectId)}/version?${params}`);
-  return versions.find(v => v.version_type === 'release') || versions[0] || null;
+  const versions = (await getJson(`${API}/project/${encodeURIComponent(projectId)}/version?${params}`))
+    .filter(v => (v.game_versions || []).includes(mcVersion))
+    .sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
+  return versions.find(v => v.version_type === 'release') || versions.find(v => v.version_type === 'beta') || versions[0] || null;
 }
 
 async function installProject(instanceId, projectId, type = 'mod', onProgress = () => {}, seen = new Set(), opts = {}) {

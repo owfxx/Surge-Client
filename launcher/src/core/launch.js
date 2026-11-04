@@ -134,7 +134,7 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
 
   const ram = inst.ramMb || cfg.ramMb;
   const useZgc = ram >= 6144;
-  const jvm = (cfg.jvmPreset === 'surge' ? (useZgc ? SURGE_ZGC : SURGE_JVM) : [])
+  const jvm = ['-XX:+IgnoreUnrecognizedVMOptions'].concat(cfg.jvmPreset === 'surge' ? (useZgc ? SURGE_ZGC : SURGE_JVM) : [])
     .concat([`-Dsurge.home=${paths.root}`, `-Dsurge.codesUrl=${cfg.codesUrl || release.codesUrl()}`, `-Dsurge.apiUrl=${social.apiUrl()}`, `-Dsurge.token=${surgeToken}`, `-Dsurge.repo=${release.repo()}`])
     .concat(surgeJar ? [`-Dfabric.addMods=${surgeJar}`] : [])
     .concat(cfg.extraJvmArgs.split(/\s+/).filter(Boolean));

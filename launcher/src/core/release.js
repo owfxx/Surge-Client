@@ -88,7 +88,7 @@ async function updateMod(mcVersion, haveVersion, onProgress = () => {}) {
   for (const rel of list) {
     if (rel.draft) continue;
     for (const a of rel.assets || []) {
-      if (!/^surge-client-.+\.jar$/.test(a.name) || !a.name.includes(`mc${mcVersion}`)) continue;
+      if (!/^surge-client-.+\.jar$/.test(a.name) || !(a.name.endsWith(`-mc${mcVersion}.jar`) || a.name.endsWith(`+mc${mcVersion}.jar`))) continue;
       if (!best || newer(jarVersion(a.name), jarVersion(best.name))) best = a;
     }
   }

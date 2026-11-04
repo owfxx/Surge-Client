@@ -959,7 +959,7 @@ function renderBrowse() {
       <div class="seg" id="bType">${Object.entries(TYPE_LABEL).map(([k, v]) => `<button data-t="${k}" class="${B.type === k ? 'on' : ''}">${v}</button>`).join('')}</div>
       <input class="input search" id="bQuery" placeholder="Search ${TYPE_LABEL[B.type].toLowerCase()}" value="${esc(B.query)}">
       ${selectWrap(`<select class="input" id="bSort" aria-label="Sort">${['relevance', 'downloads', 'follows', 'updated', 'newest'].map(s => `<option value="${s}" ${B.sort === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}</select>`)}
-      ${forPack ? selectWrap(`<select class="input" id="bTarget" data-tip="Installs into this modpack">${state.packs.map(p => `<option value="${esc(p.id)}" ${p.id === B.target ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`) : ''}
+      ${forPack ? selectWrap(`<select class="input" id="bTarget" data-tip="Installs into this modpack">${state.packs.map(p => `<option value="${esc(p.id)}" ${p.id === B.target ? 'selected' : ''}>${esc(p.name)} (${esc(p.mcVersion)})</option>`).join('')}</select>`) : ''}
     </div>
     <div id="bResults" class="results"></div>
     <div class="pager" id="bPager"></div></div>`;
@@ -975,7 +975,8 @@ function renderBrowse() {
 
 async function runSearch() {
   const B = state.browse;
-  const target = state.packs.find(p => p.id === B.target);
+  const target = state.packs.find(p => p.id === B.target) || state.selected;
+  if (target) B.target = target.id;
   B.loading = true; B.error = null; drawResults();
   try {
     const r = await S.browse.search({ source: B.source, type: B.type, query: B.query, sort: B.sort, offset: B.offset, mcVersion: B.type === 'modpack' ? '' : (target?.mcVersion || '') });
