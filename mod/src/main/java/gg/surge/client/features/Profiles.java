@@ -121,8 +121,8 @@ public final class Profiles {
 		m.header("Saved setups");
 		for (int i = 1; i <= 3; i++) {
 			final int n = i;
-			m.button("Setup " + n, "Save", () -> saveSlot(n));
-			m.button("Setup " + n + " ", "Load", () -> loadSlot(n));
+			m.button("Save what I have now as setup " + n, "Save", () -> saveSlot(n));
+			m.button("Switch to setup " + n, "Load", () -> loadSlot(n));
 		}
 		m.header("Share");
 		m.button("Copy my setup", "Export", Profiles::export);

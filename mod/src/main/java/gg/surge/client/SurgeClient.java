@@ -217,7 +217,7 @@ public class SurgeClient implements ClientModInitializer {
 			String menu = KeyBindingHelper.getBoundKeyOf(menuKey).getDisplayName().getString();
 			String emotes = KeyBindingHelper.getBoundKeyOf(emoteKey).getDisplayName().getString();
 			gg.surge.client.net.Social.notice("Welcome to Surge Client", menu + ": mods   " + emotes + ": emotes");
-			gg.surge.client.net.Social.notice("Wardrobe and friends", "Press Esc, then use the icons on the right");
+			gg.surge.client.net.Social.notice("Wardrobe and friends", "In the Esc menu, on the right");
 		}
 
 		if (Mods.TOGGLE_SPRINT.enabled()) {
