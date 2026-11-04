@@ -3,6 +3,12 @@ const config = require('./config');
 
 let cached = null;
 
+function loadCached(uuid) {
+  const s = config.load().surgeSession;
+  if (s && s.token && (!uuid || s.uuid === uuid)) return s;
+  return null;
+}
+
 async function refreshService() {
   try {
     const repo = require('./release').repo();
@@ -24,8 +30,10 @@ function apiUrl() {
 async function signIn(authorization) {
   const api = apiUrl();
   if (!api || !authorization || !authorization.access_token) return null;
-  const uuid = String(authorization.uuid || '').replace(/-/g, '');
-  if (cached && cached.uuid === uuid && Date.now() - cached.at < 6 * 3600 * 1000) return cached;
+  const uuid = String(authorization.uuid || '').replace(/-/g, '').toLowerCase();
+  if (cached && cached.uuid === uuid) return cached;
+  const saved = loadCached(uuid);
+  if (saved) { cached = saved; return cached; }
   const serverId = crypto.randomBytes(16).toString('hex');
   const join = await fetch('https://sessionserver.mojang.com/session/minecraft/join', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -39,20 +47,39 @@ async function signIn(authorization) {
   const data = await res.json();
   if (!res.ok || !data.token) throw new Error(data.error || `Surge sign-in failed (${res.status})`);
   cached = { uuid: data.uuid, token: data.token, name: data.name, at: Date.now() };
+  config.save({ surgeSession: cached });
   return cached;
 }
 
-async function social() {
+function forget() {
+  cached = null;
+  config.save({ surgeSession: null });
+}
+
+async function social(retry = true) {
+  if (!config.load().apiUrl && !config.load().autoApiUrl) await refreshService();
   const api = apiUrl();
   if (!api) return { off: true };
+  const active = require('./auth').activeUuid();
+  if (!active) return { signedOut: true };
+  if (cached && cached.uuid !== active) cached = null;
+  if (!cached) cached = loadCached(active);
   if (!cached) {
-    try { await signIn(await require('./auth').getLaunchAuth()); } catch { return null; }
-    if (!cached) return null;
+    let auth;
+    try { auth = await require('./auth').getLaunchAuth(); } catch (e) {
+      return /sign in/i.test(e.message) ? { signedOut: true } : { error: `Couldn't refresh your Microsoft sign-in. ${e.message}` };
+    }
+    try { await signIn(auth); } catch (e) { return { error: e.message }; }
+    if (!cached) return { error: 'Could not sign in to Surge' };
   }
-  const res = await fetch(`${api}/v1/social`, { headers: { Authorization: `Bearer ${cached.token}` } });
-  return res.ok ? res.json() : null;
+  let res;
+  try { res = await fetch(`${api}/v1/social`, { headers: { Authorization: `Bearer ${cached.token}` }, signal: AbortSignal.timeout(8000) }); }
+  catch { return { error: 'The Surge service is not reachable right now' }; }
+  if (res.status === 401 && retry) { forget(); return social(false); }
+  if (!res.ok) return { error: `The Surge service answered ${res.status}` };
+  return res.json();
 }
 
 function token() { return cached ? cached.token : ''; }
 
-module.exports = { refreshService, apiUrl, signIn, social, token };
+module.exports = { refreshService, apiUrl, signIn, social, token, forget };

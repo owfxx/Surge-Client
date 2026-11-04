@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class Ui {
@@ -117,6 +118,15 @@ public final class Ui {
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), on ? 1.25F : 0.85F, 0.5F));
 	}
 
+	private static final java.util.List<Runnable> LABELS = new java.util.ArrayList<>();
+
+	public static void flushLabels() {
+		if (LABELS.isEmpty()) return;
+		List<Runnable> copy = new java.util.ArrayList<>(LABELS);
+		LABELS.clear();
+		for (Runnable r : copy) r.run();
+	}
+
 	private static final java.util.Set<Object> HOVERED = new java.util.HashSet<>();
 	private static final Map<Object, Long> HOVER_SINCE = new HashMap<>();
 
@@ -149,15 +159,16 @@ public final class Ui {
 		if (icon == COIN_ITEM) coin(g, x + (size - s) / 2, y + (size - s) / 2, s);
 		else item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
 		g.pose().popMatrix();
-		float l = approach(key + ":label", hov && held > 1200 ? 1f : 0f, 12f);
-		if (l > 0.01f) {
+		float l = approach(key + ":label", hov && held > 350 ? 1f : 0f, 14f);
+		if (l > 0.01f) LABELS.add(() -> {
 			int tw = font.width(label) + 10;
-			int lx = labelLeft ? x - tw - 6 + Math.round((1 - l) * 6) : x + size + 6 - Math.round((1 - l) * 6);
-			int ly = y + (size - 14) / 2;
+			boolean below = labelLeft && y < 40;
+			int lx = below ? Math.min(x + size - tw, x + (size - tw) / 2) : labelLeft ? x - tw - 6 + Math.round((1 - l) * 6) : x + size + 6 - Math.round((1 - l) * 6);
+			int ly = below ? y + size + 5 - Math.round((1 - l) * 4) : y + (size - 14) / 2;
 			g.nextStratum();
 			cutBox(g, lx, ly, tw, 14, 3, Colors.alpha(0xF0141416, l), Colors.alpha(0xFF45454C, l));
 			g.drawString(font, label, lx + 5, ly + 3, Colors.alpha(0xFFFFFFFF, l), false);
-		}
+		});
 		return hov;
 	}
 

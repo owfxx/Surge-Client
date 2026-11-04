@@ -191,39 +191,20 @@ function presenceIdle() {
   clearInterval(presenceTimer);
   discord.set({ details: 'In the launcher' });
 }
-function presencePlaying(inst) {
-  const file = path.join(paths.root, 'presence.json');
-  const name = inst ? inst.name : 'Minecraft';
-  const since = Date.now();
-  let last = '';
-  const update = () => {
-    let st = { state: 'menu' };
-    try { st = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { }
-    const cfg = config.load();
-    if (st.discord === false) { if (last !== 'off') { last = 'off'; discord.set({ details: 'Playing Minecraft' }); } return; }
-    const showServer = cfg.discordShowServer && st.showServer !== false;
-    const state = st.state === 'server' ? (showServer && st.server ? `On ${st.server}` : 'In multiplayer')
-      : st.state === 'singleplayer' ? 'In singleplayer' : 'In the menus';
-    const details = st.showPack === false ? 'Playing Minecraft' : `Playing ${name}`;
-    const key = details + state;
-    if (key === last) return;
-    last = key;
-    discord.set({ details, state, since: st.since && st.state !== 'menu' ? st.since : since });
-  };
-  try { fs.writeFileSync(file, JSON.stringify({ state: 'menu', server: '', since })); } catch { }
-  update();
+function presencePlaying() {
   clearInterval(presenceTimer);
-  presenceTimer = setInterval(update, 5000);
+  discord.stop();
 }
 function applyDiscordSettings() {
   const cfg = config.load();
-  if (cfg.discord && cfg.discordClientId) { discord.start(cfg.discordClientId); presenceIdle(); } else discord.stop();
+  const id = cfg.discordClientId || discord.DEFAULT_ID;
+  if (cfg.discord !== false && id) { discord.start(id); presenceIdle(); } else discord.stop();
 }
 
 handle('launch:start', (id, target = {}) => {
   const logTail = [];
   const startedAt = Date.now();
-  presencePlaying(instances.get(id));
+  presencePlaying();
   return launcher.launch(id, {
     server: target.server,
     world: target.world,
@@ -236,7 +217,7 @@ handle('launch:start', (id, target = {}) => {
     onExit: code => {
       const crash = code && code !== 130 ? crash_.analyze(instances.dirOf(id), logTail, startedAt) : null;
       send('launch:exit', { code, crash });
-      presenceIdle();
+      applyDiscordSettings();
       if (win && !win.isDestroyed() && !win.isVisible()) win.show();
     },
   }).then(r => { if (config.load().closeOnLaunch) win.hide(); return r; });

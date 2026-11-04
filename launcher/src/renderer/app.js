@@ -418,7 +418,12 @@ async function homeSide() {
   const data = await S.social().catch(() => null);
   if (!$('#friendsCard')) return;
   if (data && data.off) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Friends and chat are coming soon.</div>'; return; }
-  if (!data) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Sign in with a Microsoft account to see your friends.</div>'; return; }
+  if (!data || data.signedOut) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Sign in with a Microsoft account to see your friends.</div>'; return; }
+  if (data.error) {
+    card.innerHTML = `<div class="side-head">Friends</div><div class="muted small">${esc(data.error)}</div><button class="btn sm" id="friendsRetry" style="margin-top:8px">Try again</button>`;
+    $('#friendsRetry', card).onclick = () => { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Loading…</div>'; homeSide(); };
+    return;
+  }
   const fr = (data.friends || []).slice().sort((a, b) => (a.status === 'offline') - (b.status === 'offline'));
   const on = fr.filter(f => f.status !== 'offline').length;
   const req = (data.incoming || []).length;
@@ -909,7 +914,7 @@ function renderServers() {
   view.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { const l = list.filter((_, i) => i !== +b.dataset.del); await saveList(l); renderServers(); });
   list.forEach(async (sv, i) => {
     let r = pingCache.get(sv.address);
-    if (!r) { r = await S.servers.ping(sv.address).catch(() => ({ online: false })); pingCache.set(sv.address, r); }
+    if (!r) { r = (await S.servers.ping(sv.address).catch(() => null)) || { online: false }; pingCache.set(sv.address, r); }
     if (state.view !== 'servers' || !$(`#svMotd${i}`)) return;
     $(`#svMotd${i}`).innerHTML = r.online ? motdHtml(r.motd) : `<span style="color:#ff5555">${esc(r.error || 'Offline')}</span>`;
     $(`#svPlayers${i}`).textContent = r.online ? `${r.players.online.toLocaleString('en-US')} / ${r.players.max.toLocaleString('en-US')}` : '';
@@ -1060,11 +1065,6 @@ function renderSettings() {
       <section><h2>Online</h2><div class="panel">
         ${row('Surge service link', `<input class="input" id="sApi" style="width:280px" value="${esc(c.apiUrl || '')}" placeholder="https://surge-client.you.workers.dev" aria-label="Surge service link">`)}
       </div></section>
-      <section><h2>Discord</h2><div class="panel">
-        ${row('Show what you\'re playing', `<button class="toggle ${c.discord !== false ? 'on' : ''}" id="sDiscord" aria-label="Show on Discord"></button>`)}
-        ${row('Show server address', `<button class="toggle ${c.discordShowServer !== false ? 'on' : ''}" id="sDiscordServer" aria-label="Show server address"></button>`)}
-        ${row('Application ID', `<input class="input" id="sDiscordId" style="width:200px" value="${esc(c.discordClientId || '')}" placeholder="From the Discord developer portal" aria-label="Discord application ID"><button class="btn sm" id="sDiscordLink">Create one</button>`)}
-      </div></section>
     </div></div>`;
   const save = async patch => { state.cfg = { ...state.cfg, ...(await safe(() => S.config.set(patch))) }; };
   $('#sRam').oninput = e => { $('#sRamV').textContent = `${(e.target.value / 1024).toFixed(1)} GB`; e.target.style.setProperty('--p', pct(+e.target.value)); };
@@ -1080,11 +1080,7 @@ function renderSettings() {
   $('#sHide').onclick = async () => { await save({ closeOnLaunch: !state.cfg.closeOnLaunch }); renderSettings(); };
   $('#sSound').onclick = async () => { await save({ uiSounds: state.cfg.uiSounds === false }); renderSettings(); };
   $('#sData').onclick = () => S.config.openDataDir();
-  $('#sDiscord').onclick = async () => { await save({ discord: state.cfg.discord === false }); renderSettings(); };
-  $('#sDiscordServer').onclick = async () => { await save({ discordShowServer: state.cfg.discordShowServer === false }); renderSettings(); };
-  $('#sDiscordId').onchange = async e => { await save({ discordClientId: e.target.value.replace(/\D/g, '') }); toast(e.target.value.trim() ? 'Discord status on' : 'Discord status off'); };
   $('#sApi').onchange = async e => { await save({ apiUrl: e.target.value.trim() }); toast(e.target.value.trim() ? 'Cosmetics and badges are now shared' : 'Sharing off'); };
-  $('#sDiscordLink').onclick = () => S.open('https://discord.com/developers/applications');
 }
 
 window.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.code === 'F4') { e.preventDefault(); openAdmin(); } });
@@ -1294,7 +1290,53 @@ async function checkSelfUpdate() {
   });
 }
 
+function backgroundFx() {
+  const c = document.getElementById('bgfx');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w = 0, h = 0, dpr = 1, stars = [], last = 0;
+  const resize = () => {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    w = c.clientWidth; h = c.clientHeight;
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    const n = Math.round((w * h) / 9000);
+    stars = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h, z: 0.25 + Math.random() * 0.75, p: Math.random() * Math.PI * 2 }));
+  };
+  const draw = t => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const s = t / 1000;
+    for (const [ox, oy, r, a] of [[0.25, 0.3, 0.55, 0.05], [0.8, 0.75, 0.5, 0.04]]) {
+      const gx = w * (ox + Math.sin(s * 0.05 + ox * 9) * 0.08), gy = h * (oy + Math.cos(s * 0.04 + oy * 7) * 0.08);
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * r);
+      g.addColorStop(0, `rgba(255,255,255,${a})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+    for (const st of stars) {
+      const y = ((st.y - s * 6 * st.z) % h + h) % h;
+      const x = (st.x + Math.sin(s * 0.2 + st.p) * 4 * st.z + w) % w;
+      const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(s * (0.6 + st.z) + st.p));
+      const size = st.z > 0.85 ? 2 : 1;
+      ctx.fillStyle = `rgba(255,255,255,${(0.12 + 0.5 * st.z) * tw})`;
+      ctx.fillRect(Math.round(x), Math.round(y), size, size);
+    }
+  };
+  const loop = t => {
+    requestAnimationFrame(loop);
+    if (document.hidden || t - last < 33) return;
+    last = t;
+    draw(t);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+  if (still) draw(0); else requestAnimationFrame(loop);
+}
+
 (async function boot() {
+  backgroundFx();
   state.cfg = await safe(() => S.config.get());
   await refreshAccounts();
   await safe(() => S.instances.ensureDefault());

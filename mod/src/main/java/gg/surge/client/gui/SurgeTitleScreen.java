@@ -208,6 +208,7 @@ public class SurgeTitleScreen extends Screen {
 			else playedIntro = true;
 		}
 
+		Ui.flushLabels();
 		SocialToasts.render(g, minecraft, this.width);
 		if (action != null) { Ui.click(); action.run(); }
 	}

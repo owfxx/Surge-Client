@@ -192,7 +192,10 @@ public final class PerfCheck {
 		if (cap < 260 && avg > cap * 0.9f) out.add(new Finding(0, "FPS is capped at " + cap, "Your game could run faster but Max FPS holds it back. That's fine if you like it, it saves power.", "Unlimited", () -> { o.framerateLimit().set(260); o.save(); }));
 		else if (o.enableVsync().get() && avg > 50) out.add(new Finding(0, "VSync is on", "VSync locks your FPS to your monitor and adds a little input delay.", "Turn off", () -> Performance.set(mc, Performance.byKey("unlimitedFps"), true)));
 		if (!FabricLoader.getInstance().isModLoaded("sodium"))
-			out.add(new Finding(avg < 60 ? 1 : 0, "Sodium isn't installed", "Sodium is the biggest FPS boost there is for Fabric. Turn it on under Settings, Performance mods, then restart.", null, null));
+			out.add(new Finding(avg < 60 ? 1 : 0, "Sodium isn't installed", "Sodium is the biggest FPS boost there is for Fabric. Surge can download it for you, it starts working the next time you open the game.", "Download", () -> {
+				PerfMods.Mod sodium = PerfMods.KNOWN.get(0);
+				if (!PerfMods.wanted(sodium)) PerfMods.toggle(sodium);
+			}));
 		if (Runtime.getRuntime().availableProcessors() < 4)
 			out.add(new Finding(0, "Few CPU cores", "Your PC has " + Runtime.getRuntime().availableProcessors() + " CPU threads. Closing other programs while playing helps.", null, null));
 		out.sort((a, b) -> Integer.compare(b.severity, a.severity));

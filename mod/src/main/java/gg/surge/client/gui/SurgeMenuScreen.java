@@ -293,11 +293,11 @@ public class SurgeMenuScreen extends Screen {
 
 		List<PerfMods.Mod> mods = PerfMods.list();
 		rows.add(new HeaderRow(() -> "Performance mods"));
-		if (mods.isEmpty()) rows.add(new InfoRow("Start the game from the Surge launcher to manage these."));
+		rows.add(new InfoRow("Turn one on and Surge downloads it for you. Changes happen the next time you start the game."));
 		for (PerfMods.Mod m : mods) {
-			rows.add(new ToggleRow(m.title(), null, () -> PerfMods.wanted(m), () -> PerfMods.toggle(m), "pm:" + m.file())
-				.status(() -> PerfMods.needsRestart(m) ? "next start" : null)
-				.tip(PerfMods.needsRestart(m) ? "Changes when you next press Play" : m.file()));
+			rows.add(new ToggleRow(m.title(), null, () -> PerfMods.wanted(m), () -> PerfMods.toggle(m), "pm:" + m.slug())
+				.status(() -> PerfMods.status(m))
+				.tip(m.description()));
 		}
 	}
 

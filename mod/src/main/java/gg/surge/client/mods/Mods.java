@@ -245,7 +245,7 @@ public final class Mods {
 	public static final Setting.Toggle WP_DEATH = WAYPOINTS.toggle("death", "Waypoint where you die", true);
 
 	public static final SurgeMod DISCORD = mod("discord", "Discord Status", Category.UTILITY, Items.AMETHYST_CLUSTER,
-		"Show what you're playing on your Discord profile (through the Surge launcher)", true);
+		"Show what you're playing on your Discord profile", true);
 	public static final Setting.Toggle DISCORD_SERVER = DISCORD.toggle("server", "Show the server address", true);
 	public static final Setting.Toggle DISCORD_PACK = DISCORD.toggle("pack", "Show the modpack name", true);
 

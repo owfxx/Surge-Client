@@ -60,4 +60,6 @@ async function getLaunchAuth() {
   return mc.mclc();
 }
 
-module.exports = { login, logout, setActive, publicAccounts, getLaunchAuth };
+function activeUuid() { const s = readStore(); return String(s.active || '').replace(/-/g, '').toLowerCase(); }
+
+module.exports = { login, logout, setActive, publicAccounts, getLaunchAuth, activeUuid };

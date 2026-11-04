@@ -2,6 +2,7 @@ const net = require('net');
 const path = require('path');
 const os = require('os');
 
+const DEFAULT_ID = '';
 let sock = null;
 let ready = false;
 let clientId = '';
@@ -80,4 +81,4 @@ function set({ details, state, since } = {}) {
   push(activity);
 }
 
-module.exports = { start, stop, set };
+module.exports = { DEFAULT_ID,  start, stop, set };

@@ -77,6 +77,7 @@ public final class MenuOverlay {
 			}
 		}
 
+		Ui.flushLabels();
 		SocialToasts.render(g, mc, w);
 		if (action != null) { Ui.click(); action.run(); }
 	}

@@ -155,10 +155,11 @@ export default {
       if (r.status !== 200) return json({ error: 'Mojang could not confirm this account' }, 401);
       const prof = await r.json();
       const uuid = norm(prof.id);
-      const token = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
+      const fresh = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
       await db.prepare(`INSERT INTO users (uuid, name, name_lc, token, status, server, seen) VALUES (?1, ?2, ?3, ?4, 'online', '', ?5)
-        ON CONFLICT(uuid) DO UPDATE SET name = ?2, name_lc = ?3, token = ?4, seen = ?5`).bind(uuid, prof.name, prof.name.toLowerCase(), token, Date.now()).run();
-      return json({ token, uuid, name: prof.name });
+        ON CONFLICT(uuid) DO UPDATE SET name = ?2, name_lc = ?3, token = COALESCE(NULLIF(users.token, ''), ?4), seen = ?5`).bind(uuid, prof.name, prof.name.toLowerCase(), fresh, Date.now()).run();
+      const row = await db.prepare('SELECT token FROM users WHERE uuid = ?1').bind(uuid).first();
+      return json({ token: row ? row.token : fresh, uuid, name: prof.name });
     }
 
     if (p === '/v1/me' && req.method === 'PUT') {
