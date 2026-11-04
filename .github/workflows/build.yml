@@ -90,7 +90,9 @@ jobs:
           for f in mod/build/libs/surge-client-*.jar; do
             case "$f" in *-sources.jar) continue;; esac
             cp "$f" "out/$(basename "$f" | sed 's/+/-/')"
+            cp "$f" out/Surge-Client-Mod.jar
           done
+          cp launcher/dist/*-Standalone.exe out/Surge-Client.exe
           ls -la out
 
       - uses: actions/upload-artifact@v5

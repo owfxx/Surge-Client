@@ -56,9 +56,11 @@ async function latest(env) {
 }
 
 async function download(env, mod) {
-  const l = await latest(env);
-  const src = l && (mod ? l.jar : { url: l.url, name: 'Surge Client.exe' });
-  if (!src) return new Response('Download is not available right now. Try again in a minute.', { status: 503 });
+  const l = await latest(env).catch(() => null);
+  const base = `https://github.com/${REPO(env)}/releases/latest/download/`;
+  const src = mod
+    ? (l && l.jar ? l.jar : { url: base + 'Surge-Client-Mod.jar', name: 'surge-client-mc1.21.11.jar' })
+    : { url: l ? l.url : base + 'Surge-Client.exe', name: 'Surge Client.exe' };
   const r = await fetch(src.url, { redirect: 'follow', headers: { 'User-Agent': 'surge-client-site' } });
   if (!r.ok) return new Response('Download is not available right now. Try again in a minute.', { status: 502 });
   const h = new Headers({ 'content-type': mod ? 'application/java-archive' : 'application/octet-stream', 'content-disposition': `attachment; filename="${src.name}"`, 'cache-control': 'no-store' });
