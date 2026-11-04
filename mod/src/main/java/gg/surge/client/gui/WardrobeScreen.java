@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class WardrobeScreen extends Screen {
 	public enum Section {
-		COSMETICS("Cosmetics", Items.ELYTRA), EMOTES("Emotes", Items.ARMOR_STAND), OUTFITS("Outfits", Items.LEATHER_CHESTPLATE),
+		FEATURED("Featured", Items.NETHER_STAR), COSMETICS("Cosmetics", Items.ELYTRA), EMOTES("Emotes", Items.ARMOR_STAND), OUTFITS("Outfits", Items.LEATHER_CHESTPLATE),
 		SKINS("Skins", Items.PLAYER_HEAD), CURRENCY("Coins", Items.GOLD_NUGGET);
 		final String label;
 		final Item icon;
@@ -48,7 +48,7 @@ public class WardrobeScreen extends Screen {
 	private static final int[] WHEEL_COL = {1, 2, 2, 2, 1, 0, 0, 0};
 	private static final int[] WHEEL_ROW = {0, 0, 1, 2, 2, 2, 1, 0};
 
-	private static Section section = Section.COSMETICS;
+	private static Section section = Section.FEATURED;
 	private static String cosmeticSub = "All", emoteSub = "All";
 	private static int sortIdx;
 	private static int outfitIdx, wheelPage;
@@ -230,7 +230,23 @@ public class WardrobeScreen extends Screen {
 		return "Basic";
 	}
 
+	private List<Shop.Item> featured() {
+		List<Shop.Item> out = new ArrayList<>();
+		String q = searchBox == null ? "" : searchBox.getValue().trim().toLowerCase();
+		for (Shop.Item i : Shop.ITEMS) if (Sales.discount(i) > 0 && !Locks.locked(i)) out.add(i);
+		for (Emotes.Emote e : Emotes.Emote.values()) {
+			Shop.Item i = Shop.byId("emote:" + e.name());
+			if (e.music != null && i != null && !out.contains(i)) out.add(i);
+		}
+		Shop.Item beta = Shop.byId("cape:beta");
+		if (beta != null && Wallet.get().owns(beta.id()) && !out.contains(beta)) out.add(0, beta);
+		for (Shop.Item i : Shop.bySub("cosmetic", "cape")) if (i.key().startsWith("classic_") && !out.contains(i) && out.size() < 24) out.add(i);
+		if (!q.isEmpty()) out.removeIf(i -> !i.name().toLowerCase().contains(q));
+		return out;
+	}
+
 	private List<Shop.Item> items() {
+		if (section == Section.FEATURED) return featured();
 		List<Shop.Item> out = new ArrayList<>();
 		String q = searchBox == null ? "" : searchBox.getValue().trim().toLowerCase();
 		boolean emotes = section == Section.EMOTES;
@@ -384,7 +400,7 @@ public class WardrobeScreen extends Screen {
 		g.drawString(font, "Wardrobe", wx + 8, wy + 9, Ui.TEXT, false);
 		g.fill(wx, wy + 24, wx + sideW, wy + 25, 0xFF141416);
 		int y = wy + 30;
-		Object[][] groups = {{Section.OUTFITS, 0xFF6EE07A}, {Section.SKINS, 0xFFFF8AD8}, {Section.EMOTES, 0xFFFFB347}, {Section.COSMETICS, 0xFFFFE066}};
+		Object[][] groups = {{Section.FEATURED, 0xFF6CB4FF}, {Section.OUTFITS, 0xFF6EE07A}, {Section.SKINS, 0xFFFF8AD8}, {Section.EMOTES, 0xFFFFB347}, {Section.COSMETICS, 0xFFFFE066}};
 		for (Object[] grp : groups) {
 			Section s = (Section) grp[0];
 			int col = (Integer) grp[1];
@@ -428,7 +444,7 @@ public class WardrobeScreen extends Screen {
 		Ui.coin(g, px + pillW - 14, wy + 7, 11);
 		if (pillHov && click) action = () -> switchTo(Section.CURRENCY);
 
-		boolean grid = section == Section.COSMETICS || section == Section.EMOTES;
+		boolean grid = section == Section.COSMETICS || section == Section.EMOTES || section == Section.FEATURED;
 		if (grid) {
 			int bx = px - 19;
 			if (squareButton(g, mx, my, bx, wy + 5, Ui.SEARCH, searching) && click) action = () -> { searching = !searching; if (!searching) searchBox.setValue(""); setFocused(searching ? searchBox : null); searchBox.setFocused(searching); };
@@ -448,7 +464,7 @@ public class WardrobeScreen extends Screen {
 
 		scroll += (scrollTarget - scroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
 		switch (section) {
-			case COSMETICS, EMOTES -> action = grid(g, mx, my, click, rclick, action);
+			case FEATURED, COSMETICS, EMOTES -> action = grid(g, mx, my, click, rclick, action);
 			case OUTFITS -> action = outfits(g, mx, my, click, rclick, action);
 			case SKINS -> action = skinsPage(g, mx, my, click, action);
 			case CURRENCY -> action = coinsPage(g, mx, my, click, delta, action);
@@ -520,6 +536,12 @@ public class WardrobeScreen extends Screen {
 					if (!owned) { buy(item, false); return; }
 					if (isEmote) {
 						Emotes.Emote e = Emotes.Emote.byName(item.key());
+						if (section != Section.EMOTES) {
+							if (minecraft.player == null || e == null) { toast("Join a world to play emotes", Ui.MUTED); return; }
+							minecraft.setScreen(null);
+							Emotes.play(minecraft, e);
+							return;
+						}
 						selectedEmote = picked ? null : e;
 						if (!picked) toast("Click a slot on the wheel to put " + item.name() + " there", Ui.ACCENT_2);
 						return;
