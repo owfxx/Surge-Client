@@ -648,6 +648,10 @@ public class SocialScreen extends Screen {
 		return out;
 	}
 
+	public void autotestRequestsTab() {
+		tab = Tab.REQUESTS;
+	}
+
 	public void autotestFriendsTab() {
 		tab = Tab.FRIENDS;
 		selected = "069a79f444e94726a5befca90e38aaf5";

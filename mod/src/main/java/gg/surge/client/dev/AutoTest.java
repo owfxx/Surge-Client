@@ -91,10 +91,14 @@ public final class AutoTest {
 		STEPS.add(new Step("11-coins", 30, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.CURRENCY))));
 		STEPS.add(new Step("12-social", 40, mc -> { fakeSocial(); open(mc, new SocialScreen(null)); }));
 		STEPS.add(new Step("12b-social-friends", 30, mc -> clickAt(mc, 0.24, 0.135)));
+		STEPS.add(new Step("12c-social-requests", 30, mc -> { if (mc.screen instanceof SocialScreen ss) ss.autotestRequestsTab(); }));
 		STEPS.add(new Step("13-emote-wheel", 40, mc -> open(mc, new EmoteWheelScreen())));
 		STEPS.add(new Step("14-hud-editor", 40, mc -> open(mc, new HudEditorScreen(null))));
 		STEPS.add(new Step("15-pause", 40, mc -> { open(mc, null); mc.pauseGame(false); }));
 		STEPS.add(new Step("16-mods-ingame", 30, mc -> open(mc, new SurgeMenuScreen(null))));
+		STEPS.add(new Step("16b-perf-intro", 30, mc -> open(mc, SurgeMenuScreen.perf(null))));
+		STEPS.add(new Step("16c-perf-running", 60, mc -> { open(mc, null); gg.surge.client.perf.PerfCheck.start(); }));
+		STEPS.add(new Step("16d-perf-report", 420, mc -> { }));
 		STEPS.add(new Step("17-servers", 40, mc -> open(mc, new JoinMultiplayerScreen(new TitleScreen()))));
 		STEPS.add(new Step("17b-friends-tab", 40, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.FRIENDS))));
 		STEPS.add(new Step("18-discover", 60, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.DISCOVER))));

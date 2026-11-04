@@ -528,10 +528,10 @@ public class WardrobeScreen extends Screen {
 		if (section == Section.OUTFITS || section == Section.SKINS || section == Section.CURRENCY) focus = hoveredItem;
 		applyPreview(focus);
 		int infoH = focus != null ? 58 : section == Section.OUTFITS ? 38 : 20;
-		int floorY = y2 - infoH - 10;
-		int size = Math.max(30, Math.min(80, Math.min((floorY - y1 - 20) * 100 / 210, stageW * 30 / 100)));
-		g.fillGradient(x1, y1, x2, floorY, 0x00FFFFFF, 0x0CFFFFFF);
+		int floorY0 = y2 - infoH - 10;
+		int size = Math.max(30, Math.min(80, Math.min((floorY0 - y1 - 30) * 100 / 220, stageW * 30 / 100)));
 		int rx = Math.min(stageW / 2 - 14, size + 14);
+		int floorY = floorY0 - Math.max(4, rx * 22 / 100) - 2;
 		pedestal(g, cx, floorY, rx);
 		int boxTop = floorY - size * 2 - 22, boxBot = floorY + 6;
 		if (minecraft.player != null) {
@@ -688,7 +688,7 @@ public class WardrobeScreen extends Screen {
 		}
 
 		List<Shop.Item> list = items();
-		int gap = 5, cols = Math.max(2, (gw + gap) / (78 + gap));
+		int gap = 5, cols = Math.max(2, (gw + gap) / (68 + gap));
 		int tw = (gw - 4 - (cols - 1) * gap) / cols, th = Math.round(tw * 1.18f);
 		contentH = ((list.size() + cols - 1) / cols) * (th + gap) + 4;
 		scrollTarget = Math.max(0, Math.min(Math.max(0, contentH - gridH), scrollTarget));
