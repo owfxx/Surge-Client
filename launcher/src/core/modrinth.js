@@ -24,13 +24,15 @@ function normalize(hit) {
   };
 }
 
+const BLOCKED = new Set(['essential']);
+
 async function search({ query = '', type = 'mod', mcVersion = '', offset = 0, sort = 'relevance' }) {
   const facets = [[`project_type:${type}`]];
   if (mcVersion) facets.push([`versions:${mcVersion}`]);
   if (type === 'mod' || type === 'modpack') facets.push(['categories:fabric']);
   const params = new URLSearchParams({ query, facets: JSON.stringify(facets), index: sort, offset: String(offset), limit: '24' });
   const res = await getJson(`${API}/search?${params}`);
-  return { hits: res.hits.map(normalize), total: res.total_hits };
+  return { hits: res.hits.filter(h => !BLOCKED.has(h.slug)).map(normalize), total: res.total_hits };
 }
 
 function loadersFor(type) {
@@ -51,6 +53,7 @@ async function installProject(instanceId, projectId, type = 'mod', onProgress = 
   const inst = instances.get(instanceId);
   if (instances.hasProject(instanceId, 'modrinth', projectId)) return [];
   const project = await getJson(`${API}/project/${encodeURIComponent(projectId)}`);
+  if (BLOCKED.has(project.slug)) throw new Error(`${project.title} doesn't work together with Surge Client`);
   const contentType = project.project_type === 'resourcepack' ? 'resourcepack' : project.project_type === 'shader' ? 'shader' : 'mod';
   const version = await bestVersion(project.id, inst.mcVersion, contentType);
   if (!version) {
@@ -143,6 +146,8 @@ const PERFORMANCE_MODS = [
   ['memoryleakfix'],
 ];
 
+const EXTRA_MODS = ['simple-voice-chat'];
+
 async function installPerformanceStack(instanceId, onProgress = () => {}) {
   const seen = new Set();
   const installed = [];
@@ -155,6 +160,9 @@ async function installPerformanceStack(instanceId, onProgress = () => {}) {
         onProgress({ stage: `Skipped ${slug}: ${e.message}` });
       }
     }
+  }
+  for (const slug of EXTRA_MODS) {
+    try { installed.push(...await installProject(instanceId, slug, 'mod', onProgress, seen, { optional: true })); } catch (e) { onProgress({ stage: `Skipped ${slug}: ${e.message}` }); }
   }
   return installed;
 }

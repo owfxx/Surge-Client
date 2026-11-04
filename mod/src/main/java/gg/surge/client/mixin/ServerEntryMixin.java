@@ -26,7 +26,8 @@ public abstract class ServerEntryMixin {
 		var font = Minecraft.getInstance().font;
 		String code = region.contains(", ") ? region.substring(region.lastIndexOf(", ") + 2) : "";
 		String flag = code.isEmpty() ? "" : gg.surge.client.features.Flags.glyph(code);
-		String label = code.isEmpty() ? region : (flag.isEmpty() ? code : flag + " " + code);
+		net.minecraft.network.chat.Component label = code.isEmpty() || flag.isEmpty() ? net.minecraft.network.chat.Component.literal(code.isEmpty() ? region : code)
+			: net.minecraft.network.chat.Component.empty().append(gg.surge.client.features.Flags.icon(flag)).append(" " + code);
 		int x = e.getX() + 37 + font.width(serverData.name) + 6;
 		int y = e.getY() + 3;
 		int max = e.getX() + e.getWidth() - 60;

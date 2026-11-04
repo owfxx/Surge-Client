@@ -54,7 +54,7 @@ public abstract class EntityRendererMixin {
 		}
 		Component out = entity == Minecraft.getInstance().player ? gg.surge.client.features.NickHider.apply(name) : name;
 		String flag = gg.surge.client.net.SurgeNet.flagGlyph(entity.getUUID());
-		if (!flag.isEmpty()) out = Component.empty().append(out).append(Component.literal(" " + flag).withStyle(st -> st.withColor(0xFFFFFF)));
+		if (!flag.isEmpty()) out = Component.empty().append(out).append(Component.literal(" ")).append(gg.surge.client.features.Flags.icon(flag));
 		if (Badges.show(entity.getUUID())) out = Badges.prefix(out);
 		if (out != name) cir.setReturnValue(out);
 	}

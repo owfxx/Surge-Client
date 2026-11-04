@@ -19,7 +19,7 @@ public final class Badges {
 	public static Component prefix(Component name) {
 		if (name.getString().contains(GLYPH)) return name;
 		return Component.empty()
-			.append(Component.literal(GLYPH).withStyle(s -> s.withColor(0xFFFFFF)))
+			.append(gg.surge.client.features.Flags.icon(GLYPH))
 			.append(Component.literal(" "))
 			.append(name);
 	}
