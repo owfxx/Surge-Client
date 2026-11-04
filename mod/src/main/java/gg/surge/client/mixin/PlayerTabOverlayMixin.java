@@ -17,7 +17,9 @@ public abstract class PlayerTabOverlayMixin {
 	private void surge$badge(PlayerInfo info, CallbackInfoReturnable<Component> cir) {
 		Component name = cir.getReturnValue();
 		if (name == null) return;
-		if (Badges.show(info.getProfile().id())) cir.setReturnValue(Badges.prefix(name));
+		net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+		if (mc.player != null && info.getProfile().id().equals(mc.player.getUUID())) name = gg.surge.client.features.NickHider.apply(name);
+		cir.setReturnValue(Badges.show(info.getProfile().id()) ? Badges.prefix(name) : name);
 	}
 
 	@Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)

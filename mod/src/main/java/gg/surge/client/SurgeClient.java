@@ -134,6 +134,7 @@ public class SurgeClient implements ClientModInitializer {
 			Fullbright.apply(mc);
 			DamageTint.apply(mc);
 			OptionTweaks.apply(mc);
+			gg.surge.client.features.Extras.applyGlint(mc);
 			Sales.load();
 			gg.surge.client.economy.Locks.load();
 		});
@@ -204,6 +205,8 @@ public class SurgeClient implements ClientModInitializer {
 		Waypoints.tick(mc);
 		gg.surge.client.net.SurgeNet.tick(mc);
 		gg.surge.client.net.Social.tick(mc);
+		gg.surge.client.features.Extras.tick(mc);
+		gg.surge.client.features.Profiles.tick(mc);
 
 		LocalPlayer p = mc.player;
 		if (p == null) return;
@@ -230,6 +233,7 @@ public class SurgeClient implements ClientModInitializer {
 		HudModules.pollClicks(mc);
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
 		Waypoints.render(g, mc);
+		gg.surge.client.features.Extras.render(g, mc);
 		for (HudModule m : HudModules.ALL) {
 			if (m.enabled()) m.draw(g, mc);
 		}

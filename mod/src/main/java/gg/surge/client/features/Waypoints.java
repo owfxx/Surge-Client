@@ -55,7 +55,7 @@ public final class Waypoints {
 
 	private static double ex, ey, ez, fx, fy, fz, rx, ry, rz, ux, uy, uz, focal, halfW, halfH;
 
-	private static void setupCamera(GuiGraphics g, Minecraft mc) {
+	static void setupCamera(GuiGraphics g, Minecraft mc) {
 		Camera cam = mc.gameRenderer.getMainCamera();
 		Vec3 eye = cam.position();
 		ex = eye.x; ey = eye.y; ez = eye.z;
@@ -68,7 +68,7 @@ public final class Waypoints {
 		focal = halfH / Math.tan(Math.toRadians(Zoom.lastFov()) / 2.0);
 	}
 
-	private static double[] project(double x, double y, double z) {
+	static double[] project(double x, double y, double z) {
 		double vx = x - ex, vy = y - ey, vz = z - ez;
 		double cz = vx * fx + vy * fy + vz * fz;
 		if (cz < 0.05) return null;

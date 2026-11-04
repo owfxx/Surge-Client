@@ -39,6 +39,9 @@ public final class Mods {
 	public static final Setting.Color HUD_TEXT = GENERAL.color("hudText", "Text color", "FFFFFF").showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Toggle HUD_SHADOW = GENERAL.toggle("hudShadow", "Text shadow", true).showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Choice HUD_BRACKETS = GENERAL.choice("hudBrackets", "Brackets", "None", "None", "[ ]", "( )", "< >").showIf(() -> Mods.HUD_OVERRIDE.on());
+	public static final Setting.Header H_THEME = GENERAL.header("Menu colors");
+	public static final Setting.Choice THEME = GENERAL.choice("theme", "Theme", "Purple", "Purple", "Blue", "Cyan", "Green", "Red", "Orange", "Pink", "Gold", "Mono", "Custom");
+	public static final Setting.Color THEME_COLOR = GENERAL.color("themeColor", "Custom color", "8F50F2").showIf(() -> Mods.THEME.is("Custom"));
 	public static final Setting.Header H_SOCIAL = GENERAL.header("Status and friends");
 	public static final Setting.Choice STATUS = GENERAL.choice("status", "Your status", "Online", "Online", "Idle", "Busy", "Offline");
 	public static final Setting.Toggle AUTO_IDLE = GENERAL.toggle("autoIdle", "Go idle after 5 minutes away", true);
@@ -250,6 +253,64 @@ public final class Mods {
 	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
 		"Bind keys that send a chat message or command, like /home or gg", true);
 
+	public static final SurgeMod ENTITY_GLOW = mod("entity_glow", "Entity Highlights", Category.VISUAL, Items.GLOW_INK_SAC,
+		"Outline players, mobs or items so you can spot them through walls", false);
+	public static final Setting.Toggle GLOW_PLAYERS = ENTITY_GLOW.toggle("players", "Players", true);
+	public static final Setting.Toggle GLOW_HOSTILE = ENTITY_GLOW.toggle("hostile", "Hostile mobs", false);
+	public static final Setting.Toggle GLOW_PASSIVE = ENTITY_GLOW.toggle("passive", "Animals", false);
+	public static final Setting.Toggle GLOW_ITEMS = ENTITY_GLOW.toggle("items", "Dropped items", false);
+	public static final Setting.Slider GLOW_RANGE = ENTITY_GLOW.slider("range", "Range", 48, 8, 128, 8, " blocks");
+	public static final Setting.Toggle GLOW_TEAM = ENTITY_GLOW.toggle("team", "Use team colors", true);
+	public static final Setting.Color GLOW_COLOR = ENTITY_GLOW.color("color", "Outline color", "B483FF").showIf(() -> !Mods.GLOW_TEAM.on());
+
+	public static final SurgeMod NICK_HIDER = mod("nick_hider", "Nick Hider", Category.VISUAL, Items.LEATHER_HELMET,
+		"Hide your name in chat, the tab list and your nametag, great for recording", false);
+	public static final Setting.Choice NICK_NAME = NICK_HIDER.choice("nick", "Show me as", "You", "You", "Player", "Surge", "Hidden", "Me");
+
+	public static final SurgeMod TRAILS = mod("trails", "Projectile Trails", Category.PVP, Items.SPECTRAL_ARROW,
+		"Particle trails behind arrows, pearls, tridents and snowballs", false);
+	public static final Setting.Choice TRAIL_TYPE = TRAILS.choice("type", "Particle", "Flame", "Flame", "Soul", "Crit", "Magic", "Hearts", "Notes", "End rod", "Cherry", "Smoke");
+	public static final Setting.Toggle TRAIL_OWN = TRAILS.toggle("own", "Only my projectiles", true);
+	public static final Setting.Slider TRAIL_AMOUNT = TRAILS.slider("amount", "Amount", 2, 1, 5, 1, "x");
+
+	public static final SurgeMod DAMAGE_NUMBERS = mod("damage_numbers", "Damage Numbers", Category.PVP, Items.REDSTONE,
+		"Floating numbers show how much damage players and mobs take", false);
+	public static final Setting.Choice DMG_FORMAT = DAMAGE_NUMBERS.choice("format", "Show as", "Hearts", "Hearts", "Health points");
+	public static final Setting.Color DMG_COLOR = DAMAGE_NUMBERS.color("color", "Color", "FF5555");
+	public static final Setting.Toggle DMG_HEAL = DAMAGE_NUMBERS.toggle("heal", "Show healing too", true);
+	public static final Setting.Slider DMG_SIZE = DAMAGE_NUMBERS.slider("size", "Size", 100, 50, 200, 10, "%");
+	public static final Setting.Toggle DMG_OWN = DAMAGE_NUMBERS.toggle("own", "Show on yourself", false);
+
+	public static final SurgeMod TIME_CHANGER = mod("time_changer", "Time Changer", Category.VISUAL, Items.CLOCK,
+		"Pick the time of day you see. Only changes it for you.", false);
+	public static final Setting.Choice TIME_PRESET = TIME_CHANGER.choice("preset", "Time", "Day", "Sunrise", "Day", "Noon", "Sunset", "Night", "Midnight", "Custom");
+	public static final Setting.Slider TIME_CUSTOM = TIME_CHANGER.slider("custom", "Custom time", 6000, 0, 23999, 250, "").showIf(() -> Mods.TIME_PRESET.is("Custom"));
+	public static final Setting.Toggle TIME_CYCLE = TIME_CHANGER.toggle("cycle", "Let the time move", false);
+
+	public static final SurgeMod DROP_PROTECT = mod("drop_protect", "Drop Protection", Category.UTILITY, Items.CHEST,
+		"Stops you dropping valuable items by accident: press drop twice to really drop them", true);
+	public static final Setting.Toggle DROP_ENCHANTED = DROP_PROTECT.toggle("enchanted", "Enchanted items", true);
+	public static final Setting.Toggle DROP_RARE = DROP_PROTECT.toggle("rare", "Netherite, diamond gear, totems and elytras", true);
+	public static final Setting.Toggle DROP_NAMED = DROP_PROTECT.toggle("named", "Renamed items", true);
+	public static final Setting.Toggle DROP_ALL = DROP_PROTECT.toggle("all", "Every item", false);
+
+	public static final SurgeMod GLINT = mod("glint", "Glint Customizer", Category.VISUAL, Items.ENCHANTED_BOOK,
+		"Change how fast and how strong the enchantment shine is", false);
+	public static final Setting.Slider GLINT_SPEED = GLINT.slider("speed", "Speed", 50, 0, 100, 5, "%");
+	public static final Setting.Slider GLINT_STRENGTH = GLINT.slider("strength", "Strength", 75, 0, 100, 5, "%");
+
+	public static final SurgeMod DURABILITY = mod("durability", "Durability Warning", Category.UTILITY, Items.DAMAGED_ANVIL,
+		"Warns you when your armor or the item in your hand is about to break", true);
+	public static final Setting.Slider DURA_PERCENT = DURABILITY.slider("percent", "Warn below", 10, 2, 50, 1, "%");
+	public static final Setting.Toggle DURA_SOUND = DURABILITY.toggle("sound", "Play a sound", true);
+	public static final Setting.Toggle DURA_ARMOR = DURABILITY.toggle("armor", "Check armor", true);
+	public static final Setting.Toggle DURA_HANDS = DURABILITY.toggle("hands", "Check held items", true);
+
+	public static final SurgeMod PROFILES = mod("profiles", "Profiles", Category.UTILITY, Items.BOOKSHELF,
+		"Save your whole setup (mods, HUD layout, settings) and switch between them, or per server", true);
+	static { PROFILES.toggleable = false; }
+	public static final Setting.Toggle PROFILE_PER_SERVER = PROFILES.toggle("perServer", "Remember a setup for each server", false);
+
 	static {
 		TAG_COUNTRY.label = gg.surge.client.features.Flags::name;
 		DAMAGE_TINT.onToggle(on -> DamageTint.apply(mc())).onChange(() -> DamageTint.apply(mc()));
@@ -261,6 +322,8 @@ public final class Mods {
 		OVERLAYS.onToggle(on -> OptionTweaks.apply(mc())).onChange(() -> OptionTweaks.apply(mc()));
 		CHAT.onToggle(on -> OptionTweaks.apply(mc()));
 		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
+		GLINT.onToggle(on -> gg.surge.client.features.Extras.applyGlint(mc())).onChange(() -> gg.surge.client.features.Extras.applyGlint(mc()));
+		gg.surge.client.features.Profiles.buttons(PROFILES);
 	}
 
 	public static List<SurgeMod> all() {

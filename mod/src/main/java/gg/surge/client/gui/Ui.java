@@ -19,10 +19,34 @@ public final class Ui {
 	public static final int SURFACE = 0xFF3A3A3D;
 	public static final int SURFACE_HOVER = 0xFF48484C;
 	public static final int EDGE = 0xFF0C0C0D;
-	public static final int ACCENT = 0xFF8F50F2;
-	public static final int ACCENT_HOVER = 0xFF9F66F7;
-	public static final int ACCENT_DIM = 0xFF5A2AA8;
-	public static final int ACCENT_2 = 0xFFB483FF;
+	public static int ACCENT = 0xFF8F50F2;
+	public static int ACCENT_HOVER = 0xFF9F66F7;
+	public static int ACCENT_DIM = 0xFF5A2AA8;
+	public static int ACCENT_2 = 0xFFB483FF;
+	private static String themeKey = "";
+
+	private static void theme() {
+		String t = gg.surge.client.mods.Mods.THEME.get();
+		String key = t + gg.surge.client.mods.Mods.THEME_COLOR.get();
+		if (key.equals(themeKey)) return;
+		themeKey = key;
+		int base = switch (t) {
+			case "Blue" -> 0x3B82F6;
+			case "Cyan" -> 0x06B6D4;
+			case "Green" -> 0x22C55E;
+			case "Red" -> 0xEF4444;
+			case "Orange" -> 0xF97316;
+			case "Pink" -> 0xEC4899;
+			case "Gold" -> 0xEAB308;
+			case "Mono" -> 0x8A8A92;
+			case "Custom" -> gg.surge.client.mods.Mods.THEME_COLOR.rgb(0) & 0xFFFFFF;
+			default -> 0x8F50F2;
+		};
+		ACCENT = 0xFF000000 | base;
+		ACCENT_HOVER = Colors.lerp(ACCENT, 0xFFFFFFFF, 0.15f);
+		ACCENT_DIM = Colors.lerp(ACCENT, 0xFF000000, 0.4f);
+		ACCENT_2 = Colors.lerp(ACCENT, 0xFFFFFFFF, 0.35f);
+	}
 	public static final int TEXT = 0xFFFFFFFF;
 	public static final int MUTED = 0xFFA9AAAE;
 	public static final int FAINT = 0xFF6E6F74;
@@ -42,6 +66,7 @@ public final class Ui {
 	private Ui() {}
 
 	public static void frame() {
+		theme();
 		long now = System.nanoTime();
 		long diff = now - lastFrame;
 		if (diff < 1_000_000L) return;

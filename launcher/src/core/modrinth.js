@@ -140,6 +140,7 @@ const PERFORMANCE_MODS = [
   ['scalablelux'],
   ['krypton'],
   ['modernfix', 'modernfix-mvus'],
+  ['memoryleakfix'],
 ];
 
 async function installPerformanceStack(instanceId, onProgress = () => {}) {

@@ -234,6 +234,13 @@ public final class Social {
 		return null;
 	}
 
+	public static void notice(String title, String text) {
+		synchronized (TOASTS) {
+			TOASTS.add(new Toast(title, text, System.currentTimeMillis()));
+			while (TOASTS.size() > 4) TOASTS.remove(0);
+		}
+	}
+
 	public static void toast(String title, String text) {
 		if (!Mods.SOCIAL_TOASTS.on()) return;
 		synchronized (TOASTS) {

@@ -112,10 +112,10 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
 
   onProgress({ stage: 'Syncing Surge mod…' });
   applyPendingModToggles(inst);
-  if (inst.loader === 'fabric' && !inst.perfChecked && inst.autoPerf !== false) {
+  if (inst.loader === 'fabric' && inst.perfChecked !== 2 && inst.autoPerf !== false) {
     onProgress({ stage: 'Adding performance mods…' });
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
-    instances.update(inst.id, { perfChecked: true });
+    instances.update(inst.id, { perfChecked: 2 });
   }
   const surgeJar = await syncSurgeMod(inst, onProgress);
   await social.refreshService();
