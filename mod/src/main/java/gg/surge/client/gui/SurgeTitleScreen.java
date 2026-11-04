@@ -53,7 +53,7 @@ public class SurgeTitleScreen extends Screen {
 	private boolean glass(GuiGraphics g, int mx, int my, int x, int y, int w, int h, String label, boolean primary, float alpha) {
 		boolean hov = Ui.hover(mx, my, x, y, w, h) && alpha > 0.95f;
 		float a = Ui.anim("title:" + label, hov);
-		int fill = primary ? Colors.lerp(0xE07A3FE0, 0xF0935BF5, a) : Colors.lerp(0x9A0E0E12, 0xC0222228, a);
+		int fill = primary ? Colors.lerp(Colors.alpha(Ui.ACCENT, 0.88f), Colors.alpha(Ui.ACCENT_HOVER, 0.94f), a) : Colors.lerp(0x9A0E0E12, 0xC0222228, a);
 		int border = primary ? Colors.lerp(0x60FFFFFF, 0xC0FFFFFF, a) : Colors.lerp(0x30FFFFFF, Colors.alpha(Ui.ACCENT_2, 0.75f), a);
 		g.fill(x, y, x + w, y + h, Colors.alpha(fill, alpha));
 		Ui.outline(g, x, y, w, h, Colors.alpha(border, alpha));

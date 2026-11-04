@@ -78,6 +78,7 @@ public final class AutoTest {
 				for (int i = 0; i < 8; i++) {
 					gg.surge.client.cosmetics.Preview.drawCard(g, i * w, 20, i * w + w, 140, 40, i * 45f, new gg.surge.client.cosmetics.CapturedLook("surge", null, null, null, 0f, false));
 					g.drawString(font, String.valueOf(i * 45), i * w + 4, 150, 0xFFFFFFFF, true);
+					gg.surge.client.cosmetics.Preview.drawCard(g, i * w, 170, i * w + w, 290, 40, i * 45f, new gg.surge.client.cosmetics.CapturedLook(null, "surge", null, null, 0f, false));
 				}
 			}
 		})));
