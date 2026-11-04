@@ -57,6 +57,7 @@ public final class Mods {
 	public static final Setting.Toggle UI_HOVER = GENERAL.toggle("hoverSounds", "Hover sounds", false);
 	public static final Setting.Toggle UI_ANIM = GENERAL.toggle("animations", "Smooth animations", true);
 	public static final Setting.Slider UI_ANIM_SPEED = GENERAL.slider("animSpeed", "Animation speed", 100, 50, 200, 10, "%").showIf(() -> Mods.UI_ANIM.on());
+	public static final Setting.Choice BRAND_POS = GENERAL.choice("brandPos", "Surge Client label", "Bottom right", "Bottom right", "Under inventory");
 
 	public static final SurgeMod TOGGLE_SPRINT = mod("toggle_sprint", "Toggle Sprint", Category.PVP, Items.SUGAR,
 		"Sprint without holding the key. Tap your sprint key to switch it on or off.", false);

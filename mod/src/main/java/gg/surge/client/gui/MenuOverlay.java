@@ -12,17 +12,13 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import org.lwjgl.glfw.GLFW;
 
 public final class MenuOverlay {
-	private static final net.minecraft.world.item.ItemStack SHIRT = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_CHESTPLATE);
-	private static final net.minecraft.world.item.ItemStack MODS = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPARATOR);
 	private static final net.minecraft.world.item.ItemStack COIN = Ui.COIN_ITEM;
-	private static final net.minecraft.world.item.ItemStack GEAR = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.REPEATER);
-	private static final net.minecraft.world.item.ItemStack SOCIAL = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITABLE_BOOK);
-	private static final net.minecraft.world.item.ItemStack EMOTE = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARMOR_STAND);
 
 	private MenuOverlay() {}
 
 	public static void register() {
 		ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> Brand.draw(client, s, g));
 			if (screen instanceof net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen) {
 				boolean[] down = {true};
 				ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> {
@@ -58,15 +54,16 @@ public final class MenuOverlay {
 
 		Ui.frame();
 		g.nextStratum();
-		int size = 22, x = w - size - 8, y = h / 2 - 76;
-		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
+		int size = 22, x = w - size - 8, y = h / 2 - 66;
+		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, Ui.I_SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
 		unreadBadge(g, mc, x, y - 26, size);
-		if (Ui.tile(g, mc.font, mx, my, x, y, size, GEAR, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y, size, Ui.I_GEAR, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
 		y += 26;
-		if (Ui.tile(g, mc.font, mx, my, x, y, size, SHIRT, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.COSMETICS));
-		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
+		boolean underPerson = screen instanceof PauseScreen && mc.player != null && (w / 2 - 112) - Math.max(8, w / 2 - 202) >= 50;
+		if (!underPerson && Ui.tile(g, mc.font, mx, my, x, y, size, Ui.I_SHIRT, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
+		if (underPerson) y -= 26;
+		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, Ui.I_MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
 		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, COIN, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
-		if (mc.player != null && Ui.tile(g, mc.font, mx, my, x, y + 78, size, EMOTE, "Emotes", true, 1f) && click) action = () -> mc.setScreen(new EmoteWheelScreen());
 
 		if (screen instanceof PauseScreen && mc.player != null) {
 			int x2 = w / 2 - 112;
@@ -74,6 +71,13 @@ public final class MenuOverlay {
 			if (x2 - x1 >= 50) {
 				int y1 = h / 2 - 80, y2 = h / 2 + 30;
 				gg.surge.client.cosmetics.Preview.draw(g, x1, y1, x2, y2, 46);
+				int bw = Math.min(84, x2 - x1), bx = (x1 + x2) / 2 - bw / 2, by = y2 + 6;
+				boolean hov = Ui.hover(mx, my, bx, by, bw, 18);
+				float a = Ui.anim("pausewardrobe", hov);
+				Ui.cutBox(g, bx, by, bw, 18, 4, Colors.lerp(0xE01A1A1D, 0xF02A2A2F, a), Colors.lerp(0x50FFFFFF, 0xE0FFFFFF, a));
+				Ui.icon(g, Ui.I_SHIRT, bx + 6, by + 5, 1, 0xFFFFFFFF);
+				g.drawString(mc.font, "Wardrobe", bx + 18, by + 5, 0xFFFFFFFF, false);
+				if (hov && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
 			}
 		}
 

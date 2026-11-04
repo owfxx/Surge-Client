@@ -458,9 +458,9 @@ public class SurgeMenuScreen extends Screen {
 		Ui.icon(g, LEFT, px + 5, y + 5, 1, Ui.TEXT);
 		if (bh && clickL) action = this::onClose;
 		Ui.logo(g, px + 25, y + 1, 16);
-		g.drawString(font, "Surge", px + 45, y + 5, Ui.TEXT, true);
+		g.drawString(font, Ui.ten("SURGE"), px + 45, y + 5, Ui.TEXT, true);
 		String fps = minecraft.getFps() + " fps";
-		g.drawString(font, fps, px + 49 + font.width("Surge"), y + 5, Ui.FAINT, false);
+		g.drawString(font, fps, px + 50 + font.width(Ui.ten("SURGE")), y + 5, Ui.FAINT, false);
 
 		int bx = px + pw;
 		boolean roomy = pw >= 420;
@@ -470,9 +470,6 @@ public class SurgeMenuScreen extends Screen {
 		int ww = roomy ? font.width("Wardrobe") + 27 : 20;
 		bx -= ww + 4;
 		if (topButton(g, mx, my, bx, y, ww, roomy ? "Wardrobe" : "", WARDROBE_ICON, false) && clickL) action = () -> minecraft.setScreen(new WardrobeScreen(this));
-		int emw = roomy ? font.width("Emotes") + 27 : 20;
-		bx -= emw + 4;
-		if (topButton(g, mx, my, bx, y, emw, roomy ? "Emotes" : "", EMOTE_ICON, false) && clickL) action = () -> minecraft.setScreen(new EmoteWheelScreen());
 		int left = cx;
 		int sw = Math.max(60, Math.min(170, bx - 8 - left));
 		int sx = left;
@@ -984,7 +981,7 @@ public class SurgeMenuScreen extends Screen {
 				g.pose().pushMatrix();
 				g.pose().translate(bx + 8, y + 8);
 				g.pose().scale(2f, 2f);
-				g.drawString(font, stats[i][0], 0, 0, colors[i], false);
+				g.drawString(font, Ui.ten(stats[i][0]), 0, 0, colors[i], false);
 				g.pose().popMatrix();
 				g.drawString(font, stats[i][1], bx + 8, y + 28, Ui.FAINT, false);
 			}
@@ -1022,7 +1019,7 @@ public class SurgeMenuScreen extends Screen {
 			g.drawString(font, worst, x + w - 8 - font.width(worst), lyy, Ui.FAINT, false);
 
 			int fy = gy + gh + 26;
-			g.drawString(font, "What we found", x + 2, fy, Ui.TEXT, false);
+			g.drawString(font, Ui.ten("What we found"), x + 2, fy, Ui.TEXT, false);
 			fy += 14;
 			for (PerfCheck.Finding fd : r.findings()) {
 				int fh = findingH(fd, w);

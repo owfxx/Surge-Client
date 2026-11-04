@@ -258,7 +258,7 @@ public class SocialScreen extends Screen {
 		Ui.cutBox(g, m, y, 18, 18, 3, bh ? 0xFF34343A : 0xFF232327, 0xFF3A3A40);
 		Ui.icon(g, BACK, m + 5, y + 5, 1, Ui.TEXT);
 		if (bh && click) action = this::onClose;
-		g.drawString(font, "Social", m + 26, y + 5, Ui.TEXT, true);
+		g.drawString(font, Ui.ten("SOCIAL"), m + 26, y + 5, Ui.TEXT, true);
 
 		String st = Social.status();
 		String stLabel = Social.statusLabel(st);
@@ -275,7 +275,7 @@ public class SocialScreen extends Screen {
 		int ax = sx - 20;
 		if (iconButton(g, mx, my, ax, y + 1, ADD, tab == Tab.REQUESTS) && click) action = () -> { tab = Tab.REQUESTS; adding = true; };
 
-		int tx = m + 26 + font.width("Social") + 22, selX = -1, selW = 0;
+		int tx = m + 26 + font.width(Ui.ten("SOCIAL")) + 22, selX = -1, selW = 0;
 		for (Tab t : Tab.values()) {
 			String label = switch (t) { case CHAT -> "Chats"; case FRIENDS -> "Friends"; case REQUESTS -> "Requests"; };
 			int badge = switch (t) { case CHAT -> sumUnread(); case FRIENDS -> 0; case REQUESTS -> Social.incoming.size(); };

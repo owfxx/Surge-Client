@@ -427,12 +427,12 @@ public class WardrobeScreen extends Screen {
 		Ui.cutBox(g, m, y, 18, 18, 3, bh ? 0xFF34343A : 0xFF232327, 0xFF3A3A40);
 		Ui.icon(g, LEFT, m + 5, y + 5, 1, Ui.TEXT);
 		if (bh && click) action = this::onClose;
-		g.drawString(font, "Wardrobe", m + 26, y + 5, Ui.TEXT, true);
+		g.drawString(font, Ui.ten("WARDROBE"), m + 26, y + 5, Ui.TEXT, true);
 
 		Section[] tabs = {Section.FEATURED, Section.COSMETICS, Section.EMOTES, Section.OUTFITS, Section.SKINS};
 		String bal = String.format("%,d", Wallet.get().coins);
 		int pillW = font.width(bal) + 26, px = this.width - m - pillW;
-		int tx = Math.max(m + 26 + font.width("Wardrobe") + 18, gx);
+		int tx = Math.max(m + 26 + font.width(Ui.ten("WARDROBE")) + 18, gx);
 		int gap = 14, need = 0;
 		for (Section s : tabs) need += font.width(s.label) + gap;
 		if (tx + need > px - 8) gap = Math.max(6, gap - (tx + need - (px - 8)) / tabs.length - 1);
@@ -553,7 +553,7 @@ public class WardrobeScreen extends Screen {
 			g.pose().pushMatrix();
 			g.pose().translate(x1 + 4, y1 + 2);
 			g.pose().scale(1.5f, 1.5f);
-			g.drawString(font, Ui.fit(font, focus.name(), Math.round((stageW - 8) / 1.5f)), 0, 0, Ui.TEXT, true);
+			g.drawString(font, Ui.ten(Ui.fit(font, focus.name(), Math.round((stageW - 8) / 1.5f))), 0, 0, Ui.TEXT, true);
 			g.pose().popMatrix();
 			g.fill(x1 + 4, y1 + 19, x1 + 8, y1 + 23, rc);
 			g.drawString(font, Ui.fit(font, rarityName(focus) + "  " + kind(focus), stageW - 16), x1 + 12, y1 + 18, Ui.MUTED, false);
@@ -561,13 +561,13 @@ public class WardrobeScreen extends Screen {
 			g.pose().pushMatrix();
 			g.pose().translate(x1 + 4, y1 + 2);
 			g.pose().scale(1.5f, 1.5f);
-			g.drawString(font, "Outfit " + (outfitIdx + 1), 0, 0, Ui.TEXT, true);
+			g.drawString(font, Ui.ten("Outfit " + (outfitIdx + 1)), 0, 0, Ui.TEXT, true);
 			g.pose().popMatrix();
 		} else {
 			g.pose().pushMatrix();
 			g.pose().translate(x1 + 4, y1 + 2);
 			g.pose().scale(1.5f, 1.5f);
-			g.drawString(font, minecraft.getUser().getName(), 0, 0, Ui.TEXT, true);
+			g.drawString(font, Ui.ten(minecraft.getUser().getName()), 0, 0, Ui.TEXT, true);
 			g.pose().popMatrix();
 			g.drawString(font, "Drag to turn", x1 + 4, y1 + 18, Ui.FAINT, false);
 		}
@@ -863,7 +863,7 @@ public class WardrobeScreen extends Screen {
 		int x = gx, y = top + 4, cw = gw;
 		Ui.cutBox(g, x, y, cw, 52, 6, 0xFF1E1E21, 0xFF2E2E33);
 		Ui.coin(g, x + 10, y + 10, 32);
-		g.drawString(font, Component.literal(String.format("%,d", Wallet.get().coins)).withStyle(ChatFormatting.BOLD), x + 50, y + 15, Ui.TEXT, true);
+		Ui.heading(g, font, String.format("%,d", Wallet.get().coins), x + 50, y + 12, Ui.TEXT, 1.5f, true);
 		g.drawString(font, "Surge Coins", x + 50, y + 28, Ui.MUTED, false);
 
 		Wallet w = Wallet.get();

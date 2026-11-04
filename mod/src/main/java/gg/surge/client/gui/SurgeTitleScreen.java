@@ -14,10 +14,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class SurgeTitleScreen extends Screen {
 	private static final ItemStack COIN = Ui.COIN_ITEM;
-	private static final ItemStack SHIRT = new ItemStack(Items.LEATHER_CHESTPLATE);
-	private static final ItemStack GEAR = new ItemStack(Items.REPEATER);
-	private static final ItemStack SOCIAL = new ItemStack(Items.WRITABLE_BOOK);
-	private static final ItemStack MODS = new ItemStack(Items.COMPARATOR);
 	private static boolean playedIntro, logOpen, logChecked;
 	private long openedAt;
 	private boolean wasDown = true;
@@ -124,7 +120,7 @@ public class SurgeTitleScreen extends Screen {
 			int px = right - pw, py = y - 10 - ph;
 			g.nextStratum();
 			Ui.cutBox(g, px, py, pw, ph, 5, Colors.alpha(0xF0141416, alpha), Colors.alpha(0xFF3A3A40, alpha));
-			g.drawString(font, "What's new in " + shown, px + 10, py + 8, Colors.alpha(0xFFFFFFFF, alpha), false);
+			g.drawString(font, Ui.ten("What's new in " + shown), px + 10, py + 8, Colors.alpha(0xFFFFFFFF, alpha), false);
 			int ry = py + 22;
 			for (String[] r : rows) {
 				if (r[0].equals("1")) g.fill(px + 11, ry + 3, px + 14, ry + 6, Colors.alpha(Ui.ACCENT_2, alpha));
@@ -178,13 +174,15 @@ public class SurgeTitleScreen extends Screen {
 		int x = this.width - 8 - 24;
 		if (Ui.tile(g, font, mx, my, x, ty, 24, COIN, Wallet.get().coins + " Surge Coins", true, kc) && click) action = () -> minecraft.setScreen(WardrobeScreen.open(this, WardrobeScreen.Section.CURRENCY));
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, MODS, "Surge mods", true, kc) && click) action = () -> minecraft.setScreen(new SurgeMenuScreen(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_MODS, "Surge mods", true, kc) && click) action = () -> minecraft.setScreen(new SurgeMenuScreen(this));
+		if (this.width < 400) {
+			x -= 30;
+			if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_SHIRT, "Wardrobe", true, kc) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+		}
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, SHIRT, "Wardrobe", true, kc) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_GEAR, "Settings", true, kc) && click) action = () -> minecraft.setScreen(SurgeMenuScreen.general(this));
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, GEAR, "Settings", true, kc) && click) action = () -> minecraft.setScreen(SurgeMenuScreen.general(this));
-		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
 		MenuOverlay.unreadBadge(g, minecraft, x, ty, 24);
 
 		String name = minecraft.getUser().getName();
@@ -196,6 +194,20 @@ public class SurgeTitleScreen extends Screen {
 		for (var f : gg.surge.client.net.Social.friends) if (!"offline".equals(f.status())) on++;
 		String sub = gg.surge.client.net.Social.statusLabel(st) + (gg.surge.client.net.Social.available() ? "  " + on + " friend" + (on == 1 ? "" : "s") + " online" : "");
 		g.drawString(font, sub, 19, ty + 14, Colors.alpha(0xFFA9AAAE, kc), true);
+
+		float ks = since(300, 500);
+		if (this.width >= 400 && ks > 0) {
+			int sc = Math.max(2, Math.min(5, (this.height - 120) / 40));
+			int fx = Math.max(16 + 8 * sc, this.width / 2 - bw / 2 - 30 - 12 * sc);
+			fx = Math.min(fx, this.width / 5 + 8 * sc);
+			int fy = (this.height - 33 * sc) / 2 - 14 + Math.round((1 - ks) * 10 + (float) Math.sin((System.currentTimeMillis() - openedAt) / 1100.0) * 1.5f);
+			if (SkinArt.draw(g, fx, fy, sc)) {
+				int bwW = 84, bxW = fx - bwW / 2, byW = (this.height + 33 * sc) / 2 - 2;
+				if (glass(g, mx, my, bxW, byW, bwW, 18, "Wardrobe", false, ks) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+				String nm = minecraft.getUser().getName();
+				g.drawString(font, nm, fx - font.width(nm) / 2, fy - 14, Colors.alpha(0xFFFFFFFF, ks), true);
+			}
+		}
 
 		float kf = since(500, 400);
 		g.drawString(font, "Minecraft 1.21.11", 8, this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);

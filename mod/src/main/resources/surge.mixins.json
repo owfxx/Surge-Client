@@ -25,7 +25,7 @@
 		"ItemInHandRendererMixin",
 		"TotemPopMixin",
 		"AvatarNameMixin",
-		"ServerEntryMixin", "OptionsAccessor", "LevelTimeMixin", "LocalPlayerDropMixin", "InventoryScreenMixin", "AvatarRenderStateMixin"
+		"ServerEntryMixin", "OptionsAccessor", "LevelTimeMixin", "LocalPlayerDropMixin", "InventoryScreenMixin", "AvatarRenderStateMixin", "ContainerScreenAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 0

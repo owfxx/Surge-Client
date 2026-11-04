@@ -1,4 +1,5 @@
 @font-face { font-family: 'Monocraft'; src: url('assets/font/Monocraft.otf') format('opentype'); font-display: block; }
+@font-face { font-family: 'Minecraft Ten'; src: url('assets/font/MinecraftTen.ttf') format('truetype'); font-display: block; }
 @font-face { font-family: 'Geist'; font-weight: 100 900; src: url('assets/font/geist-latin-wght-normal.woff2') format('woff2'); }
 
 :root {
@@ -16,6 +17,7 @@
   --green: #3c8527;
   --red: #c33636;
   --pixel: 'Monocraft', 'Consolas', monospace;
+  --ten: 'Minecraft Ten', 'Monocraft', monospace;
   --body: 'Geist', 'Segoe UI', sans-serif;
 }
 
@@ -61,7 +63,7 @@ main { flex: 1; overflow-y: auto; padding: 22px 30px 30px; position: relative; z
 main.home { padding: 0; overflow: hidden; }
 .page { max-width: 1060px; }
 .view-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-.view-title { font: 26px/1.15 var(--pixel); margin: 0; text-shadow: 3px 3px 0 #000; }
+.view-title { font: 32px/1.1 var(--ten); letter-spacing: 1px; margin: 0; text-shadow: 3px 3px 0 #000; }
 
 .btn { position: relative; height: 40px; padding: 0 18px 4px; border: 2px solid var(--outline); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
   font: 14px var(--pixel); color: #fff; text-shadow: 2px 2px 0 rgba(0, 0, 0, .45);
@@ -121,7 +123,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .hero-info { position: absolute; left: 44px; bottom: 44px; z-index: 2; max-width: min(560px, 52%); }
 .hero-chips { display: flex; gap: 6px; margin-bottom: 14px; }
 .pack-title { display: inline-flex; align-items: flex-end; gap: 14px; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: #fff; margin-bottom: 22px; }
-.pack-title h1 { margin: 0; font: clamp(32px, 4vw, 50px)/1.05 var(--pixel); text-shadow: 4px 4px 0 #000; text-wrap: balance; }
+.pack-title h1 { margin: 0; font: clamp(32px, 4vw, 56px)/1.05 var(--ten); letter-spacing: 2px; text-shadow: 4px 4px 0 #000; text-wrap: balance; }
 .pack-title svg { width: 18px; height: 18px; margin-bottom: 10px; fill: none; stroke: var(--muted); stroke-width: 3; flex: none; }
 .pack-title:hover svg { stroke: #fff; }
 .play-row { display: flex; gap: 8px; align-items: center; }
@@ -154,7 +156,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .back svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 3; }
 .detail-head { display: flex; gap: 18px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
 .detail-head .pack-icon { width: 76px; height: 76px; }
-.detail-head h1 { font: 26px/1.15 var(--pixel); margin: 0 0 10px; text-shadow: 3px 3px 0 #000; }
+.detail-head h1 { font: 32px/1.1 var(--ten); margin: 0 0 10px; text-shadow: 3px 3px 0 #000; }
 .detail-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .toolbar .search { flex: 1; min-width: 180px; }
@@ -180,7 +182,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .pager { display: flex; justify-content: center; gap: 10px; margin-top: 18px; align-items: center; color: var(--muted); font: 12px var(--pixel); }
 
 .settings { max-width: 780px; display: flex; flex-direction: column; gap: 22px; }
-.settings h2 { font: 15px var(--pixel); color: var(--muted); margin: 0 0 8px; text-shadow: 2px 2px 0 #000; }
+.settings h2 { font: 16px var(--ten); letter-spacing: 1px; color: var(--muted); margin: 0 0 8px; text-shadow: 2px 2px 0 #000; }
 .setting { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 16px; border-top: 2px solid var(--outline); min-height: 64px; }
 .setting:first-child { border-top: 0; }
 .setting .label { font-weight: 600; }
@@ -201,7 +203,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .modal { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(0, 0, 0, .65); animation: fade .12s; }
 @keyframes fade { from { opacity: 0; } }
 .modal-card { width: min(500px, calc(100% - 40px)); max-height: calc(100% - 80px); overflow: auto; padding: 20px 22px 22px; background: var(--slate); border: 2px solid var(--outline); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .06), 0 30px 80px -24px #000; }
-.modal-card h2 { margin: 0 0 16px; font: 18px var(--pixel); text-shadow: 2px 2px 0 #000; }
+.modal-card h2 { margin: 0 0 16px; font: 24px var(--ten); text-shadow: 2px 2px 0 #000; }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
 .form label .input { color: #fff; }
@@ -239,7 +241,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .skin-card canvas { width: 48px; height: 96px; image-rendering: pixelated; filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, .5)); }
 .skin-card .x-btn { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; font-size: 15px; opacity: 0; }
 .skin-card:hover .x-btn { opacity: 1; }
-.section-title { font: 15px var(--pixel); color: var(--muted); margin: 18px 0 8px; text-shadow: 2px 2px 0 #000; }
+.section-title { font: 16px var(--ten); letter-spacing: 1px; color: var(--muted); margin: 18px 0 8px; text-shadow: 2px 2px 0 #000; }
 .cape-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .crash-details { margin: 0; padding: 10px 12px; background: #111112; border: 2px solid var(--outline); font: 12px/1.5 Consolas, monospace; color: #d4d4d8; white-space: pre-wrap; max-height: 200px; overflow: auto; user-select: text; }
 .update-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; background: var(--slate-2); border: 2px solid var(--outline); }
@@ -262,7 +264,7 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .home-side > * { pointer-events: auto; }
 .greet { text-align: right; text-shadow: 2px 2px 0 rgba(0, 0, 0, .5); animation: rise .6s ease both; }
 .greet-time { font: 13px var(--pixel); color: var(--muted); }
-.greet-name { font: 22px var(--pixel); color: #fff; }
+.greet-name { font: 24px var(--ten); letter-spacing: 1px; color: #fff; }
 .side-card { background: rgba(14, 14, 18, .62); border: 2px solid rgba(255, 255, 255, .08); backdrop-filter: blur(8px); padding: 12px 14px; animation: rise .6s .1s ease both; }
 .side-card.news { animation-delay: .2s; margin-top: auto; }
 .side-head { font: 13px var(--pixel); color: #e4e4e7; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }

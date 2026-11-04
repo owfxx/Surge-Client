@@ -69,6 +69,20 @@ public final class Ui {
 		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX[idx], x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, s, s, s, s);
 	}
 
+	public static final net.minecraft.network.chat.FontDescription TEN = new net.minecraft.network.chat.FontDescription.Resource(Identifier.fromNamespaceAndPath("surge", "ten"));
+
+	public static net.minecraft.network.chat.MutableComponent ten(String text) {
+		return net.minecraft.network.chat.Component.literal(text).withStyle(st -> st.withFont(TEN));
+	}
+
+	public static void heading(GuiGraphics g, Font font, String text, int x, int y, int color, float scale, boolean shadow) {
+		g.pose().pushMatrix();
+		g.pose().translate(x, y);
+		g.pose().scale(scale, scale);
+		g.drawString(font, ten(text), 0, 0, color, shadow);
+		g.pose().popMatrix();
+	}
+
 	public static final Identifier LOGO = Identifier.fromNamespaceAndPath("surge", "textures/gui/logo.png");
 
 	private static final Map<Object, Float> ANIM = new HashMap<>();
@@ -144,7 +158,28 @@ public final class Ui {
 		return 0;
 	}
 
+	public static final String[] I_SOCIAL = {"XXXXXXXX", "XXXXXXXX", "XX.XX.XX", "XXXXXXXX", "XXXXXXXX", ".XX.....", ".X......", "........"};
+	public static final String[] I_MODS = {"..X.....", "XXXXXXXX", "..X.....", "......X.", "XXXXXXXX", "......X.", "...X....", "XXXXXXXX"};
+	public static final String[] I_GEAR = {"..X..X..", ".XXXXXX.", "XXX..XXX", ".X....X.", ".X....X.", "XXX..XXX", ".XXXXXX.", "..X..X.."};
+	public static final String[] I_SHIRT = {"XXX..XXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", ".XXXXXX.", ".XXXXXX.", ".XXXXXX.", ".XXXXXX."};
+
+	public static boolean tile(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, String[] px, String label, boolean labelLeft, float alpha) {
+		return tileCore(g, font, mx, my, x, y, size, () -> {
+			int sc = size >= 22 ? 2 : 1;
+			int iw = px[0].length() * sc, ih = px.length * sc;
+			icon(g, px, x + (size - iw) / 2, y + (size - ih) / 2, sc, Colors.alpha(0xFFFFFFFF, alpha));
+		}, label, labelLeft, alpha);
+	}
+
 	public static boolean tile(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, ItemStack icon, String label, boolean labelLeft, float alpha) {
+		return tileCore(g, font, mx, my, x, y, size, () -> {
+			int s = Math.min(16, size - 6);
+			if (icon == COIN_ITEM) coin(g, x + (size - s) / 2, y + (size - s) / 2, s);
+			else item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
+		}, label, labelLeft, alpha);
+	}
+
+	private static boolean tileCore(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, Runnable drawIcon, String label, boolean labelLeft, float alpha) {
 		Object key = "tile:" + label;
 		boolean hov = alpha > 0.95f && hover(mx, my, x, y, size, size);
 		long held = hoverTick(key, hov);
@@ -155,9 +190,7 @@ public final class Ui {
 		g.pose().scale(pop, pop);
 		g.pose().translate(-(x + size / 2f), -(y + size / 2f));
 		cutBox(g, x, y, size, size, 4, Colors.alpha(Colors.lerp(0xC0141416, 0xE0232327, a), alpha), Colors.alpha(Colors.lerp(0x40FFFFFF, 0xFFFFFFFF, a), alpha));
-		int s = Math.min(16, size - 6);
-		if (icon == COIN_ITEM) coin(g, x + (size - s) / 2, y + (size - s) / 2, s);
-		else item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
+		drawIcon.run();
 		g.pose().popMatrix();
 		float l = approach(key + ":label", hov && held > 350 ? 1f : 0f, 14f);
 		if (l > 0.01f) LABELS.add(() -> {

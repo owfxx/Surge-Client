@@ -1,0 +1,7 @@
+{
+ "providers": [
+  {"type": "space", "advances": {" ": 4}},
+  {"type": "ttf", "file": "surge:minecraft_ten.ttf", "size": 10.5, "oversample": 4.0, "shift": [0, 0.5]},
+  {"type": "reference", "id": "minecraft:default"}
+ ]
+}
