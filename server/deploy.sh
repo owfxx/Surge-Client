@@ -5,7 +5,9 @@ API=https://api.cloudflare.com/client/v4
 cf() { curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" "$@"; }
 json() { node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const o=JSON.parse(d);const v=($1);process.stdout.write(v==null?'':String(v))})"; }
 
-ACC=$(cf "$API/accounts" | json "o.result&&o.result[0]&&o.result[0].id")
+echo "Token: $(cf "$API/user/tokens/verify" | json "o.result&&o.result.status")"
+ACC="${CLOUDFLARE_ACCOUNT_ID:-}"
+[ -z "$ACC" ] && ACC=$(cf "$API/accounts" | json "o.result&&o.result[0]&&o.result[0].id")
 if [ -z "$ACC" ]; then echo "Token can't see a Cloudflare account"; cf "$API/accounts"; exit 1; fi
 export CLOUDFLARE_ACCOUNT_ID=$ACC
 
