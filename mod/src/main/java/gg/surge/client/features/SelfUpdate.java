@@ -68,7 +68,8 @@ public final class SelfUpdate {
 				Path pending = dir.resolve(name + ".pending");
 				Files.move(tmp, pending, StandardCopyOption.REPLACE_EXISTING);
 				installed = latest;
-				Runtime.getRuntime().addShutdownHook(new Thread(() -> swap(self, pending, dir.resolve(name))));
+				Path fresh = dir.resolve(name);
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> swap(self, pending, fresh)));
 			} catch (Exception ignored) { }
 		});
 	}

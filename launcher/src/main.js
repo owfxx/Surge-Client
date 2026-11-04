@@ -281,6 +281,6 @@ handle('selfupdate:apply', async url => {
   return r;
 });
 
-app.whenReady().then(() => { createWindow(); applyDiscordSettings(); });
+app.whenReady().then(() => { createWindow(); applyDiscordSettings(); require('./core/social').refreshService(); });
 app.on('before-quit', () => discord.stop());
 app.on('window-all-closed', () => { if (!launcher.isRunning()) app.quit(); });

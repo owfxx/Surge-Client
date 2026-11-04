@@ -415,9 +415,9 @@ async function homeSide() {
   if (g) g.innerHTML = `<div class="greet-time">${h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}${name ? ',' : ''}</div>${name ? `<div class="greet-name">${esc(name)}</div>` : ''}`;
   const card = $('#friendsCard');
   if (!card) return;
-  if (!state.cfg.apiUrl) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Turn on online features in Settings to see your friends here.</div>'; return; }
   const data = await S.social().catch(() => null);
   if (!$('#friendsCard')) return;
+  if (data && data.off) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Friends and chat are coming soon.</div>'; return; }
   if (!data) { card.innerHTML = '<div class="side-head">Friends</div><div class="muted small">Sign in with a Microsoft account to see your friends.</div>'; return; }
   const fr = (data.friends || []).slice().sort((a, b) => (a.status === 'offline') - (b.status === 'offline'));
   const on = fr.filter(f => f.status !== 'offline').length;

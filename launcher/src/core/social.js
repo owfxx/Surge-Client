@@ -3,8 +3,20 @@ const config = require('./config');
 
 let cached = null;
 
+async function refreshService() {
+  try {
+    const repo = require('./release').repo();
+    if (!repo) return;
+    const r = await fetch(`https://github.com/${repo}/releases/download/data/service.json`, { signal: AbortSignal.timeout(6000) });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d && typeof d.api === 'string' && /^https:\/\//.test(d.api) && d.api !== config.load().autoApiUrl) config.save({ autoApiUrl: d.api });
+  } catch { }
+}
+
 function apiUrl() {
-  let u = (config.load().apiUrl || '').trim().replace(/\/+$/, '');
+  const cfg = config.load();
+  let u = (cfg.apiUrl || cfg.autoApiUrl || require('./release').bundledApi() || '').trim().replace(/\/+$/, '');
   if (u && !/^https?:\/\//i.test(u)) u = `https://${u}`;
   return u;
 }
@@ -32,7 +44,7 @@ async function signIn(authorization) {
 
 async function social() {
   const api = apiUrl();
-  if (!api) return null;
+  if (!api) return { off: true };
   if (!cached) {
     try { await signIn(await require('./auth').getLaunchAuth()); } catch { return null; }
     if (!cached) return null;
@@ -43,4 +55,4 @@ async function social() {
 
 function token() { return cached ? cached.token : ''; }
 
-module.exports = { apiUrl, signIn, social, token };
+module.exports = { refreshService, apiUrl, signIn, social, token };

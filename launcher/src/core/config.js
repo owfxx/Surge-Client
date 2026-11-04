@@ -11,6 +11,7 @@ const DEFAULTS = {
   extraJvmArgs: '',
   curseforgeKey: '',
   apiUrl: '',
+  autoApiUrl: '',
   codesUrl: '',
   closeOnLaunch: false,
   uiSounds: true,

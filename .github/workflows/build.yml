@@ -9,7 +9,33 @@ permissions:
   contents: write
 
 jobs:
+  server:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - name: Deploy online service
+        id: deploy
+        working-directory: server
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: bash deploy.sh
+      - name: Share the service address
+        if: steps.deploy.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "{\"api\":\"${{ steps.deploy.outputs.url }}\"}" > service.json
+          gh release view data -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create data -R "$GITHUB_REPOSITORY" --title "Codes and sales" --notes "Used by Surge Client. Don't delete." --latest=false
+          gh release upload data service.json --clobber -R "$GITHUB_REPOSITORY"
+
   build:
+    needs: server
+    if: always()
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -42,7 +68,7 @@ jobs:
 
       - name: Point the launcher at this repo for updates
         shell: bash
-        run: echo "{\"repo\":\"${GITHUB_REPOSITORY}\"}" > launcher/resources/update-source.json
+        run: echo "{\"repo\":\"${GITHUB_REPOSITORY}\",\"api\":\"${{ needs.server.outputs.url }}\"}" > launcher/resources/update-source.json
 
       - name: Build mod
         working-directory: mod

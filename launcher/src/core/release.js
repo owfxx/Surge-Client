@@ -9,15 +9,19 @@ const API = 'https://api.github.com';
 const UA = 'SurgeClient';
 const UPDATES = path.join(paths.root, 'mod-updates');
 
-function bundledSource() {
+function bundled() {
   for (const p of [
     process.resourcesPath && path.join(process.resourcesPath, 'update-source.json'),
-    path.join(__dirname, '..', '..', 'update-source.json'),
+    path.join(__dirname, '..', '..', 'resources', 'update-source.json'),
   ]) {
-    try { if (p && fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')).repo || ''; } catch { }
+    try { if (p && fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { }
   }
-  return '';
+  return {};
 }
+
+function bundledSource() { return bundled().repo || ''; }
+
+function bundledApi() { return bundled().api || ''; }
 
 function repo() {
   return (config.load().updateRepo || bundledSource() || '').trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
@@ -189,4 +193,4 @@ async function publishDiscover({ token, servers }) {
   return `https://github.com/${r}/releases/download/data/discover.json`;
 }
 
-module.exports = { publishDiscover, repo, codesUrl, releases, updateMod, downloadedMod, checkLauncher, applyLauncher, publishFile, publishCodes, newer, jarVersion };
+module.exports = { bundledApi, publishDiscover, repo, codesUrl, releases, updateMod, downloadedMod, checkLauncher, applyLauncher, publishFile, publishCodes, newer, jarVersion };

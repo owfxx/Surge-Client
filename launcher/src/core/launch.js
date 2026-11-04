@@ -118,6 +118,7 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
     instances.update(inst.id, { perfChecked: true });
   }
   const surgeJar = await syncSurgeMod(inst, onProgress);
+  await social.refreshService();
   let surgeToken = '';
   try {
     const sess = await Promise.race([social.signIn(authorization), new Promise(r => setTimeout(() => r(null), 8000))]);
