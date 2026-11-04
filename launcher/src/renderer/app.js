@@ -392,7 +392,7 @@ function renderHome() {
         <div class="greet" id="greet"></div>
         <div class="side-card" id="friendsCard"><div class="side-head">Friends</div><div class="muted small">Loading…</div></div>
         <div class="side-card news"><div class="side-head">What's new</div>
-          <ul><li>A new wardrobe: see every item on your character</li><li>10 dances with their own music</li><li>Daily coin rewards, bigger for streaks</li><li>Chat with friends and join their games</li></ul></div>
+          <ul><li>New wardrobe and social menus with their own look</li><li>FPS check: finds what makes your game lag</li><li>10 dances with their own music</li><li>Daily coin rewards, bigger for streaks</li></ul></div>
       </aside>
       <div class="panel log ${state.launch.showLog ? '' : 'hidden'}" id="log"></div>
     </section>`;

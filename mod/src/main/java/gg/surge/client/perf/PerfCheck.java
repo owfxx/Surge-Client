@@ -152,6 +152,9 @@ public final class PerfCheck {
 		Options o = mc.options;
 		List<Finding> out = new ArrayList<>();
 		int rd = o.renderDistance().get();
+		if (avg > 0 && avg < 30 && stutters <= 3)
+			out.add(new Finding(2, "Low FPS all the time", "Your game runs at about " + Math.round(avg) + " FPS without big spikes, so the whole game is too heavy for your PC. The Max FPS preset turns on every boost and caps render distance at 12.",
+				"Max FPS", () -> Performance.preset(mc, Performance.Preset.MAX_FPS)));
 		if (heapPeak > 0.9f) {
 			out.add(new Finding(2, "RAM almost full", "The game used " + Math.round(heapPeak * 100) + "% of its " + fmt(ram) + " GB. When it fills up, Minecraft freezes to clean up. Give it more RAM in the Surge launcher settings (4 to 6 GB is a good amount).", null, null));
 		}

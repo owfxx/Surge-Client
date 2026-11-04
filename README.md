@@ -30,6 +30,7 @@ Requires Windows 10 or 11 and a Minecraft Java Edition account.
 - Surge Coins: a daily reward that grows with your streak, plus coins for playing
 - Friends: add people, chat, set your status and see which server your friends are on
 - Minimap, profiles you can save and share, and menu color themes
+- FPS check: plays along for 15 seconds, then shows what's causing lag and fixes it with one click
 
 All keys can be changed in **Options → Controls → Key Binds → Surge Client**.
 
