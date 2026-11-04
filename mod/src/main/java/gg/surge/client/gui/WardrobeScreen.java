@@ -224,6 +224,7 @@ public class WardrobeScreen extends Screen {
 				toast(switch (r.error()) {
 					case 2 -> "You already redeemed this code";
 					case 3 -> "You already have everything this code gives";
+					case 4 -> "This code has been used up";
 					default -> "That code doesn't exist. Check the spelling, or ask for a new one.";
 				}, 0xFFFF8C8C);
 			}

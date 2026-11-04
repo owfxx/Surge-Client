@@ -1,4 +1,4 @@
-import { adminSetup, adminApi, publicData } from './admin.js';
+import { adminSetup, adminApi, publicData, redeemCode } from './admin.js';
 import { ADMIN_PAGE } from './admin-page.js';
 const FRESH_MS = 15 * 60 * 1000;
 const ONLINE_MS = 3 * 60 * 1000;
@@ -196,6 +196,13 @@ export default {
     }
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
+
+    if (p === '/v1/redeem' && req.method === 'POST') {
+      const u = await me(req, db);
+      if (!u) return json({ error: 'sign in' }, 401);
+      const r = await redeemCode(db, u.uuid, body.code);
+      return json(r.body, r.status);
+    }
 
     if (p === '/v1/health' && req.method === 'GET') {
       let n = 0;

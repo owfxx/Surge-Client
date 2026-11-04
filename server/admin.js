@@ -32,7 +32,26 @@ export async function adminSetup(db) {
     db.prepare('CREATE TABLE IF NOT EXISTS admin_servers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, ip TEXT, description TEXT, tag TEXT)'),
     db.prepare('CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, expires INTEGER)'),
     db.prepare('CREATE TABLE IF NOT EXISTS admin_fails (ip TEXT PRIMARY KEY, count INTEGER, at INTEGER)'),
+    db.prepare('CREATE TABLE IF NOT EXISTS code_uses (hash TEXT, uuid TEXT, at INTEGER, PRIMARY KEY (hash, uuid))'),
   ]);
+  try { await db.prepare('ALTER TABLE admin_codes ADD COLUMN max_uses INTEGER DEFAULT 0').run(); } catch { }
+}
+
+export async function redeemCode(db, uuid, raw) {
+  await adminSetup(db);
+  const n = normalize(raw);
+  if (n.length < 4) return { status: 404, body: { error: 'not found' } };
+  const hash = await sha256(n);
+  const c = await db.prepare('SELECT hash, coins, items, max_uses FROM admin_codes WHERE hash = ?1').bind(hash).first();
+  if (!c) return { status: 404, body: { error: 'not found' } };
+  const mine = await db.prepare('SELECT at FROM code_uses WHERE hash = ?1 AND uuid = ?2').bind(hash, uuid).first();
+  if (mine) return { status: 409, body: { error: 'already redeemed' } };
+  if (c.max_uses > 0) {
+    const used = await db.prepare('SELECT COUNT(*) AS n FROM code_uses WHERE hash = ?1').bind(hash).first();
+    if ((used ? used.n : 0) >= c.max_uses) return { status: 410, body: { error: 'used up' } };
+  }
+  await db.prepare('INSERT OR IGNORE INTO code_uses (hash, uuid, at) VALUES (?1, ?2, ?3)').bind(hash, uuid, Date.now()).run();
+  return { status: 200, body: { hash, coins: c.coins || 0, items: JSON.parse(c.items || '[]') } };
 }
 
 async function lockedList(db) {
@@ -44,7 +63,7 @@ async function lockedList(db) {
 
 export async function publicData(db) {
   const now = Date.now();
-  const codes = (await db.prepare('SELECT hash, coins, items FROM admin_codes').all()).results.map(c => ({ hash: c.hash, coins: c.coins, items: JSON.parse(c.items || '[]') }));
+  const codes = (await db.prepare('SELECT hash, coins, items FROM admin_codes WHERE max_uses IS NULL OR max_uses = 0').all()).results.map(c => ({ hash: c.hash, coins: c.coins, items: JSON.parse(c.items || '[]') }));
   const sales = (await db.prepare('SELECT target, percent, until FROM admin_sales WHERE until = 0 OR until > ?1').bind(now).all()).results;
   const servers = (await db.prepare('SELECT name, ip, description, tag FROM admin_servers ORDER BY id').all()).results;
   const out = { codes, sales, servers };
@@ -55,7 +74,7 @@ export async function publicData(db) {
 
 async function state(db) {
   const now = Date.now();
-  const codes = (await db.prepare('SELECT hash, code, coins, items, created FROM admin_codes ORDER BY created DESC').all()).results.map(c => ({ ...c, items: JSON.parse(c.items || '[]') }));
+  const codes = (await db.prepare('SELECT c.hash, c.code, c.coins, c.items, c.created, c.max_uses, (SELECT COUNT(*) FROM code_uses u WHERE u.hash = c.hash) AS used FROM admin_codes c ORDER BY c.created DESC').all()).results.map(c => ({ ...c, items: JSON.parse(c.items || '[]') }));
   const sales = (await db.prepare('SELECT id, target, percent, until FROM admin_sales WHERE until = 0 OR until > ?1 ORDER BY id').bind(now).all()).results;
   const servers = (await db.prepare('SELECT id, name, ip, description, tag FROM admin_servers ORDER BY id').all()).results;
   const locked = (await lockedList(db)) || ['cape:beta'];
@@ -104,6 +123,7 @@ export async function adminApi(req, env, db, path) {
     const valid = new Set(ITEMS.map(i => i.id));
     const items = (Array.isArray(body.items) ? body.items : []).filter(i => valid.has(i)).slice(0, 20);
     if (!coins && !items.length) return json({ error: 'A code needs coins or an item' }, 400);
+    const uses = Math.max(0, Math.min(100000, Math.floor(Number(body.uses) || 0)));
     const custom = String(body.code || '').trim();
     const list = custom ? [custom] : Array.from({ length: Math.max(1, Math.min(100, Math.floor(Number(body.count) || 1))) }, randomCode);
     const made = [];
@@ -111,7 +131,7 @@ export async function adminApi(req, env, db, path) {
       const n = normalize(code);
       if (n.length < 4) return json({ error: 'Codes need at least 4 letters or numbers' }, 400);
       const hash = await sha256(n);
-      const r = await db.prepare('INSERT OR IGNORE INTO admin_codes (hash, code, coins, items, created) VALUES (?1, ?2, ?3, ?4, ?5)').bind(hash, code, coins, JSON.stringify(items), Date.now()).run();
+      const r = await db.prepare('INSERT OR IGNORE INTO admin_codes (hash, code, coins, items, created, max_uses) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(hash, code, coins, JSON.stringify(items), Date.now(), uses).run();
       if (r.meta.changes) made.push(code);
     }
     if (!made.length) return json({ error: 'That code already exists' }, 400);
@@ -119,6 +139,7 @@ export async function adminApi(req, env, db, path) {
   }
   if (path === 'codes/delete' && req.method === 'POST') {
     await db.prepare('DELETE FROM admin_codes WHERE hash = ?1').bind(String(body.hash || '')).run();
+    await db.prepare('DELETE FROM code_uses WHERE hash = ?1').bind(String(body.hash || '')).run();
     return json({ ok: true });
   }
   if (path === 'sales' && req.method === 'POST') {

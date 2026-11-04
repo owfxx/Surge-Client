@@ -173,6 +173,18 @@ public final class Wallet {
 		if (redeemed.contains(hash)) return CompletableFuture.completedFuture(new Reward(0, java.util.List.of(), 2));
 		return CompletableFuture.supplyAsync(() -> {
 			Found f = null;
+			if (gg.surge.client.net.Social.available()) {
+				try {
+					JsonObject body = new JsonObject();
+					body.addProperty("code", rawCode);
+					java.net.http.HttpResponse<String> r = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(gg.surge.client.net.SurgeNet.url() + "/v1/redeem"))
+						.timeout(java.time.Duration.ofSeconds(8)).header("Content-Type", "application/json").header("Authorization", "Bearer " + gg.surge.client.net.Social.token())
+						.POST(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString())).build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+					if (r.statusCode() == 200) return entry(JsonParser.parseString(r.body()).getAsJsonObject());
+					if (r.statusCode() == 409) return new Found(-1, java.util.List.of());
+					if (r.statusCode() == 410) return new Found(-2, java.util.List.of());
+				} catch (Exception ignored) { }
+			}
 			for (Path dir : codeDirs()) {
 				for (String name : new String[]{"codes.json", "admin.json"}) {
 					if (f != null) break;
@@ -191,6 +203,8 @@ public final class Wallet {
 			return f;
 		}).thenApply(f -> {
 			if (f == null) return new Reward(0, java.util.List.of(), 1);
+			if (f.coins() == -1) return new Reward(0, java.util.List.of(), 2);
+			if (f.coins() == -2) return new Reward(0, java.util.List.of(), 4);
 			synchronized (this) {
 				if (redeemed.contains(hash)) return new Reward(0, java.util.List.of(), 2);
 				java.util.List<String> fresh = new java.util.ArrayList<>();
