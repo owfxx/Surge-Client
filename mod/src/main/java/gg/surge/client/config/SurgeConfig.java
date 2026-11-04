@@ -65,6 +65,7 @@ public class SurgeConfig {
 	}
 
 	public Outfit[] outfits = {null, null, null};
+	public String seenVersion = "";
 
 	public static class BetaCape {
 		public String design = "logo";

@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 public final class SelfUpdate {
 	public static volatile String installed;
+	public static volatile java.util.List<String> notes = java.util.List.of();
 
 	private SelfUpdate() {}
 
@@ -67,6 +68,7 @@ public final class SelfUpdate {
 				if (d.statusCode() != 200 || Files.size(tmp) < 10_000) { Files.deleteIfExists(tmp); return; }
 				Path pending = dir.resolve(name + ".pending");
 				Files.move(tmp, pending, StandardCopyOption.REPLACE_EXISTING);
+				notes = Changelog.parse(rel.has("body") && !rel.get("body").isJsonNull() ? rel.get("body").getAsString() : "");
 				installed = latest;
 				Path fresh = dir.resolve(name);
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> swap(self, pending, fresh)));

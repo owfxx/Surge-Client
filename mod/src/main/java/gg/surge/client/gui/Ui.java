@@ -144,9 +144,7 @@ public final class Ui {
 		g.pose().translate(x + size / 2f, y + size / 2f);
 		g.pose().scale(pop, pop);
 		g.pose().translate(-(x + size / 2f), -(y + size / 2f));
-		g.fill(x, y, x + size, y + size, Colors.alpha(Colors.lerp(0xA00E0E12, 0xD0202026, a), alpha));
-		Ui.outline(g, x, y, size, size, Colors.alpha(Colors.lerp(0x28FFFFFF, 0xFFFFFFFF, a), alpha));
-		if (a > 0.02f) Ui.outline(g, x - 1, y - 1, size + 2, size + 2, Colors.alpha(0x50FFFFFF, a * alpha));
+		cutBox(g, x, y, size, size, 4, Colors.alpha(Colors.lerp(0xC0141416, 0xE0232327, a), alpha), Colors.alpha(Colors.lerp(0x40FFFFFF, 0xFFFFFFFF, a), alpha));
 		int s = Math.min(16, size - 6);
 		if (icon == COIN_ITEM) coin(g, x + (size - s) / 2, y + (size - s) / 2, s);
 		else item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
@@ -157,8 +155,7 @@ public final class Ui {
 			int lx = labelLeft ? x - tw - 6 + Math.round((1 - l) * 6) : x + size + 6 - Math.round((1 - l) * 6);
 			int ly = y + (size - 14) / 2;
 			g.nextStratum();
-			g.fill(lx, ly, lx + tw, ly + 14, Colors.alpha(0xE0101014, l));
-			Ui.outline(g, lx, ly, tw, 14, Colors.alpha(0x60FFFFFF, l));
+			cutBox(g, lx, ly, tw, 14, 3, Colors.alpha(0xF0141416, l), Colors.alpha(0xFF45454C, l));
 			g.drawString(font, label, lx + 5, ly + 3, Colors.alpha(0xFFFFFFFF, l), false);
 		}
 		return hov;

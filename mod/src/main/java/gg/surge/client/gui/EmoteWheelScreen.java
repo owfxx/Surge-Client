@@ -206,8 +206,8 @@ public class EmoteWheelScreen extends Screen {
 			float ha = Ui.anim("wheelseg:" + i, i == hov || (editing && i == editSlot));
 			has[i] = ha;
 			boolean filled = at(slots, i) != null;
-			int base = filled ? 0xC8181820 : 0x70101014;
-			int hi = editing && i == editSlot ? Colors.alpha(Ui.ACCENT, 0.94f) : filled ? Colors.alpha(Ui.ACCENT_DIM, 0.94f) : 0xA0303040;
+			int base = filled ? 0xD0141416 : 0x78101012;
+			int hi = editing && i == editSlot ? 0xF04A4A52 : filled ? 0xF0303036 : 0xA0262629;
 			colors[i] = Colors.alpha(Colors.lerp(base, hi, ha), k * (0.6f + 0.4f * flip));
 			grow[i] = Math.round(ha * 6);
 		}
@@ -257,8 +257,8 @@ public class EmoteWheelScreen extends Screen {
 		for (int p = 0; p < pages; p++) {
 			int x = px0 + p * (pw + 3);
 			boolean ph = Ui.hover(mx, my, x, py0, pw, 14);
-			Ui.box(g, x, py0, pw, 14, p == page ? Ui.ACCENT : ph ? 0xE0303036 : 0xB0181820, p == page ? Ui.ACCENT_2 : Ui.EDGE);
-			Ui.centered(g, font, String.valueOf(p + 1), x + pw / 2 + 1, py0 + 3, 0xFFFFFFFF);
+			Ui.box(g, x, py0, pw, 14, p == page ? 0xFFE4E4E7 : ph ? 0xE0303036 : 0xB0181820, p == page ? 0xFFFFFFFF : Ui.EDGE);
+			Ui.centered(g, font, String.valueOf(p + 1), x + pw / 2 + 1, py0 + 3, p == page ? 0xFF141416 : 0xFFFFFFFF);
 			if (ph && click) { int to = p; action = () -> setPage(to); }
 		}
 		if (editing && pages < MAX_PAGES) {
@@ -302,7 +302,7 @@ public class EmoteWheelScreen extends Screen {
 		for (Emotes.Emote e : all) {
 			boolean onPage = slots.contains(e.name());
 			boolean h = Ui.hover(mx, my, x + 3, y, w - 6, 17) && my >= top && my < bottom;
-			if (h) { g.fill(x + 3, y, x + w - 3, y + 17, 0xFF2E2E33); Emotes.setPreview(e); }
+			if (h) { Ui.cut(g, x + 3, y, w - 6, 17, 3, 0xFF2A2A2F); g.fill(x + 3, y + 3, x + 5, y + 14, Ui.ACCENT_2); Emotes.setPreview(e); }
 			g.drawString(font, e.label, x + 9, y + 5, onPage ? Ui.FAINT : Ui.TEXT, false);
 			if (onPage) g.drawString(font, "✔", x + w - 14, y + 5, Ui.ACCENT_2, false);
 			if (h && click) {

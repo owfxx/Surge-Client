@@ -1272,10 +1272,21 @@ async function adminPanel(tab = 'codes') {
   });
 }
 
+function changeLines(text) {
+  return String(text || '').split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l && !/https?:\/\/|full changelog|what's changed|new contributors| by @/i.test(l) && !/^#/.test(l))
+    .map(l => l.replace(/^[-*•]\s*/, '').replace(/\*\*|__|`/g, ''))
+    .filter(Boolean)
+    .slice(0, 20);
+}
+
 async function checkSelfUpdate() {
   const u = await S.selfUpdate.check().catch(() => null);
   if (!u) return;
-  modal(`<h2>Update available</h2><p class="muted" style="margin:0">Surge Client ${esc(u.version)} is out.${u.notes ? `<br><br>${esc(u.notes).slice(0, 400)}` : ''}</p>
+  const items = changeLines(u.notes);
+  modal(`<h2>Update available</h2><p class="muted" style="margin:0">Surge Client ${esc(u.version)} is out.</p>
+    ${items.length ? `<details class="changelog"><summary>What's new in ${esc(u.version)}</summary><ul>${items.map(l => `<li>${esc(l)}</li>`).join('')}</ul></details>` : ''}
     <div class="modal-actions"><button class="btn" id="uLater">Later</button><button class="btn primary" id="uNow">Update and restart</button></div>`,
   (card, close) => {
     $('#uLater', card).onclick = close;

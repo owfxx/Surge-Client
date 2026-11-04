@@ -61,6 +61,7 @@ public final class AutoTest {
 
 	private static void plan() {
 		STEPS.add(new Step("01-title", 80, mc -> { mc.options.onboardAccessibility = false; open(mc, new TitleScreen()); }));
+		STEPS.add(new Step("01b-title-log", 30, mc -> gg.surge.client.gui.SurgeTitleScreen.autotestLog()));
 		STEPS.add(new Step("02-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(mc.screen))));
 		STEPS.add(new Step("03-settings", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
 		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
