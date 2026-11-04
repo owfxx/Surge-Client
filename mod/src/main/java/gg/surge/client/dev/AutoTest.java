@@ -60,7 +60,7 @@ public final class AutoTest {
 	}
 
 	private static void plan() {
-		STEPS.add(new Step("01-title", 60, mc -> { }));
+		STEPS.add(new Step("01-title", 80, mc -> { mc.options.onboardAccessibility = false; open(mc, new TitleScreen()); }));
 		STEPS.add(new Step("02-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(mc.screen))));
 		STEPS.add(new Step("03-settings", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
 		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
@@ -81,10 +81,12 @@ public final class AutoTest {
 				}
 			}
 		})));
+		STEPS.add(new Step("08c-wardrobe-hover", 30, mc -> { open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); hover(mc, 0.33, 0.30); }));
 		STEPS.add(new Step("09-wardrobe-emotes", 50, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.EMOTES))));
 		STEPS.add(new Step("10-wardrobe-outfits", 40, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.OUTFITS))));
 		STEPS.add(new Step("11-coins", 30, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.CURRENCY))));
-		STEPS.add(new Step("12-social", 40, mc -> open(mc, new SocialScreen(null))));
+		STEPS.add(new Step("12-social", 40, mc -> { fakeSocial(); open(mc, new SocialScreen(null)); }));
+		STEPS.add(new Step("12b-social-friends", 30, mc -> clickAt(mc, 0.24, 0.135)));
 		STEPS.add(new Step("13-emote-wheel", 40, mc -> open(mc, new EmoteWheelScreen())));
 		STEPS.add(new Step("14-hud-editor", 40, mc -> open(mc, new HudEditorScreen(null))));
 		STEPS.add(new Step("15-pause", 40, mc -> { open(mc, null); mc.pauseGame(false); }));
@@ -93,6 +95,39 @@ public final class AutoTest {
 		STEPS.add(new Step("18-discover", 60, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.DISCOVER))));
 		STEPS.add(new Step("19-beta-cape", 30, mc -> open(mc, new gg.surge.client.gui.BetaCapeScreen(null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
+	}
+
+	private static void hover(Minecraft mc, double fx, double fy) {
+		long win = mc.getWindow().handle();
+		org.lwjgl.glfw.GLFW.glfwSetCursorPos(win, mc.getWindow().getScreenWidth() * fx, mc.getWindow().getScreenHeight() * fy);
+	}
+
+	private static void clickAt(Minecraft mc, double fx, double fy) {
+		hover(mc, fx, fy);
+		if (mc.screen instanceof SocialScreen ss) ss.autotestFriendsTab();
+	}
+
+	private static void fakeSocial() {
+		System.setProperty("surge.apiUrl", "https://surge-test.invalid");
+		System.setProperty("surge.token", "0123456789abcdef0123456789abcdef0123456789abcdef");
+		gg.surge.client.net.Social.myUuid = "aaaa0000aaaa0000aaaa0000aaaa0000";
+		java.util.List<gg.surge.client.net.Social.Friend> fr = new ArrayList<>();
+		fr.add(new gg.surge.client.net.Social.Friend("069a79f444e94726a5befca90e38aaf5", "Notch", "online", "mc.hypixel.net"));
+		fr.add(new gg.surge.client.net.Social.Friend("853c80ef3c3749fdaa49938b674adae6", "jeb_", "idle", ""));
+		fr.add(new gg.surge.client.net.Social.Friend("61699b2ed3274a019f1e0ea8c3f06bc6", "Dinnerbone", "busy", "play.cubecraft.net"));
+		fr.add(new gg.surge.client.net.Social.Friend("c06f89064c8a49119c29ea1dbd1aab82", "MHF_Steve", "offline", ""));
+		gg.surge.client.net.Social.friends = fr;
+		gg.surge.client.net.Social.incoming = new ArrayList<>(java.util.List.of(new gg.surge.client.net.Social.Person("f7c77d999f154a66a87dc4a51ef30d19", "hypixel")));
+		long now = System.currentTimeMillis();
+		String me = gg.surge.client.net.Social.myUuid, n = "069a79f444e94726a5befca90e38aaf5";
+		java.util.List<gg.surge.client.net.Social.Message> m = new ArrayList<>();
+		m.add(new gg.surge.client.net.Social.Message(1, n, me, "hey, you on?", now - 86400000L - 600000));
+		m.add(new gg.surge.client.net.Social.Message(2, me, n, "yeah! what are you playing?", now - 86400000L - 500000));
+		m.add(new gg.surge.client.net.Social.Message(3, n, me, "bedwars on hypixel, want to join? we need one more for the team", now - 300000));
+		m.add(new gg.surge.client.net.Social.Message(4, me, n, "omw", now - 120000));
+		gg.surge.client.net.Social.CHATS.put(n, m);
+		gg.surge.client.net.Social.CHATS.put("853c80ef3c3749fdaa49938b674adae6", new ArrayList<>(java.util.List.of(new gg.surge.client.net.Social.Message(5, "853c80ef3c3749fdaa49938b674adae6", me, "check out the new cape", now - 3600000))));
+		gg.surge.client.net.Social.UNREAD.put("853c80ef3c3749fdaa49938b674adae6", 2);
 	}
 
 	private static void createWorld(Minecraft mc) {

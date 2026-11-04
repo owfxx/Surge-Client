@@ -601,6 +601,11 @@ public class SocialScreen extends Screen {
 		return out;
 	}
 
+	public void autotestFriendsTab() {
+		tab = Tab.FRIENDS;
+		selected = "069a79f444e94726a5befca90e38aaf5";
+	}
+
 	@Override
 	public void removed() {
 		Social.screenOpen = false;
