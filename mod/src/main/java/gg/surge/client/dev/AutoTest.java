@@ -123,6 +123,7 @@ public final class AutoTest {
 	private static void fakeSocial() {
 		System.setProperty("surge.apiUrl", "https://surge-test.invalid");
 		System.setProperty("surge.token", "0123456789abcdef0123456789abcdef0123456789abcdef");
+		gg.surge.client.net.Social.useSession("0123456789abcdef0123456789abcdef0123456789abcdef");
 		gg.surge.client.net.Social.myUuid = "aaaa0000aaaa0000aaaa0000aaaa0000";
 		java.util.List<gg.surge.client.net.Social.Friend> fr = new ArrayList<>();
 		fr.add(new gg.surge.client.net.Social.Friend("069a79f444e94726a5befca90e38aaf5", "Notch", "online", "mc.hypixel.net"));

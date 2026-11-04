@@ -52,8 +52,93 @@ public final class Social {
 
 	private Social() {}
 
+	private static volatile String session;
+	private static volatile boolean signingIn;
+	private static volatile long lastAttempt;
+	public static volatile String signInError = "";
+
+	private static java.nio.file.Path sessionFile() {
+		return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("surge").resolve("session.json");
+	}
+
+	private static String myId() {
+		try { return Minecraft.getInstance().getUser().getProfileId().toString().replace("-", "").toLowerCase(); } catch (Exception e) { return ""; }
+	}
+
 	public static String token() {
-		return System.getProperty("surge.token", "").trim();
+		if (session == null) {
+			session = System.getProperty("surge.token", "").trim();
+			if (session.isEmpty()) {
+				try {
+					JsonObject o = JsonParser.parseString(java.nio.file.Files.readString(sessionFile())).getAsJsonObject();
+					if (s(o, "uuid").equals(myId())) session = s(o, "token");
+				} catch (Exception ignored) { }
+			}
+		}
+		return session;
+	}
+
+	public static void useSession(String t) {
+		session = t;
+	}
+
+	private static void forget() {
+		session = "";
+		try { java.nio.file.Files.deleteIfExists(sessionFile()); } catch (Exception ignored) { }
+	}
+
+	public static void ensureSignedIn() {
+		if (!SurgeNet.online() || !token().isEmpty() || signingIn) return;
+		if (System.currentTimeMillis() - lastAttempt < 60_000) return;
+		lastAttempt = System.currentTimeMillis();
+		signingIn = true;
+		Minecraft mc = Minecraft.getInstance();
+		String access, uuid, name;
+		try {
+			access = mc.getUser().getAccessToken();
+			uuid = myId();
+			name = mc.getUser().getName();
+		} catch (Exception e) {
+			signingIn = false;
+			signInError = "Couldn't read your Minecraft account";
+			return;
+		}
+		CompletableFuture.runAsync(() -> {
+			try {
+				if (access == null || access.length() < 20 || uuid.isEmpty()) { signInError = "Friends and chat need a Microsoft account"; return; }
+				byte[] rnd = new byte[16];
+				new java.security.SecureRandom().nextBytes(rnd);
+				StringBuilder sid = new StringBuilder();
+				for (byte b : rnd) sid.append(String.format("%02x", b));
+				JsonObject join = new JsonObject();
+				join.addProperty("accessToken", access);
+				join.addProperty("selectedProfile", uuid);
+				join.addProperty("serverId", sid.toString());
+				HttpResponse<String> j = HTTP.send(HttpRequest.newBuilder(URI.create("https://sessionserver.mojang.com/session/minecraft/join")).timeout(Duration.ofSeconds(10))
+					.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(join.toString())).build(), HttpResponse.BodyHandlers.ofString());
+				if (j.statusCode() >= 300) { signInError = "Minecraft couldn't confirm your account (" + j.statusCode() + "). Restart the game and try again."; return; }
+				JsonObject body = new JsonObject();
+				body.addProperty("name", name);
+				body.addProperty("serverId", sid.toString());
+				HttpResponse<String> r = HTTP.send(HttpRequest.newBuilder(URI.create(SurgeNet.url() + "/v1/auth")).timeout(Duration.ofSeconds(10))
+					.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body.toString())).build(), HttpResponse.BodyHandlers.ofString());
+				JsonObject o = JsonParser.parseString(r.body()).getAsJsonObject();
+				if (r.statusCode() != 200 || s(o, "token").isEmpty()) { signInError = o.has("error") ? s(o, "error") : "Surge sign-in failed (" + r.statusCode() + ")"; return; }
+				session = s(o, "token");
+				signInError = "";
+				JsonObject save = new JsonObject();
+				save.addProperty("uuid", uuid);
+				save.addProperty("token", session);
+				java.nio.file.Files.createDirectories(sessionFile().getParent());
+				java.nio.file.Files.writeString(sessionFile(), save.toString());
+				lastSocial = 0;
+				lastMessages = 0;
+			} catch (Exception e) {
+				signInError = "Can't reach the Surge service right now";
+			} finally {
+				signingIn = false;
+			}
+		});
 	}
 
 	public static boolean available() {
@@ -61,8 +146,9 @@ public final class Social {
 	}
 
 	public static String unavailableReason() {
-		if (!SurgeNet.online()) return "Friends and chat need the Surge online service. Ask the server owner to set it up.";
-		return "Start the game from the Surge launcher, signed in with your Microsoft account, to use friends and chat.";
+		if (!SurgeNet.online()) return "Friends and chat are offline right now.";
+		if (signingIn || signInError.isEmpty()) return "Signing you in…";
+		return signInError;
 	}
 
 	public static String status() {
@@ -108,6 +194,7 @@ public final class Social {
 		lastMy = my;
 		lastScreen = mc.screen;
 		synchronized (TOASTS) { TOASTS.removeIf(t -> System.currentTimeMillis() - t.at() > 6000); }
+		ensureSignedIn();
 		if (!available()) return;
 		long now = System.currentTimeMillis();
 		if (!busySocial && now - lastSocial > (screenOpen ? 5_000 : 20_000)) { lastSocial = now; refresh(); }
@@ -136,6 +223,7 @@ public final class Social {
 		return HTTP.sendAsync(r, HttpResponse.BodyHandlers.ofString()).thenApply(res -> {
 			JsonObject o;
 			try { o = JsonParser.parseString(res.body()).getAsJsonObject(); } catch (Exception e) { o = new JsonObject(); }
+			if (res.statusCode() == 401) { forget(); lastAttempt = 0; o.addProperty("error", "Signing you in again…"); }
 			if (res.statusCode() >= 400 && !o.has("error")) o.addProperty("error", "Something went wrong (" + res.statusCode() + ")");
 			return o;
 		}).exceptionally(e -> {

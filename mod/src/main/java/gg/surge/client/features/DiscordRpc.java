@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Locale;
 
 public final class DiscordRpc {
-	public static final String DEFAULT_ID = "";
+	public static final String DEFAULT_ID = "1567508779472388246";
 
 	public record Activity(String details, String state, long since) {}
 

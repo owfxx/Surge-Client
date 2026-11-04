@@ -36,14 +36,17 @@ public final class SurgeNet {
 
 	public static String url() {
 		String u = System.getProperty("surge.apiUrl", "").trim();
+		if (u.isEmpty()) u = DEFAULT_URL;
 		while (u.endsWith("/")) u = u.substring(0, u.length() - 1);
 		if (!u.isEmpty() && !u.contains("://")) u = "https://" + u;
 		return u;
 	}
 
+	public static final String DEFAULT_URL = "https://surge-client.remvuxd.workers.dev";
+
 	public static String publicUrl() {
 		String u = url();
-		return u.isEmpty() ? "https://surge-client.remvuxd.workers.dev" : u;
+		return u.isEmpty() ? DEFAULT_URL : u;
 	}
 
 	public static boolean online() {

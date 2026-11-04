@@ -2,7 +2,7 @@ const net = require('net');
 const path = require('path');
 const os = require('os');
 
-const DEFAULT_ID = '';
+const DEFAULT_ID = '1567508779472388246';
 let sock = null;
 let ready = false;
 let clientId = '';
