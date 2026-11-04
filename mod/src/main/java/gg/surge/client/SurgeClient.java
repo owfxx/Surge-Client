@@ -139,6 +139,7 @@ public class SurgeClient implements ClientModInitializer {
 			gg.surge.client.economy.Locks.load();
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(SurgeClient::tick);
+		if (gg.surge.client.dev.AutoTest.active()) ClientTickEvents.END_CLIENT_TICK.register(gg.surge.client.dev.AutoTest::tick);
 		MenuOverlay.register();
 		LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, ctx) -> {
 			if (renderer instanceof AvatarRenderer) helper.register(new CosmeticLayer((AvatarRenderer) renderer));

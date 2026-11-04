@@ -1,0 +1,141 @@
+package gg.surge.client.dev;
+
+import gg.surge.client.config.SurgeConfig;
+import gg.surge.client.economy.Shop;
+import gg.surge.client.economy.Wallet;
+import gg.surge.client.emotes.Emotes;
+import gg.surge.client.gui.EmoteWheelScreen;
+import gg.surge.client.gui.HudEditorScreen;
+import gg.surge.client.gui.ServerTabsScreen;
+import gg.surge.client.gui.SocialScreen;
+import gg.surge.client.gui.SurgeMenuScreen;
+import gg.surge.client.gui.WardrobeScreen;
+import gg.surge.client.hud.HudModule;
+import gg.surge.client.mods.Mods;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LevelSettings;
+import net.minecraft.world.level.WorldDataConfiguration;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.levelgen.WorldOptions;
+import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+public final class AutoTest {
+	private static final Logger LOG = LoggerFactory.getLogger("SurgeAutoTest");
+	private record Step(String name, int wait, Consumer<Minecraft> run) {}
+
+	private static final List<Step> STEPS = new ArrayList<>();
+	private static int index = -1, ticks, total;
+	private static boolean worldRequested, inWorld;
+
+	private AutoTest() {}
+
+	public static boolean active() {
+		return System.getProperty("surge.autotest") != null;
+	}
+
+	private static void shot(Minecraft mc, String name) {
+		try {
+			Screenshot.grab(mc.gameDirectory, "surge-" + name + ".png", mc.getMainRenderTarget(), 1, c -> LOG.info("Screenshot {}: {}", name, c.getString()));
+		} catch (Throwable t) {
+			LOG.error("Screenshot {} failed", name, t);
+		}
+	}
+
+	private static void open(Minecraft mc, Screen s) {
+		mc.setScreen(s);
+	}
+
+	private static void plan() {
+		STEPS.add(new Step("01-title", 60, mc -> { }));
+		STEPS.add(new Step("02-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(mc.screen))));
+		STEPS.add(new Step("03-settings", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
+		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
+		STEPS.add(new Step("04-hud", 60, mc -> { open(mc, null); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
+		STEPS.add(new Step("05-third-person", 40, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT)));
+		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
+		STEPS.add(new Step("07-emote-pony", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.PONY); }));
+		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
+		STEPS.add(new Step("09-wardrobe-emotes", 50, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.EMOTES))));
+		STEPS.add(new Step("10-wardrobe-outfits", 40, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.OUTFITS))));
+		STEPS.add(new Step("11-coins", 30, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.CURRENCY))));
+		STEPS.add(new Step("12-social", 40, mc -> open(mc, new SocialScreen(null))));
+		STEPS.add(new Step("13-emote-wheel", 40, mc -> open(mc, new EmoteWheelScreen())));
+		STEPS.add(new Step("14-hud-editor", 40, mc -> open(mc, new HudEditorScreen(null))));
+		STEPS.add(new Step("15-pause", 40, mc -> { open(mc, null); mc.pauseGame(false); }));
+		STEPS.add(new Step("16-mods-ingame", 30, mc -> open(mc, new SurgeMenuScreen(null))));
+		STEPS.add(new Step("17-servers", 40, mc -> open(mc, new JoinMultiplayerScreen(new TitleScreen()))));
+		STEPS.add(new Step("18-discover", 60, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.DISCOVER))));
+		STEPS.add(new Step("19-beta-cape", 30, mc -> open(mc, new gg.surge.client.gui.BetaCapeScreen(null))));
+		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
+	}
+
+	private static void createWorld(Minecraft mc) {
+		worldRequested = true;
+		Wallet w = Wallet.get();
+		for (Shop.Item i : Shop.ITEMS) w.owned.add(i.id());
+		w.coins = 12500;
+		SurgeConfig c = SurgeConfig.get();
+		c.cape = "surge";
+		c.wings = "none";
+		c.halo = "surge";
+		for (String id : new String[]{"keystrokes", "cps", "fps", "coords", "armor", "minimap", "effects", "compass"}) {
+			HudModule m = Mods.hud(id);
+			if (m != null) m.setEnabled(true);
+		}
+		LevelSettings settings = new LevelSettings("SurgeTest", GameType.CREATIVE, false, Difficulty.PEACEFUL, true, new GameRules(FeatureFlags.DEFAULT_FLAGS), WorldDataConfiguration.DEFAULT);
+		mc.createWorldOpenFlows().createFreshLevel("SurgeTest" + System.currentTimeMillis(), settings, WorldOptions.defaultWithRandomSeed(), WorldPresets::createNormalWorldDimensions, new TitleScreen());
+	}
+
+	public static void tick(Minecraft mc) {
+		if (!active()) return;
+		if (++total > 20 * 60 * 6) { LOG.error("Auto test timed out at step {}", index); mc.stop(); return; }
+		if (STEPS.isEmpty()) plan();
+		if (index < 0) {
+			if (mc.getOverlay() != null || mc.screen == null) return;
+			index = 0;
+			ticks = 0;
+			STEPS.get(0).run().accept(mc);
+			return;
+		}
+		Step s = STEPS.get(index);
+		if (s.name().equals("world")) {
+			if (mc.player == null || mc.level == null) return;
+			if (!inWorld) { inWorld = true; ticks = 0; }
+			if (++ticks < 100) return;
+			next(mc);
+			return;
+		}
+		if (++ticks < s.wait()) return;
+		shot(mc, s.name());
+		next(mc);
+	}
+
+	private static void next(Minecraft mc) {
+		index++;
+		ticks = 0;
+		if (index >= STEPS.size()) {
+			LOG.info("SURGE AUTOTEST DONE");
+			mc.stop();
+			return;
+		}
+		try {
+			STEPS.get(index).run().accept(mc);
+		} catch (Throwable t) {
+			LOG.error("Step {} failed", STEPS.get(index).name(), t);
+		}
+	}
+}

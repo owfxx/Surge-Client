@@ -116,3 +116,35 @@ jobs:
           target_commitish: ${{ github.sha }}
           files: out/*
           generate_release_notes: true
+
+  autotest:
+    if: contains(github.event.head_commit.message, '[test]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: '25' }
+      - name: Install a virtual screen
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils libopenal1 > /dev/null
+      - name: Run the game and take screenshots
+        working-directory: mod
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          MESA_GL_VERSION_OVERRIDE: '4.5'
+        run: |
+          chmod +x gradlew
+          timeout 1200 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest --no-configuration-cache || true
+          ls -la run/screenshots || true
+      - name: Publish screenshots
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p shots
+          cp mod/run/screenshots/*.png shots/ 2>/dev/null || true
+          cp mod/run/logs/latest.log shots/latest.log 2>/dev/null || true
+          ls shots
+          gh release view autotest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create autotest -R "$GITHUB_REPOSITORY" --title "Test screenshots" --notes "Automatic test run screenshots." --prerelease --latest=false
+          for a in $(gh release view autotest -R "$GITHUB_REPOSITORY" --json assets -q '.assets[].name'); do gh release delete-asset autotest "$a" -R "$GITHUB_REPOSITORY" -y || true; done
+          gh release upload autotest shots/* --clobber -R "$GITHUB_REPOSITORY"
