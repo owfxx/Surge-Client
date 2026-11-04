@@ -79,6 +79,10 @@ public class WardrobeScreen extends Screen {
 		this.parent = parent;
 	}
 
+	public static void autotestSub(String sub) {
+		cosmeticSub = sub;
+	}
+
 	public static WardrobeScreen open(Screen parent, Section s) {
 		section = s;
 		return new WardrobeScreen(parent);

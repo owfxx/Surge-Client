@@ -78,11 +78,13 @@ public final class AutoTest {
 				for (int i = 0; i < 8; i++) {
 					gg.surge.client.cosmetics.Preview.drawCard(g, i * w, 20, i * w + w, 140, 40, i * 45f, new gg.surge.client.cosmetics.CapturedLook("surge", null, null, null, 0f, false));
 					g.drawString(font, String.valueOf(i * 45), i * w + 4, 150, 0xFFFFFFFF, true);
+					g.enableScissor(0, 160, this.width, 300);
 					gg.surge.client.cosmetics.Preview.drawCard(g, i * w, 170, i * w + w, 290, 40, i * 45f, new gg.surge.client.cosmetics.CapturedLook(null, "surge", null, null, 0f, false));
+					g.disableScissor();
 				}
 			}
 		})));
-		STEPS.add(new Step("08c-wardrobe-hover", 30, mc -> { open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); hover(mc, 0.33, 0.30); }));
+		STEPS.add(new Step("08c-wardrobe-wings", 30, mc -> { WardrobeScreen.autotestSub("Capes"); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
 		STEPS.add(new Step("09-wardrobe-emotes", 50, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.EMOTES))));
 		STEPS.add(new Step("10-wardrobe-outfits", 40, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.OUTFITS))));
 		STEPS.add(new Step("11-coins", 30, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.CURRENCY))));
