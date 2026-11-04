@@ -164,7 +164,7 @@ public class EmoteWheelScreen extends Screen {
 		Runnable action = null;
 
 		List<Emotes.Emote> all = owned();
-		int cx = this.width / 2, cy = this.height / 2;
+		int cx = this.width / 2, cy = this.height / 2 - 8;
 		if (editing) cx = Math.min(cx, (this.width - 150) / 2 + 4);
 		float k = openProgress();
 
@@ -182,7 +182,7 @@ public class EmoteWheelScreen extends Screen {
 		if (page >= pages) page = 0;
 		List<String> slots = pagesList.get(page);
 
-		int R = Math.round(Math.min(110, Math.min(this.width - (editing ? 150 : 0), this.height) / 2 - 30) * (0.9f + 0.1f * k));
+		int R = Math.round(Math.min(110, Math.min((this.width - (editing ? 150 : 0)) / 2 - 30, this.height / 2 - 52)) * (0.9f + 0.1f * k));
 		int r = Math.round(R * 0.55f);
 		double seg = Math.PI * 2 / PER_PAGE;
 		double start = -Math.PI / 2 - seg / 2;
@@ -253,7 +253,7 @@ public class EmoteWheelScreen extends Screen {
 		Ui.centeredShadow(g, font, Ui.fit(font, title, r * 2 - 10), cx, cy + r - 14, hovered != null || editing ? Ui.TEXT : Ui.MUTED);
 
 		int pw = 14, totalW = pages * (pw + 3) + (editing && pages < MAX_PAGES ? pw + 3 : 0);
-		int px0 = cx - totalW / 2, py0 = cy + R + 12;
+		int px0 = cx - totalW / 2, py0 = cy + R + 8;
 		for (int p = 0; p < pages; p++) {
 			int x = px0 + p * (pw + 3);
 			boolean ph = Ui.hover(mx, my, x, py0, pw, 14);
@@ -276,7 +276,7 @@ public class EmoteWheelScreen extends Screen {
 			};
 		}
 		String hint = editing ? "Right click a slot to empty it" : pages > 1 ? "Scroll or press 0 for the next page" : "";
-		if (!hint.isEmpty()) Ui.centered(g, font, hint, cx, py0 + 19, 0x80FFFFFF);
+		if (!hint.isEmpty() && py0 + 28 < this.height - 26) Ui.centered(g, font, hint, cx, py0 + 18, 0x80FFFFFF);
 
 		int by = Math.max(6, cy - R - 30);
 		if (Ui.pill(g, font, mx, my, cx - 40, by, 80, 16, editing ? "Done" : "Edit wheel", editing) && click) action = () -> { editing = !editing; editSlot = -1; };
