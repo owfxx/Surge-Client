@@ -253,16 +253,6 @@ public final class Mods {
 	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
 		"Bind keys that send a chat message or command, like /home or gg", true);
 
-	public static final SurgeMod ENTITY_GLOW = mod("entity_glow", "Entity Highlights", Category.VISUAL, Items.GLOW_INK_SAC,
-		"Outline players, mobs or items so you can spot them through walls", false);
-	public static final Setting.Toggle GLOW_PLAYERS = ENTITY_GLOW.toggle("players", "Players", true);
-	public static final Setting.Toggle GLOW_HOSTILE = ENTITY_GLOW.toggle("hostile", "Hostile mobs", false);
-	public static final Setting.Toggle GLOW_PASSIVE = ENTITY_GLOW.toggle("passive", "Animals", false);
-	public static final Setting.Toggle GLOW_ITEMS = ENTITY_GLOW.toggle("items", "Dropped items", false);
-	public static final Setting.Slider GLOW_RANGE = ENTITY_GLOW.slider("range", "Range", 48, 8, 128, 8, " blocks");
-	public static final Setting.Toggle GLOW_TEAM = ENTITY_GLOW.toggle("team", "Use team colors", true);
-	public static final Setting.Color GLOW_COLOR = ENTITY_GLOW.color("color", "Outline color", "B483FF").showIf(() -> !Mods.GLOW_TEAM.on());
-
 	public static final SurgeMod NICK_HIDER = mod("nick_hider", "Nick Hider", Category.VISUAL, Items.LEATHER_HELMET,
 		"Hide your name in chat, the tab list and your nametag, great for recording", false);
 	public static final Setting.Choice NICK_NAME = NICK_HIDER.choice("nick", "Show me as", "You", "You", "Player", "Surge", "Hidden", "Me");

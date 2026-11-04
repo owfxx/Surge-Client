@@ -36,7 +36,6 @@ final class ExtraModules {
 
 	static List<HudModule> create() {
 		List<HudModule> out = new ArrayList<>();
-		out.add(new TargetHud());
 		out.add(new HitDelay());
 		out.add(new CpsGraph());
 		out.add(new KillCounter());
@@ -72,42 +71,6 @@ final class ExtraModules {
 			lastCpsSample = now;
 			System.arraycopy(CPS, 1, CPS, 0, CPS.length - 1);
 			CPS[CPS.length - 1] = HudModules.leftCps();
-		}
-	}
-
-	static final class TargetHud extends HudModule {
-		final Setting.Toggle distance = toggle("distance", "Show distance", true);
-		final Setting.Toggle compare = toggle("compare", "Show who's winning", true);
-		final Setting.Color barColor = color("bar", "Health bar color", "FF5555");
-
-		TargetHud() { super("target", "Target HUD", Items.TARGET, "Health and name of the player you're fighting", false, 0.42f, 0.62f); }
-
-		@Override public int width(Minecraft mc) { return 140; }
-
-		@Override public int height(Minecraft mc) { return 34; }
-
-		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			Entity e = CombatStats.target();
-			LivingEntity le = e instanceof LivingEntity l ? l : null;
-			if (le == null && mc.player != null && mc.screen == null) return;
-			String name = le == null ? "Steve" : le.getName().getString();
-			float hp = le == null ? 14 : le.getHealth(), max = le == null ? 20 : le.getMaxHealth();
-			int w = width(mc);
-			if (bgOn()) g.fill(x, y, x + w, y + 34, bg());
-			text(g, mc, HudModules.Ui2.fit(mc, name, w - 50), x + 5, y + 4, fg());
-			String hpText = String.format("%.1f❤", hp / 2f);
-			g.drawString(mc.font, hpText, x + w - 5 - mc.font.width(hpText), y + 4, 0xFFFF7777, shadowOn());
-			int bw = w - 10;
-			g.fill(x + 5, y + 16, x + 5 + bw, y + 21, 0x60000000);
-			g.fill(x + 5, y + 16, x + 5 + Math.round(bw * Math.max(0, Math.min(1, hp / Math.max(1, max)))), y + 21, 0xFF000000 | barColor.rgb(0));
-			String sub = "";
-			if (distance.on()) sub = le == null || mc.player == null ? "3.1 blocks" : String.format("%.1f blocks", mc.player.distanceTo(le));
-			if (compare.on() && mc.player != null && le != null) {
-				float mine = mc.player.getHealth();
-				String s = mine > hp + 1 ? "Winning" : mine < hp - 1 ? "Losing" : "Even";
-				sub = sub.isEmpty() ? s : sub + "  " + s;
-			}
-			if (!sub.isEmpty()) g.drawString(mc.font, sub, x + 5, y + 24, Colors.alpha(fg(), 0.7f), shadowOn());
 		}
 	}
 
@@ -257,7 +220,6 @@ final class ExtraModules {
 		final Setting.Slider size = slider("size", "Size", 96, 64, 192, 8, "px");
 		final Setting.Choice zoom = choice("zoom", "Zoom", "1x", "0.5x", "1x", "2x", "4x");
 		final Setting.Choice shape = choice("shape", "Shape", "Square", "Square", "Round");
-		final Setting.Toggle showPlayers = toggle("players", "Show players", true);
 		final Setting.Toggle showWaypoints = toggle("waypoints", "Show waypoints", true);
 		final Setting.Toggle showCoords = toggle("coords", "Show coordinates", true);
 
@@ -350,14 +312,6 @@ final class ExtraModules {
 					int wx = cx + (int) Math.round((wp.x + 0.5 - p.getX()) / perPx), wy = cy + (int) Math.round((wp.z + 0.5 - p.getZ()) / perPx);
 					if (!inside(wx - cx, wy - cy, s, round)) continue;
 					g.fill(wx - 2, wy - 2, wx + 2, wy + 2, 0xFF000000 | Colors.parse(wp.color));
-				}
-			}
-			if (showPlayers.on()) {
-				for (Player o : mc.level.players()) {
-					if (o == p) continue;
-					int ox = cx + (int) Math.round((o.getX() - p.getX()) / perPx), oy = cy + (int) Math.round((o.getZ() - p.getZ()) / perPx);
-					if (!inside(ox - cx, oy - cy, s, round)) continue;
-					g.fill(ox - 1, oy - 1, ox + 2, oy + 2, 0xFFFFFFFF);
 				}
 			}
 			double yaw = Math.toRadians(p.getYRot());

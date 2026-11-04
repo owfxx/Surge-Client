@@ -58,23 +58,4 @@ public abstract class EntityRendererMixin {
 		if (Badges.show(entity.getUUID())) out = Badges.prefix(out);
 		if (out != name) cir.setReturnValue(out);
 	}
-
-	@Inject(method = "extractRenderState", at = @At("TAIL"))
-	private void surge$glow(Entity entity, net.minecraft.client.renderer.entity.state.EntityRenderState state, float partialTick, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
-		if (!gg.surge.client.mods.Mods.ENTITY_GLOW.enabled()) return;
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null || entity == mc.player) return;
-		double r = gg.surge.client.mods.Mods.GLOW_RANGE.get();
-		if (entity.distanceToSqr(mc.player) > r * r) return;
-		boolean want;
-		if (entity instanceof Player) want = gg.surge.client.mods.Mods.GLOW_PLAYERS.on();
-		else if (entity instanceof net.minecraft.world.entity.monster.Enemy) want = gg.surge.client.mods.Mods.GLOW_HOSTILE.on();
-		else if (entity instanceof net.minecraft.world.entity.animal.Animal) want = gg.surge.client.mods.Mods.GLOW_PASSIVE.on();
-		else if (entity instanceof net.minecraft.world.entity.item.ItemEntity) want = gg.surge.client.mods.Mods.GLOW_ITEMS.on();
-		else want = false;
-		if (!want) return;
-		int team = entity.getTeamColor();
-		int col = gg.surge.client.mods.Mods.GLOW_TEAM.on() && (team & 0xFFFFFF) != 0xFFFFFF ? team : gg.surge.client.mods.Mods.GLOW_COLOR.rgb(0);
-		state.outlineColor = 0xFF000000 | (col & 0xFFFFFF);
-	}
 }
