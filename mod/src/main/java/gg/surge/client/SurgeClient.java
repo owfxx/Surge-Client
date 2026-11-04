@@ -211,6 +211,14 @@ public class SurgeClient implements ClientModInitializer {
 
 		LocalPlayer p = mc.player;
 		if (p == null) return;
+		if (!SurgeConfig.get().welcomed && p.tickCount > 60) {
+			SurgeConfig.get().welcomed = true;
+			SurgeConfig.save();
+			String menu = KeyBindingHelper.getBoundKeyOf(menuKey).getDisplayName().getString();
+			String emotes = KeyBindingHelper.getBoundKeyOf(emoteKey).getDisplayName().getString();
+			gg.surge.client.net.Social.notice("Welcome to Surge Client", menu + ": mods   " + emotes + ": emotes");
+			gg.surge.client.net.Social.notice("Wardrobe and friends", "Press Esc, then use the icons on the right");
+		}
 
 		if (Mods.TOGGLE_SPRINT.enabled()) {
 			var o = mc.options;

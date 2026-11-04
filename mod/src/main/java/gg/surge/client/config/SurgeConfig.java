@@ -73,6 +73,7 @@ public class SurgeConfig {
 	}
 
 	public BetaCape betaCape = new BetaCape();
+	public boolean welcomed = false;
 
 	public List<List<String>> emotePages = null;
 
