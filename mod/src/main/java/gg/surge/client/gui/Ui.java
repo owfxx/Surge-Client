@@ -174,6 +174,20 @@ public final class Ui {
 		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x12FFFFFF);
 	}
 
+	public static void cut(GuiGraphics g, int x, int y, int w, int h, int c, int color) {
+		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
+		for (int i = 0; i < c; i++) {
+			g.fill(x + c - i, y + i, x + w - c + i, y + i + 1, color);
+			g.fill(x + c - i, y + h - i - 1, x + w - c + i, y + h - i, color);
+		}
+		g.fill(x, y + c, x + w, y + h - c, color);
+	}
+
+	public static void cutBox(GuiGraphics g, int x, int y, int w, int h, int c, int fill, int edge) {
+		cut(g, x, y, w, h, c, edge);
+		cut(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, c - 1), fill);
+	}
+
 	public static void outline(GuiGraphics g, int x, int y, int w, int h, int color) {
 		g.fill(x, y, x + w, y + 1, color);
 		g.fill(x, y + h - 1, x + w, y + h, color);
