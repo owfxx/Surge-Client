@@ -181,6 +181,83 @@ final class EmoteAnimations {
 				p.rArm(-180 * Math.max(0, s), 0, 30 + 40 * c).lArm(-180 * Math.max(0, -s), 0, -30 - 40 * c)
 					.head(-15, 20 * s, 0).lean(20).rLeg(18 * s, 0, 0).lLeg(-18 * s, 0, 0).body(0, 10 * s, 0);
 			}
+			case GRIDDY -> {
+				float b = t * e.bpm / 60f;
+				float side = sin(b * (float) Math.PI);
+				float hop = Math.abs(sin(b * (float) Math.PI));
+				boolean goggles = ((int) (b / 8)) % 2 == 1;
+				if (goggles) p.rArm(-150, -35, 0).lArm(-150, 35, 0).head(-6, side * 8, 0);
+				else p.rArm(-60 - 40 * side, -10, 12).lArm(-60 + 40 * side, 10, -12).head(6 * hop, side * 6, 0);
+				p.rLeg(-35 * Math.max(0, side), 0, 4).lLeg(-35 * Math.max(0, -side), 0, -4).lean(10).bob(-hop * 1.5f).sway(side * 0.6f);
+			}
+			case MOONWALK -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI * 0.5f);
+				float r = Math.max(0, s), l = Math.max(0, -s);
+				p.rLeg(18 * l - 6, 0, 0).lLeg(18 * r - 6, 0, 0).body(0, 0, 0).lean(-6)
+					.rArm(14 * s, 0, 10).lArm(-14 * s, 0, -10).head(-4, 0, sin(b * (float) Math.PI) * 4).bob(-Math.abs(s) * 0.8f);
+				if (((int) (b / 4)) % 4 == 3) p.rArm(-150, -20, 20).head(-20, 0, 0);
+			}
+			case SHUFFLE -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI * 2f);
+				float kick = sin(b * (float) Math.PI);
+				p.rLeg(-20 * Math.max(0, kick), 0, 25 * Math.max(0, s)).lLeg(-20 * Math.max(0, -kick), 0, -25 * Math.max(0, -s))
+					.rArm(-30 - 30 * kick, 0, 25).lArm(-30 + 30 * kick, 0, -25).bob(-Math.abs(s) * 1.6f).head(8 * Math.abs(s), 0, 0).sway(kick * 0.5f);
+			}
+			case RUNNING_MAN -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI);
+				float up = Math.max(0, s), dn = Math.max(0, -s);
+				p.rLeg(-70 * up + 25 * dn, 0, 0).lLeg(-70 * dn + 25 * up, 0, 0)
+					.rArm(-80 + 40 * s, -10, 10).lArm(-80 - 40 * s, 10, -10).bob(-Math.abs(s) * 2f).head(10 * Math.abs(s), 0, 0).lean(6);
+			}
+			case DISCO -> {
+				float b = t * e.bpm / 60f;
+				boolean upBeat = ((int) (b / 2)) % 2 == 0;
+				float hip = sin(b * (float) Math.PI);
+				if (upBeat) p.rArm(-170, -10, 35).head(-20, -15, 0);
+				else p.rArm(-40, 30, -40).head(10, 15, 0);
+				p.lArm(-20, 0, -15 - 10 * Math.abs(hip)).body(0, 10 * hip, 0).sway(hip * 1.2f).rLeg(0, 0, 6 + 4 * hip).lLeg(-10 * Math.max(0, hip), 0, -6);
+			}
+			case TWIST -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI);
+				p.body(0, 35 * s, 0).rArm(-70, -20 + 25 * s, 30).lArm(-70, 20 + 25 * s, -30)
+					.rLeg(-8, -30 * s, 6).lLeg(-8, -30 * s, -6).head(0, -15 * s, 0).bob(1.5f + Math.abs(s) * 1.5f);
+			}
+			case CHARLESTON -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI * 0.5f);
+				float jazz = sin(b * (float) Math.PI * 4f) * 10;
+				p.rLeg(-40 * s, 0, 10 * Math.abs(s)).lLeg(40 * s * 0.4f, 0, -10 * Math.abs(s))
+					.rArm(-100 + 30 * s, -30, 20 + jazz).lArm(-100 - 30 * s, 30, -20 - jazz).lean(8 * s).head(-8, 0, 6 * s).bob(-Math.abs(s) * 1.2f);
+			}
+			case PONY -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI);
+				float bounce = Math.abs(sin(b * (float) Math.PI * 2f));
+				boolean lasso = ((int) (b / 8)) % 2 == 1;
+				if (lasso) p.rArm(-175, 0, 20 + sin(b * (float) Math.PI * 2f) * 25).lArm(-70, 35, 0);
+				else p.rArm(-70, -35, 0).lArm(-70, 35, 0);
+				p.rLeg(-20 * Math.max(0, s), 0, 8).lLeg(-20 * Math.max(0, -s), 0, -8).bob(-bounce * 2.5f).head(6 * bounce, 0, 0).sway(s * 0.8f);
+			}
+			case TOPROCK -> {
+				float b = t * e.bpm / 60f;
+				float s = sin(b * (float) Math.PI * 0.5f);
+				float open = Math.abs(sin(b * (float) Math.PI));
+				p.rLeg(-15 * Math.max(0, s), 0, -18 * Math.max(0, s)).lLeg(-15 * Math.max(0, -s), 0, 18 * Math.max(0, -s))
+					.rArm(-40 - 30 * open, -30 + 50 * open, 20).lArm(-40 - 30 * open, 30 - 50 * open, -20).lean(12).body(0, 15 * s, 0).head(5, 10 * s, 0).bob(-open * 1.2f);
+			}
+			case WOAH -> {
+				float b = t * e.bpm / 60f;
+				int bar = (int) (b / 2);
+				float hit = 1f - clamp((b % 2f) * 3f);
+				boolean right = bar % 2 == 0;
+				if (right) p.rArm(-95, 40, 0).lArm(-30 - 30 * hit, 0, -20).lean(-14 * hit + 4).head(-10 * hit, -20, 0).body(0, -15, 0);
+				else p.lArm(-95, -40, 0).rArm(-30 - 30 * hit, 0, 20).lean(-14 * hit + 4).head(-10 * hit, 20, 0).body(0, 15, 0);
+				p.rLeg(0, 0, 6).lLeg(0, 0, -6).bob(hit * 2f);
+			}
 			case CRY -> {
 				float sob = sin(t * 14f);
 				p.rArm(-135, -30, 0).lArm(-135, 30, 0).head(25 + sob * 3, 0, 0).lean(10);

@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFW;
 public final class MenuOverlay {
 	private static final net.minecraft.world.item.ItemStack SHIRT = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LEATHER_CHESTPLATE);
 	private static final net.minecraft.world.item.ItemStack MODS = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPARATOR);
-	private static final net.minecraft.world.item.ItemStack COIN = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET);
+	private static final net.minecraft.world.item.ItemStack COIN = Ui.COIN_ITEM;
 	private static final net.minecraft.world.item.ItemStack GEAR = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.REPEATER);
 	private static final net.minecraft.world.item.ItemStack SOCIAL = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WRITABLE_BOOK);
 	private static final net.minecraft.world.item.ItemStack EMOTE = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARMOR_STAND);

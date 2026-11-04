@@ -55,7 +55,7 @@ public class EmoteWheelScreen extends Screen {
 		return out;
 	}
 
-	private static List<List<String>> layout() {
+	static List<List<String>> layout() {
 		SurgeConfig c = SurgeConfig.get();
 		if (c.emotePages != null && !c.emotePages.isEmpty()) {
 			for (List<String> p : c.emotePages) while (p.size() < PER_PAGE) p.add("");
@@ -72,7 +72,7 @@ public class EmoteWheelScreen extends Screen {
 		return auto;
 	}
 
-	private static List<List<String>> editable() {
+	static List<List<String>> editable() {
 		SurgeConfig c = SurgeConfig.get();
 		if (c.emotePages == null || c.emotePages.isEmpty()) {
 			List<List<String>> copy = new ArrayList<>();

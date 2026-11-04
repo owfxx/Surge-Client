@@ -13,6 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PlayerModelMixin {
 	@Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
 	private void surge$emote(AvatarRenderState state, CallbackInfo ci) {
+		gg.surge.client.cosmetics.CapturedLook look = ((gg.surge.client.cosmetics.SurgeState) state).surge$look();
+		if (look != null) {
+			Emotes.animateCaptured((PlayerModel) (Object) this, look.emote(), look.emoteTime(), look.emotePreview());
+			return;
+		}
 		net.minecraft.world.entity.player.Player p = CosmeticLayer.playerOf(state);
 		if (p == null) return;
 		if (p == net.minecraft.client.Minecraft.getInstance().player) Emotes.animate((PlayerModel) (Object) this);

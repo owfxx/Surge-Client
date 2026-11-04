@@ -21,16 +21,32 @@ public final class Emotes {
 		HEADBANG("Headbang", 4.0f, true), YAWN("Yawn", 3.2f, false),
 		GUITAR("Air Guitar", 4.0f, true), ROBOT("Robot", 4.0f, true), CHICKEN("Chicken Dance", 4.0f, true),
 		WAVE_BOTH("Big Wave", 3.0f, false), VICTORY("Victory", 3.0f, false), SHY("Shy", 3.5f, false),
-		KICK("Kick", 1.8f, false), SALSA("Salsa", 4.0f, true), DRUMS("Drums", 4.0f, true), SWIM("Swim", 4.0f, true);
+		KICK("Kick", 1.8f, false), SALSA("Salsa", 4.0f, true), DRUMS("Drums", 4.0f, true), SWIM("Swim", 4.0f, true),
+		GRIDDY("Griddy", 13.2f, "griddy", 146), MOONWALK("Moonwalk", 16.6f, "moonwalk", 116), SHUFFLE("Shuffle", 15.2f, "shuffle", 126),
+		RUNNING_MAN("Running Man", 19.6f, "running_man", 98), DISCO("Disco Fever", 16.0f, "disco", 120), TWIST("The Twist", 12.3f, "twist", 156),
+		CHARLESTON("Charleston", 10.9f, "charleston", 176), PONY("Pony", 14.8f, "pony", 130), TOPROCK("Toprock", 18.5f, "toprock", 104),
+		WOAH("The Woah", 13.7f, "woah", 140);
 
 		public final String label;
 		public final float seconds;
 		public final boolean loops;
+		public final String music;
+		public final float bpm;
 
 		Emote(String label, float seconds, boolean loops) {
 			this.label = label;
 			this.seconds = seconds;
 			this.loops = loops;
+			this.music = null;
+			this.bpm = 120;
+		}
+
+		Emote(String label, float seconds, String music, float bpm) {
+			this.label = label;
+			this.seconds = seconds;
+			this.loops = false;
+			this.music = music;
+			this.bpm = bpm;
 		}
 
 		public static Emote byName(String name) {
@@ -70,16 +86,19 @@ public final class Emotes {
 		previousCamera = mc.options.getCameraType();
 		mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
 		gg.surge.client.net.SurgeNet.playedEmote(emote.name());
+		EmoteMusic.start(p, emote, System.currentTimeMillis());
 	}
 
 	public static void stop(Minecraft mc) {
 		if (current == null) return;
 		if (previousCamera != null) mc.options.setCameraType(previousCamera);
 		current = null;
+		if (mc.player != null) EmoteMusic.stop(mc.player.getUUID());
 		gg.surge.client.net.SurgeNet.playedEmote("none");
 	}
 
 	public static void tick(Minecraft mc) {
+		EmoteMusic.tick(mc);
 		LocalPlayer p = mc.player;
 		if (current == null) return;
 		if (p == null) { current = null; return; }
@@ -104,6 +123,16 @@ public final class Emotes {
 		Emote e = gg.surge.client.net.SurgeNet.remoteEmote(id, start);
 		if (e == null) return;
 		run(m, e, (System.currentTimeMillis() - start[0]) / 1000f, false);
+	}
+
+	public static void animateCaptured(PlayerModel m, Emote e, float t, boolean previewing) {
+		if (e != null) run(m, e, t, previewing);
+	}
+
+	public static Object[] localLook() {
+		if (preview != null) return new Object[]{preview, (System.nanoTime() - previewStart) / 1e9f, true};
+		if (current != null) return new Object[]{current, (System.nanoTime() - startNanos) / 1e9f, false};
+		return null;
 	}
 
 	public static void animate(PlayerModel m) {

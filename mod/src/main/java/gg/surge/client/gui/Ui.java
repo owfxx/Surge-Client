@@ -58,6 +58,13 @@ public final class Ui {
 	public static final int OFF_LIP = 0xFF5E1717;
 	public static final int NEUTRAL = 0xFF4C4C50;
 	public static final int BUTTON = 0xFF4C4C50, BUTTON_HOVER = 0xFF5E5E63, BUTTON_LIP = 0xFF2E2E31;
+	public static final Identifier COIN_TEX = Identifier.fromNamespaceAndPath("surge", "textures/gui/coin.png");
+	public static final ItemStack COIN_ITEM = new ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET);
+
+	public static void coin(GuiGraphics g, int x, int y, int size) {
+		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX, x, y, 0f, 0f, size, size, 64, 64, 64, 64);
+	}
+
 	public static final Identifier LOGO = Identifier.fromNamespaceAndPath("surge", "textures/gui/logo.png");
 
 	private static final Map<Object, Float> ANIM = new HashMap<>();
@@ -138,7 +145,8 @@ public final class Ui {
 		Ui.outline(g, x, y, size, size, Colors.alpha(Colors.lerp(0x28FFFFFF, 0xFFFFFFFF, a), alpha));
 		if (a > 0.02f) Ui.outline(g, x - 1, y - 1, size + 2, size + 2, Colors.alpha(0x50FFFFFF, a * alpha));
 		int s = Math.min(16, size - 6);
-		item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
+		if (icon == COIN_ITEM) coin(g, x + (size - s) / 2, y + (size - s) / 2, s);
+		else item(g, icon, x + (size - s) / 2, y + (size - s) / 2, s);
 		g.pose().popMatrix();
 		float l = approach(key + ":label", hov && held > 1200 ? 1f : 0f, 12f);
 		if (l > 0.01f) {

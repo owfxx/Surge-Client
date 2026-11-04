@@ -6,17 +6,23 @@ import gg.surge.client.net.Social;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.PlayerSkin;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class SocialScreen extends Screen {
 	private enum Tab { CHAT, FRIENDS }
@@ -25,14 +31,15 @@ public class SocialScreen extends Screen {
 	private static String selected;
 
 	private final Screen parent;
-	private EditBox input, addBox;
-	private int px, py, pw, ph;
+	private EditBox input, addBox, searchBox;
+	private boolean searching, adding;
+	private int wx, wy, ww, wh, leftW;
 	private boolean wasL = true, wasR = true, wasEnter;
 	private String note = "";
 	private int noteColor = Ui.MUTED;
 	private long noteAt;
-	private float scroll, scrollTarget;
-	private int contentH;
+	private float scroll, scrollTarget, listScroll, listScrollTarget;
+	private int contentH, listH;
 	private long openedAt;
 	private int menuX, menuY;
 	private List<String> menuLabels;
@@ -46,28 +53,32 @@ public class SocialScreen extends Screen {
 	@Override
 	protected void init() {
 		if (openedAt == 0) openedAt = System.currentTimeMillis();
-		pw = Math.min(500, this.width - 16);
-		ph = Math.min(300, this.height - 16);
-		px = (this.width - pw) / 2;
-		py = (this.height - ph) / 2;
+		ww = Math.min(640, this.width - 20);
+		wh = Math.min(360, this.height - 20);
+		wx = (this.width - ww) / 2;
+		wy = (this.height - wh) / 2;
+		leftW = Math.max(130, Math.min(200, (int) (ww * 0.32f)));
 		clearWidgets();
-		input = new EditBox(font, 0, 0, 100, 10, Component.literal("Message"));
-		input.setBordered(false);
-		input.setMaxLength(500);
-		input.setHint(Component.literal("Message").withStyle(ChatFormatting.DARK_GRAY));
-		addBox = new EditBox(font, 0, 0, 100, 10, Component.literal("Name"));
-		addBox.setBordered(false);
-		addBox.setMaxLength(16);
-		addBox.setHint(Component.literal("Minecraft name").withStyle(ChatFormatting.DARK_GRAY));
-		addWidget(input);
-		addWidget(addBox);
+		input = box("Message", 500);
+		addBox = box("Minecraft name", 16);
+		searchBox = box("Search", 16);
 		Social.screenOpen = true;
 		Social.refresh();
 	}
 
+	private EditBox box(String hint, int max) {
+		EditBox b = new EditBox(font, 0, 0, 100, 10, Component.literal(hint));
+		b.setBordered(false);
+		b.setMaxLength(max);
+		b.setHint(Component.literal(hint).withStyle(ChatFormatting.DARK_GRAY));
+		b.visible = false;
+		addWidget(b);
+		return b;
+	}
+
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		g.fill(0, 0, this.width, this.height, Colors.alpha(0x90000000, Math.min(1f, (System.currentTimeMillis() - openedAt) / 180f)));
+		g.fill(0, 0, this.width, this.height, Colors.alpha(0xB0101012, Math.min(1f, (System.currentTimeMillis() - openedAt) / 180f)));
 	}
 
 	@Override
@@ -77,13 +88,16 @@ public class SocialScreen extends Screen {
 
 	@Override
 	public boolean shouldCloseOnEsc() {
-		return menuLabels == null && !(getFocused() instanceof EditBox);
+		if (menuLabels != null) { menuLabels = null; return false; }
+		return !(getFocused() instanceof EditBox e && !e.getValue().isEmpty());
 	}
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		if (scrollY != 0) { scrollTarget = Math.max(0, Math.min(Math.max(0, contentH), scrollTarget - (float) scrollY * 24f)); return true; }
-		return false;
+		if (scrollY == 0) return false;
+		if (mouseX < wx + leftW) listScrollTarget = Math.max(0, Math.min(Math.max(0, listH), listScrollTarget - (float) scrollY * 24f));
+		else scrollTarget = Math.max(0, Math.min(Math.max(0, contentH), scrollTarget + (float) scrollY * 24f));
+		return true;
 	}
 
 	private void note(String s, int color) {
@@ -93,10 +107,18 @@ public class SocialScreen extends Screen {
 	}
 
 	private void openMenu(int x, int y, List<String> labels, List<Runnable> actions) {
-		menuX = Math.min(x, this.width - 110);
-		menuY = Math.min(y, this.height - labels.size() * 16 - 6);
+		int w = 60;
+		for (String l : labels) w = Math.max(w, font.width(l) + 16);
+		menuX = Math.min(x, this.width - w - 4);
+		menuY = Math.min(y, this.height - labels.size() * 16 - 8);
 		menuLabels = labels;
 		menuActions = actions;
+	}
+
+	private int menuWidth() {
+		int w = 60;
+		for (String l : menuLabels) w = Math.max(w, font.width(l) + 16);
+		return w;
 	}
 
 	private void friendMenu(int x, int y, Social.Friend f) {
@@ -104,11 +126,15 @@ public class SocialScreen extends Screen {
 		List<String> l = new ArrayList<>();
 		List<Runnable> a = new ArrayList<>();
 		l.add("Message"); a.add(() -> { tab = Tab.CHAT; selected = f.uuid(); });
-		if (!f.server().isEmpty() && !f.server().equals("Singleplayer")) { l.add("Join their server"); a.add(() -> join(f)); }
+		if (joinable(f)) { l.add("Join their game"); a.add(() -> join(f)); }
 		l.add(isMuted ? "Unmute" : "Mute"); a.add(() -> { if (isMuted) Social.unmute(f.uuid()); else Social.mute(f.uuid()); note(isMuted ? "Unmuted " + f.name() : "Muted " + f.name(), Ui.MUTED); });
 		l.add("Remove friend"); a.add(() -> { Social.remove(f.uuid()); if (f.uuid().equals(selected)) selected = null; note("Removed " + f.name(), Ui.MUTED); });
 		l.add("Block"); a.add(() -> { Social.block(f.uuid()); if (f.uuid().equals(selected)) selected = null; note("Blocked " + f.name(), 0xFFFF8C8C); });
 		openMenu(x, y, l, a);
+	}
+
+	private static boolean joinable(Social.Friend f) {
+		return !"offline".equals(f.status()) && !f.server().isEmpty() && !f.server().equals("Singleplayer") && ServerAddress.isValidAddress(f.server());
 	}
 
 	private void join(Social.Friend f) {
@@ -116,6 +142,46 @@ public class SocialScreen extends Screen {
 		if (!ServerAddress.isValidAddress(ip)) { note("Can't join that server", 0xFFFF8C8C); return; }
 		ConnectScreen.startConnecting(this, minecraft, ServerAddress.parseString(ip), new ServerData(f.name() + "'s server", ip, ServerData.Type.OTHER), false, null);
 	}
+
+	private static UUID uuid(String raw) {
+		try {
+			String s = raw.replace("-", "");
+			if (s.length() != 32) return null;
+			return UUID.fromString(s.substring(0, 8) + "-" + s.substring(8, 12) + "-" + s.substring(12, 16) + "-" + s.substring(16, 20) + "-" + s.substring(20));
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private void face(GuiGraphics g, String rawUuid, int x, int y, int size) {
+		UUID id = uuid(rawUuid);
+		PlayerSkin skin = null;
+		if (id != null && minecraft.getConnection() != null) {
+			PlayerInfo info = minecraft.getConnection().getPlayerInfo(id);
+			if (info != null) skin = info.getSkin();
+		}
+		if (skin == null) skin = id != null ? DefaultPlayerSkin.get(id) : DefaultPlayerSkin.getDefaultSkin();
+		PlayerFaceRenderer.draw(g, skin, x, y, size);
+	}
+
+	private static String when(long ts) {
+		Calendar now = Calendar.getInstance(), c = Calendar.getInstance();
+		c.setTimeInMillis(ts);
+		if (now.get(Calendar.YEAR) == c.get(Calendar.YEAR) && now.get(Calendar.DAY_OF_YEAR) == c.get(Calendar.DAY_OF_YEAR)) return new SimpleDateFormat("HH:mm").format(new Date(ts));
+		now.add(Calendar.DAY_OF_YEAR, -1);
+		if (now.get(Calendar.YEAR) == c.get(Calendar.YEAR) && now.get(Calendar.DAY_OF_YEAR) == c.get(Calendar.DAY_OF_YEAR)) return "Yesterday";
+		return new SimpleDateFormat("MMM d").format(new Date(ts));
+	}
+
+	private boolean iconButton(GuiGraphics g, int mx, int my, int x, int y, String[] icon, boolean on) {
+		boolean hov = Ui.hover(mx, my, x, y, 16, 16);
+		g.fill(x, y, x + 16, y + 16, on ? 0xFF4A4A52 : hov ? 0xFF3A3A40 : 0xFF2C2C30);
+		Ui.icon(g, icon, x + 4, y + 4, 1, Ui.TEXT);
+		return hov;
+	}
+
+	private static final String[] ADD = {".XX.....", "XXXX..X.", "XXXX.XXX", ".XX...X.", "XXXX....", "XXXX....", "........", "........"};
+	private static final String[] MENU = {"........", "XXXXXXX.", "........", "XXXXXXX.", "........", "XXXXXXX.", "........", "........"};
 
 	@Override
 	public void render(GuiGraphics g, int mx, int my, float delta) {
@@ -132,88 +198,159 @@ public class SocialScreen extends Screen {
 		Runnable action = null;
 
 		if (menuLabels != null && (click || rclick)) {
-			int idx = -1;
-			for (int i = 0; i < menuLabels.size(); i++) if (Ui.hover(mx, my, menuX, menuY + 3 + i * 16, 104, 16)) idx = i;
+			int idx = -1, w = menuWidth();
+			for (int i = 0; i < menuLabels.size(); i++) if (Ui.hover(mx, my, menuX, menuY + 3 + i * 16, w, 16)) idx = i;
 			Runnable run = idx >= 0 ? menuActions.get(idx) : null;
 			menuLabels = null;
 			if (run != null) { Ui.click(); run.run(); }
 			click = rclick = false;
 		}
-
-		Ui.shadow(g, px, py, pw, ph);
-		Ui.box(g, px, py, pw, ph, Ui.BG, Ui.EDGE);
-		Ui.logo(g, px + 9, py + 8, 16);
-		g.drawString(font, Component.literal("Social").withStyle(ChatFormatting.BOLD), px + 30, py + 12, Ui.TEXT, true);
-		if (Ui.iconButton(g, mx, my, px + pw - 26, py + 7, 18, Ui.CROSS) && click) action = this::onClose;
-
-		String st = Social.status();
-		String stLabel = Social.statusLabel(st);
-		int sw = font.width(stLabel) + 26, sx = px + pw - 32 - sw;
-		boolean stHov = Ui.hover(mx, my, sx, py + 7, sw, 18);
-		float sa = Ui.anim("social:status", stHov);
-		Ui.box(g, sx, py + 7, sw, 18, Colors.lerp(0xFF1C1C1F, 0xFF2C2C31, sa), Ui.EDGE);
-		dot(g, sx + 8, py + 16, Social.statusColor(st.equals("invisible") ? "offline" : st));
-		g.drawString(font, stLabel, sx + 16, py + 12, Ui.TEXT, false);
-		if (stHov && click) {
-			List<String> ls = List.of("Online", "Idle", "Busy", "Appear offline");
-			List<Runnable> as = new ArrayList<>();
-			for (String v : new String[]{"Online", "Idle", "Busy", "Offline"}) as.add(() -> Mods.STATUS.set(v));
-			openMenu(sx, py + 27, ls, as);
-			click = false;
-		}
-
-		int tx = px + 92;
-		for (Tab t : Tab.values()) {
-			String label = t == Tab.CHAT ? "Chat" : "Friends";
-			int badge = t == Tab.CHAT ? sumUnread() : Social.incoming.size();
-			int w = font.width(label) + 18 + (badge > 0 ? 12 : 0);
-			if (Ui.pill(g, font, mx, my, tx, py + 8, w, 16, label + (badge > 0 ? "  " : ""), t == tab) && click && t != tab) action = () -> { tab = t; scroll = scrollTarget = 0; };
-			if (badge > 0) {
-				int bx = tx + w - 14;
-				g.fill(bx, py + 11, bx + 10, py + 21, 0xFFE11D48);
-				Ui.centered(g, font, badge > 9 ? "9+" : String.valueOf(badge), bx + 5, py + 12, 0xFFFFFFFF);
+		if (click) {
+			for (EditBox b : new EditBox[]{input, addBox, searchBox}) {
+				boolean over = b.visible && Ui.hover(mx, my, b.getX() - 6, b.getY() - 5, b.getWidth() + 12, 18);
+				b.setFocused(over);
+				if (over) setFocused(b);
 			}
-			tx += w + 4;
 		}
-		g.fill(px + 1, py + 31, px + pw - 1, py + 32, Ui.EDGE);
 
-		input.visible = false;
-		addBox.visible = false;
+		g.fill(wx, wy, wx + ww, wy + wh, 0xFF1E1E21);
+		Ui.outline(g, wx - 1, wy - 1, ww + 2, wh + 2, 0xFF2C2C30);
+		g.fill(wx + leftW, wy, wx + leftW + 2, wy + wh, 0xFF141416);
+		input.visible = addBox.visible = searchBox.visible = false;
+
+		action = left(g, mx, my, click, rclick, enterPressed, delta, action);
 		if (!Social.available()) {
-			List<String> lines = wrap(Social.unavailableReason(), pw - 60);
-			for (int i = 0; i < lines.size(); i++) Ui.centered(g, font, lines.get(i), px + pw / 2, py + ph / 2 - 10 + i * 11, Ui.MUTED);
-		} else if (tab == Tab.CHAT) {
-			action = chat(g, mx, my, click, rclick, enterPressed, delta, action);
-		} else {
-			action = friendsTab(g, mx, my, click, rclick, enterPressed, delta, action);
-		}
+			int cx = wx + leftW + 2 + (ww - leftW - 2) / 2;
+			List<String> lines = wrap(Social.unavailableReason(), ww - leftW - 40);
+			for (int i = 0; i < lines.size(); i++) Ui.centered(g, font, lines.get(i), cx, wy + wh / 2 - 10 + i * 11, Ui.MUTED);
+		} else if (tab == Tab.CHAT) action = chat(g, mx, my, click, rclick, enterPressed, delta, action);
+		else action = friendPanel(g, mx, my, click, enterPressed, delta, action);
 
 		if (!note.isEmpty() && System.currentTimeMillis() - noteAt < 4000) {
-			int nw = font.width(note) + 12;
-			Ui.box(g, px + (pw - nw) / 2, py + ph - 22, nw, 16, 0xF0141418, noteColor);
-			g.drawString(font, note, px + (pw - nw) / 2 + 6, py + ph - 18, noteColor, false);
+			g.nextStratum();
+			int nw = font.width(note) + 14, nx = wx + leftW + 2 + (ww - leftW - 2 - nw) / 2, ny = wy + 30;
+			g.fill(nx, ny, nx + nw, ny + 16, 0xF0101012);
+			Ui.outline(g, nx, ny, nw, 16, noteColor);
+			g.drawString(font, note, nx + 7, ny + 4, noteColor, false);
 		}
-
 		if (menuLabels != null) {
 			g.nextStratum();
-			int h = menuLabels.size() * 16 + 6;
-			Ui.shadow(g, menuX, menuY, 104, h);
-			Ui.box(g, menuX, menuY, 104, h, 0xFA18181B, Ui.EDGE);
+			int w = menuWidth(), h = menuLabels.size() * 16 + 6;
+			g.fill(menuX, menuY, menuX + w, menuY + h, 0xFA202023);
+			Ui.outline(g, menuX, menuY, w, h, 0xFF3A3A40);
 			for (int i = 0; i < menuLabels.size(); i++) {
 				int y = menuY + 3 + i * 16;
-				boolean hov = Ui.hover(mx, my, menuX, y, 104, 16);
-				if (hov) g.fill(menuX + 2, y, menuX + 102, y + 16, Colors.lerp(0xFF2E2E32, Ui.ACCENT, 0.35f));
+				if (Ui.hover(mx, my, menuX, y, w, 16)) g.fill(menuX + 2, y, menuX + w - 2, y + 16, 0xFF34343A);
 				String lab = menuLabels.get(i);
-				int col = lab.equals("Block") || lab.equals("Remove friend") ? 0xFFFF8C8C : Ui.TEXT;
-				g.drawString(font, lab, menuX + 8, y + 4, col, false);
+				g.drawString(font, lab, menuX + 8, y + 4, lab.equals("Block") || lab.equals("Remove friend") ? 0xFFFF8C8C : Ui.TEXT, false);
 			}
 		}
 		if (action != null) { Ui.click(); action.run(); }
 	}
 
-	private static void dot(GuiGraphics g, int cx, int cy, int color) {
-		g.fill(cx - 2, cy - 3, cx + 3, cy + 4, color);
-		g.fill(cx - 3, cy - 2, cx + 4, cy + 3, color);
+	private void statusDot(GuiGraphics g, int x, int y, String status) {
+		g.fill(x - 1, y - 1, x + 6, y + 6, 0xFF1E1E21);
+		g.fill(x, y, x + 5, y + 5, Social.statusColor(status));
+	}
+
+	private Runnable left(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
+		int x = wx, w = leftW;
+		g.drawString(font, "Social", x + 10, wy + 10, Ui.TEXT, false);
+		int bx = x + w - 22;
+		if (iconButton(g, mx, my, bx, wy + 5, Ui.SEARCH, searching) && click) action = () -> { searching = !searching; if (!searching) searchBox.setValue(""); };
+		bx -= 19;
+		if (iconButton(g, mx, my, bx, wy + 5, ADD, adding) && click) action = () -> { adding = !adding; tab = Tab.FRIENDS; };
+		g.fill(x, wy + 26, x + w, wy + 27, 0xFF141416);
+
+		int ty = wy + 34, tx = x + 10;
+		for (Tab t : Tab.values()) {
+			String label = t == Tab.CHAT ? "Chat" : "Friends";
+			int badge = t == Tab.CHAT ? sumUnread() : Social.incoming.size();
+			boolean hov = Ui.hover(mx, my, tx - 2, ty - 3, font.width(label) + 4, 14);
+			g.drawString(font, label, tx, ty, t == tab ? Ui.ACCENT_2 : hov ? Ui.TEXT : Ui.MUTED, false);
+			if (t == tab) g.fill(tx, ty + 11, tx + font.width(label), ty + 12, Ui.ACCENT_2);
+			if (badge > 0) {
+				String b = badge > 9 ? "9+" : String.valueOf(badge);
+				int bxx = tx + font.width(label) + 3;
+				g.fill(bxx, ty - 1, bxx + font.width(b) + 4, ty + 9, 0xFFE11D48);
+				g.drawString(font, b, bxx + 2, ty, 0xFFFFFFFF, false);
+			}
+			if (hov && click && t != tab) action = () -> { tab = t; listScroll = listScrollTarget = 0; };
+			tx += font.width(label) + 22;
+		}
+		int top = wy + 52;
+		if (searching) {
+			g.fill(x + 8, top, x + w - 8, top + 16, 0xFF141416);
+			Ui.outline(g, x + 8, top, w - 16, 16, searchBox.isFocused() ? Ui.ACCENT_2 : 0xFF34343A);
+			searchBox.visible = true;
+			searchBox.setX(x + 13);
+			searchBox.setY(top + 4);
+			searchBox.setWidth(w - 26);
+			searchBox.render(g, mx, my, delta);
+			top += 20;
+		}
+		g.fill(x, top - 2, x + w, top - 1, 0xFF141416);
+
+		int bottom = wy + wh - 24;
+		String q = searchBox.getValue().trim().toLowerCase();
+		List<Social.Friend> fr = new ArrayList<>();
+		for (Social.Friend f : Social.friends) if (q.isEmpty() || f.name().toLowerCase().contains(q)) fr.add(f);
+		if (tab == Tab.CHAT) {
+			fr.sort((a, b) -> Long.compare(lastTs(b.uuid()), lastTs(a.uuid())));
+			int rowH = 28;
+			listH = Math.max(0, fr.size() * rowH - (bottom - top));
+			listScrollTarget = Math.min(listScrollTarget, listH);
+			listScroll += (listScrollTarget - listScroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
+			g.enableScissor(x, top, x + w, bottom);
+			int y = top - Math.round(listScroll);
+			if (fr.isEmpty() && Social.available()) {
+				List<String> lines = wrap(Social.friends.isEmpty() ? "No friends yet. Press the add button above to add some." : "Nobody found", w - 20);
+				for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x + 10, top + 10 + i * 10, Ui.FAINT, false);
+			}
+			for (Social.Friend f : fr) {
+				boolean sel = f.uuid().equals(selected);
+				boolean hov = Ui.hover(mx, my, x, y, w, rowH) && my >= top && my < bottom;
+				if (sel || hov) g.fill(x + 2, y, x + w - 2, y + rowH, sel ? 0xFF2C2C30 : 0xFF252528);
+				face(g, f.uuid(), x + 8, y + 4, 20);
+				statusDot(g, x + 23, y + 19, f.status());
+				int un = Social.UNREAD.getOrDefault(f.uuid(), 0);
+				List<Social.Message> msgs = Social.CHATS.get(f.uuid());
+				Social.Message last = msgs == null || msgs.isEmpty() ? null : msgs.get(msgs.size() - 1);
+				String time = last == null ? "" : when(last.ts());
+				int nameMax = w - 40 - (un > 0 ? 16 : font.width(time) + 6);
+				g.drawString(font, Ui.fit(font, f.name(), nameMax), x + 34, y + 5, Ui.TEXT, false);
+				String sub = last != null ? (last.from().equals(Social.myUuid) ? "You: " : "") + last.text() : !f.server().isEmpty() && !"offline".equals(f.status()) ? f.server() : Social.statusLabel(f.status());
+				g.drawString(font, Ui.fit(font, sub, w - 44), x + 34, y + 16, Ui.FAINT, false);
+				if (un > 0) {
+					String b = un > 9 ? "9+" : String.valueOf(un);
+					g.fill(x + w - 16, y + 5, x + w - 8, y + 15, 0xFFE11D48);
+					Ui.centered(g, font, b, x + w - 12, y + 6, 0xFFFFFFFF);
+				} else if (!time.isEmpty()) g.drawString(font, time, x + w - 8 - font.width(time), y + 5, Ui.FAINT, false);
+				if (hov && click) action = () -> { selected = f.uuid(); scroll = scrollTarget = 0; };
+				if (hov && rclick) friendMenu(mx, my, f);
+				y += rowH;
+			}
+			g.disableScissor();
+		} else action = friendList(g, mx, my, click, rclick, x, w, top, bottom, fr, action);
+
+		String st = Social.status();
+		String stLabel = Social.statusLabel(st);
+		boolean sh = Ui.hover(mx, my, x + 4, bottom + 4, w - 8, 16);
+		g.fill(x, bottom, x + w, bottom + 1, 0xFF141416);
+		if (sh) g.fill(x + 4, bottom + 4, x + w - 4, bottom + 20, 0xFF2A2A2E);
+		statusDot(g, x + 10, bottom + 10, st.equals("invisible") ? "offline" : st);
+		g.drawString(font, stLabel, x + 20, bottom + 8, Ui.MUTED, false);
+		if (sh && click) {
+			List<Runnable> as = new ArrayList<>();
+			for (String v : new String[]{"Online", "Idle", "Busy", "Offline"}) as.add(() -> Mods.STATUS.set(v));
+			openMenu(x + 4, bottom - 70, List.of("Online", "Idle", "Busy", "Appear offline"), as);
+		}
+		return action;
+	}
+
+	private static long lastTs(String uuid) {
+		List<Social.Message> m = Social.CHATS.get(uuid);
+		return m == null || m.isEmpty() ? 0 : m.get(m.size() - 1).ts();
 	}
 
 	private int sumUnread() {
@@ -222,212 +359,234 @@ public class SocialScreen extends Screen {
 		return n;
 	}
 
-	private Runnable chat(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
-		List<Social.Friend> fr = Social.friends;
-		int lx = px + 1, lw = 150, top = py + 33, bottom = py + ph - 1;
-		g.fill(lx, top, lx + lw, bottom, Ui.SIDEBAR);
-		g.fill(lx + lw, top, lx + lw + 1, bottom, Ui.EDGE);
-		if (fr.isEmpty()) {
-			List<String> lines = wrap("No friends yet. Add some in the Friends tab.", lw - 16);
-			for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), lx + 8, top + 10 + i * 10, Ui.MUTED, false);
-		}
-		if (selected == null && !fr.isEmpty()) selected = fr.get(0).uuid();
-		int y = top + 4;
-		for (Social.Friend f : fr) {
-			if (y + 26 > bottom) break;
-			boolean sel = f.uuid().equals(selected);
-			boolean hov = Ui.flat(g, mx, my, lx + 3, y, lw - 6, 26, sel, "chat:" + f.uuid());
-			dot(g, lx + 13, y + 9, Social.statusColor(f.status()));
-			g.drawString(font, Ui.fit(font, f.name(), lw - 50), lx + 22, y + 5, Ui.TEXT, false);
-			List<Social.Message> msgs = Social.CHATS.get(f.uuid());
-			String sub = !f.server().isEmpty() ? f.server() : msgs != null && !msgs.isEmpty() ? msgs.get(msgs.size() - 1).text() : Social.statusLabel(f.status());
-			g.drawString(font, Ui.fit(font, sub, lw - 30), lx + 22, y + 15, Ui.FAINT, false);
-			int un = Social.UNREAD.getOrDefault(f.uuid(), 0);
-			if (un > 0) {
-				g.fill(lx + lw - 20, y + 8, lx + lw - 8, y + 18, Ui.ACCENT);
-				Ui.centered(g, font, un > 9 ? "9+" : String.valueOf(un), lx + lw - 14, y + 9, 0xFFFFFFFF);
-			}
-			if (Social.muted.contains(f.uuid())) g.drawString(font, "muted", lx + lw - 6 - font.width("muted"), y + 5, Ui.FAINT, false);
-			if (hov && click) action = () -> { selected = f.uuid(); scroll = scrollTarget = 0; };
-			if (hov && rclick) friendMenu(mx, my, f);
-			y += 28;
-		}
-
-		Social.Friend f = selected == null ? null : Social.friend(selected);
-		Social.openChat = f == null ? null : f.uuid();
-		if (f == null) return action;
-		Social.UNREAD.remove(f.uuid());
-		int cx = lx + lw + 8, cw = px + pw - 8 - cx;
-		dot(g, cx + 4, top + 11, Social.statusColor(f.status()));
-		g.drawString(font, Component.literal(f.name()).withStyle(ChatFormatting.BOLD), cx + 12, top + 7, Ui.TEXT, false);
-		String where = Social.statusLabel(f.status()) + (f.server().isEmpty() ? "" : "  on " + f.server());
-		g.drawString(font, Ui.fit(font, where, cw - 90), cx + 12, top + 18, Ui.MUTED, false);
-		if (!f.server().isEmpty() && !f.server().equals("Singleplayer")) {
-			if (Ui.pill(g, font, mx, my, cx + cw - 50, top + 6, 50, 16, "Join", true) && click) action = () -> join(f);
-		}
-		g.fill(cx, top + 30, cx + cw, top + 31, 0xFF34343A);
-
-		int areaTop = top + 34, areaBottom = bottom - 28;
-		List<Social.Message> msgs = Social.CHATS.getOrDefault(f.uuid(), List.of());
-		List<String[]> rows = new ArrayList<>();
-		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
-		for (Social.Message m : msgs) {
-			boolean mine = m.from().equals(Social.myUuid);
-			List<String> lines = wrap(m.text(), (int) (cw * 0.72f) - 12);
-			for (int i = 0; i < lines.size(); i++) rows.add(new String[]{mine ? "R" : "L", lines.get(i), i == lines.size() - 1 ? fmt.format(new Date(m.ts())) : "", i == 0 ? "first" : ""});
-		}
-		int lineH = 11;
-		int total = rows.size() * lineH + countFirsts(rows) * 6;
-		contentH = Math.max(0, total - (areaBottom - areaTop));
-		scrollTarget = Math.min(scrollTarget, contentH);
-		scroll += (scrollTarget - scroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
-		g.enableScissor(cx, areaTop, cx + cw, areaBottom);
-		int yy = areaBottom - total + Math.round(scroll);
-		for (String[] row : rows) {
-			if (!row[3].isEmpty()) yy += 6;
-			boolean mine = row[0].equals("R");
-			int tw = font.width(row[1]) + 10;
-			int bx = mine ? cx + cw - tw - 2 : cx + 2;
-			if (yy + lineH > areaTop && yy < areaBottom) {
-				g.fill(bx, yy, bx + tw, yy + lineH, mine ? Ui.ACCENT_DIM : 0xFF2E2E33);
-				g.drawString(font, row[1], bx + 5, yy + 2, 0xFFFFFFFF, false);
-				if (!row[2].isEmpty()) {
-					int tx = mine ? bx - 4 - font.width(row[2]) : bx + tw + 4;
-					g.drawString(font, row[2], tx, yy + 2, Ui.FAINT, false);
+	private Runnable friendList(GuiGraphics g, int mx, int my, boolean click, boolean rclick, int x, int w, int top, int bottom, List<Social.Friend> fr, Runnable action) {
+		List<Object[]> rows = new ArrayList<>();
+		if (!Social.incoming.isEmpty()) { rows.add(new Object[]{"h", "Requests"}); for (var p : Social.incoming) rows.add(new Object[]{"in", p}); }
+		List<Social.Friend> online = new ArrayList<>(), offline = new ArrayList<>();
+		for (var f : fr) ("offline".equals(f.status()) ? offline : online).add(f);
+		rows.add(new Object[]{"h", "Online (" + online.size() + ")"});
+		for (var f : online) rows.add(new Object[]{"f", f});
+		if (!offline.isEmpty()) { rows.add(new Object[]{"h", "Offline (" + offline.size() + ")"}); for (var f : offline) rows.add(new Object[]{"f", f}); }
+		if (!Social.outgoing.isEmpty()) { rows.add(new Object[]{"h", "Sent"}); for (var p : Social.outgoing) rows.add(new Object[]{"out", p}); }
+		if (!Social.blocked.isEmpty()) { rows.add(new Object[]{"h", "Blocked"}); for (var p : Social.blocked) rows.add(new Object[]{"b", p}); }
+		int total = 0;
+		for (Object[] r : rows) total += r[0].equals("h") ? 16 : 24;
+		listH = Math.max(0, total - (bottom - top));
+		listScrollTarget = Math.min(listScrollTarget, listH);
+		listScroll += (listScrollTarget - listScroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
+		g.enableScissor(x, top, x + w, bottom);
+		int y = top - Math.round(listScroll);
+		for (Object[] r : rows) {
+			String kind = (String) r[0];
+			if (kind.equals("h")) { g.drawString(font, (String) r[1], x + 10, y + 5, Ui.FAINT, false); y += 16; continue; }
+			boolean hov = Ui.hover(mx, my, x, y, w, 24) && my >= top && my < bottom;
+			Object o = r[1];
+			String id = o instanceof Social.Friend f ? f.uuid() : ((Social.Person) o).uuid();
+			String name = o instanceof Social.Friend f ? f.name() : ((Social.Person) o).name();
+			boolean sel = id.equals(selected);
+			if (sel || hov) g.fill(x + 2, y, x + w - 2, y + 24, sel ? 0xFF2C2C30 : 0xFF252528);
+			face(g, id, x + 8, y + 4, 16);
+			if (o instanceof Social.Friend f) statusDot(g, x + 19, y + 15, f.status());
+			g.drawString(font, Ui.fit(font, name, w - 80), x + 30, y + 8, kind.equals("b") ? Ui.FAINT : Ui.TEXT, false);
+			int bx = x + w - 8;
+			switch (kind) {
+				case "in" -> {
+					Social.Person p = (Social.Person) o;
+					bx -= 16;
+					if (smallButton(g, mx, my, bx, y + 4, "x", 0xFFFF8C8C) && click && hov) action = () -> Social.decline(p.uuid());
+					bx -= 18;
+					if (smallButton(g, mx, my, bx, y + 4, "+", 0xFF8CFFA0) && click && hov) action = () -> { Social.accept(p.uuid()); note("You and " + p.name() + " are friends", 0xFF8CFFA0); };
 				}
+				case "out" -> {
+					Social.Person p = (Social.Person) o;
+					bx -= 16;
+					if (smallButton(g, mx, my, bx, y + 4, "x", Ui.MUTED) && click && hov) action = () -> Social.cancel(p.uuid());
+				}
+				case "b" -> {
+					Social.Person p = (Social.Person) o;
+					int uw = font.width("Unblock") + 8;
+					if (Ui.pill(g, font, mx, my, bx - uw, y + 4, uw, 16, "Unblock", false) && click && hov) action = () -> Social.unblock(p.uuid());
+				}
+				case "f" -> {
+					Social.Friend f = (Social.Friend) o;
+					if (hov && click) action = () -> selected = f.uuid();
+					if (hov && rclick) friendMenu(mx, my, f);
+				}
+				default -> { }
 			}
-			yy += lineH;
+			y += 24;
 		}
 		g.disableScissor();
-		if (msgs.isEmpty()) Ui.centered(g, font, "Say hi to " + f.name(), cx + cw / 2, (areaTop + areaBottom) / 2, Ui.FAINT);
-
-		int iy = bottom - 24;
-		int sendW = 48;
-		Ui.box(g, cx, iy, cw - sendW - 4, 18, 0xFF161619, input.isFocused() ? Ui.ACCENT : Ui.EDGE);
-		input.visible = true;
-		input.setX(cx + 6);
-		input.setY(iy + 5);
-		input.setWidth(cw - sendW - 16);
-		input.render(g, mx, my, delta);
-		if (click) {
-			boolean over = Ui.hover(mx, my, cx, iy, cw - sendW - 4, 18);
-			input.setFocused(over);
-			setFocused(over ? input : null);
-		}
-		boolean send = (Ui.pill(g, font, mx, my, cx + cw - sendW, iy, sendW, 18, "Send", true) && click) || (enter && input.isFocused());
-		if (send && !input.getValue().isBlank()) {
-			String text = input.getValue();
-			input.setValue("");
-			scrollTarget = 0;
-			action = () -> Social.message(f.uuid(), text, err -> note(err, 0xFFFF8C8C));
-		}
 		return action;
 	}
 
-	private static int countFirsts(List<String[]> rows) {
-		int n = 0;
-		for (String[] r : rows) if (!r[3].isEmpty()) n++;
-		return n;
+	private boolean smallButton(GuiGraphics g, int mx, int my, int x, int y, String label, int color) {
+		boolean hov = Ui.hover(mx, my, x, y, 16, 16);
+		g.fill(x, y, x + 16, y + 16, hov ? 0xFF3A3A40 : 0xFF2C2C30);
+		Ui.centered(g, font, label, x + 8, y + 4, color);
+		return hov;
 	}
 
-	private Runnable friendsTab(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
+	private Runnable friendPanel(GuiGraphics g, int mx, int my, boolean click, boolean enter, float delta, Runnable action) {
+		int x = wx + leftW + 2, w = ww - leftW - 2, cx = x + w / 2;
 		Social.openChat = null;
-		int x = px + 12, w = pw - 24, top = py + 40;
-		g.drawString(font, "Add a friend", x, top, Ui.ACCENT_2, false);
-		int bw = Math.min(200, w - 110);
-		Ui.box(g, x, top + 12, bw, 18, 0xFF161619, addBox.isFocused() ? Ui.ACCENT : Ui.EDGE);
+		g.drawString(font, adding ? "Add a friend" : "Friends", x + 10, wy + 10, Ui.TEXT, false);
+		g.fill(x, wy + 26, x + w, wy + 27, 0xFF141416);
+		int y = wy + 40;
+		g.drawString(font, "Add a friend by their Minecraft name", x + 12, y, Ui.MUTED, false);
+		int bw = Math.min(220, w - 110);
+		g.fill(x + 12, y + 14, x + 12 + bw, y + 32, 0xFF141416);
+		Ui.outline(g, x + 12, y + 14, bw, 18, addBox.isFocused() ? Ui.ACCENT_2 : 0xFF34343A);
 		addBox.visible = true;
-		addBox.setX(x + 6);
-		addBox.setY(top + 17);
+		addBox.setX(x + 18);
+		addBox.setY(y + 19);
 		addBox.setWidth(bw - 12);
 		addBox.render(g, mx, my, delta);
-		if (click) {
-			boolean over = Ui.hover(mx, my, x, top + 12, bw, 18);
-			addBox.setFocused(over);
-			setFocused(over ? addBox : null);
-		}
-		boolean add = (Ui.pill(g, font, mx, my, x + bw + 6, top + 12, 96, 18, "Send request", true) && click) || (enter && addBox.isFocused());
-		if (add && !addBox.getValue().isBlank()) {
+		if (adding && !addBox.isFocused() && addBox.getValue().isEmpty()) { addBox.setFocused(true); setFocused(addBox); adding = false; }
+		boolean send = (Ui.pill(g, font, mx, my, x + 18 + bw, y + 14, 88, 18, "Send request", true) && click) || (enter && addBox.isFocused());
+		if (send && !addBox.getValue().isBlank()) {
 			String name = addBox.getValue();
 			addBox.setValue("");
 			action = () -> Social.addFriend(name, msg -> note(msg, msg.startsWith("Request") || msg.startsWith("You're") ? 0xFF8CFFA0 : 0xFFFF8C8C));
 		}
 
-		int listTop = top + 40, listBottom = py + ph - 8;
-		List<Object[]> rows = new ArrayList<>();
-		if (!Social.incoming.isEmpty()) { rows.add(new Object[]{"h", "Friend requests (" + Social.incoming.size() + ")"}); for (var p : Social.incoming) rows.add(new Object[]{"in", p}); }
-		if (!Social.outgoing.isEmpty()) { rows.add(new Object[]{"h", "Sent requests"}); for (var p : Social.outgoing) rows.add(new Object[]{"out", p}); }
-		rows.add(new Object[]{"h", "Friends (" + Social.friends.size() + ")"});
-		if (Social.friends.isEmpty()) rows.add(new Object[]{"t", "Nobody yet. Friends need to play with Surge Client too."});
-		for (var f : Social.friends) rows.add(new Object[]{"f", f});
-		if (!Social.blocked.isEmpty()) { rows.add(new Object[]{"h", "Blocked"}); for (var p : Social.blocked) rows.add(new Object[]{"b", p}); }
+		Social.Friend f = selected == null ? null : Social.friend(selected);
+		int top = y + 50;
+		if (f == null) {
+			Ui.centered(g, font, "Pick a friend on the left to see what they're up to.", cx, top + 40, Ui.FAINT);
+			return action;
+		}
+		g.fill(x + 12, top, x + w - 12, top + 72, 0xFF252528);
+		face(g, f.uuid(), x + 22, top + 10, 32);
+		statusDot(g, x + 48, top + 36, f.status());
+		g.drawString(font, Component.literal(f.name()).withStyle(ChatFormatting.BOLD), x + 64, top + 12, Ui.TEXT, false);
+		String where = Social.statusLabel(f.status()) + (!"offline".equals(f.status()) && !f.server().isEmpty() ? " on " + f.server() : "");
+		g.drawString(font, Ui.fit(font, where, w - 90), x + 64, top + 25, Ui.MUTED, false);
+		int bx = x + 64, by = top + 46;
+		if (Ui.pill(g, font, mx, my, bx, by, 60, 16, "Message", true) && click) action = () -> { tab = Tab.CHAT; scroll = scrollTarget = 0; };
+		bx += 64;
+		if (joinable(f)) { if (Ui.pill(g, font, mx, my, bx, by, 60, 16, "Join game", false) && click) action = () -> join(f); bx += 64; }
+		if (Ui.pill(g, font, mx, my, bx, by, 40, 16, "More", false) && click) friendMenu(mx, my, f);
+		return action;
+	}
 
-		int total = 0;
-		for (Object[] r : rows) total += r[0].equals("h") ? 18 : 22;
-		contentH = Math.max(0, total - (listBottom - listTop));
+	private Runnable chat(GuiGraphics g, int mx, int my, boolean click, boolean rclick, boolean enter, float delta, Runnable action) {
+		int x = wx + leftW + 2, w = ww - leftW - 2;
+		Social.Friend f = selected == null ? null : Social.friend(selected);
+		if (f == null && !Social.friends.isEmpty()) { selected = Social.friends.get(0).uuid(); f = Social.friend(selected); }
+		Social.openChat = f == null ? null : f.uuid();
+		if (f == null) {
+			Ui.centered(g, font, "Your chats show up here", x + w / 2, wy + wh / 2 - 4, Ui.FAINT);
+			return action;
+		}
+		Social.UNREAD.remove(f.uuid());
+		final Social.Friend fr = f;
+		g.drawString(font, f.name(), x + 10, wy + 10, Ui.TEXT, false);
+		face(g, f.uuid(), x + 14 + font.width(f.name()), wy + 6, 14);
+		int hx = x + w - 22;
+		if (iconButton(g, mx, my, hx, wy + 5, MENU, false) && click) friendMenu(hx, wy + 22, fr);
+		if (joinable(f)) {
+			int jw = font.width("Join Game") + 18;
+			hx -= jw + 3;
+			boolean jh = Ui.hover(mx, my, hx, wy + 5, jw, 16);
+			g.fill(hx, wy + 5, hx + jw, wy + 21, jh ? 0xFF5A5A62 : 0xFF46464C);
+			g.drawString(font, "↗ Join Game", hx + 6, wy + 9, Ui.TEXT, false);
+			if (jh && click) action = () -> join(fr);
+		}
+		g.fill(x, wy + 26, x + w, wy + 27, 0xFF141416);
+
+		int areaTop = wy + 30, areaBottom = wy + wh - 34;
+		int maxBubble = (int) (w * 0.62f);
+		List<Social.Message> msgs = Social.CHATS.getOrDefault(f.uuid(), List.of());
+		List<Object[]> rows = new ArrayList<>();
+		String lastDay = "";
+		long lastTs = 0;
+		String lastFrom = "";
+		SimpleDateFormat day = new SimpleDateFormat("MMM d"), clock = new SimpleDateFormat("HH:mm");
+		for (Social.Message m : msgs) {
+			String d = day.format(new Date(m.ts()));
+			if (!d.equals(lastDay)) { rows.add(new Object[]{"day", d}); lastDay = d; lastFrom = ""; }
+			boolean mine = m.from().equals(Social.myUuid);
+			boolean newGroup = !m.from().equals(lastFrom) || m.ts() - lastTs > 5 * 60_000;
+			if (newGroup) rows.add(new Object[]{"time", clock.format(new Date(m.ts())), mine});
+			rows.add(new Object[]{"msg", wrap(m.text(), maxBubble - 16), mine});
+			lastFrom = m.from();
+			lastTs = m.ts();
+		}
+		int total = 6;
+		for (Object[] row : rows) total += rowHeight(row);
+		contentH = Math.max(0, total - (areaBottom - areaTop));
 		scrollTarget = Math.min(scrollTarget, contentH);
 		scroll += (scrollTarget - scroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
-		g.enableScissor(x - 2, listTop, x + w + 2, listBottom);
-		int y = listTop - Math.round(scroll);
-		boolean inView = Ui.hover(mx, my, x, listTop, w, listBottom - listTop);
-		for (Object[] r : rows) {
-			String kind = (String) r[0];
-			if (kind.equals("h")) {
-				g.drawString(font, (String) r[1], x, y + 7, Ui.ACCENT_2, false);
-				y += 18;
-				continue;
+		g.enableScissor(x, areaTop, x + w, areaBottom);
+		int yy = areaBottom - total + Math.round(scroll) + 6;
+		for (Object[] row : rows) {
+			int h = rowHeight(row);
+			if (yy + h > areaTop && yy < areaBottom) {
+				switch ((String) row[0]) {
+					case "day" -> {
+						String d = (String) row[1];
+						int dw = font.width(d);
+						g.fill(x + 12, yy + 6, x + w / 2 - dw / 2 - 8, yy + 7, 0xFF34343A);
+						g.fill(x + w / 2 + dw / 2 + 8, yy + 6, x + w - 12, yy + 7, 0xFF34343A);
+						Ui.centered(g, font, d, x + w / 2, yy + 2, Ui.FAINT);
+					}
+					case "time" -> {
+						String t = (String) row[1];
+						boolean mine = (Boolean) row[2];
+						g.pose().pushMatrix();
+						int tx = mine ? x + w - 12 - Math.round(font.width(t) * 0.75f) : x + 12;
+						g.pose().translate(tx, yy + 3);
+						g.pose().scale(0.75f, 0.75f);
+						g.drawString(font, t, 0, 0, Ui.FAINT, false);
+						g.pose().popMatrix();
+					}
+					default -> {
+						@SuppressWarnings("unchecked") List<String> lines = (List<String>) row[1];
+						boolean mine = (Boolean) row[2];
+						int bw = 0;
+						for (String s : lines) bw = Math.max(bw, font.width(s));
+						bw += 14;
+						int bh = lines.size() * 10 + 8;
+						int bx = mine ? x + w - 12 - bw : x + 12;
+						g.fill(bx, yy, bx + bw, yy + bh, mine ? 0xFF4A4A52 : 0xFF2C2C30);
+						g.fill(mine ? bx + bw - 2 : bx, yy + bh - 2, mine ? bx + bw : bx + 2, yy + bh, mine ? 0xFF5E5E66 : 0xFF38383E);
+						for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), bx + 7, yy + 5 + i * 10, Ui.TEXT, false);
+					}
+				}
 			}
-			if (kind.equals("t")) {
-				g.drawString(font, (String) r[1], x + 4, y + 7, Ui.FAINT, false);
-				y += 22;
-				continue;
-			}
-			boolean hov = inView && Ui.hover(mx, my, x, y, w, 20);
-			if (hov) g.fill(x, y, x + w, y + 20, 0xFF2E2E33);
-			int bx = x + w - 4;
-			switch (kind) {
-				case "in" -> {
-					Social.Person p = (Social.Person) r[1];
-					g.drawString(font, p.name(), x + 8, y + 6, Ui.TEXT, false);
-					bx -= 60;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 60, 16, "Decline", false) && click && hov) action = () -> Social.decline(p.uuid());
-					bx -= 64;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 60, 16, "Accept", true) && click && hov) action = () -> { Social.accept(p.uuid()); note("You and " + p.name() + " are friends", 0xFF8CFFA0); };
-					bx -= 52;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 48, 16, "Block", false) && click && hov) action = () -> Social.block(p.uuid());
-				}
-				case "out" -> {
-					Social.Person p = (Social.Person) r[1];
-					g.drawString(font, p.name(), x + 8, y + 6, Ui.TEXT, false);
-					g.drawString(font, "waiting", x + 16 + font.width(p.name()), y + 6, Ui.FAINT, false);
-					bx -= 60;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 60, 16, "Cancel", false) && click && hov) action = () -> Social.cancel(p.uuid());
-				}
-				case "f" -> {
-					Social.Friend f = (Social.Friend) r[1];
-					dot(g, x + 8, y + 10, Social.statusColor(f.status()));
-					g.drawString(font, f.name(), x + 16, y + 6, Ui.TEXT, false);
-					String sub = Social.statusLabel(f.status()) + (f.server().isEmpty() ? "" : " on " + f.server()) + (Social.muted.contains(f.uuid()) ? "  (muted)" : "");
-					g.drawString(font, Ui.fit(font, sub, w - 220), x + 22 + font.width(f.name()), y + 6, Ui.FAINT, false);
-					bx -= 18;
-					boolean more = Ui.iconButton(g, mx, my, bx, y + 2, 16, new String[]{"........", "........", "........", "XX.XX.XX", "XX.XX.XX", "........", "........", "........"});
-					if (more && click && hov) friendMenu(mx, my, f);
-					bx -= 70;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 66, 16, "Message", true) && click && hov) action = () -> { tab = Tab.CHAT; selected = f.uuid(); };
-					if (hov && rclick) friendMenu(mx, my, f);
-				}
-				case "b" -> {
-					Social.Person p = (Social.Person) r[1];
-					g.drawString(font, p.name(), x + 8, y + 6, Ui.FAINT, false);
-					bx -= 64;
-					if (Ui.pill(g, font, mx, my, bx, y + 2, 64, 16, "Unblock", false) && click && hov) action = () -> Social.unblock(p.uuid());
-				}
-				default -> { }
-			}
-			y += 22;
+			yy += h;
 		}
 		g.disableScissor();
+		if (msgs.isEmpty()) Ui.centered(g, font, "Say hi to " + f.name(), x + w / 2, (areaTop + areaBottom) / 2, Ui.FAINT);
+
+		int iy = wy + wh - 28;
+		g.fill(x + 8, iy, x + w - 8, iy + 20, 0xFF29292D);
+		if (input.isFocused()) Ui.outline(g, x + 8, iy, w - 16, 20, 0xFF4A4A52);
+		input.visible = true;
+		input.setHint(Component.literal("Message " + f.name()).withStyle(ChatFormatting.DARK_GRAY));
+		input.setX(x + 16);
+		input.setY(iy + 6);
+		input.setWidth(w - 32);
+		input.render(g, mx, my, delta);
+		if (enter && input.isFocused() && !input.getValue().isBlank()) {
+			String text = input.getValue();
+			input.setValue("");
+			scrollTarget = 0;
+			action = () -> Social.message(fr.uuid(), text, err -> note(err, 0xFFFF8C8C));
+		}
 		return action;
+	}
+
+	private static int rowHeight(Object[] row) {
+		return switch ((String) row[0]) {
+			case "day" -> 18;
+			case "time" -> 11;
+			default -> {
+				@SuppressWarnings("unchecked") List<String> lines = (List<String>) row[1];
+				yield lines.size() * 10 + 12;
+			}
+		};
 	}
 
 	private List<String> wrap(String text, int w) {

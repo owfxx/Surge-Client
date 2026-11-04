@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 public class SurgeTitleScreen extends Screen {
-	private static final ItemStack COIN = new ItemStack(Items.GOLD_NUGGET);
+	private static final ItemStack COIN = Ui.COIN_ITEM;
 	private static final ItemStack SHIRT = new ItemStack(Items.LEATHER_CHESTPLATE);
 	private static final ItemStack GEAR = new ItemStack(Items.REPEATER);
 	private static final ItemStack SOCIAL = new ItemStack(Items.WRITABLE_BOOK);

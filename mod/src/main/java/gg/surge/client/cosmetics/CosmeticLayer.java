@@ -57,11 +57,12 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		float speed = (float) Math.min(1.0, Math.sqrt(dx * dx + dz * dz) * 4.0);
 		boolean flying = p.getAbilities().flying || p.isFallFlying();
 
-		String cape = Cosmetics.forPlayer(p, "cape");
+		CapturedLook look = ((SurgeState) state).surge$look();
+		String cape = look != null ? look.cape() : Cosmetics.forPlayer(p, "cape");
 		if (cape != null && !elytra) cape(ps, q, light, cape, age, speed, p.isShiftKeyDown());
-		String wings = Cosmetics.forPlayer(p, "wings");
+		String wings = look != null ? look.wings() : Cosmetics.forPlayer(p, "wings");
 		if (wings != null && !(elytra && Mods.COS_WINGS_ELYTRA.on())) wings(ps, q, light, wings, age, flying ? 1f : speed);
-		String halo = Cosmetics.forPlayer(p, "halo");
+		String halo = look != null ? look.halo() : Cosmetics.forPlayer(p, "halo");
 		if (halo != null) halo(ps, q, halo, age);
 	}
 

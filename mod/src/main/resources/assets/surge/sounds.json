@@ -1,0 +1,82 @@
+{
+ "emote.charleston": {
+  "sounds": [
+   {
+    "name": "surge:emote/charleston",
+    "stream": true
+   }
+  ]
+ },
+ "emote.disco": {
+  "sounds": [
+   {
+    "name": "surge:emote/disco",
+    "stream": true
+   }
+  ]
+ },
+ "emote.griddy": {
+  "sounds": [
+   {
+    "name": "surge:emote/griddy",
+    "stream": true
+   }
+  ]
+ },
+ "emote.moonwalk": {
+  "sounds": [
+   {
+    "name": "surge:emote/moonwalk",
+    "stream": true
+   }
+  ]
+ },
+ "emote.pony": {
+  "sounds": [
+   {
+    "name": "surge:emote/pony",
+    "stream": true
+   }
+  ]
+ },
+ "emote.running_man": {
+  "sounds": [
+   {
+    "name": "surge:emote/running_man",
+    "stream": true
+   }
+  ]
+ },
+ "emote.shuffle": {
+  "sounds": [
+   {
+    "name": "surge:emote/shuffle",
+    "stream": true
+   }
+  ]
+ },
+ "emote.toprock": {
+  "sounds": [
+   {
+    "name": "surge:emote/toprock",
+    "stream": true
+   }
+  ]
+ },
+ "emote.twist": {
+  "sounds": [
+   {
+    "name": "surge:emote/twist",
+    "stream": true
+   }
+  ]
+ },
+ "emote.woah": {
+  "sounds": [
+   {
+    "name": "surge:emote/woah",
+    "stream": true
+   }
+  ]
+ }
+}

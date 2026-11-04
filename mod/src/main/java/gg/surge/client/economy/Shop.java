@@ -41,7 +41,9 @@ public final class Shop {
 			{"ZOMBIE", "700"}, {"TPOSE", "600"}, {"CRY", "750"}, {"SIT", "600"}, {"POINT", "600"}, {"PEACE", "650"},
 			{"STRETCH", "600"}, {"TWIRL", "800"}, {"JUMP", "750"}, {"MEDITATE", "850"}, {"HEADBANG", "700"}, {"YAWN", "600"},
 			{"GUITAR", "900"}, {"ROBOT", "850"}, {"CHICKEN", "800"}, {"WAVE_BOTH", "650"}, {"VICTORY", "750"},
-			{"SHY", "650"}, {"KICK", "700"}, {"SALSA", "950"}, {"DRUMS", "900"}, {"SWIM", "800"}};
+			{"SHY", "650"}, {"KICK", "700"}, {"SALSA", "950"}, {"DRUMS", "900"}, {"SWIM", "800"},
+			{"GRIDDY", "1200"}, {"MOONWALK", "1100"}, {"SHUFFLE", "1100"}, {"RUNNING_MAN", "1000"}, {"DISCO", "1000"},
+			{"TWIST", "900"}, {"CHARLESTON", "950"}, {"PONY", "1100"}, {"TOPROCK", "1000"}, {"WOAH", "1000"}};
 		for (String[] e : emotes) {
 			gg.surge.client.emotes.Emotes.Emote em = gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]);
 			add("emote:" + e[0], "emote", "", em.label, Integer.parseInt(e[1]));

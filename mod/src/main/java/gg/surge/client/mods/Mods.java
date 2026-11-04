@@ -42,6 +42,10 @@ public final class Mods {
 	public static final Setting.Header H_THEME = GENERAL.header("Menu colors");
 	public static final Setting.Choice THEME = GENERAL.choice("theme2", "Theme", "Ash", "Ash", "Purple", "Blue", "Cyan", "Green", "Red", "Orange", "Pink", "Gold", "Mono", "Custom");
 	public static final Setting.Color THEME_COLOR = GENERAL.color("themeColor", "Custom color", "6B6B73").showIf(() -> Mods.THEME.is("Custom"));
+	public static final Setting.Header H_EMOTES = GENERAL.header("Emotes");
+	public static final Setting.Toggle EMOTE_MUSIC = GENERAL.toggle("emoteMusic", "Dance music", true);
+	public static final Setting.Toggle EMOTE_MUSIC_OTHERS = GENERAL.toggle("emoteMusicOthers", "Hear other players' dance music", true).showIf(() -> Mods.EMOTE_MUSIC.on());
+	public static final Setting.Slider EMOTE_VOLUME = GENERAL.slider("emoteVolume", "Music volume", 80, 0, 100, 5, "%").showIf(() -> Mods.EMOTE_MUSIC.on());
 	public static final Setting.Header H_SOCIAL = GENERAL.header("Status and friends");
 	public static final Setting.Choice STATUS = GENERAL.choice("status", "Your status", "Online", "Online", "Idle", "Busy", "Offline");
 	public static final Setting.Toggle AUTO_IDLE = GENERAL.toggle("autoIdle", "Go idle after 5 minutes away", true);

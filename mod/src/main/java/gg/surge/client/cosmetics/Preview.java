@@ -11,6 +11,8 @@ import java.util.Map;
 public final class Preview {
 	public static volatile boolean clean;
 	public static volatile float yaw;
+	public static volatile CapturedLook card;
+	public static volatile Float forced;
 
 	private static final class Spin {
 		float yaw, target;
@@ -22,6 +24,22 @@ public final class Preview {
 	private static final Map<String, Spin> SPINS = new HashMap<>();
 
 	private Preview() {}
+
+	public static void drawCard(GuiGraphics g, int x1, int y1, int x2, int y2, int size, float turn, CapturedLook look) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player == null) return;
+		int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+		clean = true;
+		yaw = turn;
+		card = look;
+		try {
+			InventoryScreen.renderEntityInInventoryFollowsMouse(g, x1, y1, x2, y2, size, 0.0625F, cx, cy - size / 2f, mc.player);
+		} finally {
+			clean = false;
+			yaw = 0f;
+			card = null;
+		}
+	}
 
 	private static float facing() {
 		String sub = Cosmetics.previewSub;
@@ -51,9 +69,9 @@ public final class Preview {
 		}
 		s.lastMouse = mx;
 
-		if (!s.dragging && System.currentTimeMillis() - s.touchedAt > 2500) {
-			float want = facing();
-			if (want == 0f && Cosmetics.previewSub == null) want = (float) Math.sin(System.currentTimeMillis() / 2400.0) * 25f;
+		if (!s.dragging && (forced != null || System.currentTimeMillis() - s.touchedAt > 2500)) {
+			float want = forced != null ? forced : facing();
+			if (forced == null && want == 0f && Cosmetics.previewSub == null) want = (float) Math.sin(System.currentTimeMillis() / 2400.0) * 25f;
 			float diff = ((want - s.target) % 360 + 540) % 360 - 180;
 			s.target += diff * (1f - (float) Math.exp(-dt * 6f));
 		}
@@ -69,6 +87,6 @@ public final class Preview {
 			clean = false;
 			yaw = 0f;
 		}
-		if (over && !s.dragging) g.drawString(mc.font, "Drag to turn", cx - mc.font.width("Drag to turn") / 2, y2 - 10, 0x80FFFFFF, true);
+		if (down && over) forced = null;
 	}
 }
