@@ -71,6 +71,16 @@ public final class AutoTest {
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
 		STEPS.add(new Step("07-emote-pony", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.PONY); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
+		STEPS.add(new Step("08b-angles", 40, mc -> open(mc, new Screen(net.minecraft.network.chat.Component.literal("angles")) {
+			@Override
+			public void render(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float d) {
+				int w = this.width / 8;
+				for (int i = 0; i < 8; i++) {
+					gg.surge.client.cosmetics.Preview.drawCard(g, i * w, 20, i * w + w, 140, 40, i * 45f, new gg.surge.client.cosmetics.CapturedLook("surge", null, null, null, 0f, false));
+					g.drawString(font, String.valueOf(i * 45), i * w + 4, 150, 0xFFFFFFFF, true);
+				}
+			}
+		})));
 		STEPS.add(new Step("09-wardrobe-emotes", 50, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.EMOTES))));
 		STEPS.add(new Step("10-wardrobe-outfits", 40, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.OUTFITS))));
 		STEPS.add(new Step("11-coins", 30, mc -> open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.CURRENCY))));
