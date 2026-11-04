@@ -755,7 +755,7 @@ public class WardrobeScreen extends Screen {
 		Wallet w = Wallet.get();
 		int ey = y + 128;
 		g.drawString(font, "Earn coins", x, ey, Ui.TEXT, false);
-		g.drawString(font, Ui.fit(font, "Daily reward: " + gg.surge.client.economy.Rewards.dailyAmount(w.streak + 1) + " coins tomorrow" + (w.streak > 0 ? " (" + w.streak + " day streak)" : ""), cw), x, ey + 13, Ui.MUTED, false);
+		g.drawString(font, Ui.fit(font, "Tomorrow: +" + gg.surge.client.economy.Rewards.dailyAmount(w.streak + 1) + " coins" + (w.streak > 1 ? ", " + w.streak + " day streak" : ""), cw), x, ey + 13, Ui.MUTED, false);
 		int left = gg.surge.client.economy.Rewards.PLAY_MINUTES * 60 - w.playSeconds;
 		g.drawString(font, Ui.fit(font, "Playing: +" + gg.surge.client.economy.Rewards.PLAY_REWARD + " coins in " + Math.max(1, left / 60) + " min", cw), x, ey + 25, Ui.MUTED, false);
 		g.fill(x, ey + 37, x + Math.min(cw, 160), ey + 39, 0xFF2C2C30);

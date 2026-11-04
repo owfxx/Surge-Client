@@ -40,6 +40,6 @@ public final class Rewards {
 		int amount = dailyAmount(w.streak);
 		w.coins += amount;
 		w.save();
-		Social.notice("Daily reward: +" + amount + " coins", w.streak > 1 ? w.streak + " days in a row. Come back tomorrow for more" : "Play again tomorrow to start a streak");
+		Social.notice("Daily reward: +" + amount + " coins", w.streak > 1 ? w.streak + " days in a row!" : "Come back tomorrow for more");
 	}
 }
