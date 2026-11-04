@@ -40,3 +40,7 @@ npx --yes wrangler@4 deploy
 URL="https://surge-client.$SUB.workers.dev"
 echo "Online service: $URL"
 echo "url=$URL" >> "${GITHUB_OUTPUT:-/dev/null}"
+sleep 8
+for p in / /download/mod "/v1/players?ids=0"; do
+  echo "Check $p: $(curl -s -o /dev/null -w '%{http_code}' -r 0-1000 "$URL$p")"
+done
