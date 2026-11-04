@@ -148,6 +148,12 @@ export default {
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
 
+    if (p === '/v1/diag' && req.method === 'GET') {
+      const r = await fetch('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=Notch&serverId=surgediag0001', { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+      const r2 = await fetch('https://api.mojang.com/users/profiles/minecraft/Notch', { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+      return json({ hasJoined: r.status, profiles: r2.status, body: (await r.text()).slice(0, 120) });
+    }
+
     if (p === '/v1/auth' && req.method === 'POST') {
       const name = String(body.name || ''), serverId = String(body.serverId || '');
       if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[A-Za-z0-9_-]{8,64}$/.test(serverId)) return json({ error: 'bad request' }, 400);
