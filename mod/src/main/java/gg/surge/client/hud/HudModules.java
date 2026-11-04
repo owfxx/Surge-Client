@@ -503,7 +503,8 @@ public final class HudModules {
 
 		private List<ItemStack> stacks(Minecraft mc) {
 			List<ItemStack> out = new ArrayList<>();
-			if (mc.player == null) {
+			boolean editing = mc.screen instanceof gg.surge.client.gui.HudEditorScreen;
+			if (mc.player == null || (editing && java.util.Arrays.stream(ARMOR).allMatch(sl -> mc.player.getItemBySlot(sl).isEmpty()))) {
 				out.add(new ItemStack(Items.DIAMOND_HELMET));
 				out.add(new ItemStack(Items.DIAMOND_CHESTPLATE));
 				out.add(new ItemStack(Items.DIAMOND_LEGGINGS));
