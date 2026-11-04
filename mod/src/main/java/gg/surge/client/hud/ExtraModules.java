@@ -267,7 +267,7 @@ final class ExtraModules {
 
 		Minimap() { super("minimap", "Minimap", Items.MAP, "A live map of the area around you", false, 0.84f, 0.02f); }
 
-		private int scale() {
+		private int blocksPerSample() {
 			return switch (zoom.get()) { case "0.5x" -> 4; case "2x" -> 1; case "4x" -> 1; default -> 2; };
 		}
 
@@ -316,7 +316,7 @@ final class ExtraModules {
 		}
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			int s = size.asInt(), ppx = px(), sc = scale();
+			int s = size.asInt(), ppx = px(), sc = blocksPerSample();
 			int n = s / ppx;
 			boolean round = shape.is("Round");
 			if (mc.player == null || mc.level == null) {
