@@ -1,6 +1,11 @@
 ## 1.5.2
-- New look for the title screen and pause menu
+- New look for the title screen, pause menu and emote wheel
 - See what changed in each update right in the game and launcher
+- Discord status now comes from the game itself, so it works without the launcher too
+- Performance mods like Sodium can be downloaded right from the mod menu, launcher or not
+- Launcher shows your friends again when you're signed in
+- Animated launcher background
+- Icon names on the title screen no longer hide behind other icons
 
 ## 1.5.1
 - Mod menu redesigned to match the wardrobe and social menus
