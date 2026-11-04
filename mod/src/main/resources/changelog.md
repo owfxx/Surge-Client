@@ -1,3 +1,14 @@
+## 1.5.3
+- Friends and chat sign-in fixed, it now works with the launcher and with the standalone mod
+- Discord status works out of the box
+- Emotes got particles: blushing, tears, hearts, sweat, confetti and music notes
+- Cry, Flustered, Facepalm, Laugh, Thinking, Yawn and more were reanimated
+- Many emotes like T-Pose and Wave keep playing while you walk
+- Wardrobe cards zoom in on the item, wings and capes are shown from the back
+- Command keys can use mouse buttons like Mouse 4 and Mouse 5
+- Clearer Surge badge in the tab list and on nametags
+- Damage numbers removed
+
 ## 1.5.2
 - New look for the title screen, pause menu and emote wheel
 - See what changed in each update right in the game and launcher
