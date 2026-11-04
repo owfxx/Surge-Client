@@ -26,8 +26,10 @@ Requires Windows 10 or 11 and a Minecraft Java Edition account.
 - A HUD editor: drag anything, hold Alt to snap to the grid, Ctrl to line up with other mods
 - FPS boost that doesn't change how the game looks, with extra options if you want even more FPS
 - Command Keys: bind a key to a chat message or command
-- Wardrobe with wings, halos, capes and animated emotes (press **B** for the emote wheel)
+- Wardrobe with wings, halos, capes and animated emotes, including dances with their own music (press **B** for the emote wheel)
+- Surge Coins: a daily reward that grows with your streak, plus coins for playing
 - Friends: add people, chat, set your status and see which server your friends are on
+- Minimap, profiles you can save and share, and menu color themes
 
 All keys can be changed in **Options → Controls → Key Binds → Surge Client**.
 
