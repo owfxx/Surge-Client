@@ -197,12 +197,12 @@ public class SurgeTitleScreen extends Screen {
 
 		float ks = since(300, 500);
 		if (this.width >= 400 && ks > 0) {
-			int sc = Math.max(2, Math.min(5, (this.height - 120) / 40));
-			int fx = Math.max(16 + 8 * sc, this.width / 2 - bw / 2 - 30 - 12 * sc);
-			fx = Math.min(fx, this.width / 5 + 8 * sc);
-			int fy = (this.height - 33 * sc) / 2 - 14 + Math.round((1 - ks) * 10 + (float) Math.sin((System.currentTimeMillis() - openedAt) / 1100.0) * 1.5f);
-			if (SkinArt.draw(g, fx, fy, sc)) {
-				int bwW = 84, bxW = fx - bwW / 2, byW = (this.height + 33 * sc) / 2 - 2;
+			int skin = Math.max(2, Math.min(5, (this.height - 120) / 40));
+			int fx = Math.max(16 + 8 * skin, this.width / 2 - bw / 2 - 30 - 12 * skin);
+			fx = Math.min(fx, this.width / 5 + 8 * skin);
+			int fy = (this.height - 33 * skin) / 2 - 14 + Math.round((1 - ks) * 10 + (float) Math.sin((System.currentTimeMillis() - openedAt) / 1100.0) * 1.5f);
+			if (SkinArt.draw(g, fx, fy, skin)) {
+				int bwW = 84, bxW = fx - bwW / 2, byW = (this.height + 33 * skin) / 2 - 2;
 				if (glass(g, mx, my, bxW, byW, bwW, 18, "Wardrobe", false, ks) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
 				String nm = minecraft.getUser().getName();
 				g.drawString(font, nm, fx - font.width(nm) / 2, fy - 14, Colors.alpha(0xFFFFFFFF, ks), true);
