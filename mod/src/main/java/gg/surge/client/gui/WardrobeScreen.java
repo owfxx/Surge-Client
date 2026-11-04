@@ -280,7 +280,7 @@ public class WardrobeScreen extends Screen {
 
 	private static float cardTurn(Shop.Item item) {
 		if (item.category().equals("emote")) return 18f;
-		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 155f; case "halo" -> 20f; default -> 0f; };
+		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 180f; case "halo" -> 20f; default -> 0f; };
 	}
 
 	private void openMenu(int x, int y, List<String> labels, List<Runnable> actions) {
@@ -662,8 +662,9 @@ public class WardrobeScreen extends Screen {
 		int cxg = gx + cell + 4;
 		int cyg = gy + cell + 4;
 		g.fill(cxg, cyg, cxg + cell, cyg + cell, 0xFF202023);
-		String hint = selectedEmote != null ? "Pick a slot" : "Click an emote";
-		Ui.centered(g, font, Ui.fit(font, hint, cell - 4), cxg + cell / 2, cyg + cell / 2 - 4, Ui.FAINT);
+		String[] hint = selectedEmote != null ? new String[]{"Pick a", "slot"} : new String[]{"Pick an", "emote"};
+		Ui.centered(g, font, hint[0], cxg + cell / 2, cyg + cell / 2 - 9, Ui.FAINT);
+		Ui.centered(g, font, hint[1], cxg + cell / 2, cyg + cell / 2 + 1, Ui.FAINT);
 		int infoY = gy + cell * 3 + 14;
 		String info = selectedEmote != null ? "Placing " + selectedEmote.label : "Right click a slot to empty it";
 		Ui.centered(g, font, Ui.fit(font, info, rw - 10), rx + rw / 2, infoY, selectedEmote != null ? Ui.ACCENT_2 : Ui.FAINT);

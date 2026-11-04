@@ -669,7 +669,7 @@ public final class HudModules {
 		final Setting.Toggle hideVanilla = toggle("hideVanilla", "Hide the vanilla effect icons", true);
 		private final Map<Object, Integer> maxDuration = new HashMap<>();
 
-		PotionEffects() { super("effects", "Potion Effects", Items.POTION, "Your active effects, with icons and time left", false, 0.80f, 0.30f); }
+		PotionEffects() { super("effects", "Potion Effects", Items.POTION, "Your active effects, with icons and time left", false, 0.80f, 0.45f); }
 
 		@Override public boolean hideVanillaEffects() { return enabled() && hideVanilla.on(); }
 

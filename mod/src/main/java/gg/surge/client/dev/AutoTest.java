@@ -66,6 +66,8 @@ public final class AutoTest {
 		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
 		STEPS.add(new Step("04-hud", 60, mc -> { open(mc, null); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
 		STEPS.add(new Step("05-third-person", 40, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT)));
+		STEPS.add(new Step("05b-back-view", 30, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK)));
+		STEPS.add(new Step("05c-halo-front", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
 		STEPS.add(new Step("07-emote-pony", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.PONY); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
@@ -90,8 +92,8 @@ public final class AutoTest {
 		w.coins = 12500;
 		SurgeConfig c = SurgeConfig.get();
 		c.cape = "surge";
-		c.wings = "none";
-		c.halo = "surge";
+		c.wings = "surge";
+		c.halo = "none";
 		for (String id : new String[]{"keystrokes", "cps", "fps", "coords", "armor", "minimap", "effects", "compass"}) {
 			HudModule m = Mods.hud(id);
 			if (m != null) m.setEnabled(true);

@@ -458,7 +458,7 @@ public class SurgeMenuScreen extends Screen {
 	}
 
 	private void sidebar(GuiGraphics g, int mx, int my) {
-		int y = py + 8;
+		int y = py + HEADER_H + 4;
 		for (Tab t : Tab.values()) {
 			if (t == Tab.KEYS) { g.fill(px + 10, y + 2, px + SIDEBAR_W - 10, y + 3, 0xFF2E2E33); y += 7; }
 			boolean sel = t == tab && openMod == null && query.isEmpty();
