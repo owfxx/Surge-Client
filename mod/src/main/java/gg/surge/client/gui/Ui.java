@@ -61,8 +61,16 @@ public final class Ui {
 	public static final Identifier COIN_TEX = Identifier.fromNamespaceAndPath("surge", "textures/gui/coin.png");
 	public static final ItemStack COIN_ITEM = new ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET);
 
+	public static final Identifier COIN_SMALL = Identifier.fromNamespaceAndPath("surge", "textures/gui/coin_small.png");
+
 	public static void coin(GuiGraphics g, int x, int y, int size) {
-		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX, x, y, 0f, 0f, size, size, 64, 64, 64, 64);
+		if (size < 14) {
+			int s = size < 16 ? 8 : 16;
+			g.blit(RenderPipelines.GUI_TEXTURED, COIN_SMALL, x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, 8, 8, 8, 8);
+			return;
+		}
+		int s = Math.max(16, size / 16 * 16);
+		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX, x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, 16, 16, 16, 16);
 	}
 
 	public static final Identifier LOGO = Identifier.fromNamespaceAndPath("surge", "textures/gui/logo.png");
