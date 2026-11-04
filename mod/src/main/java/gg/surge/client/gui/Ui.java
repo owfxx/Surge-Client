@@ -169,9 +169,7 @@ public final class Ui {
 	}
 
 	public static void box(GuiGraphics g, int x, int y, int w, int h, int fill, int edge) {
-		g.fill(x, y, x + w, y + h, edge);
-		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
-		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x12FFFFFF);
+		cutBox(g, x, y, w, h, 3, fill, edge == EDGE ? 0xFF2E2E33 : edge);
 	}
 
 	public static void cut(GuiGraphics g, int x, int y, int w, int h, int c, int color) {
@@ -203,20 +201,17 @@ public final class Ui {
 	}
 
 	public static void chunky(GuiGraphics g, int x, int y, int w, int h, int fill, int lip) {
-		g.fill(x, y, x + w, y + h, EDGE);
-		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, lip);
-		g.fill(x + 1, y + 1, x + w - 1, y + h - 3, fill);
-		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x38FFFFFF);
+		cutBox(g, x, y, w, h, 3, fill, Colors.lerp(fill, 0xFFFFFFFF, 0.12f));
 	}
 
 	public static boolean pill(GuiGraphics g, Font font, int mx, int my, int x, int y, int w, int h, String label, boolean active) {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick("pill:" + label + "@" + x + "," + y, hov);
 		float a = anim("pill:" + label + "@" + x + "," + y, hov);
-		int fill = active ? Colors.lerp(ACCENT, ACCENT_HOVER, a) : Colors.lerp(BUTTON, BUTTON_HOVER, a);
-		chunky(g, x, y, w, h, fill, active ? ACCENT_DIM : BUTTON_LIP);
+		int fill = active ? Colors.lerp(0xFFE4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xFF2A2A2E, 0xFF36363B, a);
+		cutBox(g, x, y, w, h, 3, fill, active ? 0xFFFFFFFF : 0xFF3A3A40);
 		String text = fit(font, label, w - 6);
-		g.drawString(font, text, x + (w - font.width(text)) / 2, y + (h - 9) / 2, TEXT, true);
+		g.drawString(font, text, x + (w - font.width(text)) / 2, y + (h - 8) / 2, active ? 0xFF141416 : TEXT, false);
 		return hov;
 	}
 
@@ -224,30 +219,24 @@ public final class Ui {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick(key, hov);
 		float a = anim(key, hov || selected);
-		if (a > 0.01f) g.fill(x, y, x + w, y + h, Colors.alpha(selected ? Colors.lerp(0xFF2E2E32, ACCENT, 0.35f) : 0xFF2E2E32, a));
-		if (selected) g.fill(x, y, x + 2, y + h, ACCENT);
+		if (a > 0.01f) cut(g, x, y, w, h, 3, Colors.alpha(selected ? 0xFF2A2A2F : 0xFF222226, a));
+		if (selected) g.fill(x, y + 4, x + 2, y + h - 4, ACCENT_2);
 		return hov;
 	}
 
 	public static void toggleSwitch(GuiGraphics g, int x, int y, boolean on, Object key) {
 		float a = anim(key, on);
-		int track = Colors.lerp(0xFF55555A, ACCENT, a);
-		g.fill(x, y, x + 22, y + 12, EDGE);
-		g.fill(x + 1, y + 1, x + 21, y + 11, track);
-		int kx = x + 1 + Math.round(a * 10);
-		g.fill(kx, y + 1, kx + 10, y + 11, 0xFFE9E9EC);
-		g.fill(kx, y + 9, kx + 10, y + 11, 0xFFB9B9BE);
+		cutBox(g, x, y, 22, 12, 3, Colors.lerp(0xFF202023, ACCENT_2, a), Colors.lerp(0xFF3A3A40, ACCENT_2, a));
+		int kx = x + 2 + Math.round(a * 10);
+		cut(g, kx, y + 2, 8, 8, 2, Colors.lerp(0xFF6E6F74, 0xFF141416, a));
 	}
 
 	public static void slider(GuiGraphics g, int x, int y, int w, float fraction, boolean active) {
 		int cy = y + 5;
-		g.fill(x, cy - 1, x + w, cy + 2, EDGE);
-		g.fill(x + 1, cy, x + w - 1, cy + 1, 0xFF55555A);
+		g.fill(x, cy, x + w, cy + 2, 0xFF2E2E33);
 		int fx = x + Math.round((w - 1) * Math.max(0, Math.min(1, fraction)));
-		g.fill(x + 1, cy, fx, cy + 1, ACCENT_2);
-		g.fill(fx - 3, y, fx + 4, y + 11, EDGE);
-		g.fill(fx - 2, y + 1, fx + 3, y + 10, active ? 0xFFFFFFFF : 0xFFDDDDE2);
-		g.fill(fx - 2, y + 8, fx + 3, y + 10, 0xFFA9A9AE);
+		g.fill(x, cy, fx, cy + 2, ACCENT_2);
+		cutBox(g, fx - 3, y + 1, 7, 9, 2, active ? 0xFFFFFFFF : 0xFFE4E4E7, 0xFF141416);
 	}
 
 	public static String fit(Font font, String s, int maxW) {
@@ -302,16 +291,15 @@ public final class Ui {
 	public static boolean iconButton(GuiGraphics g, int mx, int my, int x, int y, int size, String[] px) {
 		boolean hov = hover(mx, my, x, y, size, size);
 		float a = anim("ib@" + x + "," + y, hov);
-		chunky(g, x, y, size, size, Colors.lerp(BUTTON, BUTTON_HOVER, a), BUTTON_LIP);
-		icon(g, px, x + (size - 8) / 2 + 1, y + (size - 10) / 2 + 1, 1, 0xFF2A2A2A);
-		icon(g, px, x + (size - 8) / 2, y + (size - 10) / 2, 1, TEXT);
+		cutBox(g, x, y, size, size, 3, Colors.lerp(0xFF232327, 0xFF34343A, a), 0xFF3A3A40);
+		icon(g, px, x + (size - 8) / 2, y + (size - 8) / 2, 1, TEXT);
 		return hov;
 	}
 
 	public static boolean itemButton(GuiGraphics g, int mx, int my, int x, int y, int size, ItemStack stack) {
 		boolean hov = hover(mx, my, x, y, size, size);
 		float a = anim("itb@" + x + "," + y, hov);
-		chunky(g, x, y, size, size, Colors.lerp(BUTTON, BUTTON_HOVER, a), BUTTON_LIP);
+		cutBox(g, x, y, size, size, 3, Colors.lerp(0xFF232327, 0xFF34343A, a), 0xFF3A3A40);
 		int s = Math.min(16, size - 6);
 		item(g, stack, x + (size - s) / 2, y + (size - s) / 2 - 1, s);
 		return hov;
@@ -333,7 +321,7 @@ public final class Ui {
 		int x = Math.min(mx + 10, screenW - w - 12);
 		int y = Math.min(my + 12, screenH - h - 4);
 		g.nextStratum();
-		box(g, x, y, w + 10, h, 0xF8141418, ACCENT_DIM);
+		cutBox(g, x, y, w + 10, h, 3, 0xF8141418, 0xFF45454C);
 		for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x + 5, y + 4 + i * 10, TEXT, false);
 	}
 }

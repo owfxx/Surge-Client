@@ -50,7 +50,8 @@ public class SurgeMenuScreen extends Screen {
 		}
 	}
 
-	private static final int SIDEBAR_W = 104, HEADER_H = 30, CARD_H = 64, GAP = 6;
+	private static final int CARD_H = 66, GAP = 6;
+	private int SIDEBAR_W = 104, HEADER_H = 26;
 	private static Tab tab = Tab.ALL;
 	private static String query = "";
 
@@ -118,7 +119,8 @@ public class SurgeMenuScreen extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		float k = openProgress();
-		g.fill(0, 0, this.width, this.height, Colors.alpha(0x90000000, k));
+		g.fill(0, 0, this.width, this.height, Colors.alpha(0xE8141416, k));
+		g.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, Colors.alpha(0x60000000, k));
 	}
 
 	private float openProgress() {
@@ -129,14 +131,16 @@ public class SurgeMenuScreen extends Screen {
 	@Override
 	protected void init() {
 		if (openedAt == 0) openedAt = System.currentTimeMillis();
-		pw = Math.min(470, this.width - 16);
-		ph = Math.min(300, this.height - 16);
-		px = (this.width - pw) / 2;
-		py = (this.height - ph) / 2;
-		cx = px + SIDEBAR_W + 8;
+		int m = this.width < 480 ? 6 : 12;
+		SIDEBAR_W = this.width < 480 ? 92 : 112;
+		px = m;
+		py = m;
+		pw = this.width - m * 2;
+		ph = this.height - m * 2;
+		cx = px + SIDEBAR_W + 10;
 		cy = py + HEADER_H + 6;
-		cw = px + pw - 10 - cx;
-		ch = py + ph - 8 - cy;
+		cw = px + pw - 6 - cx;
+		ch = py + ph - cy;
 		if (search == null) {
 			search = new EditBox(font, 0, 0, 110, 10, Component.literal("Search"));
 			search.setBordered(false);
@@ -408,17 +412,9 @@ public class SurgeMenuScreen extends Screen {
 		float k = openProgress();
 		boolean animating = k < 1f;
 		if (animating) {
-			float s = 0.94f + 0.06f * k;
 			g.pose().pushMatrix();
-			g.pose().translate(this.width / 2f, this.height / 2f);
-			g.pose().scale(s, s);
-			g.pose().translate(-this.width / 2f, -this.height / 2f);
+			g.pose().translate(0, (1f - k) * 8f);
 		}
-
-		Ui.shadow(g, px, py, pw, ph);
-		Ui.box(g, px, py, pw, ph, Ui.BG, Ui.EDGE);
-		g.fill(px + 1, py + 1, px + SIDEBAR_W, py + ph - 1, Ui.SIDEBAR);
-		g.fill(px + SIDEBAR_W, py + 1, px + SIDEBAR_W + 1, py + ph - 1, Ui.EDGE);
 
 		header(g, mx, my, delta);
 		sidebar(g, mx, my);
@@ -443,55 +439,78 @@ public class SurgeMenuScreen extends Screen {
 		tip = text;
 	}
 
-	private void header(GuiGraphics g, int mx, int my, float delta) {
-		Ui.logo(g, px + 9, py + 7, 16);
-		g.drawString(font, Component.literal("Surge").withStyle(ChatFormatting.BOLD), px + 30, py + 11, Ui.TEXT, true);
-		String fps = minecraft.getFps() + " fps";
-		g.drawString(font, fps, px + 32 + font.width("Surge") + 6, py + 11, Ui.FAINT, false);
+	private static final String[] LEFT = {"....X...", "...XX...", "..XXX...", ".XXXX...", "..XXX...", "...XX...", "....X...", "........"};
 
-		int bx = px + pw - 26;
-		if (Ui.iconButton(g, mx, my, bx, py + 6, 18, Ui.CROSS) && clickL) action = this::onClose;
-		int ew = font.width("Edit HUD") + 16;
-		bx -= ew + 4;
-		if (Ui.pill(g, font, mx, my, bx, py + 6, ew, 18, "Edit HUD", true) && clickL) action = () -> minecraft.setScreen(new HudEditorScreen(this));
-		int sw = Math.min(140, bx - (px + SIDEBAR_W + 8) - 8);
-		int sx = bx - sw - 6;
-		boolean focused = search.isFocused();
-		Ui.box(g, sx, py + 6, sw, 18, 0xFF161619, focused ? Ui.ACCENT : Ui.EDGE);
-		Ui.icon(g, Ui.SEARCH, sx + 5, py + 11, 1, focused ? Ui.ACCENT_2 : Ui.FAINT);
-		search.setX(sx + 17);
-		search.setY(py + 11);
-		search.setWidth(sw - 22);
-		search.render(g, mx, my, delta);
-		g.fill(px + SIDEBAR_W + 1, py + HEADER_H, px + pw - 1, py + HEADER_H + 1, Ui.EDGE);
+	private boolean topButton(GuiGraphics g, int mx, int my, int x, int y, int w, String label, ItemStack icon, boolean primary) {
+		boolean hov = Ui.hover(mx, my, x, y, w, 18);
+		float a = Ui.anim("tb:" + label, hov);
+		Ui.cutBox(g, x, y, w, 18, 3, primary ? Colors.lerp(0xFFE4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xFF232327, 0xFF34343A, a), primary ? 0xFFFFFFFF : 0xFF3A3A40);
+		int tx = x + 6;
+		if (icon != null) { Ui.item(g, icon, x + 4, y + 2, 14); tx = x + 21; }
+		g.drawString(font, label, tx, y + 5, primary ? 0xFF141416 : Ui.TEXT, false);
+		return hov;
 	}
 
+	private void header(GuiGraphics g, int mx, int my, float delta) {
+		int y = py;
+		boolean bh = Ui.hover(mx, my, px, y, 18, 18);
+		Ui.cutBox(g, px, y, 18, 18, 3, bh ? 0xFF34343A : 0xFF232327, 0xFF3A3A40);
+		Ui.icon(g, LEFT, px + 5, y + 5, 1, Ui.TEXT);
+		if (bh && clickL) action = this::onClose;
+		Ui.logo(g, px + 25, y + 1, 16);
+		g.drawString(font, "Surge", px + 45, y + 5, Ui.TEXT, true);
+		String fps = minecraft.getFps() + " fps";
+		g.drawString(font, fps, px + 49 + font.width("Surge"), y + 5, Ui.FAINT, false);
+
+		int bx = px + pw;
+		boolean roomy = pw >= 420;
+		int ew = font.width("Edit HUD") + 12;
+		bx -= ew;
+		if (topButton(g, mx, my, bx, y, ew, "Edit HUD", null, true) && clickL) action = () -> minecraft.setScreen(new HudEditorScreen(this));
+		int ww = roomy ? font.width("Wardrobe") + 27 : 20;
+		bx -= ww + 4;
+		if (topButton(g, mx, my, bx, y, ww, roomy ? "Wardrobe" : "", WARDROBE_ICON, false) && clickL) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+		int emw = roomy ? font.width("Emotes") + 27 : 20;
+		bx -= emw + 4;
+		if (topButton(g, mx, my, bx, y, emw, roomy ? "Emotes" : "", EMOTE_ICON, false) && clickL) action = () -> minecraft.setScreen(new EmoteWheelScreen());
+		int left = cx;
+		int sw = Math.max(60, Math.min(170, bx - 8 - left));
+		int sx = left;
+		boolean focused = search.isFocused();
+		Ui.cutBox(g, sx, y, sw, 18, 3, 0xFF141416, focused ? Ui.ACCENT_2 : 0xFF2E2E33);
+		Ui.icon(g, Ui.SEARCH, sx + 5, y + 5, 1, focused ? Ui.ACCENT_2 : 0xFF55555C);
+		search.setX(sx + 17);
+		search.setY(y + 5);
+		search.setWidth(sw - 22);
+		search.render(g, mx, my, delta);
+		g.fill(px, y + HEADER_H - 5, px + pw, y + HEADER_H - 4, 0xFF2A2A2E);
+	}
+
+	private static final ItemStack WARDROBE_ICON = new ItemStack(Items.LEATHER_CHESTPLATE), EMOTE_ICON = new ItemStack(Items.ARMOR_STAND);
+
 	private void sidebar(GuiGraphics g, int mx, int my) {
-		int y = py + HEADER_H + 4;
+		int y = py + HEADER_H + 6;
+		int rowH = ph < 230 ? 18 : 21;
 		for (Tab t : Tab.values()) {
-			if (t == Tab.KEYS) { g.fill(px + 10, y + 2, px + SIDEBAR_W - 10, y + 3, 0xFF2E2E33); y += 7; }
+			if (t == Tab.KEYS) { g.fill(px + 4, y + 2, px + SIDEBAR_W - 4, y + 3, 0xFF26262A); y += 7; }
 			boolean sel = t == tab && openMod == null && query.isEmpty();
 			boolean selSoft = t == tab && (openMod != null || !query.isEmpty());
-			if (Ui.flat(g, mx, my, px + 4, y, SIDEBAR_W - 8, 20, sel, "tab:" + t) && clickL) {
+			if (Ui.flat(g, mx, my, px, y, SIDEBAR_W, rowH - 2, sel || selSoft, "tab:" + t) && clickL) {
 				action = () -> { tab = t; openMod = null; query = ""; search.setValue(""); buildPage(); };
 			}
-			Ui.item(g, t.stack(), px + 9, y + 3, 14);
-			g.drawString(font, Ui.fit(font, t.label, SIDEBAR_W - 36), px + 28, y + 6, sel || selSoft ? Ui.TEXT : Ui.MUTED, false);
-			y += 22;
+			Ui.item(g, t.stack(), px + 7, y + (rowH - 2 - 14) / 2, 14);
+			boolean hov = Ui.hover(mx, my, px, y, SIDEBAR_W, rowH - 2);
+			g.drawString(font, Ui.fit(font, t.label, SIDEBAR_W - 30), px + 26, y + (rowH - 10) / 2, sel || selSoft ? Ui.TEXT : hov ? 0xFFD4D4D8 : Ui.FAINT, false);
+			y += rowH;
 		}
-		int by = py + ph - 52;
-		if (Ui.itemButton(g, mx, my, px + 8, by, 20, new ItemStack(Items.LEATHER_CHESTPLATE)) && clickL) action = () -> minecraft.setScreen(new WardrobeScreen(this));
-		g.drawString(font, "Wardrobe", px + 34, by + 6, Ui.hover(mx, my, px + 8, by, SIDEBAR_W - 16, 20) ? Ui.TEXT : Ui.MUTED, false);
-		if (Ui.hover(mx, my, px + 28, by, SIDEBAR_W - 36, 20) && clickL) action = () -> minecraft.setScreen(new WardrobeScreen(this));
-		by += 24;
-		if (Ui.itemButton(g, mx, my, px + 8, by, 20, new ItemStack(Items.ARMOR_STAND)) && clickL) action = () -> minecraft.setScreen(new EmoteWheelScreen());
-		g.drawString(font, "Emotes", px + 34, by + 6, Ui.hover(mx, my, px + 8, by, SIDEBAR_W - 16, 20) ? Ui.TEXT : Ui.MUTED, false);
-		if (Ui.hover(mx, my, px + 28, by, SIDEBAR_W - 36, 20) && clickL) action = () -> minecraft.setScreen(new EmoteWheelScreen());
+		int on = 0, total = 0;
+		for (SurgeMod m : Mods.all()) if (m.toggleable) { total++; if (m.enabled()) on++; }
+		if (py + ph - 12 > y + 6) g.drawString(font, Ui.fit(font, on + " of " + total + " mods on", SIDEBAR_W), px + 2, py + ph - 10, 0xFF4A4A52, false);
 	}
 
 	private void grid(GuiGraphics g, int mx, int my) {
 		List<SurgeMod> mods = visibleMods();
-		int cols = Math.max(2, (cw + GAP) / 92);
+		int cols = Math.max(2, (cw + GAP) / 88);
 		int cardW = (cw - (cols - 1) * GAP) / cols;
 		int rowsN = (mods.size() + cols - 1) / cols;
 		contentH = rowsN * (CARD_H + GAP);
@@ -514,35 +533,27 @@ public class SurgeMenuScreen extends Screen {
 	private void card(GuiGraphics g, SurgeMod m, int x, int y, int w, int mx, int my, boolean inView) {
 		boolean hov = inView && Ui.hover(mx, my, x, y, w, CARD_H);
 		float a = Ui.anim("card:" + m.id, hov);
-		float on = Ui.anim("on:" + m.id, m.enabled());
-		int lift = Math.round(a);
-		int yy = y - lift;
-		Ui.chunky(g, x, yy, w, CARD_H, Colors.lerp(Ui.SURFACE, Ui.SURFACE_HOVER, a), 0xFF26262A);
-		if (a > 0.02f) Ui.outline(g, x, yy, w, CARD_H, Colors.alpha(0xFFFFFFFF, a * 0.85f));
-		Ui.item(g, m.icon(), x + w / 2 - 12, yy + 6, 24);
-		String name = Ui.fit(font, m.name, w - 8);
-		g.drawString(font, name, x + (w - font.width(name)) / 2, yy + 34, Ui.TEXT, true);
+		float on = Ui.anim("on:" + m.id, m.enabled() || !m.toggleable);
+		int yy = y;
+		Ui.cutBox(g, x, yy, w, CARD_H, 5, Colors.lerp(0xFF1E1E21, 0xFF27272B, a), Colors.lerp(Colors.lerp(0xFF2A2A2E, 0xFF4A4A52, on), 0xFF8A8A92, a));
+		if (m.toggleable) g.fillGradient(x + 1, yy + 1, x + w - 1, yy + 30, Colors.alpha(Ui.ACCENT_2, 0.10f * on), 0x00000000);
+		Ui.item(g, m.icon(), x + w / 2 - 11, yy + 7, 22);
+		String name = Ui.fit(font, m.name, w - 10);
+		g.drawString(font, name, x + (w - font.width(name)) / 2, yy + 33, Colors.lerp(Ui.MUTED, Ui.TEXT, Math.max(on, a)), false);
 
-		int bx = x + 4, by = yy + CARD_H - 18, bw = w - 8, bh = 13;
-		String status;
-		int fill, lip;
+		int by = yy + CARD_H - 16;
+		g.fill(x + 1, by - 3, x + w - 1, by - 2, 0xFF26262A);
 		if (!m.toggleable) {
-			status = "Open";
-			fill = Ui.ACCENT;
-			lip = Ui.ACCENT_DIM;
+			g.drawString(font, "Open", x + 7, by + 2, Ui.MUTED, false);
+			Ui.icon(g, new String[]{"...X....", "...XX...", "...XXX..", "...XXXX.", "...XXX..", "...XX...", "...X....", "........"}, x + w - 14, by + 2, 1, Ui.MUTED);
 		} else {
-			status = m.enabled() ? "Enabled" : "Disabled";
-			fill = Colors.lerp(Ui.OFF, Ui.ON, on);
-			lip = Colors.lerp(Ui.OFF_LIP, Ui.ON_LIP, on);
+			g.drawString(font, m.enabled() ? "On" : "Off", x + 7, by + 2, m.enabled() ? Ui.ACCENT_2 : Ui.FAINT, false);
+			Ui.toggleSwitch(g, x + w - 28, by + 1, m.enabled(), "cardsw:" + m.id);
 		}
-		g.fill(bx, by, bx + bw, by + bh, Ui.EDGE);
-		g.fill(bx + 1, by + 1, bx + bw - 1, by + bh - 1, lip);
-		g.fill(bx + 1, by + 1, bx + bw - 1, by + bh - 3, fill);
-		Ui.centeredShadow(g, font, status, bx + bw / 2, by + 2, Ui.TEXT);
 
 		boolean gearHov = false;
 		if (m.hasSettings()) {
-			int gx = x + w - 13, gy = yy + 4;
+			int gx = x + w - 13, gy = yy + 5;
 			gearHov = hov && Ui.hover(mx, my, gx - 2, gy - 2, 12, 12);
 			Ui.icon(g, Ui.GEAR, gx, gy, 1, gearHov ? Ui.TEXT : Colors.alpha(Ui.MUTED, 0.5f + a * 0.5f));
 		}
@@ -564,8 +575,8 @@ public class SurgeMenuScreen extends Screen {
 
 	private void scrollbar(GuiGraphics g, int top, int h) {
 		if (contentH <= h) return;
-		int x = cx + cw + 4;
-		g.fill(x, top, x + 2, top + h, 0x30FFFFFF);
+		int x = cx + cw + 2;
+		g.fill(x, top, x + 2, top + h, 0x18FFFFFF);
 		int barH = Math.max(16, h * h / contentH);
 		int barY = top + Math.round((h - barH) * (scroll / Math.max(1, contentH - h)));
 		g.fill(x, barY, x + 2, barY + barH, Ui.ACCENT_2);
@@ -605,8 +616,8 @@ public class SurgeMenuScreen extends Screen {
 		}
 		g.disableScissor();
 		if (contentH > viewH) {
-			int x = cx + cw + 4;
-			g.fill(x, top, x + 2, top + viewH, 0x30FFFFFF);
+			int x = cx + cw + 2;
+			g.fill(x, top, x + 2, top + viewH, 0x18FFFFFF);
 			int barH = Math.max(16, viewH * viewH / contentH);
 			int barY = top + Math.round((viewH - barH) * (scroll / Math.max(1, contentH - viewH)));
 			g.fill(x, barY, x + 2, barY + barH, Ui.ACCENT_2);
@@ -640,7 +651,7 @@ public class SurgeMenuScreen extends Screen {
 
 		void base(GuiGraphics g, int x, int y, int w, boolean hov, String label, ItemStack icon) {
 			float a = Ui.anim(this, hov);
-			if (a > 0.01f) g.fill(x, y + 1, x + w, y + height() - 1, Colors.alpha(0xFF2E2E33, a));
+			if (a > 0.01f) Ui.cut(g, x, y + 1, w, height() - 2, 3, Colors.alpha(0xFF222226, a));
 			int tx = x + 6;
 			if (icon != null) { Ui.item(g, icon, x + 4, y + (height() - 14) / 2, 14); tx = x + 23; }
 			g.drawString(font, Ui.fit(font, label, w / 2 + 20), tx, y + (height() - 8) / 2, Ui.TEXT, false);
@@ -657,9 +668,9 @@ public class SurgeMenuScreen extends Screen {
 
 		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
 			String t = text.get();
-			g.drawString(font, t, x + 2, y + 9, Ui.ACCENT_2, false);
+			g.drawString(font, t, x + 2, y + 9, Ui.TEXT, false);
 			int lx = x + 8 + font.width(t);
-			g.fill(lx, y + 13, x + w, y + 14, 0xFF34343A);
+			g.fill(lx, y + 13, x + w, y + 14, 0xFF26262A);
 		}
 	}
 
