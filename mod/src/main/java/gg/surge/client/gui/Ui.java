@@ -119,6 +119,7 @@ public final class Ui {
 			int tw = font.width(label) + 10;
 			int lx = labelLeft ? x - tw - 6 + Math.round((1 - l) * 6) : x + size + 6 - Math.round((1 - l) * 6);
 			int ly = y + (size - 14) / 2;
+			g.nextStratum();
 			g.fill(lx, ly, lx + tw, ly + 14, Colors.alpha(0xE0101014, l));
 			Ui.outline(g, lx, ly, tw, 14, Colors.alpha(0x60FFFFFF, l));
 			g.drawString(font, label, lx + 5, ly + 3, Colors.alpha(0xFFFFFFFF, l), false);
@@ -280,6 +281,7 @@ public final class Ui {
 		int h = lines.size() * 10 + 6;
 		int x = Math.min(mx + 10, screenW - w - 12);
 		int y = Math.min(my + 12, screenH - h - 4);
+		g.nextStratum();
 		box(g, x, y, w + 10, h, 0xF8141418, ACCENT_DIM);
 		for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x + 5, y + 4 + i * 10, TEXT, false);
 	}

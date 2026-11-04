@@ -17,6 +17,7 @@ public final class SocialToasts {
 		synchronized (Social.TOASTS) { list = new ArrayList<>(Social.TOASTS); }
 		if (list.isEmpty()) return;
 		long now = System.currentTimeMillis();
+		g.nextStratum();
 		int y = 6;
 		for (Social.Toast t : list) {
 			long age = now - t.at();

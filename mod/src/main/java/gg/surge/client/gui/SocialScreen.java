@@ -195,6 +195,7 @@ public class SocialScreen extends Screen {
 		}
 
 		if (menuLabels != null) {
+			g.nextStratum();
 			int h = menuLabels.size() * 16 + 6;
 			Ui.shadow(g, menuX, menuY, 104, h);
 			Ui.box(g, menuX, menuY, 104, h, 0xFA18181B, Ui.EDGE);

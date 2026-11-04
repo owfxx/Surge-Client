@@ -47,6 +47,7 @@ public final class MenuOverlay {
 		int w = screen.width, h = screen.height;
 
 		Ui.frame();
+		g.nextStratum();
 		int size = 22, x = w - size - 8, y = h / 2 - 76;
 		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
 		unreadBadge(g, mc, x, y - 26, size);
