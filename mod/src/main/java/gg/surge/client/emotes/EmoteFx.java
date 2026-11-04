@@ -89,7 +89,7 @@ public final class EmoteFx {
 				head(model, ps, q, (pose, vc) -> blush(pose, vc, tt, k * 0.6f));
 				body(model, ps, q, (pose, vc) -> {
 					float beat = 1f + 0.18f * (float) Math.max(0, Math.sin(tt * 7f));
-					sprite(pose, vc, HEART, 0, -1.05f, 0f, PX * 0.75f * beat, alpha(0xFF4D7A, k));
+					sprite(pose, vc, HEART, 0, -1.05f, -0.2f, PX * 1.1f * beat, alpha(0xFF4D7A, k));
 					floaters(pose, vc, HEART, 0xFF8FB4, tt, k, 4, 1.1f, 0.7f);
 				});
 			}
@@ -116,19 +116,19 @@ public final class EmoteFx {
 				if (hit > 0) for (int i = 0; i < 6; i++) {
 					double a = i * Math.PI / 3;
 					float r = 0.25f + (1 - hit) * 0.35f;
-					sprite(pose, vc, SPARK, -0.45f + (float) Math.cos(a) * r, -0.85f + (float) Math.sin(a) * r, 0f, PX * 0.35f, alpha(0xFFF3B0, k * hit));
+					sprite(pose, vc, SPARK, -0.45f + (float) Math.cos(a) * r, -0.85f + (float) Math.sin(a) * r, -0.15f, PX * 0.6f, alpha(0xFFF3B0, k * hit));
 				}
 			});
 			case LAUGH -> head(model, ps, q, (pose, vc) -> {
 				for (int side = -1; side <= 1; side += 2) {
 					float p = frac(tt * 1.4f + (side > 0 ? 0.5f : 0f));
-					sprite(pose, vc, DROP, side * (0.31f + p * 0.12f), -0.28f + p * p * 0.25f, -0.2f, PX * 0.4f, alpha(0x9AD8FF, k * (1 - p)));
+					sprite(pose, vc, DROP, side * (0.31f + p * 0.12f), -0.28f + p * p * 0.25f, -0.2f, PX * 0.6f, alpha(0x9AD8FF, k * (1 - p)));
 				}
 			});
 			case HEADBANG -> head(model, ps, q, (pose, vc) -> {
 				float p = frac(tt * 2.2f);
-				sprite(pose, vc, DROP, 0.3f + p * 0.1f, -0.5f + p * 0.2f, 0f, PX * 0.45f, alpha(0x9AD8FF, k * (1 - p)));
-				sprite(pose, vc, DROP, -0.3f - p * 0.1f, -0.45f + p * 0.2f, 0f, PX * 0.45f, alpha(0x9AD8FF, k * (1 - p)));
+				sprite(pose, vc, DROP, 0.3f + p * 0.1f, -0.5f + p * 0.2f, 0f, PX * 0.65f, alpha(0x9AD8FF, k * (1 - p)));
+				sprite(pose, vc, DROP, -0.3f - p * 0.1f, -0.45f + p * 0.2f, 0f, PX * 0.65f, alpha(0x9AD8FF, k * (1 - p)));
 			});
 			default -> {
 				if (e.music != null || e == Emote.GUITAR || e == Emote.DRUMS || e == Emote.GROOVE || e == Emote.SALSA)
@@ -165,14 +165,14 @@ public final class EmoteFx {
 	private static void tears(PoseStack.Pose pose, VertexConsumer vc, float t, float k) {
 		float z = -4.04f * PX;
 		for (int side = -1; side <= 1; side += 2) {
-			float ex = side < 0 ? -2.5f * PX : 2.5f * PX;
-			quad(pose, vc, ex - 0.4f * PX, -3.6f * PX, z, 0.8f * PX, 3.6f * PX, alpha(0x5FB4FF, 0.55f * k));
-			for (int i = 0; i < 3; i++) {
-				float p = frac(t * 1.3f + i / 3f + (side > 0 ? 0.17f : 0f));
-				float y = -3.8f * PX + p * 7f * PX + (p > 0.5f ? (p - 0.5f) * (p - 0.5f) * 0.9f : 0);
-				float x = ex + (p > 0.5f ? side * (p - 0.5f) * 0.12f : 0);
-				float zz = p > 0.5f ? z - (p - 0.5f) * 0.25f : z - 0.002f;
-				sprite(pose, vc, DROP, x, y, zz, PX * 0.32f, alpha(0x7FC8FF, k * (1f - Math.max(0, p - 0.7f) / 0.3f)));
+			float ex = side * 4.6f * PX;
+			quad(pose, vc, side < 0 ? -4.2f * PX : 3.4f * PX, -3.4f * PX, z, 0.8f * PX, 3.4f * PX, alpha(0x5FB4FF, 0.7f * k));
+			for (int i = 0; i < 4; i++) {
+				float p = frac(t * 1.1f + i / 4f + (side > 0 ? 0.13f : 0f));
+				float x = ex + side * p * 0.1f;
+				float y = -2.5f * PX + p * p * 0.75f;
+				float zz = z - 0.05f - p * 0.12f;
+				sprite(pose, vc, DROP, x, y, zz, PX * 0.6f, alpha(0x7FC8FF, k * (1f - Math.max(0, p - 0.75f) / 0.25f)));
 			}
 		}
 	}
@@ -184,22 +184,22 @@ public final class EmoteFx {
 			float x = sx + (float) Math.sin(p * 7f + i) * 0.05f;
 			float y = -0.7f - p * 0.65f;
 			float a = Math.min(1f, p * 5f) * (1f - p);
-			sprite(pose, vc, px, x, y, 0.02f, PX * (0.45f + 0.2f * (1 - p)), alpha(rgb, a * k));
+			sprite(pose, vc, px, x, y, -0.2f, PX * (0.8f + 0.3f * (1 - p)), alpha(rgb, Math.min(1f, a * 1.6f) * k));
 		}
 	}
 
 	private static final int[] CONFETTI = {0xFF5C5C, 0xFFD54F, 0x5CE1E6, 0x8AFF80, 0xC58CFF, 0xFFFFFF};
 
 	private static void confetti(PoseStack.Pose pose, VertexConsumer vc, float t, float k) {
-		for (int i = 0; i < 18; i++) {
+		for (int i = 0; i < 28; i++) {
 			float p = frac(t * 0.55f + hash(i) );
 			int cycle = (int) Math.floor(t * 0.55f + hash(i));
 			float x = (hash(i * 31 + cycle) - 0.5f) * 1.1f + (float) Math.sin(p * 9f + i) * 0.06f;
 			float y = -1.45f + p * 1.6f;
 			float z = (hash(i * 13 + cycle) - 0.5f) * 0.6f;
 			int c = CONFETTI[i % CONFETTI.length];
-			float w = PX * (0.6f + 0.4f * (float) Math.abs(Math.sin(p * 12f + i)));
-			quad(pose, vc, x, y, z, w, PX * 0.6f, alpha(c, k * (1f - p * 0.7f)));
+			float w = PX * (1.2f + 0.8f * (float) Math.abs(Math.sin(p * 12f + i)));
+			quad(pose, vc, x, y, z - 0.15f, w, PX * 1.2f, alpha(c, k * (1f - p * 0.5f)));
 		}
 	}
 }

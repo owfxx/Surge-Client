@@ -1,3 +1,13 @@
+## 1.5.4
+- Minecraft Ten font for big headings in the game and launcher
+- Your skin on the title screen, with the wardrobe right under you
+- Wardrobe button under your character in the pause menu
+- New icons on the side buttons, the extra Emotes button is gone
+- Surge Client label in the corner of every menu, pick bottom right or under your inventory in Settings
+- Bigger, clearer emote particles
+- Codes can now have a limited number of uses
+- Admin page has proper pickers for code unlocks, sales and locked items
+
 ## 1.5.3
 - Friends and chat sign-in fixed, it now works with the launcher and with the standalone mod
 - Discord status works out of the box
