@@ -305,6 +305,18 @@ public class WardrobeScreen extends Screen {
 		return new CapturedLook(t.equals("cape") ? item.key() : null, t.equals("wings") ? item.key() : null, t.equals("halo") ? item.key() : null, null, 0f, false);
 	}
 
+	private void drawFocused(GuiGraphics g, Shop.Item item, int i, int x1, int y1, int x2, int y2) {
+		int h = y2 - y1;
+		String t = item.category().equals("emote") ? "emote" : typeOf(item);
+		float zoom = switch (t) { case "halo" -> 0.95f; case "wings", "cape" -> 0.62f; default -> 0.36f; };
+		float drop = switch (t) { case "halo" -> 1.05f; case "wings" -> 0.55f; case "cape" -> 0.45f; default -> 0f; };
+		int size = Math.round(h * zoom);
+		int shift = Math.round(size * drop);
+		g.enableScissor(x1, y1, x2, y2);
+		Preview.drawCard(g, x1, y1 + 2, x2, y2 + shift * 2, size, cardTurn(item), lookFor(item, i));
+		g.disableScissor();
+	}
+
 	private static float cardTurn(Shop.Item item) {
 		if (item.category().equals("emote")) return 18f;
 		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 180f; case "halo" -> 20f; default -> 0f; };
@@ -521,55 +533,81 @@ public class WardrobeScreen extends Screen {
 		return hov;
 	}
 
+	private String hoverId;
+	private long hoverSince;
+
 	private Runnable stage(GuiGraphics g, int mx, int my, boolean click, Runnable action) {
 		int x1 = stageX, x2 = stageX + stageW, y1 = top + 4, y2 = this.height - m;
 		int cx = (x1 + x2) / 2;
-		Shop.Item focus = hoveredItem != null ? hoveredItem : selected;
-		if (section == Section.OUTFITS || section == Section.SKINS || section == Section.CURRENCY) focus = hoveredItem;
+		String hid = hoveredItem == null ? null : hoveredItem.id();
+		if (!java.util.Objects.equals(hid, hoverId)) { hoverId = hid; hoverSince = System.currentTimeMillis(); }
+		boolean settled = hoveredItem != null && System.currentTimeMillis() - hoverSince > 110;
+		Shop.Item focus = settled ? hoveredItem : selected;
+		if (section == Section.OUTFITS || section == Section.SKINS || section == Section.CURRENCY) focus = settled ? hoveredItem : null;
 		applyPreview(focus);
-		int infoH = focus != null ? 58 : section == Section.OUTFITS ? 38 : 20;
-		int floorY0 = y2 - infoH - 10;
-		int size = Math.max(30, Math.min(80, Math.min((floorY0 - y1 - 30) * 100 / 220, stageW * 30 / 100)));
-		int rx = Math.min(stageW / 2 - 14, size + 14);
-		int floorY = floorY0 - Math.max(4, rx * 22 / 100) - 2;
-		pedestal(g, cx, floorY, rx);
-		int boxTop = floorY - size * 2 - 22, boxBot = floorY + 6;
-		if (minecraft.player != null) {
-			int cy = floorY - Math.round(size * 0.97f);
-			int half = Math.round(size * 1.15f);
-			Preview.draw(g, x1 + 18, cy - half, x2 - 18, cy + half, size);
-		} else Ui.centered(g, font, "Join a world to see yourself", cx, (boxTop + floorY) / 2, Ui.FAINT);
 
-		int ay = floorY - 26;
-		if (Ui.hover(mx, my, cx - rx - 12, ay, 12, 14) || Ui.hover(mx, my, cx + rx, ay, 12, 14)) {
-			boolean lh = Ui.hover(mx, my, cx - rx - 12, ay, 12, 14);
-			if (click) action = () -> Preview.forced = (Preview.forced == null ? 0f : Preview.forced) + (lh ? -90f : 90f);
-		}
-		Ui.icon(g, LEFT, cx - rx - 10, ay + 3, 1, Ui.hover(mx, my, cx - rx - 12, ay, 12, 14) ? Ui.TEXT : 0xFF55555C);
-		Ui.icon(g, RIGHT, cx + rx + 2, ay + 3, 1, Ui.hover(mx, my, cx + rx, ay, 12, 14) ? Ui.TEXT : 0xFF55555C);
-
-		int iy = y2 - infoH;
+		int headH = 30;
 		if (focus != null) {
 			int rc = rarity(focus);
-			g.drawString(font, Ui.fit(font, focus.name(), stageW - 8), x1 + 4, iy, Ui.TEXT, true);
-			String sub = rarityName(focus) + "  " + kind(focus);
-			g.fill(x1 + 4, iy + 13, x1 + 8, iy + 17, rc);
-			g.drawString(font, Ui.fit(font, sub, stageW - 16), x1 + 12, iy + 12, Ui.MUTED, false);
-			if (focus == selected || hoveredItem == null) {
-				Primary p = primary(focus);
-				boolean beta = focus.id().equals("cape:beta") && Wallet.get().owns(focus.id());
-				int bw = beta ? stageW - 8 - 74 : stageW - 8;
-				boolean coin = p.label().startsWith("Buy") || p.label().startsWith("Confirm");
-				if (bigButton(g, mx, my, x1 + 4, iy + 30, bw, 22, p.label(), true, p.enabled(), coin) && click) action = p.run();
-				if (beta && bigButton(g, mx, my, x1 + 8 + bw, iy + 30, 70, 22, "Customize", false, true, false) && click) action = () -> minecraft.setScreen(new BetaCapeScreen(this));
-				if (!p.enabled() && p.label().startsWith("Buy")) g.drawString(font, "Need " + (Shop.price(focus) - Wallet.get().coins) + " more", x1 + 4 + bw - font.width("Need " + (Shop.price(focus) - Wallet.get().coins) + " more"), iy + 12, 0xFFFF8C8C, false);
-			} else g.drawString(font, "Click to select", x1 + 4, iy + 36, Ui.FAINT, false);
+			g.pose().pushMatrix();
+			g.pose().translate(x1 + 4, y1 + 2);
+			g.pose().scale(1.5f, 1.5f);
+			g.drawString(font, Ui.fit(font, focus.name(), Math.round((stageW - 8) / 1.5f)), 0, 0, Ui.TEXT, true);
+			g.pose().popMatrix();
+			g.fill(x1 + 4, y1 + 19, x1 + 8, y1 + 23, rc);
+			g.drawString(font, Ui.fit(font, rarityName(focus) + "  " + kind(focus), stageW - 16), x1 + 12, y1 + 18, Ui.MUTED, false);
 		} else if (section == Section.OUTFITS) {
-			g.drawString(font, "Outfit " + (outfitIdx + 1), x1 + 4, iy, Ui.TEXT, true);
-			if (bigButton(g, mx, my, x1 + 4, iy + 14, stageW - 8, 20, "Save what I'm wearing", false, true, false) && click) action = this::saveOutfit;
+			g.pose().pushMatrix();
+			g.pose().translate(x1 + 4, y1 + 2);
+			g.pose().scale(1.5f, 1.5f);
+			g.drawString(font, "Outfit " + (outfitIdx + 1), 0, 0, Ui.TEXT, true);
+			g.pose().popMatrix();
 		} else {
-			String name = minecraft.getUser().getName();
-			Ui.centered(g, font, name, cx, iy + 4, Ui.MUTED);
+			g.pose().pushMatrix();
+			g.pose().translate(x1 + 4, y1 + 2);
+			g.pose().scale(1.5f, 1.5f);
+			g.drawString(font, minecraft.getUser().getName(), 0, 0, Ui.TEXT, true);
+			g.pose().popMatrix();
+			g.drawString(font, "Drag to turn", x1 + 4, y1 + 18, Ui.FAINT, false);
+		}
+
+		int footH = 28;
+		int floorY0 = y2 - footH - 8;
+		int size = Math.max(34, Math.min(110, Math.min((floorY0 - (y1 + headH) - 16) * 100 / 215, stageW * 36 / 100)));
+		int rx = Math.min(stageW / 2 - 14, size + 12);
+		int floorY = floorY0 - Math.max(4, rx * 22 / 100) - 2;
+		pedestal(g, cx, floorY, rx);
+		if (minecraft.player != null) {
+			int cy = floorY - Math.round(size * 0.97f);
+			int half = Math.round(size * 1.2f);
+			Preview.draw(g, x1 + 10, cy - half, x2 - 10, cy + half, size);
+		} else Ui.centered(g, font, "Join a world to see yourself", cx, (y1 + floorY) / 2, Ui.FAINT);
+
+		int ay = floorY - 26;
+		boolean lh = Ui.hover(mx, my, cx - rx - 14, ay, 14, 16), rh = Ui.hover(mx, my, cx + rx, ay, 14, 16);
+		if ((lh || rh) && click) action = () -> Preview.forced = (Preview.forced == null ? 0f : Preview.forced) + (lh ? -90f : 90f);
+		Ui.icon(g, LEFT, cx - rx - 10, ay + 4, 1, lh ? Ui.TEXT : 0xFF55555C);
+		Ui.icon(g, RIGHT, cx + rx + 2, ay + 4, 1, rh ? Ui.TEXT : 0xFF55555C);
+
+		int by = y2 - 22;
+		Shop.Item act = selected != null && section != Section.OUTFITS && section != Section.SKINS && section != Section.CURRENCY ? selected : null;
+		if (act != null) {
+			Primary p = primary(act);
+			boolean beta = act.id().equals("cape:beta") && Wallet.get().owns(act.id());
+			int bw = beta ? stageW - 8 - 74 : stageW - 8;
+			boolean coin = p.label().startsWith("Buy") || p.label().startsWith("Confirm");
+			String label = p.label();
+			if (focus != act) label = label + "  " + Ui.fit(font, act.name(), 90);
+			if (bigButton(g, mx, my, x1 + 4, by, bw, 22, label, true, p.enabled(), coin) && click) action = p.run();
+			if (beta && bigButton(g, mx, my, x1 + 8 + bw, by, 70, 22, "Customize", false, true, false) && click) action = () -> minecraft.setScreen(new BetaCapeScreen(this));
+			if (!p.enabled() && p.label().startsWith("Buy")) {
+				String need = "Need " + (Shop.price(act) - Wallet.get().coins) + " more coins";
+				Ui.centered(g, font, need, cx, by - 12, 0xFFFF8C8C);
+			}
+		} else if (section == Section.OUTFITS) {
+			if (bigButton(g, mx, my, x1 + 4, by, stageW - 8, 22, "Save what I'm wearing", false, true, false) && click) action = this::saveOutfit;
+		} else if (section == Section.FEATURED || section == Section.COSMETICS) {
+			Ui.centered(g, font, "Click an item to try it on", cx, by + 7, Ui.FAINT);
 		}
 		return action;
 	}
@@ -712,7 +750,7 @@ public class WardrobeScreen extends Screen {
 			Ui.cutBox(g, x, y, tw, th, 5, Colors.lerp(0xFF1E1E21, 0xFF27272B, a), edge);
 			g.fillGradient(x + 1, y + th / 2, x + tw - 1, y + th - 14, 0x00000000, Colors.alpha(rc, 0.12f + 0.1f * a));
 			for (int k = 0; k < 7; k++) g.fill(x + 1, y + 1 + k, x + 8 - k, y + 2 + k, k < 4 ? rc : Colors.alpha(rc, 0.5f));
-			Preview.drawCard(g, x + 1, y + 4, x + tw - 1, y + th - 14, Math.round((th - 18) * 0.34f), cardTurn(item), lookFor(item, i));
+			drawFocused(g, item, i, x + 1, y + 1, x + tw - 1, y + th - 14);
 			g.fill(x + 1, y + th - 14, x + tw - 1, y + th - 13, 0xFF2A2A2E);
 			g.drawString(font, Ui.fit(font, item.name(), tw - 8), x + 5, y + th - 11, hov || sel ? Ui.TEXT : 0xFFC8C8CD, false);
 			if (owned) {

@@ -151,9 +151,14 @@ export default {
     if (p === '/v1/auth' && req.method === 'POST') {
       const name = String(body.name || ''), serverId = String(body.serverId || '');
       if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[A-Za-z0-9_-]{8,64}$/.test(serverId)) return json({ error: 'bad request' }, 400);
-      const r = await fetch(`https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${encodeURIComponent(name)}&serverId=${encodeURIComponent(serverId)}`);
-      if (r.status !== 200) return json({ error: 'Mojang could not confirm this account' }, 401);
-      const prof = await r.json();
+      let r = null, prof = null;
+      for (let i = 0; i < 6 && !prof; i++) {
+        if (i) await new Promise(res => setTimeout(res, 300 + i * 300));
+        r = await fetch(`https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${encodeURIComponent(name)}&serverId=${encodeURIComponent(serverId)}`, { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+        if (r.status === 200) { try { prof = await r.json(); } catch { prof = null; } }
+        else if (r.status !== 204 && r.status !== 404) break;
+      }
+      if (!prof || !prof.id) return json({ error: `Mojang could not confirm this account (${r ? r.status : 0})` }, 401);
       const uuid = norm(prof.id);
       const fresh = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
       await db.prepare(`INSERT INTO users (uuid, name, name_lc, token, status, server, seen) VALUES (?1, ?2, ?3, ?4, 'online', '', ?5)

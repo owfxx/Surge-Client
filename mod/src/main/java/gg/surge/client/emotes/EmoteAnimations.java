@@ -15,23 +15,27 @@ final class EmoteAnimations {
 	static void pose(Emote e, Pose p, float t) {
 		switch (e) {
 			case WAVE -> {
-				float w = sin(t * 10f);
-				p.rArm(0, 0, 150 + w * 22).lArm(0, 0, -6).head(-6, -10, 4 + w * 2).body(0, -4, 0);
+				float w = sin(t * 9f);
+				float hi = Emotes.ease(clamp(t / 0.3f));
+				p.rArm(-15 + w * 5, 0, (150 + w * 24) * hi).lArm(4, 0, -6).head(-8, -14, 6 + w * 3).body(0, -6, 0).bob(-Math.abs(sin(t * 4.5f)) * 0.5f);
 			}
 			case CLAP -> {
 				float c = Math.abs(sin(t * 7f));
 				p.rArm(-75, -(8 + 22 * c), 0).lArm(-75, 8 + 22 * c, 0).head(4 - 6 * c, 0, 0);
 			}
 			case FLUSTERED -> {
+				float shake = t < 1.2f ? sin(t * 14f) * (1.2f - t) * 14f : 0f;
 				float s = sin(t * 2.2f);
-				float tap = Math.abs(sin(t * 3f));
-				p.rArm(-145, -28, 8).lArm(-145, 28, -8)
-					.head(18, s * 12, s * 8).body(0, s * 8, 0)
-					.rLeg(0, 0, -5).lLeg(-6 - tap * 10, 0, 5);
+				float tap = Math.max(0f, sin(t * 6f));
+				p.rArm(-145 + s * 4, -28, 8).lArm(-145 - s * 4, 28, -8)
+					.head(20 + s * 3, shake + s * 10, s * 9).body(0, s * 10, 0).sway(s * 0.4f)
+					.rLeg(0, 0, -4).lLeg(28 * tap, 0, 6).bob(-tap * 0.3f);
 			}
 			case FACEPALM -> {
-				float shake = sin(t * 6f);
-				p.rArm(-125, -38, 0).lArm(0, 0, -5).head(28, shake * 8, 0).lean(6);
+				float up = Emotes.ease(clamp(t / 0.45f)), down = Emotes.ease(clamp((t - e.seconds + 0.6f) / 0.5f));
+				float a = up * (1 - down);
+				float shake = t > 0.6f ? sin(t * 6.5f) * 9 * a : 0;
+				p.rArm(-128 * a, -38 * a, 0).lArm(-20 * a, 25 * a, -6).head(30 * a, shake, 0).lean(7 * a).bob(0.4f * a);
 			}
 			case DAB -> {
 				float d = Emotes.ease(clamp(t * 4f));
@@ -49,12 +53,16 @@ final class EmoteAnimations {
 					.bob(-j * 2.5f).rLeg(0, 0, 4 * j).lLeg(0, 0, -4 * j);
 			}
 			case THINKING -> {
-				float tap = sin(t * 5f) * 3;
-				p.rArm(-110, -32, 0).lArm(-40, 40, 0).head(-12 + tap, 12, 8);
+				float tap = sin(t * 8f) * 3;
+				float look = sin(t * 0.8f);
+				p.rArm(-112 + tap, -34, 0).lArm(-42, 42, 0).head(-14 + look * 6, 14 + sin(t * 0.6f) * 10, 8).sway(sin(t * 1.2f) * 0.4f).body(0, look * 4, 0);
 			}
 			case LAUGH -> {
-				float shake = sin(t * 18f);
-				p.lean(-12 + shake * 2).rArm(-35, -30, 0).lArm(-35, 30, 0).head(-20 + shake * 5, 0, 0);
+				float shake = sin(t * 20f);
+				float cyc = t % 1.4f;
+				float slap = Emotes.ease(clamp((cyc - 0.85f) / 0.15f)) * (1 - Emotes.ease(clamp((cyc - 1.15f) / 0.2f)));
+				p.lean(-14 * (1 - slap) + 20 * slap + shake * 2).rArm(-30 - 25 * slap, -30 * (1 - slap), 10 * slap).lArm(-35, 32, 0)
+					.head(-24 * (1 - slap) + 12 * slap + shake * 5, 0, 0).bob(Math.abs(shake) * 0.5f).rLeg(-8 * slap, 0, 0);
 			}
 			case BOW -> {
 				float ph = (t % 3f) / 3f;
@@ -62,8 +70,9 @@ final class EmoteAnimations {
 				p.lean(40 * down).rArm(-70 * down, -45 * down, 0).lArm(25 * down, 0, -5).head(10 * down, 0, 0);
 			}
 			case HEART -> {
+				float beat = Math.max(0, sin(t * 7f));
 				float s = sin(t * 2f);
-				p.rArm(-170, 0, 22).lArm(-170, 0, -22).head(-18, 0, s * 5).sway(s * 0.6f);
+				p.rArm(-168, 0, 24 + beat * 5).lArm(-168, 0, -24 - beat * 5).head(-16, 0, s * 6).sway(s * 0.6f).body(0, s * 6, 0).bob(-beat * 0.4f);
 			}
 			case BOXING -> {
 				float ph = (t * 2.4f) % 2f;
@@ -122,8 +131,9 @@ final class EmoteAnimations {
 				p.head(25 + h * 25, 0, 0).lean(8 + h * 6).rArm(-60, -15, 0).lArm(-60, 15, 0).bob(Math.abs(h) * 0.6f);
 			}
 			case YAWN -> {
-				float a = Emotes.ease(clamp(t / 0.8f)) * (1 - Emotes.ease(clamp((t - 2.2f) / 0.9f)));
-				p.head(-30 * a, 0, 0).rArm(-150 * a, 0, 30 * a).lArm(-60 * a, 30 * a, 0).lean(-6 * a);
+				float a = Emotes.ease(clamp(t / 0.8f)) * (1 - Emotes.ease(clamp((t - 2.3f) / 0.8f)));
+				float tremble = a > 0.95f ? sin(t * 24f) * 2 : 0;
+				p.head(-32 * a, 0, 6 * a * sin(t * 1.5f)).rArm(0, 0, 170 * a + tremble + 6).lArm(-70 * a, 35 * a, -6).lean(-8 * a).bob(-1.2f * a);
 			}
 			case GUITAR -> {
 				float strum = sin(t * 14f);
@@ -259,8 +269,11 @@ final class EmoteAnimations {
 				p.rLeg(0, 0, 6).lLeg(0, 0, -6).bob(hit * 2f);
 			}
 			case CRY -> {
-				float sob = sin(t * 14f);
-				p.rArm(-135, -30, 0).lArm(-135, 30, 0).head(25 + sob * 3, 0, 0).lean(10);
+				float sob = sin(t * 9f);
+				float rub = sin(t * 3f);
+				float lift = Emotes.ease(clamp(((t % 2.6f) - 1.9f) / 0.2f)) * (1 - Emotes.ease(clamp(((t % 2.6f) - 2.3f) / 0.25f)));
+				p.rArm(-140 + rub * 9 + lift * 30, -30 + rub * 6, 4).lArm(-140 - rub * 9 + lift * 30, 30 - rub * 6, -4)
+					.head(28 + sob * 4 - lift * 30, rub * 5, 0).lean(14 + sob * 2 - lift * 8).bob(Math.abs(sob) * 0.6f);
 			}
 		}
 	}
