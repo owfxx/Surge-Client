@@ -7,6 +7,7 @@ import gg.surge.client.mods.Colors;
 import gg.surge.client.mods.Mods;
 import gg.surge.client.mods.Setting;
 import gg.surge.client.mods.SurgeMod;
+import gg.surge.client.perf.PerfCheck;
 import gg.surge.client.perf.PerfMods;
 import gg.surge.client.perf.Performance;
 import net.minecraft.ChatFormatting;
@@ -33,7 +34,7 @@ public class SurgeMenuScreen extends Screen {
 	private enum Tab {
 		ALL("All mods", Items.NETHER_STAR), HUD("HUD", Items.ITEM_FRAME), PVP("PvP", Items.NETHERITE_SWORD),
 		VISUAL("Visual", Items.AMETHYST_CLUSTER), UTILITY("Utility", Items.IRON_PICKAXE),
-		KEYS("Command Keys", Items.COMMAND_BLOCK), FPS("Settings", Items.COMPARATOR);
+		KEYS("Command Keys", Items.COMMAND_BLOCK), FPS("Settings", Items.COMPARATOR), PERF("FPS check", Items.CLOCK);
 		final String label;
 		final Item icon;
 		ItemStack stack;
@@ -88,6 +89,12 @@ public class SurgeMenuScreen extends Screen {
 
 	public static SurgeMenuScreen general(Screen parent) {
 		tab = Tab.FPS;
+		query = "";
+		return new SurgeMenuScreen(parent);
+	}
+
+	public static SurgeMenuScreen perf(Screen parent) {
+		tab = Tab.PERF;
 		query = "";
 		return new SurgeMenuScreen(parent);
 	}
@@ -148,7 +155,7 @@ public class SurgeMenuScreen extends Screen {
 	}
 
 	private boolean gridMode() {
-		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.KEYS));
+		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.KEYS && tab != Tab.PERF));
 	}
 
 	private void buildPage() {
@@ -160,6 +167,7 @@ public class SurgeMenuScreen extends Screen {
 		if (openMod != null) settingsRows(openMod);
 		else if (query.isEmpty() && tab == Tab.FPS) { settingsRows(Mods.GENERAL); rows.add(new HeaderRow(() -> "FPS boost")); fpsRows(); }
 		else if (query.isEmpty() && tab == Tab.KEYS) keyRows();
+		else if (query.isEmpty() && tab == Tab.PERF) rows.add(new PerfRow());
 	}
 
 	private void open(SurgeMod mod) {
@@ -241,6 +249,7 @@ public class SurgeMenuScreen extends Screen {
 
 	private void fpsRows() {
 		var o = minecraft.options;
+		rows.add(new ButtonRow("Not sure what's slowing you down?", "FPS check", () -> { tab = Tab.PERF; buildPage(); }));
 		rows.add(new PresetRow());
 		rows.add(new SliderRow("Render distance", intOption(o.renderDistance(), 2, 32, 1, " chunks")));
 		rows.add(new SliderRow("Simulation distance", intOption(o.simulationDistance(), 5, 32, 1, " chunks")));
@@ -885,6 +894,144 @@ public class SurgeMenuScreen extends Screen {
 			Ui.icon(g, Ui.PLUS, x + (w - tw) / 2, y + 9, 1, col);
 			g.drawString(font, label, x + (w - tw) / 2 + 12, y + 9, Colors.lerp(Ui.MUTED, Ui.TEXT, a), false);
 			if (hov && clickL) action = run;
+		}
+	}
+
+	private final class PerfRow extends Row {
+		int lastW = 300;
+
+		private List<String> lines(String text, int w) {
+			List<String> out = new ArrayList<>();
+			StringBuilder line = new StringBuilder();
+			for (String word : text.split(" ")) {
+				String next = line.isEmpty() ? word : line + " " + word;
+				if (font.width(next) > w && !line.isEmpty()) { out.add(line.toString()); line = new StringBuilder(word); }
+				else line = new StringBuilder(next);
+			}
+			if (!line.isEmpty()) out.add(line.toString());
+			return out;
+		}
+
+		private int findingH(PerfCheck.Finding f, int w) {
+			return 18 + lines(f.detail, w - 20 - (f.fixLabel != null ? 84 : 0)).size() * 10 + 6;
+		}
+
+		@Override int height() {
+			PerfCheck.Report r = PerfCheck.report;
+			if (r == null || PerfCheck.state == PerfCheck.State.RECORDING) return 120;
+			int h = 50 + 74 + 18;
+			for (PerfCheck.Finding f : r.findings()) h += findingH(f, lastW) + 4;
+			return h + 30;
+		}
+
+		private boolean button(GuiGraphics g, int mx, int my, int x, int y, int w, int h, String label, boolean primary) {
+			boolean over = Ui.hover(mx, my, x, y, w, h);
+			float a = Ui.anim("pb:" + label + y, over);
+			Ui.cutBox(g, x, y, w, h, 3, primary ? Colors.lerp(0xFFE4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xFF2A2A2E, 0xFF36363B, a), primary ? 0xFFFFFFFF : 0xFF3A3A40);
+			String t = Ui.fit(font, label, w - 6);
+			g.drawString(font, t, x + (w - font.width(t)) / 2, y + (h - 8) / 2, primary ? 0xFF141416 : Ui.TEXT, false);
+			return over;
+		}
+
+		private Runnable startAction() {
+			return () -> {
+				if (minecraft.level == null) { setTip("perf:start", "Join a world or server first"); return; }
+				PerfCheck.start();
+				minecraft.setScreen(null);
+			};
+		}
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			lastW = w;
+			PerfCheck.Report r = PerfCheck.report;
+			if (PerfCheck.state == PerfCheck.State.RECORDING) {
+				g.drawString(font, "Checking… " + PerfCheck.secondsLeft() + "s left", x + 4, y + 10, Ui.TEXT, false);
+				g.drawString(font, "Close this menu and play normally.", x + 4, y + 24, Ui.MUTED, false);
+				if (button(g, mx, my, x + 4, y + 42, 80, 18, "Stop", false) && clickL) action = PerfCheck::cancel;
+				return;
+			}
+			if (r == null) {
+				Ui.cutBox(g, x, y + 2, w, 112, 6, 0xFF1C1C1F, 0xFF2E2E33);
+				Ui.item(g, new ItemStack(Items.CLOCK), x + 12, y + 14, 16);
+				g.drawString(font, "Find out why your game lags", x + 36, y + 18, Ui.TEXT, false);
+				int ly = y + 38;
+				for (String l : lines("Surge watches your game for " + PerfCheck.SECONDS + " seconds while you play. Then it tells you what causes low FPS and stutters, like RAM, chunk loading, entities or heavy settings, and fixes most of it with one click.", w - 24)) {
+					g.drawString(font, l, x + 12, ly, Ui.MUTED, false);
+					ly += 10;
+				}
+				boolean inWorld = minecraft.level != null;
+				if (button(g, mx, my, x + 12, y + 88, 120, 18, inWorld ? "Start the check" : "Join a world first", inWorld) && clickL && inWorld) action = startAction();
+				g.drawString(font, "Walking around helps", x + 140, y + 93, Ui.FAINT, false);
+				return;
+			}
+			int bw = (w - 8) / 3;
+			String[][] stats = {{String.valueOf(Math.round(r.avgFps())), "average FPS"}, {String.valueOf(Math.round(r.lowFps())), "1% low FPS"}, {String.valueOf(r.stutters()), r.stutters() == 1 ? "stutter" : "stutters"}};
+			int[] colors = {Ui.TEXT, r.lowFps() < 30 ? 0xFFFF8C8C : r.lowFps() < 55 ? 0xFFFFC56B : 0xFF8CFFA0, r.stutters() > 10 ? 0xFFFF8C8C : r.stutters() > 3 ? 0xFFFFC56B : 0xFF8CFFA0};
+			for (int i = 0; i < 3; i++) {
+				int bx = x + i * (bw + 4);
+				Ui.cutBox(g, bx, y + 2, bw, 40, 5, 0xFF1C1C1F, 0xFF2E2E33);
+				g.pose().pushMatrix();
+				g.pose().translate(bx + 8, y + 8);
+				g.pose().scale(2f, 2f);
+				g.drawString(font, stats[i][0], 0, 0, colors[i], false);
+				g.pose().popMatrix();
+				g.drawString(font, stats[i][1], bx + 8, y + 28, Ui.FAINT, false);
+			}
+			int gy = y + 50, gh = 56;
+			Ui.cutBox(g, x, gy, w, gh + 18, 5, 0xFF161619, 0xFF2A2A2E);
+			float[] f = r.frames();
+			float top = Math.max(40f, r.spikeMs() * 2f);
+			for (float v : f) top = Math.max(top, Math.min(v, 150f));
+			int gx0 = x + 6, gw = w - 12, base = gy + gh;
+			int ref = base - Math.round(16.7f / top * (gh - 6));
+			for (int i = gx0; i < gx0 + gw; i += 3) g.fill(i, ref, i + 1, ref + 1, 0xFF3A3A40);
+			g.drawString(font, "60", x + w - 18, ref - 9, 0xFF55555C, false);
+			int nb = Math.max(1, gw);
+			for (int b = 0; b < nb && f.length > 0; b++) {
+				int from = (int) ((long) b * f.length / nb), to = Math.max(from + 1, (int) ((long) (b + 1) * f.length / nb));
+				float mxv = 0;
+				boolean gcHit = false, mvHit = false;
+				for (int k = from; k < to && k < f.length; k++) {
+					if (f[k] > mxv) { mxv = f[k]; gcHit = r.gc()[k]; mvHit = r.moving()[k]; }
+				}
+				int bh = Math.max(1, Math.round(Math.min(mxv, top) / top * (gh - 6)));
+				boolean spike = mxv >= r.spikeMs();
+				int col = !spike ? 0xFF55555C : gcHit ? 0xFFFFB347 : mvHit ? 0xFF6CB4FF : 0xFFFF8C8C;
+				g.fill(gx0 + b, base - bh, gx0 + b + 1, base, col);
+			}
+			int lx = x + 8, lyy = base + 6;
+			int[][] legend = {{0xFFFFB347}, {0xFF6CB4FF}, {0xFFFF8C8C}};
+			String[] names = {"memory cleanup", "chunk loading", "other"};
+			for (int i = 0; i < 3; i++) {
+				g.fill(lx, lyy + 2, lx + 5, lyy + 7, legend[i][0]);
+				g.drawString(font, names[i], lx + 8, lyy, Ui.FAINT, false);
+				lx += font.width(names[i]) + 18;
+			}
+			String worst = "worst " + Math.round(r.worstMs()) + " ms";
+			g.drawString(font, worst, x + w - 8 - font.width(worst), lyy, Ui.FAINT, false);
+
+			int fy = gy + gh + 26;
+			g.drawString(font, "What we found", x + 2, fy, Ui.TEXT, false);
+			fy += 14;
+			for (PerfCheck.Finding fd : r.findings()) {
+				int fh = findingH(fd, w);
+				int sev = switch (fd.severity) { case 2 -> 0xFFFF6B6B; case 1 -> 0xFFFFB347; case -1 -> 0xFF6EE07A; default -> 0xFF6E6F74; };
+				Ui.cutBox(g, x, fy, w, fh, 4, 0xFF1C1C1F, 0xFF2A2A2E);
+				g.fill(x + 1, fy + 4, x + 3, fy + fh - 4, sev);
+				g.drawString(font, Ui.fit(font, fd.title, w - 110), x + 10, fy + 6, Ui.TEXT, false);
+				int ly = fy + 18;
+				for (String l : lines(fd.detail, w - 20 - (fd.fixLabel != null ? 84 : 0))) { g.drawString(font, l, x + 10, ly, Ui.MUTED, false); ly += 10; }
+				if (fd.fixLabel != null) {
+					int bx = x + w - 84;
+					if (fd.fixed) g.drawString(font, "Done", bx + 40 - font.width("Done") / 2, fy + 8, 0xFF8CFFA0, false);
+					else if (button(g, mx, my, bx, fy + 4, 78, 16, fd.fixLabel, true) && clickL) action = () -> { fd.fix.run(); fd.fixed = true; };
+				}
+				fy += fh + 4;
+			}
+			boolean inWorld = minecraft.level != null;
+			if (button(g, mx, my, x, fy + 4, 100, 18, "Run again", false) && clickL && inWorld) action = startAction();
+			long mins = (System.currentTimeMillis() - r.at()) / 60000;
+			g.drawString(font, mins < 1 ? "Checked just now" : "Checked " + mins + " min ago", x + 108, fy + 9, Ui.FAINT, false);
 		}
 	}
 

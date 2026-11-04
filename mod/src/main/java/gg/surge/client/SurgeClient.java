@@ -241,6 +241,18 @@ public class SurgeClient implements ClientModInitializer {
 	private static void renderHud(GuiGraphics g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		HudModules.pollClicks(mc);
+		boolean wasRecording = gg.surge.client.perf.PerfCheck.state == gg.surge.client.perf.PerfCheck.State.RECORDING;
+		gg.surge.client.perf.PerfCheck.frame(mc);
+		if (wasRecording && gg.surge.client.perf.PerfCheck.state == gg.surge.client.perf.PerfCheck.State.DONE && mc.screen == null) {
+			mc.setScreen(gg.surge.client.gui.SurgeMenuScreen.perf(null));
+			return;
+		}
+		if (gg.surge.client.perf.PerfCheck.state == gg.surge.client.perf.PerfCheck.State.RECORDING && mc.screen == null) {
+			String t = "Checking performance  " + gg.surge.client.perf.PerfCheck.secondsLeft() + "s";
+			int w = mc.font.width(t) + 16, x = (g.guiWidth() - w) / 2;
+			gg.surge.client.gui.Ui.cutBox(g, x, 4, w, 16, 3, 0xD0101012, 0xFF45454C);
+			g.drawString(mc.font, t, x + 8, 8, 0xFFE4E4E7, false);
+		}
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
 		Waypoints.render(g, mc);
 		gg.surge.client.features.Extras.render(g, mc);
