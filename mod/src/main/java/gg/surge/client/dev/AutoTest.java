@@ -95,8 +95,11 @@ public final class AutoTest {
 		STEPS.add(new Step("15-pause", 40, mc -> { open(mc, null); mc.pauseGame(false); }));
 		STEPS.add(new Step("16-mods-ingame", 30, mc -> open(mc, new SurgeMenuScreen(null))));
 		STEPS.add(new Step("17-servers", 40, mc -> open(mc, new JoinMultiplayerScreen(new TitleScreen()))));
+		STEPS.add(new Step("17b-friends-tab", 40, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.FRIENDS))));
 		STEPS.add(new Step("18-discover", 60, mc -> open(mc, new ServerTabsScreen(mc.screen, ServerTabsScreen.Mode.DISCOVER))));
 		STEPS.add(new Step("19-beta-cape", 30, mc -> open(mc, new gg.surge.client.gui.BetaCapeScreen(null))));
+		STEPS.add(new Step("19b-minimap-settings", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("minimap"), null))));
+		STEPS.add(new Step("19c-profiles", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.PROFILES, null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
 	}
 
