@@ -752,6 +752,14 @@ public class WardrobeScreen extends Screen {
 			List<String> lines = wrap(message, cw);
 			for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x, y + 94 + i * 10, messageColor, false);
 		}
+		Wallet w = Wallet.get();
+		int ey = y + 128;
+		g.drawString(font, "Earn coins", x, ey, Ui.TEXT, false);
+		g.drawString(font, Ui.fit(font, "Daily reward: " + gg.surge.client.economy.Rewards.dailyAmount(w.streak + 1) + " coins tomorrow" + (w.streak > 0 ? " (" + w.streak + " day streak)" : ""), cw), x, ey + 13, Ui.MUTED, false);
+		int left = gg.surge.client.economy.Rewards.PLAY_MINUTES * 60 - w.playSeconds;
+		g.drawString(font, Ui.fit(font, "Playing: +" + gg.surge.client.economy.Rewards.PLAY_REWARD + " coins in " + Math.max(1, left / 60) + " min", cw), x, ey + 25, Ui.MUTED, false);
+		g.fill(x, ey + 37, x + Math.min(cw, 160), ey + 39, 0xFF2C2C30);
+		g.fill(x, ey + 37, x + Math.round(Math.min(cw, 160) * (w.playSeconds / (float) (gg.surge.client.economy.Rewards.PLAY_MINUTES * 60))), ey + 39, Ui.ACCENT_2);
 		g.drawString(font, "Codes can give coins, cosmetics or emotes.", x, wy + wh - 26, Ui.FAINT, false);
 		g.drawString(font, "Spaces, dashes and capitals don't matter.", x, wy + wh - 15, Ui.FAINT, false);
 		return action;

@@ -207,6 +207,7 @@ public class SurgeClient implements ClientModInitializer {
 		gg.surge.client.net.SurgeNet.tick(mc);
 		gg.surge.client.net.Social.tick(mc);
 		gg.surge.client.features.Extras.tick(mc);
+		gg.surge.client.economy.Rewards.tick(mc);
 		gg.surge.client.features.Profiles.tick(mc);
 
 		LocalPlayer p = mc.player;

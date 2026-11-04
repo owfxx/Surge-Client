@@ -32,6 +32,9 @@ public final class Wallet {
 	public int coins = STARTING_COINS;
 	public Set<String> owned = new LinkedHashSet<>();
 	public Set<String> redeemed = new LinkedHashSet<>();
+	public String lastDaily = "";
+	public int streak = 0;
+	public int playSeconds = 0;
 
 	public static Path home() {
 		String prop = System.getProperty("surge.home");
