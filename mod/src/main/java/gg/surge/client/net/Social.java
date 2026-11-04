@@ -106,21 +106,28 @@ public final class Social {
 		CompletableFuture.runAsync(() -> {
 			try {
 				if (access == null || access.length() < 20 || uuid.isEmpty()) { signInError = "Friends and chat need a Microsoft account"; return; }
-				byte[] rnd = new byte[16];
-				new java.security.SecureRandom().nextBytes(rnd);
-				StringBuilder sid = new StringBuilder();
-				for (byte b : rnd) sid.append(String.format("%02x", b));
-				JsonObject join = new JsonObject();
-				join.addProperty("accessToken", access);
-				join.addProperty("selectedProfile", uuid);
-				join.addProperty("serverId", sid.toString());
-				HttpResponse<String> j = HTTP.send(HttpRequest.newBuilder(URI.create("https://sessionserver.mojang.com/session/minecraft/join")).timeout(Duration.ofSeconds(10))
-					.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(join.toString())).build(), HttpResponse.BodyHandlers.ofString());
-				if (j.statusCode() >= 300) { signInError = "Minecraft couldn't confirm your account (" + j.statusCode() + "). Restart the game and try again."; return; }
+				HttpResponse<String> c = HTTP.send(HttpRequest.newBuilder(URI.create("https://api.minecraftservices.com/player/certificates")).timeout(Duration.ofSeconds(10))
+					.header("Authorization", "Bearer " + access).header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+				if (c.statusCode() >= 300) { signInError = "Minecraft couldn't confirm your account (" + c.statusCode() + "). Restart the game and try again."; return; }
+				JsonObject cert = JsonParser.parseString(c.body()).getAsJsonObject();
+				JsonObject kp = cert.getAsJsonObject("keyPair");
+				String priv = s(kp, "privateKey").replaceAll("-----[A-Z ]+-----", "").replaceAll("\\s", "");
+				String pub = s(kp, "publicKey").replaceAll("-----[A-Z ]+-----", "").replaceAll("\\s", "");
+				long exp = java.time.Instant.parse(s(cert, "expiresAt")).toEpochMilli();
+				java.security.PrivateKey pk = java.security.KeyFactory.getInstance("RSA").generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(priv)));
+				long ts = System.currentTimeMillis();
+				java.security.Signature sg = java.security.Signature.getInstance("SHA256withRSA");
+				sg.initSign(pk);
+				sg.update(("surge-auth:" + uuid + ":" + ts).getBytes(java.nio.charset.StandardCharsets.UTF_8));
 				JsonObject body = new JsonObject();
+				body.addProperty("uuid", uuid);
 				body.addProperty("name", name);
-				body.addProperty("serverId", sid.toString());
-				HttpResponse<String> r = HTTP.send(HttpRequest.newBuilder(URI.create(SurgeNet.url() + "/v1/auth")).timeout(Duration.ofSeconds(10))
+				body.addProperty("ts", ts);
+				body.addProperty("sig", java.util.Base64.getEncoder().encodeToString(sg.sign()));
+				body.addProperty("publicKey", pub);
+				body.addProperty("expiresAt", exp);
+				body.addProperty("keySig", s(cert, "publicKeySignatureV2"));
+				HttpResponse<String> r = HTTP.send(HttpRequest.newBuilder(URI.create(SurgeNet.url() + "/v1/auth/key")).timeout(Duration.ofSeconds(15))
 					.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body.toString())).build(), HttpResponse.BodyHandlers.ofString());
 				JsonObject o = JsonParser.parseString(r.body()).getAsJsonObject();
 				if (r.statusCode() != 200 || s(o, "token").isEmpty()) { signInError = o.has("error") ? s(o, "error") : "Surge sign-in failed (" + r.statusCode() + ")"; return; }

@@ -36,6 +36,12 @@ database_name = "surge-client"
 database_id = "$DB"
 TOML
 
+KEYS=$(curl -sS --max-time 15 https://api.minecraftservices.com/publickeys | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const o=JSON.parse(d);process.stdout.write(JSON.stringify((o.playerCertificateKeys||[]).map(k=>k.publicKey)))}catch{process.stdout.write('[]')}})" || echo '[]')
+echo "Mojang keys: $(echo "$KEYS" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(String(JSON.parse(d).length)))")"
+if [ "$KEYS" != "[]" ]; then
+  printf '\n[vars]\nMOJANG_KEYS = %s\n' "$(node -e "process.stdout.write(JSON.stringify(process.argv[1]))" "$KEYS")" >> wrangler.toml
+fi
+
 npx --yes wrangler@4 deploy
 if [ -n "${ADMIN_PASSWORD:-}" ]; then printf '%s' "$ADMIN_PASSWORD" | npx --yes wrangler@4 secret put ADMIN_PASSWORD >/dev/null && echo "Admin password set"; else echo "No ADMIN_PASSWORD secret: the website admin stays locked"; fi
 URL="https://surge-client.$SUB.workers.dev"

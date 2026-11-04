@@ -34,15 +34,18 @@ async function signIn(authorization) {
   if (cached && cached.uuid === uuid) return cached;
   const saved = loadCached(uuid);
   if (saved) { cached = saved; return cached; }
-  const serverId = crypto.randomBytes(16).toString('hex');
-  const join = await fetch('https://sessionserver.mojang.com/session/minecraft/join', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken: authorization.access_token, selectedProfile: uuid, serverId }),
+  const cr = await fetch('https://api.minecraftservices.com/player/certificates', {
+    method: 'POST', headers: { Authorization: `Bearer ${authorization.access_token}`, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000),
   });
-  if (join.status !== 204 && !join.ok) throw new Error(`Mojang sign-in failed (${join.status})`);
-  const res = await fetch(`${api}/v1/auth`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: authorization.name, serverId }),
+  if (!cr.ok) throw new Error(`Minecraft couldn't confirm your account (${cr.status})`);
+  const cert = await cr.json();
+  const strip = pem => String(pem || '').replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, '');
+  const key = crypto.createPrivateKey({ key: Buffer.from(strip(cert.keyPair.privateKey), 'base64'), format: 'der', type: 'pkcs8' });
+  const ts = Date.now();
+  const sig = crypto.sign('sha256', Buffer.from(`surge-auth:${uuid}:${ts}`), key).toString('base64');
+  const res = await fetch(`${api}/v1/auth/key`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(15000),
+    body: JSON.stringify({ uuid, name: authorization.name, ts, sig, publicKey: strip(cert.keyPair.publicKey), expiresAt: new Date(cert.expiresAt).getTime(), keySig: cert.publicKeySignatureV2 }),
   });
   const data = await res.json();
   if (!res.ok || !data.token) throw new Error(data.error || `Surge sign-in failed (${res.status})`);

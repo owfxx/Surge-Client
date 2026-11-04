@@ -126,6 +126,55 @@ footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
 </body></html>`;
 }
 
+const b64bytes = s => Uint8Array.from(atob(String(s || '').replace(/\s+/g, '')), c => c.charCodeAt(0));
+
+async function mojangKeyValid(env, payload, sig) {
+  let keys = [];
+  try { keys = JSON.parse(env.MOJANG_KEYS || '[]'); } catch { keys = []; }
+  for (const k of keys) {
+    try {
+      const key = await crypto.subtle.importKey('spki', b64bytes(k), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-1' }, false, ['verify']);
+      if (await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig, payload)) return true;
+    } catch { }
+  }
+  return false;
+}
+
+async function verifyProfileKey(env, body) {
+  const uuid = norm(body.uuid);
+  if (!/^[0-9a-f]{32}$/.test(uuid)) return 'bad uuid';
+  const ts = Number(body.ts) || 0, exp = Number(body.expiresAt) || 0;
+  if (Math.abs(Date.now() - ts) > 5 * 60 * 1000) return 'clock';
+  if (exp < Date.now()) return 'expired key';
+  const spki = b64bytes(body.publicKey), keySig = b64bytes(body.keySig), sig = b64bytes(body.sig);
+  const payload = new Uint8Array(24 + spki.length);
+  const dv = new DataView(payload.buffer);
+  for (let i = 0; i < 16; i++) payload[i] = parseInt(uuid.substr(i * 2, 2), 16);
+  dv.setBigInt64(16, BigInt(exp));
+  payload.set(spki, 24);
+  if (!(await mojangKeyValid(env, payload, keySig))) return 'not signed by Mojang';
+  const player = await crypto.subtle.importKey('spki', spki, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+  const msg = new TextEncoder().encode(`surge-auth:${uuid}:${ts}`);
+  if (!(await crypto.subtle.verify('RSASSA-PKCS1-v1_5', player, sig, msg))) return 'bad signature';
+  return null;
+}
+
+async function nameFor(uuid, fallback) {
+  try {
+    const r = await fetch(`https://playerdb.co/api/player/minecraft/${uuid}`, { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+    if (r.ok) { const d = await r.json(); const n = d && d.data && d.data.player && d.data.player.username; if (/^[A-Za-z0-9_]{1,16}$/.test(n || '')) return n; }
+  } catch { }
+  return /^[A-Za-z0-9_]{1,16}$/.test(fallback || '') ? fallback : null;
+}
+
+async function issueToken(db, uuid, name) {
+  const fresh = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
+  await db.prepare(`INSERT INTO users (uuid, name, name_lc, token, status, server, seen) VALUES (?1, ?2, ?3, ?4, 'online', '', ?5)
+    ON CONFLICT(uuid) DO UPDATE SET name = ?2, name_lc = ?3, token = COALESCE(NULLIF(users.token, ''), ?4), seen = ?5`).bind(uuid, name, name.toLowerCase(), fresh, Date.now()).run();
+  const row = await db.prepare('SELECT token FROM users WHERE uuid = ?1').bind(uuid).first();
+  return row ? row.token : fresh;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -148,12 +197,19 @@ export default {
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
 
-    if (p === '/v1/diag' && req.method === 'GET') {
-      const out = {};
-      for (const [k, u] of [['hasJoined', 'https://sessionserver.mojang.com/session/minecraft/hasJoined?username=Notch&serverId=surgediag0001'], ['services', 'https://api.minecraftservices.com/minecraft/profile'], ['keys', 'https://api.minecraftservices.com/publickeys'], ['xbox', 'https://user.auth.xboxlive.com/']]) {
-        try { const r = await fetch(u, { headers: { 'User-Agent': 'SurgeClient/1.0' } }); out[k] = r.status; } catch (e) { out[k] = String(e.message).slice(0, 40); }
-      }
-      return json(out);
+    if (p === '/v1/health' && req.method === 'GET') {
+      let n = 0;
+      try { n = JSON.parse(env.MOJANG_KEYS || '[]').length; } catch { }
+      return json({ ok: true, accountKeys: n });
+    }
+
+    if (p === '/v1/auth/key' && req.method === 'POST') {
+      const why = await verifyProfileKey(env, body);
+      if (why) return json({ error: why === 'clock' ? 'Your computer clock is off, fix the time and try again' : `Couldn't confirm your Minecraft account (${why})` }, 401);
+      const uuid = norm(body.uuid);
+      const name = await nameFor(uuid, String(body.name || ''));
+      if (!name) return json({ error: 'bad name' }, 400);
+      return json({ token: await issueToken(db, uuid, name), uuid, name });
     }
 
     if (p === '/v1/auth' && req.method === 'POST') {
