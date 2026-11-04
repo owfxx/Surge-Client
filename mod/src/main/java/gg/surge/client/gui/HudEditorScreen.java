@@ -74,8 +74,8 @@ public class HudEditorScreen extends Screen {
 		if (alt) {
 			for (int x = 0; x < W; x += GRID) g.fill(x, 0, x + 1, H, 0x14FFFFFF);
 			for (int y = 0; y < H; y += GRID) g.fill(0, y, W, y + 1, 0x14FFFFFF);
-			g.fill(W / 2, 0, W / 2 + 1, H, 0x40B483FF);
-			g.fill(0, H / 2, W, H / 2 + 1, 0x40B483FF);
+			g.fill(W / 2, 0, W / 2 + 1, H, Colors.alpha(Ui.ACCENT_2, 0.25f));
+			g.fill(0, H / 2, W, H / 2 + 1, Colors.alpha(Ui.ACCENT_2, 0.25f));
 		}
 
 		hovered = null;

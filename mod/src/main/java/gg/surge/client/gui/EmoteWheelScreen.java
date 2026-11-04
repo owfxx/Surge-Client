@@ -207,7 +207,7 @@ public class EmoteWheelScreen extends Screen {
 			has[i] = ha;
 			boolean filled = at(slots, i) != null;
 			int base = filled ? 0xC8181820 : 0x70101014;
-			int hi = editing && i == editSlot ? 0xF06A3FCC : filled ? 0xF04A2E8A : 0xA0303040;
+			int hi = editing && i == editSlot ? Colors.alpha(Ui.ACCENT, 0.94f) : filled ? Colors.alpha(Ui.ACCENT_DIM, 0.94f) : 0xA0303040;
 			colors[i] = Colors.alpha(Colors.lerp(base, hi, ha), k * (0.6f + 0.4f * flip));
 			grow[i] = Math.round(ha * 6);
 		}

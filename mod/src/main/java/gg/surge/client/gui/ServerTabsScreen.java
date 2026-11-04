@@ -91,8 +91,8 @@ public class ServerTabsScreen extends Screen {
 		}
 		http.sendAsync(req, HttpResponse.BodyHandlers.ofString())
 			.thenAccept(r -> {
-				if (r.statusCode() == 404) { discover = List.of(); return; }
-				if (r.statusCode() != 200) { discoverError = "Couldn't load servers (" + r.statusCode() + ")"; return; }
+				if (r.statusCode() == 404) { List<Listing> out = new ArrayList<>(); addService(out); discover = out; return; }
+				if (r.statusCode() != 200) { List<Listing> out = new ArrayList<>(); addService(out); if (out.isEmpty()) discoverError = "Couldn't load servers (" + r.statusCode() + ")"; else discover = out; return; }
 				List<Listing> out = new ArrayList<>();
 				JsonElement root = JsonParser.parseString(r.body());
 				JsonArray arr = root.isJsonArray() ? root.getAsJsonArray() : root.getAsJsonObject().getAsJsonArray("servers");
@@ -102,9 +102,29 @@ public class ServerTabsScreen extends Screen {
 					if (ip.isEmpty()) continue;
 					out.add(new Listing(str(o, "name").isEmpty() ? ip : str(o, "name"), ip, str(o, "description"), str(o, "tag")));
 				}
+				addService(out);
 				discover = out;
 			})
-			.exceptionally(t -> { discoverError = "Couldn't load servers. Check your connection."; return null; });
+			.exceptionally(t -> {
+				List<Listing> out = new ArrayList<>();
+				addService(out);
+				if (out.isEmpty()) discoverError = "Couldn't load servers. Check your connection.";
+				else discover = out;
+				return null;
+			});
+	}
+
+	private static void addService(List<Listing> out) {
+		try {
+			JsonElement root = gg.surge.client.economy.Wallet.fetchRemote();
+			if (root == null || !root.isJsonObject() || !root.getAsJsonObject().has("servers")) return;
+			for (JsonElement e : root.getAsJsonObject().getAsJsonArray("servers")) {
+				JsonObject o = e.getAsJsonObject();
+				String ip = str(o, "ip");
+				if (ip.isEmpty() || out.stream().anyMatch(l -> l.ip().equalsIgnoreCase(ip))) continue;
+				out.add(new Listing(str(o, "name").isEmpty() ? ip : str(o, "name"), ip, str(o, "description"), str(o, "tag")));
+			}
+		} catch (Exception ignored) { }
 	}
 
 	private static String str(JsonObject o, String k) {

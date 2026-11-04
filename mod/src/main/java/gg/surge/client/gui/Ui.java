@@ -19,10 +19,10 @@ public final class Ui {
 	public static final int SURFACE = 0xFF3A3A3D;
 	public static final int SURFACE_HOVER = 0xFF48484C;
 	public static final int EDGE = 0xFF0C0C0D;
-	public static int ACCENT = 0xFF8F50F2;
-	public static int ACCENT_HOVER = 0xFF9F66F7;
-	public static int ACCENT_DIM = 0xFF5A2AA8;
-	public static int ACCENT_2 = 0xFFB483FF;
+	public static int ACCENT = 0xFF6B6B73;
+	public static int ACCENT_HOVER = 0xFF7E7E86;
+	public static int ACCENT_DIM = 0xFF404045;
+	public static int ACCENT_2 = 0xFFC4C4C9;
 	private static String themeKey = "";
 
 	private static void theme() {
@@ -38,14 +38,15 @@ public final class Ui {
 			case "Orange" -> 0xF97316;
 			case "Pink" -> 0xEC4899;
 			case "Gold" -> 0xEAB308;
+			case "Purple" -> 0x8F50F2;
 			case "Mono" -> 0x8A8A92;
 			case "Custom" -> gg.surge.client.mods.Mods.THEME_COLOR.rgb(0) & 0xFFFFFF;
-			default -> 0x8F50F2;
+			default -> 0x6B6B73;
 		};
 		ACCENT = 0xFF000000 | base;
 		ACCENT_HOVER = Colors.lerp(ACCENT, 0xFFFFFFFF, 0.15f);
 		ACCENT_DIM = Colors.lerp(ACCENT, 0xFF000000, 0.4f);
-		ACCENT_2 = Colors.lerp(ACCENT, 0xFFFFFFFF, 0.35f);
+		ACCENT_2 = Colors.lerp(ACCENT, 0xFFFFFFFF, t.equals("Ash") || t.equals("Mono") ? 0.6f : 0.35f);
 	}
 	public static final int TEXT = 0xFFFFFFFF;
 	public static final int MUTED = 0xFFA9AAAE;
@@ -198,7 +199,7 @@ public final class Ui {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick(key, hov);
 		float a = anim(key, hov || selected);
-		if (a > 0.01f) g.fill(x, y, x + w, y + h, Colors.alpha(selected ? 0xFF3A3256 : 0xFF2E2E32, a));
+		if (a > 0.01f) g.fill(x, y, x + w, y + h, Colors.alpha(selected ? Colors.lerp(0xFF2E2E32, ACCENT, 0.35f) : 0xFF2E2E32, a));
 		if (selected) g.fill(x, y, x + 2, y + h, ACCENT);
 		return hov;
 	}

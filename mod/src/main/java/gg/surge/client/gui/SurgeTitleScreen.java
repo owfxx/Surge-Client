@@ -54,7 +54,7 @@ public class SurgeTitleScreen extends Screen {
 		boolean hov = Ui.hover(mx, my, x, y, w, h) && alpha > 0.95f;
 		float a = Ui.anim("title:" + label, hov);
 		int fill = primary ? Colors.lerp(0xE07A3FE0, 0xF0935BF5, a) : Colors.lerp(0x9A0E0E12, 0xC0222228, a);
-		int border = primary ? Colors.lerp(0x60FFFFFF, 0xC0FFFFFF, a) : Colors.lerp(0x30FFFFFF, 0xC0B483FF, a);
+		int border = primary ? Colors.lerp(0x60FFFFFF, 0xC0FFFFFF, a) : Colors.lerp(0x30FFFFFF, Colors.alpha(Ui.ACCENT_2, 0.75f), a);
 		g.fill(x, y, x + w, y + h, Colors.alpha(fill, alpha));
 		Ui.outline(g, x, y, w, h, Colors.alpha(border, alpha));
 		g.fill(x + 1, y + 1, x + w - 1, y + 2, Colors.alpha(0x22FFFFFF, alpha));
@@ -130,7 +130,7 @@ public class SurgeTitleScreen extends Screen {
 		String upd = gg.surge.client.features.SelfUpdate.installed;
 		if (upd != null) {
 			String msg = "Surge Client " + upd.split("[+-]")[0] + " is ready. Restart the game to use it.";
-			g.drawString(font, msg, this.width - 8 - font.width(msg), this.height - 26, Colors.alpha(0xFFB483FF, kf), true);
+			g.drawString(font, msg, this.width - 8 - font.width(msg), this.height - 26, Colors.alpha(Ui.ACCENT_2, kf), true);
 		}
 		String brand = "Surge Client";
 		g.drawString(font, brand, this.width - 8 - font.width(brand), this.height - 14, Colors.alpha(0xA0FFFFFF, kf), true);

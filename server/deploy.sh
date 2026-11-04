@@ -37,10 +37,11 @@ database_id = "$DB"
 TOML
 
 npx --yes wrangler@4 deploy
+if [ -n "${ADMIN_PASSWORD:-}" ]; then printf '%s' "$ADMIN_PASSWORD" | npx --yes wrangler@4 secret put ADMIN_PASSWORD >/dev/null && echo "Admin password set"; else echo "No ADMIN_PASSWORD secret: the website admin stays locked"; fi
 URL="https://surge-client.$SUB.workers.dev"
 echo "Online service: $URL"
 echo "url=$URL" >> "${GITHUB_OUTPUT:-/dev/null}"
 sleep 8
-for p in / /download/mod "/v1/players?ids=0"; do
+for p in / /download/mod "/v1/players?ids=0" /admin /v1/public; do
   echo "Check $p: $(curl -s -o /dev/null -w '%{http_code}' -r 0-1000 "$URL$p")"
 done

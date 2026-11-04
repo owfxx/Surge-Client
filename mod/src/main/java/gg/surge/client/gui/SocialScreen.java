@@ -202,7 +202,7 @@ public class SocialScreen extends Screen {
 			for (int i = 0; i < menuLabels.size(); i++) {
 				int y = menuY + 3 + i * 16;
 				boolean hov = Ui.hover(mx, my, menuX, y, 104, 16);
-				if (hov) g.fill(menuX + 2, y, menuX + 102, y + 16, 0xFF3A3256);
+				if (hov) g.fill(menuX + 2, y, menuX + 102, y + 16, Colors.lerp(0xFF2E2E32, Ui.ACCENT, 0.35f));
 				String lab = menuLabels.get(i);
 				int col = lab.equals("Block") || lab.equals("Remove friend") ? 0xFFFF8C8C : Ui.TEXT;
 				g.drawString(font, lab, menuX + 8, y + 4, col, false);
@@ -289,7 +289,7 @@ public class SocialScreen extends Screen {
 			int tw = font.width(row[1]) + 10;
 			int bx = mine ? cx + cw - tw - 2 : cx + 2;
 			if (yy + lineH > areaTop && yy < areaBottom) {
-				g.fill(bx, yy, bx + tw, yy + lineH, mine ? 0xFF5B34B5 : 0xFF2E2E33);
+				g.fill(bx, yy, bx + tw, yy + lineH, mine ? Ui.ACCENT_DIM : 0xFF2E2E33);
 				g.drawString(font, row[1], bx + 5, yy + 2, 0xFFFFFFFF, false);
 				if (!row[2].isEmpty()) {
 					int tx = mine ? bx - 4 - font.width(row[2]) : bx + tw + 4;

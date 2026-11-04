@@ -87,15 +87,44 @@ public final class Wallet {
 		}
 	}
 
-	public static JsonElement fetchRemote() {
-		String url = System.getProperty("surge.codesUrl", "");
-		if (url.isBlank()) return null;
+	private static volatile JsonObject remoteCache;
+	private static volatile long remoteAt;
+
+	private static JsonObject fetchJson(String url) {
+		if (url == null || url.isBlank()) return null;
 		try {
 			HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).followRedirects(HttpClient.Redirect.NORMAL).build();
 			HttpResponse<String> res = http.send(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8)).GET().build(), HttpResponse.BodyHandlers.ofString());
-			if (res.statusCode() == 200) return JsonParser.parseString(res.body());
+			if (res.statusCode() == 200) {
+				JsonElement e = JsonParser.parseString(res.body());
+				if (e.isJsonObject()) return e.getAsJsonObject();
+			}
 		} catch (Exception ignored) { }
 		return null;
+	}
+
+	private static void addAll(JsonObject into, JsonObject from, String key) {
+		if (from == null || !from.has(key) || !from.get(key).isJsonArray()) return;
+		if (!into.has(key)) into.add(key, new JsonArray());
+		into.getAsJsonArray(key).addAll(from.getAsJsonArray(key));
+	}
+
+	public static JsonElement fetchRemote() {
+		if (remoteCache != null && System.currentTimeMillis() - remoteAt < 60_000) return remoteCache;
+		String repo = System.getProperty("surge.repo", "owfxx/Surge-Client");
+		if (repo.isBlank()) repo = "owfxx/Surge-Client";
+		String codesUrl = System.getProperty("surge.codesUrl", "");
+		if (codesUrl.isBlank()) codesUrl = "https://github.com/" + repo + "/releases/download/data/codes.json";
+		JsonObject gh = fetchJson(codesUrl);
+		JsonObject svc = fetchJson(gg.surge.client.net.SurgeNet.publicUrl() + "/v1/public");
+		if (gh == null && svc == null) return remoteCache;
+		JsonObject out = new JsonObject();
+		for (String k : new String[]{"codes", "sales", "servers"}) { addAll(out, gh, k); addAll(out, svc, k); }
+		if (svc != null && svc.has("locked")) out.add("locked", svc.get("locked"));
+		else if (gh != null && gh.has("locked")) out.add("locked", gh.get("locked"));
+		remoteCache = out;
+		remoteAt = System.currentTimeMillis();
+		return out;
 	}
 
 	public record Reward(int coins, java.util.List<String> items, int error) {
@@ -155,7 +184,7 @@ public final class Wallet {
 					if (in != null) f = find(JsonParser.parseString(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)), hash, code);
 				} catch (Exception ignored) { }
 			}
-			if (f == null) f = find(fetchRemote(), hash, code);
+			if (f == null) { remoteAt = 0; f = find(fetchRemote(), hash, code); }
 			return f;
 		}).thenApply(f -> {
 			if (f == null) return new Reward(0, java.util.List.of(), 1);

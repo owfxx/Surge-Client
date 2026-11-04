@@ -217,7 +217,7 @@ function unknownSkin() {
   paint('#15101f', [[0, 0, 32, 16], [16, 16, 24, 16], [40, 16, 16, 16], [0, 16, 16, 16], [16, 48, 16, 16], [32, 48, 16, 16]]);
   paint('#0a0710', [[8, 8, 8, 8], [20, 20, 8, 12], [44, 20, 4, 12], [36, 52, 4, 12], [4, 20, 4, 12], [20, 52, 4, 12]]);
   paint('#211833', [[8, 0, 8, 8], [20, 16, 8, 4], [44, 16, 4, 4], [36, 48, 4, 4], [4, 16, 4, 4], [20, 48, 4, 4]]);
-  g.fillStyle = '#c66bff';
+  g.fillStyle = '#d4d4d8';
   Q_MARK.forEach((row, r) => [...row].forEach((ch, col) => { if (ch === 'X') g.fillRect(8 + col, 8 + r, 1, 1); }));
   return c;
 }
@@ -263,29 +263,29 @@ function buildGeode(v) {
   group.position.x = shift;
   v.scene.add(group);
 
-  const rim = new T.PointLight(0xb46cff, 1.6, 0, 0);
+  const rim = new T.PointLight(0xa6a6aa, 1.6, 0, 0);
   rim.position.set(shift, -4, -26);
   v.scene.add(rim);
 
-  const plat = new T.Mesh(new T.CylinderGeometry(13, 11, 5, 6), new T.MeshLambertMaterial({ color: 0x3a2c56, flatShading: true }));
+  const plat = new T.Mesh(new T.CylinderGeometry(13, 11, 5, 6), new T.MeshLambertMaterial({ color: 0x3b3b3f, flatShading: true }));
   plat.position.y = -18.5;
   plat.rotation.y = Math.PI / 6;
   group.add(plat);
-  const edges = new T.LineSegments(new T.EdgesGeometry(plat.geometry), new T.LineBasicMaterial({ color: 0xc58cff, transparent: true, opacity: 0.55 }));
+  const edges = new T.LineSegments(new T.EdgesGeometry(plat.geometry), new T.LineBasicMaterial({ color: 0xc2c2c6, transparent: true, opacity: 0.55 }));
   edges.position.copy(plat.position); edges.rotation.copy(plat.rotation);
   group.add(edges);
-  const inlay = new T.Mesh(new T.CircleGeometry(10, 6), new T.MeshBasicMaterial({ color: 0xb46cff, transparent: true, opacity: 0.16, blending: T.AdditiveBlending, depthWrite: false }));
+  const inlay = new T.Mesh(new T.CircleGeometry(10, 6), new T.MeshBasicMaterial({ color: 0xa6a6aa, transparent: true, opacity: 0.16, blending: T.AdditiveBlending, depthWrite: false }));
   inlay.rotation.x = -Math.PI / 2; inlay.rotation.z = Math.PI / 6; inlay.position.y = -15.95; inlay.scale.setScalar(0.85);
   group.add(inlay);
-  const glow = new T.Mesh(new T.RingGeometry(15.2, 19, 6), new T.MeshBasicMaterial({ color: 0xb46cff, transparent: true, opacity: 0.07, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
+  const glow = new T.Mesh(new T.RingGeometry(15.2, 19, 6), new T.MeshBasicMaterial({ color: 0xa6a6aa, transparent: true, opacity: 0.07, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
   glow.rotation.x = -Math.PI / 2; glow.rotation.z = Math.PI / 6; glow.position.y = -20.9;
   group.add(glow);
 
   const crystalMat = (c, e) => new T.MeshLambertMaterial({ color: c, emissive: e, flatShading: true, transparent: true, opacity: 0.88 });
   const specs = [
-    [-26, -4, -10, 4.2, 0xb98aff, 0x1c0838], [24, 6, -12, 3.6, 0xcfa2ff, 0x200a40], [-18, 18, -24, 2.6, 0xff9fe2, 0x2a0a26],
-    [30, -14, 2, 2.8, 0xa877ff, 0x180632], [-34, 24, -46, 5.5, 0x9d6cf0, 0x14052a], [38, 22, -40, 6, 0xb184ff, 0x16062e],
-    [10, 28, -30, 2, 0xe6c8ff, 0x24103e], [-20, -16, 12, 1.8, 0xd3a8ff, 0x200a3a],
+    [-26, -4, -10, 4.2, 0xbcbcc0, 0x151519], [24, 6, -12, 3.6, 0xd4d4d8, 0x19191d], [-18, 18, -24, 2.6, 0xc8c8cc, 0x1a1a1e],
+    [30, -14, 2, 2.8, 0xaaaaae, 0x121216], [-34, 24, -46, 5.5, 0x9d9da1, 0x0e0e12], [38, 22, -40, 6, 0xb6b6ba, 0x111115],
+    [10, 28, -30, 2, 0xf7f7fb, 0x1f1f23], [-20, -16, 12, 1.8, 0xdadade, 0x18181c],
   ];
   const crystals = specs.map(([x, y, z, s, c, e], i) => {
     const m = new T.Mesh(new T.OctahedronGeometry(1, 0), crystalMat(c, e));
@@ -300,7 +300,7 @@ function buildGeode(v) {
   const N = 140, pos = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 120; pos[i * 3 + 1] = Math.random() * 70 - 30; pos[i * 3 + 2] = (Math.random() - 0.5) * 80 - 10; }
   const dustGeo = new T.BufferGeometry(); dustGeo.setAttribute('position', new T.BufferAttribute(pos, 3));
-  const dust = new T.Points(dustGeo, new T.PointsMaterial({ color: 0xe0c4ff, size: 0.6, transparent: true, opacity: 0.6, blending: T.AdditiveBlending, depthWrite: false }));
+  const dust = new T.Points(dustGeo, new T.PointsMaterial({ color: 0xf1f1f5, size: 0.6, transparent: true, opacity: 0.6, blending: T.AdditiveBlending, depthWrite: false }));
   group.add(dust);
 
   const start = performance.now();

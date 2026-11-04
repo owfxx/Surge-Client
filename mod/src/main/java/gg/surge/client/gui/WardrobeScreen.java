@@ -284,7 +284,7 @@ public class WardrobeScreen extends Screen {
 		if (preview()) {
 			int x1 = px + pw - 128, y1 = py + 36, x2 = px + pw - 10, y2 = py + ph - 10;
 			Ui.box(g, x1, y1, x2 - x1, y2 - y1, 0xFF18181B, Ui.EDGE);
-			g.fillGradient(x1 + 1, y1 + 1, x2 - 1, y2 - 1, 0x00000000, 0x508F50F2);
+			g.fillGradient(x1 + 1, y1 + 1, x2 - 1, y2 - 1, 0x00000000, Colors.alpha(Ui.ACCENT, 0.3f));
 			Preview.draw(g, x1 + 1, y1 + 4, x2 - 1, y2 - 18, 60);
 			String hint = hoveredItem != null ? hoveredItem.name() : "Hover something to try it on";
 			int hc = hoveredItem != null ? Ui.TEXT : Ui.FAINT;

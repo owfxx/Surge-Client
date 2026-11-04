@@ -1,3 +1,5 @@
+import { adminSetup, adminApi, publicData } from './admin.js';
+import { ADMIN_PAGE } from './admin-page.js';
 const FRESH_MS = 15 * 60 * 1000;
 const ONLINE_MS = 3 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{32}$/;
@@ -74,17 +76,17 @@ function page(l) {
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(MARK.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#120a24;--deep:#2a1160;--violet:#8f50f2;--lilac:#d9c2ff;--text:#f5f0ff;--muted:#b9a9d8}
+:root{--bg:#121214;--deep:#27272a;--violet:#a1a1aa;--lilac:#e4e4e7;--text:#fafafa;--muted:#a1a1aa}
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
-.sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 50% -10%,#6a32d6 0%,#3a1890 35%,var(--bg) 75%)}
+.sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 50% -10%,#52525b 0%,#2a2a2e 35%,var(--bg) 75%)}
 .sky::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8,transparent),radial-gradient(1px 1px at 70% 20%,#fff6,transparent),radial-gradient(1.5px 1.5px at 85% 60%,#fff5,transparent),radial-gradient(1px 1px at 35% 75%,#fff4,transparent),radial-gradient(1px 1px at 55% 45%,#fff5,transparent);}
 main{max-width:980px;margin:0 auto;padding:72px 20px 40px;text-align:center}
 .mark{width:96px;height:112px;margin:0 auto;filter:drop-shadow(0 8px 24px #0008);animation:float 5s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-8px)}}
 h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px;letter-spacing:.5px;text-shadow:0 4px 0 #0005}
 .lead{color:var(--lilac);font-size:clamp(17px,2.2vw,20px);max-width:560px;margin:0 auto 34px}
-.dl{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#2a1160;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif;padding:16px 30px;box-shadow:0 6px 0 #b9a9d8,0 18px 40px #0007;transition:transform .12s,box-shadow .12s}
-.dl:hover{transform:translateY(-2px);box-shadow:0 8px 0 #b9a9d8,0 22px 46px #0008}.dl:active{transform:translateY(4px);box-shadow:0 2px 0 #b9a9d8}
+.dl{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#18181b;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif;padding:16px 30px;box-shadow:0 6px 0 #a1a1aa,0 18px 40px #0007;transition:transform .12s,box-shadow .12s}
+.dl:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a1a1aa,0 22px 46px #0008}.dl:active{transform:translateY(4px);box-shadow:0 2px 0 #a1a1aa}
 .dl:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
 .dl svg{width:22px;height:22px}
 .meta{color:var(--muted);font-size:14px;margin-top:14px}
@@ -94,7 +96,7 @@ h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px
 .f h3{font:700 19px "Pixelify Sans",sans-serif;margin:0 0 6px;color:#fff}.f p{margin:0;color:var(--muted);font-size:14.5px}
 .steps{margin:64px auto 0;max-width:620px;text-align:left;color:var(--muted)}.steps h2{font:700 24px "Pixelify Sans",sans-serif;color:#fff;margin:0 0 10px;text-align:center}
 .steps ol{margin:0;padding-left:22px}.steps li{margin:6px 0}.steps b{color:#fff}
-footer{color:#8c7cab;font-size:13px;text-align:center;padding:40px 20px}
+footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
 @media (prefers-reduced-motion:reduce){.mark{animation:none}.dl{transition:none}}
 </style></head><body><div class="sky"></div>
 <main>
@@ -131,8 +133,16 @@ export default {
     }
     if (req.method === 'GET' && p === '/download') return download(env, false);
     if (req.method === 'GET' && p === '/download/mod') return download(env, true);
+    if (req.method === 'GET' && (p === '/admin' || p === '/admin/')) {
+      return new Response(ADMIN_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' } });
+    }
     const db = env.DB;
     await setup(db);
+    if (p.startsWith('/admin/api/')) { await adminSetup(db); return adminApi(req, env, db, p.slice('/admin/api/'.length)); }
+    if (p === '/v1/public' && req.method === 'GET') {
+      await adminSetup(db);
+      return new Response(JSON.stringify(await publicData(db)), { headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=30' } });
+    }
     let body = {};
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
 

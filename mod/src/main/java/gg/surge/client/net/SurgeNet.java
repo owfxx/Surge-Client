@@ -41,6 +41,11 @@ public final class SurgeNet {
 		return u;
 	}
 
+	public static String publicUrl() {
+		String u = url();
+		return u.isEmpty() ? "https://surge-client.remvuxd.workers.dev" : u;
+	}
+
 	public static boolean online() {
 		String u = url();
 		if (u.isEmpty()) return false;
