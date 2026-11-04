@@ -573,6 +573,7 @@ public final class HudModules {
 		}
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
+			if (mc.player != null && mc.screen == null && stacks(mc).stream().allMatch(ItemStack::isEmpty)) return;
 			if (layout.is("Uku")) { renderUku(g, mc, x, y); return; }
 			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
 			List<ItemStack> list = stacks(mc);
