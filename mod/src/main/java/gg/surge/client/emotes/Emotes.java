@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.particles.ParticleTypes;
 
 public final class Emotes {
 	public enum Emote {
@@ -15,7 +14,7 @@ public final class Emotes {
 		SALUTE("Salute", 3.0f, false), CHEER("Cheer", 3.5f, false), THINKING("Thinking", 4.0f, false),
 		LAUGH("Laugh", 3.5f, false), BOW("Bow", 3.0f, false), HEART("Heart", 3.5f, false),
 		BOXING("Boxing", 4.0f, true), FLOSS("Floss", 4.0f, true), GROOVE("Groove", 4.0f, true),
-		ZOMBIE("Zombie", 4.0f, true), TPOSE("T-Pose", 3.0f, false), CRY("Cry", 4.0f, false),
+		ZOMBIE("Zombie", 4.0f, true), TPOSE("T-Pose", 4.0f, true), CRY("Cry", 4.0f, false),
 		SIT("Sit", 6.0f, true), POINT("Point", 2.5f, false), PEACE("Peace", 2.5f, false), STRETCH("Stretch", 3.2f, false),
 		TWIRL("Twirl", 1.6f, false), JUMP("Jump for Joy", 3.0f, false), MEDITATE("Meditate", 6.0f, true),
 		HEADBANG("Headbang", 4.0f, true), YAWN("Yawn", 3.2f, false),
@@ -55,12 +54,15 @@ public final class Emotes {
 		}
 	}
 
+	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.DAB, Emote.SHRUG, Emote.SALUTE,
+		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.ZOMBIE, Emote.TPOSE, Emote.POINT, Emote.PEACE, Emote.WAVE_BOTH, Emote.VICTORY, Emote.CRY, Emote.YAWN, Emote.FLUSTERED, Emote.GUITAR, Emote.DRUMS);
+	public static volatile boolean walking;
+
 	private static Emote current;
 	private static long startNanos;
 	private static CameraType previousCamera;
 	private static Emote preview;
 	private static long previewStart;
-	private static int particleTick;
 
 	private Emotes() {}
 
@@ -84,7 +86,8 @@ public final class Emotes {
 		current = emote;
 		startNanos = System.nanoTime();
 		previousCamera = mc.options.getCameraType();
-		mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+		if (WALKABLE.contains(emote)) { if (previousCamera.isFirstPerson()) mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }
+		else mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
 		gg.surge.client.net.SurgeNet.playedEmote(emote.name());
 		EmoteMusic.start(p, emote, System.currentTimeMillis());
 	}
@@ -104,18 +107,14 @@ public final class Emotes {
 		if (p == null) { current = null; return; }
 		var o = mc.options;
 		float t = (System.nanoTime() - startNanos) / 1e9f;
-		if (t > 0.25f && (o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown() || o.keyAttack.isDown())) {
+		boolean walkable = WALKABLE.contains(current);
+		boolean moved = o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown();
+		if (t > 0.25f && (o.keyAttack.isDown() || o.keyUse.isDown() || (walkable ? o.keyShift.isDown() : moved))) {
 			stop(mc);
 			return;
 		}
-		if (++particleTick % 8 == 0 && mc.level != null && (current == Emote.FLUSTERED || current == Emote.HEART)) {
-			mc.level.addParticle(ParticleTypes.HEART, p.getX() + (Math.random() - 0.5) * 0.6, p.getY() + 2.2, p.getZ() + (Math.random() - 0.5) * 0.6, 0, 0.05, 0);
-		}
-		if (particleTick % 5 == 0 && mc.level != null && current == Emote.CRY) {
-			mc.level.addParticle(ParticleTypes.FALLING_WATER, p.getX() + (Math.random() - 0.5) * 0.3, p.getY() + 1.6, p.getZ() + (Math.random() - 0.5) * 0.3, 0, 0, 0);
-		}
-		if (!current.loops && t > current.seconds) stop(mc);
-		else if (current.loops && t > current.seconds * 3) stop(mc);
+		float limit = current.loops ? current.seconds * 3 : current.seconds;
+		if (t > limit) stop(mc);
 	}
 
 	public static void animateRemote(PlayerModel m, java.util.UUID id) {
@@ -150,6 +149,7 @@ public final class Emotes {
 		float out = e.loops || previewing ? 1f : ease(Math.min(1f, Math.max(0f, (e.seconds - t) / 0.25f)));
 		float k = in * out;
 		Pose p = new Pose(m, k);
+		p.upperOnly = walking && WALKABLE.contains(e);
 		EmoteAnimations.pose(e, p, t);
 		p.apply();
 	}
@@ -166,6 +166,7 @@ public final class Emotes {
 		float bob;
 		float sway;
 		float spin;
+		boolean upperOnly;
 
 		Pose(PlayerModel m, float k) {
 			this.m = m;
@@ -205,6 +206,7 @@ public final class Emotes {
 			set(m.body, body);
 			set(m.rightArm, rArm);
 			set(m.leftArm, lArm);
+			if (upperOnly) return;
 			set(m.rightLeg, rLeg);
 			set(m.leftLeg, lLeg);
 			float a = (float) Math.toRadians(lean) * k;

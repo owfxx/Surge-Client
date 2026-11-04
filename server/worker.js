@@ -149,9 +149,11 @@ export default {
     if (req.method === 'POST' || req.method === 'PUT') { try { body = await req.json(); } catch { body = {}; } }
 
     if (p === '/v1/diag' && req.method === 'GET') {
-      const r = await fetch('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=Notch&serverId=surgediag0001', { headers: { 'User-Agent': 'SurgeClient/1.0' } });
-      const r2 = await fetch('https://api.mojang.com/users/profiles/minecraft/Notch', { headers: { 'User-Agent': 'SurgeClient/1.0' } });
-      return json({ hasJoined: r.status, profiles: r2.status, body: (await r.text()).slice(0, 120) });
+      const out = {};
+      for (const [k, u] of [['hasJoined', 'https://sessionserver.mojang.com/session/minecraft/hasJoined?username=Notch&serverId=surgediag0001'], ['services', 'https://api.minecraftservices.com/minecraft/profile'], ['keys', 'https://api.minecraftservices.com/publickeys'], ['xbox', 'https://user.auth.xboxlive.com/']]) {
+        try { const r = await fetch(u, { headers: { 'User-Agent': 'SurgeClient/1.0' } }); out[k] = r.status; } catch (e) { out[k] = String(e.message).slice(0, 40); }
+      }
+      return json(out);
     }
 
     if (p === '/v1/auth' && req.method === 'POST') {

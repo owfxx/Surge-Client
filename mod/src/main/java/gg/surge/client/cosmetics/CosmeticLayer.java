@@ -49,6 +49,8 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	@Override
 	public void submit(PoseStack ps, SubmitNodeCollector q, int light, AvatarRenderState state, float limbAngle, float limbDistance) {
 		if (state.isInvisible) return;
+		CapturedLook fxLook = ((SurgeState) state).surge$look();
+		if (fxLook != null && fxLook.emote() != null) gg.surge.client.emotes.EmoteFx.submit(getParentModel(), ps, q, fxLook.emote(), fxLook.emoteTime(), fxLook.emotePreview());
 		Player p = playerOf(state);
 		if (p == null) return;
 		float age = state.ageInTicks;

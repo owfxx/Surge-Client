@@ -14,6 +14,7 @@ public abstract class PlayerModelMixin {
 	@Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
 	private void surge$emote(AvatarRenderState state, CallbackInfo ci) {
 		gg.surge.client.cosmetics.CapturedLook look = ((gg.surge.client.cosmetics.SurgeState) state).surge$look();
+		Emotes.walking = state.walkAnimationSpeed > 0.08f;
 		if (look != null) {
 			Emotes.animateCaptured((PlayerModel) (Object) this, look.emote(), look.emoteTime(), look.emotePreview());
 			return;
