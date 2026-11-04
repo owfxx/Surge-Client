@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 
 public final class AutoTest {
 	private static final Logger LOG = LoggerFactory.getLogger("SurgeAutoTest");
-	private record Step(String name, int wait, Consumer<Minecraft> run) {}
+	private record Step(String name, int delay, Consumer<Minecraft> action) {}
 
 	private static final List<Step> STEPS = new ArrayList<>();
 	private static int index = -1, ticks, total;
@@ -108,7 +108,7 @@ public final class AutoTest {
 			if (mc.getOverlay() != null || mc.screen == null) return;
 			index = 0;
 			ticks = 0;
-			STEPS.get(0).run().accept(mc);
+			STEPS.get(0).action().accept(mc);
 			return;
 		}
 		Step s = STEPS.get(index);
@@ -119,7 +119,7 @@ public final class AutoTest {
 			next(mc);
 			return;
 		}
-		if (++ticks < s.wait()) return;
+		if (++ticks < s.delay()) return;
 		shot(mc, s.name());
 		next(mc);
 	}
@@ -133,7 +133,7 @@ public final class AutoTest {
 			return;
 		}
 		try {
-			STEPS.get(index).run().accept(mc);
+			STEPS.get(index).action().accept(mc);
 		} catch (Throwable t) {
 			LOG.error("Step {} failed", STEPS.get(index).name(), t);
 		}

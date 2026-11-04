@@ -336,7 +336,7 @@ async function mountScene() {
   viewer.controls.enabled = false;
   viewer.globalLight.intensity = 2.2;
   viewer.cameraLight.intensity = 0.9;
-  shift = Math.min(30, box.width / 36);
+  shift = box.width > 900 ? Math.min(11, box.width / 100) : Math.min(30, box.width / 36);
   viewer.playerObject.position.x = shift;
   const tickGeode = buildGeode(viewer);
   canvas.onmousedown = e => { look.dragging = true; look.lastX = e.clientX; };
@@ -391,8 +391,8 @@ function renderHome() {
       <aside class="home-side" id="homeSide">
         <div class="greet" id="greet"></div>
         <div class="side-card" id="friendsCard"><div class="side-head">Friends</div><div class="muted small">Loading…</div></div>
-        <div class="side-card news"><div class="side-head">New in 1.1</div>
-          <ul><li>Social: chat with friends, status and requests</li><li>Friends and Discover tabs on the server list</li><li>10 new emotes and an editable wheel with up to 9 pages</li><li>Gamma, Tab List, Pack Display, TNT Timer and more</li></ul></div>
+        <div class="side-card news"><div class="side-head">What's new</div>
+          <ul><li>A new wardrobe: see every item on your character</li><li>10 dances with their own music</li><li>Chat with friends and join their games</li><li>Minimap, profiles, menu colors and more</li></ul></div>
       </aside>
       <div class="panel log ${state.launch.showLog ? '' : 'hidden'}" id="log"></div>
     </section>`;
