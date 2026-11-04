@@ -24,11 +24,13 @@ public abstract class ServerEntryMixin {
 		if (region == null || region.isEmpty()) return;
 		LayoutElement e = (LayoutElement) (Object) this;
 		var font = Minecraft.getInstance().font;
-		int right = e.getX() + e.getWidth() - 6, bottom = e.getY() + e.getHeight() - 11;
-		g.pose().pushMatrix();
-		g.pose().translate(right, bottom);
-		g.pose().scale(0.75f, 0.75f);
-		g.drawString(font, region, -font.width(region), 0, 0xFF9CA3AF, false);
-		g.pose().popMatrix();
+		String code = region.contains(", ") ? region.substring(region.lastIndexOf(", ") + 2) : "";
+		String flag = code.isEmpty() ? "" : gg.surge.client.features.Flags.glyph(code);
+		String label = code.isEmpty() ? region : (flag.isEmpty() ? code : flag + " " + code);
+		int x = e.getX() + 37 + font.width(serverData.name) + 6;
+		int y = e.getY() + 3;
+		int max = e.getX() + e.getWidth() - 60;
+		if (x + font.width(label) > max) return;
+		g.drawString(font, label, x, y, 0xFF9CA3AF, false);
 	}
 }

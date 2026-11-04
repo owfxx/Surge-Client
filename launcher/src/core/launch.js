@@ -117,6 +117,13 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
     instances.update(inst.id, { perfChecked: 2 });
   }
+  if (inst.loader === 'fabric' && !inst.voiceChecked) {
+    onProgress({ stage: 'Adding Simple Voice Chat…' });
+    try {
+      await modrinth.installProject(inst.id, 'simple-voice-chat', 'mod', onProgress, new Set(), { optional: true });
+      instances.update(inst.id, { voiceChecked: true });
+    } catch { }
+  }
   const surgeJar = await syncSurgeMod(inst, onProgress);
   await social.refreshService();
   let surgeToken = '';
