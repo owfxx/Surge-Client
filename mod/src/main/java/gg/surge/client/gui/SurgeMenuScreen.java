@@ -771,12 +771,12 @@ public class SurgeMenuScreen extends Screen {
 			int bx = x + w - 4 - bw;
 			boolean over = hov && Ui.hover(mx, my, bx, y + 3, bw, 16);
 			float a = Ui.anim("choice:" + this, over);
-			Ui.chunky(g, bx, y + 3, bw, 16, Colors.lerp(Ui.BUTTON, Ui.BUTTON_HOVER, a), Ui.BUTTON_LIP);
+			Ui.cutBox(g, bx, y + 3, bw, 16, 3, Colors.lerp(0xFF202023, 0xFF303035, a), Colors.lerp(0xFF34343A, 0xFF55555C, a));
 			boolean left = mx < bx + bw / 2;
 			g.drawString(font, "<", bx + 5, y + 7, over && left ? Ui.TEXT : Ui.FAINT, false);
 			g.drawString(font, ">", bx + bw - 10, y + 7, over && !left ? Ui.TEXT : Ui.FAINT, false);
 			String v = Ui.fit(font, value.get(), bw - 26);
-			g.drawString(font, v, bx + (bw - font.width(v)) / 2, y + 7, Ui.TEXT, true);
+			g.drawString(font, v, bx + (bw - font.width(v)) / 2, y + 7, Ui.TEXT, false);
 			if (over && clickL) action = () -> cycle.accept(left ? -1 : 1);
 			else if (hov && clickL) action = () -> cycle.accept(1);
 		}
