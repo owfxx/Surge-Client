@@ -58,19 +58,14 @@ public final class Ui {
 	public static final int OFF_LIP = 0xFF5E1717;
 	public static final int NEUTRAL = 0xFF4C4C50;
 	public static final int BUTTON = 0xFF4C4C50, BUTTON_HOVER = 0xFF5E5E63, BUTTON_LIP = 0xFF2E2E31;
-	public static final Identifier COIN_TEX = Identifier.fromNamespaceAndPath("surge", "textures/gui/coin.png");
 	public static final ItemStack COIN_ITEM = new ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET);
-
-	public static final Identifier COIN_SMALL = Identifier.fromNamespaceAndPath("surge", "textures/gui/coin_small.png");
+	private static final Identifier[] COIN_TEX = {Identifier.fromNamespaceAndPath("surge", "textures/gui/coin_10.png"),
+		Identifier.fromNamespaceAndPath("surge", "textures/gui/coin_16.png"), Identifier.fromNamespaceAndPath("surge", "textures/gui/coin_32.png")};
 
 	public static void coin(GuiGraphics g, int x, int y, int size) {
-		if (size < 14) {
-			int s = size < 16 ? 8 : 16;
-			g.blit(RenderPipelines.GUI_TEXTURED, COIN_SMALL, x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, 8, 8, 8, 8);
-			return;
-		}
-		int s = Math.max(16, size / 16 * 16);
-		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX, x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, 16, 16, 16, 16);
+		int idx = size < 14 ? 0 : size < 28 ? 1 : 2;
+		int s = idx == 0 ? 10 : idx == 1 ? 16 : 32;
+		g.blit(RenderPipelines.GUI_TEXTURED, COIN_TEX[idx], x + (size - s) / 2, y + (size - s) / 2, 0f, 0f, s, s, s, s, s, s);
 	}
 
 	public static final Identifier LOGO = Identifier.fromNamespaceAndPath("surge", "textures/gui/logo.png");
