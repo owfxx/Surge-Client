@@ -26,25 +26,15 @@ import java.util.Map;
 public final class Extras {
 	private Extras() {}
 
-	private record Popup(double x, double y, double z, float amount, long at, double drift) {}
-
-	private static final Map<Integer, Float> HEALTH = new HashMap<>();
-	private static final List<Popup> POPUPS = new ArrayList<>();
 	private static final Map<EquipmentSlot, Boolean> WARNED = new HashMap<>();
 	private static long dropConfirmAt;
 	private static int dropConfirmSlot = -1;
 	private static int tick;
 
 	public static void tick(Minecraft mc) {
-		if (mc.player == null || mc.level == null) {
-			HEALTH.clear();
-			POPUPS.clear();
-			return;
-		}
+		if (mc.player == null || mc.level == null) return;
 		tick++;
 		if (Mods.TRAILS.enabled()) trails(mc);
-		if (Mods.DAMAGE_NUMBERS.enabled()) trackHealth(mc);
-		else HEALTH.clear();
 		if (Mods.DURABILITY.enabled() && tick % 10 == 0) durability(mc);
 	}
 
@@ -78,50 +68,7 @@ public final class Extras {
 		}
 	}
 
-	private static void trackHealth(Minecraft mc) {
-		Map<Integer, Float> seen = new HashMap<>();
-		for (Entity e : mc.level.entitiesForRendering()) {
-			if (!(e instanceof LivingEntity le) || e.distanceToSqr(mc.player) > 32 * 32) continue;
-			if (le == mc.player && !Mods.DMG_OWN.on()) continue;
-			float hp = le.getHealth();
-			Float before = HEALTH.get(e.getId());
-			seen.put(e.getId(), hp);
-			if (before == null) continue;
-			float diff = before - hp;
-			if (diff >= 0.5f || (diff <= -0.5f && Mods.DMG_HEAL.on())) {
-				POPUPS.add(new Popup(e.getX(), e.getY() + e.getBbHeight() + 0.3, e.getZ(), diff, System.currentTimeMillis(), (Math.random() - 0.5) * 0.6));
-				if (POPUPS.size() > 60) POPUPS.remove(0);
-			}
-		}
-		HEALTH.clear();
-		HEALTH.putAll(seen);
-	}
-
 	public static void render(GuiGraphics g, Minecraft mc) {
-		if (!Mods.DAMAGE_NUMBERS.enabled() || POPUPS.isEmpty() || mc.player == null) return;
-		Waypoints.setupCamera(g, mc);
-		long now = System.currentTimeMillis();
-		float size = Mods.DMG_SIZE.get() / 100f;
-		boolean hearts = Mods.DMG_FORMAT.is("Hearts");
-		int col = Mods.DMG_COLOR.rgb(0) & 0xFFFFFF;
-		Iterator<Popup> it = POPUPS.iterator();
-		while (it.hasNext()) {
-			Popup p = it.next();
-			float age = (now - p.at()) / 1200f;
-			if (age >= 1f) { it.remove(); continue; }
-			double[] s = Waypoints.project(p.x() + p.drift() * age, p.y() + age * 0.8, p.z());
-			if (s == null) continue;
-			float amt = Math.abs(p.amount());
-			String text = (p.amount() < 0 ? "+" : "-") + (hearts ? (amt / 2f == Math.floor(amt / 2f) ? String.valueOf((int) (amt / 2f)) : String.format("%.1f", amt / 2f)) + "❤" : String.format("%.1f", amt));
-			int c = p.amount() < 0 ? 0x55FF77 : col;
-			int alpha = (int) (255 * Math.min(1f, (1f - age) * 2.5f));
-			float sc = (float) Math.max(0.6, Math.min(2.2, 6.0 / Math.max(1.0, s[2]))) * size;
-			g.pose().pushMatrix();
-			g.pose().translate((float) s[0], (float) s[1]);
-			g.pose().scale(sc, sc);
-			g.drawString(mc.font, text, -mc.font.width(text) / 2, -4, (alpha << 24) | c, true);
-			g.pose().popMatrix();
-		}
 	}
 
 	private static void durability(Minecraft mc) {

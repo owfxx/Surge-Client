@@ -788,8 +788,7 @@ public final class HudModules {
 		else if (p.isSwimming()) a = "Swimming";
 		else if (p.isVisuallyCrawling()) a = "Crawling";
 		else if (p.isShiftKeyDown()) a = sneakMod && showToggled ? "Sneaking (Toggled)" : "Sneaking";
-		else if (p.isSprinting()) a = sprintMod && showToggled ? "Sprinting (Toggled)" : "Sprinting";
-		else if (sprintMod && showToggled) a = "Sprint Toggled";
+		else if (p.isSprinting() || sprintMod) a = sprintMod && showToggled ? "Sprinting (Toggled)" : "Sprinting";
 		else return "";
 		if (p.isUsingItem() && p.isBlocking()) a += ", Blocking";
 		return a;

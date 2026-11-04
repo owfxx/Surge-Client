@@ -199,10 +199,6 @@ public final class Mods {
 		"Shrink the big titles servers put on your screen", false);
 	public static final Setting.Slider TITLE_SCALE = TITLES.slider("scale", "Scale", 60, 30, 150, 5, "%");
 
-	public static final SurgeMod BADGE = mod("badge", "Surge Badge", Category.VISUAL, Items.AMETHYST_SHARD,
-		"The Surge cloud before the names of Surge players in the tab list and on nametags", true);
-	public static final Setting.Choice BADGE_WHO = BADGE.choice("who", "Show for", "Everyone", "Everyone", "Only me");
-
 	public static final SurgeMod COSMETICS = mod("cosmetics", "Cosmetics", Category.VISUAL, Items.ELYTRA,
 		"Wings, halos and capes from the wardrobe", true);
 	public static final Setting.Toggle COS_OTHERS = COSMETICS.toggle("others", "Show other players' cosmetics", true);
@@ -266,14 +262,6 @@ public final class Mods {
 	public static final Setting.Choice TRAIL_TYPE = TRAILS.choice("type", "Particle", "Flame", "Flame", "Soul", "Crit", "Magic", "Hearts", "Notes", "End rod", "Cherry", "Smoke");
 	public static final Setting.Toggle TRAIL_OWN = TRAILS.toggle("own", "Only my projectiles", true);
 	public static final Setting.Slider TRAIL_AMOUNT = TRAILS.slider("amount", "Amount", 2, 1, 5, 1, "x");
-
-	public static final SurgeMod DAMAGE_NUMBERS = mod("damage_numbers", "Damage Numbers", Category.PVP, Items.REDSTONE,
-		"Floating numbers show how much damage players and mobs take", false);
-	public static final Setting.Choice DMG_FORMAT = DAMAGE_NUMBERS.choice("format", "Show as", "Hearts", "Hearts", "Health points");
-	public static final Setting.Color DMG_COLOR = DAMAGE_NUMBERS.color("color", "Color", "FF5555");
-	public static final Setting.Toggle DMG_HEAL = DAMAGE_NUMBERS.toggle("heal", "Show healing too", true);
-	public static final Setting.Slider DMG_SIZE = DAMAGE_NUMBERS.slider("size", "Size", 100, 50, 200, 10, "%");
-	public static final Setting.Toggle DMG_OWN = DAMAGE_NUMBERS.toggle("own", "Show on yourself", false);
 
 	public static final SurgeMod TIME_CHANGER = mod("time_changer", "Time Changer", Category.VISUAL, Items.CLOCK,
 		"Pick the time of day you see. Only changes it for you.", false);

@@ -13,20 +13,27 @@ public final class CommandKeys {
 	private static final Map<Integer, Boolean> WAS_DOWN = new HashMap<>();
 	private static long lastSent;
 
+	public static final int MOUSE = 10000;
+
 	private CommandKeys() {}
+
+	public static boolean down(long window, int key) {
+		if (key >= MOUSE) return GLFW.glfwGetMouseButton(window, key - MOUSE) == GLFW.GLFW_PRESS;
+		return key >= 0 && GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
+	}
 
 	public static void tick(Minecraft mc) {
 		if (!Mods.COMMAND_KEYS.enabled() || mc.player == null || mc.getConnection() == null) return;
 		long window = mc.getWindow().handle();
 		for (SurgeConfig.CommandKey ck : SurgeConfig.get().commandKeys) {
 			if (ck.key < 0 || ck.text == null || ck.text.isBlank()) continue;
-			boolean down = GLFW.glfwGetKey(window, ck.key) == GLFW.GLFW_PRESS;
+			boolean down = down(window, ck.key);
 			boolean was = WAS_DOWN.getOrDefault(ck.key, false);
 			if (down && !was && mc.screen == null && System.currentTimeMillis() - lastSent > 250) send(mc, ck.text);
 		}
 		WAS_DOWN.clear();
 		for (SurgeConfig.CommandKey ck : SurgeConfig.get().commandKeys) {
-			if (ck.key >= 0) WAS_DOWN.put(ck.key, GLFW.glfwGetKey(window, ck.key) == GLFW.GLFW_PRESS);
+			if (ck.key >= 0) WAS_DOWN.put(ck.key, down(window, ck.key));
 		}
 	}
 
@@ -50,6 +57,7 @@ public final class CommandKeys {
 
 	public static String keyName(int key) {
 		if (key < 0) return "None";
+		if (key >= MOUSE) return switch (key - MOUSE) { case 2 -> "Middle Mouse"; case 3 -> "Mouse 4"; case 4 -> "Mouse 5"; default -> "Mouse " + (key - MOUSE + 1); };
 		String n = GLFW.glfwGetKeyName(key, 0);
 		if (n != null && !n.isBlank()) return n.toUpperCase();
 		if (key >= GLFW.GLFW_KEY_F1 && key <= GLFW.GLFW_KEY_F25) return "F" + (key - GLFW.GLFW_KEY_F1 + 1);
@@ -85,6 +93,12 @@ public final class CommandKeys {
 		int found = -1;
 		for (int k = GLFW.GLFW_KEY_SPACE; k <= GLFW.GLFW_KEY_LAST; k++) {
 			boolean d = GLFW.glfwGetKey(window, k) == GLFW.GLFW_PRESS;
+			if (d && !prev.getOrDefault(k, false) && found < 0) found = k;
+			prev.put(k, d);
+		}
+		for (int b = 2; b <= GLFW.GLFW_MOUSE_BUTTON_LAST; b++) {
+			int k = MOUSE + b;
+			boolean d = GLFW.glfwGetMouseButton(window, b) == GLFW.GLFW_PRESS;
 			if (d && !prev.getOrDefault(k, false) && found < 0) found = k;
 			prev.put(k, d);
 		}
