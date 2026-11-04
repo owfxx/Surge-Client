@@ -1,6 +1,7 @@
 package gg.surge.client.gui;
 
 import gg.surge.client.economy.Wallet;
+import gg.surge.client.mods.Colors;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -35,7 +36,16 @@ public final class MenuOverlay {
 				return;
 			}
 			boolean[] wasDown = {true};
-			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> draw(client, s, g, mx, my, wasDown));
+			java.util.List<net.minecraft.client.gui.components.Button> buttons = new java.util.ArrayList<>();
+			if (screen instanceof PauseScreen) {
+				for (var w2 : net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen)) {
+					if (w2 instanceof net.minecraft.client.gui.components.Button b) { b.setAlpha(0f); buttons.add(b); }
+				}
+			}
+			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> {
+				if (!buttons.isEmpty()) restyle(client, g, mx, my, buttons);
+				draw(client, s, g, mx, my, wasDown);
+			});
 		});
 	}
 
@@ -69,6 +79,25 @@ public final class MenuOverlay {
 
 		SocialToasts.render(g, mc, w);
 		if (action != null) { Ui.click(); action.run(); }
+	}
+
+	private static void restyle(Minecraft mc, GuiGraphics g, int mx, int my, java.util.List<net.minecraft.client.gui.components.Button> buttons) {
+		Ui.frame();
+		g.nextStratum();
+		boolean first = true;
+		for (var b : buttons) {
+			if (!b.visible) continue;
+			int x = b.getX(), y = b.getY(), w = b.getWidth(), h = b.getHeight();
+			boolean hov = b.active && (Ui.hover(mx, my, x, y, w, h) || b.isFocused());
+			float a = Ui.anim("pause:" + x + "," + y, hov);
+			boolean primary = first;
+			first = false;
+			int fill = !b.active ? 0xD0141416 : primary ? Colors.lerp(0xF0E4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xE01A1A1D, 0xF02A2A2F, a);
+			int edge = !b.active ? 0xFF2A2A2E : primary ? 0xFFFFFFFF : Colors.lerp(0x50FFFFFF, 0xE0FFFFFF, a);
+			Ui.cutBox(g, x, y, w, h, 4, fill, edge);
+			String label = Ui.fit(mc.font, b.getMessage().getString(), w - 8);
+			g.drawString(mc.font, label, x + (w - mc.font.width(label)) / 2, y + (h - 8) / 2, !b.active ? 0xFF6E6F74 : primary ? 0xFF141416 : 0xFFFFFFFF, false);
+		}
 	}
 
 	static String socialLabel() {
