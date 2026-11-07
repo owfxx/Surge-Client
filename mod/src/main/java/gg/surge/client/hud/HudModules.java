@@ -663,7 +663,9 @@ public final class HudModules {
 
 	static final class PotionEffects extends HudModule implements HideVanillaEffects {
 		private static final String[] ROMAN = {"", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
-		final Setting.Choice style = choice("style", "Style", "Modern", "Modern", "Vanilla", "Compact");
+		final Setting.Choice style = choice("style", "Style", "Modern", "Modern", "Vanilla", "Compact", "Icons");
+		final Setting.Choice layout = choice("layout", "Direction", "Horizontal", "Horizontal", "Vertical").showIf(() -> style.is("Icons"));
+		final Setting.Toggle bar = toggle("bar", "Time bar", true).showIf(() -> style.is("Icons"));
 		final Setting.Toggle icons = toggle("icons", "Show icons", true);
 		final Setting.Toggle level = toggle("level", "Show level", true);
 		final Setting.Toggle duration = toggle("duration", "Show time left", true);
@@ -675,13 +677,13 @@ public final class HudModules {
 
 		@Override public boolean hideVanillaEffects() { return enabled() && hideVanilla.on(); }
 
-		private record Line(String name, String time, int color, net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect, float left, boolean ending) {}
+		private record Line(String name, String time, int color, net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect, float left, boolean ending, int amp, boolean ambient) {}
 
 		private List<Line> lines(Minecraft mc) {
 			List<Line> out = new ArrayList<>();
 			if (mc.player == null || mc.player.getActiveEffects().isEmpty() && mc.screen instanceof gg.surge.client.gui.HudEditorScreen) {
-				out.add(new Line("Speed II", "1:30", colored.on() ? 0xFF8CFFA0 : fg(), null, 0.7f, false));
-				out.add(new Line("Strength", "0:45", colored.on() ? 0xFF8CFFA0 : fg(), null, 0.35f, false));
+				out.add(new Line("Speed II", "1:30", colored.on() ? 0xFF8CFFA0 : fg(), null, 0.7f, false, 1, false));
+				out.add(new Line("Strength", "0:45", colored.on() ? 0xFF8CFFA0 : fg(), null, 0.35f, false, 0, false));
 				return out;
 			}
 			for (MobEffectInstance e : mc.player.getActiveEffects()) {
@@ -704,14 +706,21 @@ public final class HudModules {
 				if (!duration.on()) time = "";
 				int col = fg();
 				if (colored.on()) col = e.getEffect().value().getCategory() == MobEffectCategory.HARMFUL ? 0xFFFF8C8C : 0xFF8CFFA0;
-				out.add(new Line(name, time, col, e.getEffect(), left, ending));
+				out.add(new Line(name, time, col, e.getEffect(), left, ending, amp, e.isAmbient()));
 			}
 			return out;
 		}
 
 		private int rowH() { return style.is("Compact") ? 13 : style.is("Vanilla") ? 26 : 22; }
 
+		private boolean iconsStyle() { return style.is("Icons"); }
+
+		private int cellW() { return 26; }
+
+		private int cellH() { return 24 + (duration.on() ? 10 : 0) + (bar.on() ? 3 : 0); }
+
 		@Override public int width(Minecraft mc) {
+			if (iconsStyle()) { int n = Math.max(1, lines(mc).size()); return layout.is("Vertical") ? cellW() : n * cellW(); }
 			int w = style.is("Vanilla") ? 110 : 60;
 			for (Line l : lines(mc)) {
 				int t = style.is("Compact") ? boxWidth(mc, l.name() + (l.time().isEmpty() ? "" : " " + l.time())) + (icons.on() ? 12 : 0)
@@ -721,7 +730,9 @@ public final class HudModules {
 			return w;
 		}
 
-		@Override public int height(Minecraft mc) { return Math.max(rowH(), lines(mc).size() * (rowH() + (style.is("Compact") ? 0 : 2))); }
+		@Override public int height(Minecraft mc) {
+			if (iconsStyle()) { int n = Math.max(1, lines(mc).size()); return layout.is("Vertical") ? n * (cellH() + 2) : cellH(); }
+			return Math.max(rowH(), lines(mc).size() * (rowH() + (style.is("Compact") ? 0 : 2))); }
 
 		private void icon(GuiGraphics g, Line l, int x, int y, int size, float alpha) {
 			if (!icons.on()) return;
@@ -741,6 +752,30 @@ public final class HudModules {
 				Line l = ls.get(i);
 				float alpha = l.ending() ? 0.55f + 0.45f * (float) Math.abs(Math.sin(now / 250.0)) : 1f;
 				switch (style.get()) {
+					case "Icons" -> {
+						boolean vert = layout.is("Vertical");
+						int cx = vert ? x : x + i * cellW(), cy = vert ? y + i * (cellH() + 2) : y;
+						g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace(l.ambient() ? "hud/effect_background_ambient" : "hud/effect_background"), cx + 1, cy, 24, 24);
+						if (l.effect() != null) g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.client.gui.Gui.getMobEffectSprite(l.effect()), cx + 4, cy + 3, 18, 18, alpha);
+						else g.fill(cx + 5, cy + 4, cx + 21, cy + 20, Colors.alpha(l.color(), alpha));
+						if (level.on() && l.amp() > 0) {
+							String lv = l.amp() < ROMAN.length ? ROMAN[l.amp()].trim() : String.valueOf(l.amp() + 1);
+							g.pose().pushMatrix();
+							g.pose().translate(cx + 24 - mc.font.width(lv) * 0.75f, cy + 15);
+							g.pose().scale(0.75f, 0.75f);
+							g.drawString(mc.font, lv, 0, 0, 0xFFFFFFFF, true);
+							g.pose().popMatrix();
+						}
+						int ty = cy + 25;
+						if (duration.on() && !l.time().isEmpty()) {
+							g.drawString(mc.font, l.time(), cx + 13 - mc.font.width(l.time()) / 2, ty, Colors.alpha(l.color(), alpha), shadowOn());
+							ty += 10;
+						}
+						if (bar.on()) {
+							g.fill(cx + 2, ty, cx + 24, ty + 2, 0xA0000000);
+							g.fill(cx + 2, ty, cx + 2 + Math.round(22 * Math.max(0f, Math.min(1f, l.left()))), ty + 2, Colors.alpha(l.color(), 0.9f));
+						}
+					}
 					case "Compact" -> {
 						int yy = y + i * 13;
 						if (bgOn()) g.fill(x, yy, x + w, yy + 13, bg());

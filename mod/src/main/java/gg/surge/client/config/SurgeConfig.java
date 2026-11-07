@@ -78,6 +78,7 @@ public class SurgeConfig {
 	public boolean welcomed = false;
 
 	public List<List<String>> emotePages = null;
+	public List<String> dropItems = new ArrayList<>();
 
 	public static SurgeConfig get() {
 		if (instance == null) load();

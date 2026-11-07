@@ -290,6 +290,20 @@ public final class Mods {
 	public static final Setting.Slider GLINT_SPEED = GLINT.slider("speed", "Speed", 50, 0, 100, 5, "%");
 	public static final Setting.Slider GLINT_STRENGTH = GLINT.slider("strength", "Strength", 75, 0, 100, 5, "%");
 
+	public static final SurgeMod FOG = mod("fog", "Fog Customizer", Category.VISUAL, Items.WHITE_STAINED_GLASS,
+		"Pick which fog you see, how thick it is and what color it has", false);
+	public static final Setting.Header H_FOG_TYPES = FOG.header("Fog types");
+	public static final Setting.Toggle FOG_WORLD = FOG.toggle("world", "Distance fog", true);
+	public static final Setting.Slider FOG_WORLD_DIST = FOG.slider("worldDist", "Distance fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WORLD.on());
+	public static final Setting.Toggle FOG_WATER = FOG.toggle("water", "Water fog", true);
+	public static final Setting.Slider FOG_WATER_DIST = FOG.slider("waterDist", "Water fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WATER.on());
+	public static final Setting.Toggle FOG_LAVA = FOG.toggle("lava", "Lava fog", true);
+	public static final Setting.Toggle FOG_SNOW = FOG.toggle("snow", "Powder snow fog", true);
+	public static final Setting.Toggle FOG_EFFECTS = FOG.toggle("effects", "Blindness and darkness fog", true);
+	public static final Setting.Header H_FOG_COLOR = FOG.header("Color");
+	public static final Setting.Toggle FOG_TINT = FOG.toggle("tint", "Custom fog color", false);
+	public static final Setting.Color FOG_COLOR = FOG.color("color", "Fog color", "B483FF").showIf(() -> Mods.FOG_TINT.on());
+
 	public static final SurgeMod DURABILITY = mod("durability", "Durability Warning", Category.UTILITY, Items.DAMAGED_ANVIL,
 		"Warns you when your armor or the item in your hand is about to break", true);
 	public static final Setting.Slider DURA_PERCENT = DURABILITY.slider("percent", "Warn below", 10, 2, 50, 1, "%");

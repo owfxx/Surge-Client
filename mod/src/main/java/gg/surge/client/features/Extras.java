@@ -90,6 +90,8 @@ public final class Extras {
 
 	private static boolean valuable(ItemStack s) {
 		if (Mods.DROP_ALL.on()) return true;
+		java.util.List<String> extra = gg.surge.client.config.SurgeConfig.get().dropItems;
+		if (extra != null && !extra.isEmpty() && extra.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem()).toString())) return true;
 		if (Mods.DROP_ENCHANTED.on() && s.isEnchanted()) return true;
 		if (Mods.DROP_NAMED.on() && s.has(DataComponents.CUSTOM_NAME)) return true;
 		if (Mods.DROP_RARE.on()) {

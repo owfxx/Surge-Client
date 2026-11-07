@@ -55,12 +55,10 @@ public final class AppleSkin {
 				float s = Math.max(0, Math.min(2, sat - i * 2));
 				if (s <= 0) break;
 				int x = right - i * 8 - 9;
-				int col = s >= 2 ? 0xFFFFC22E : 0xB0FFC22E;
-				int w = s >= 2 ? 9 : 5;
-				g.fill(x, y, x + w, y + 1, col);
-				g.fill(x, y + 8, x + w, y + 9, col);
-				g.fill(x, y + 1, x + 1, y + 8, col);
-				if (s >= 2) g.fill(x + 8, y + 1, x + 9, y + 8, col);
+				int w = Math.max(1, Math.round(9 * s / 2f));
+				g.enableScissor(right - (i * 8) - w, y, right - i * 8, y + 9);
+				g.blitSprite(RenderPipelines.GUI_TEXTURED, FULL, x, y, 9, 9, 0xC8FFE14A);
+				g.disableScissor();
 			}
 		}
 

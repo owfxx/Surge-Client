@@ -169,6 +169,7 @@ public class SurgeMenuScreen extends Screen {
 		addWidget(search);
 		scroll = scrollTarget = 0;
 		if (openMod == Mods.COMMAND_KEYS) { settingsRows(openMod); keyRows(); }
+		else if (openMod == Mods.DROP_PROTECT) { settingsRows(openMod); dropRows(); }
 		else if (openMod != null) settingsRows(openMod);
 		else if (query.isEmpty() && tab == Tab.FPS) { settingsRows(Mods.GENERAL); rows.add(new HeaderRow(() -> "FPS boost")); fpsRows(); }
 		else if (query.isEmpty() && tab == Tab.PROFILES) profileRows();
@@ -340,6 +341,90 @@ public class SurgeMenuScreen extends Screen {
 		rows.add(new ButtonRow("Turn every mod off", "All off", () -> gg.surge.client.features.Profiles.allMods(false)));
 		rows.add(new ButtonRow("Turn every mod on", "All on", () -> gg.surge.client.features.Profiles.allMods(true)));
 		rows.add(new ButtonRow("Reset all settings", "Reset", gg.surge.client.features.Profiles::reset));
+	}
+
+	private void dropRows() {
+		rows.add(new HeaderRow(() -> "Your protected items"));
+		java.util.List<String> list = SurgeConfig.get().dropItems;
+		if (list == null) { SurgeConfig.get().dropItems = list = new ArrayList<>(); }
+		for (String id : new ArrayList<>(list)) rows.add(new DropItemRow(id));
+		rows.add(new AddDropRow());
+	}
+
+	private final class DropItemRow extends Row {
+		final String id;
+		final ItemStack stack;
+
+		DropItemRow(String id) {
+			this.id = id;
+			var key = net.minecraft.resources.Identifier.tryParse(id);
+			var item = key == null ? null : net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(key);
+			stack = item == null ? ItemStack.EMPTY : new ItemStack(item);
+		}
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			base(g, x, y, w, hov, stack.isEmpty() ? id : stack.getHoverName().getString(), stack.isEmpty() ? null : stack);
+			if (Ui.iconButton(g, mx, my, x + w - 20, y + 3, 16, Ui.CROSS) && hov && clickL) action = () -> {
+				SurgeConfig.get().dropItems.remove(id);
+				SurgeConfig.save();
+				needsRebuild = true;
+			};
+		}
+	}
+
+	private final class AddDropRow extends Row {
+		final EditBox box;
+		String error = "";
+
+		AddDropRow() {
+			box = new EditBox(font, 0, 0, 100, 10, Component.literal("Item"));
+			box.setBordered(false);
+			box.setMaxLength(64);
+			box.setHint(Component.literal("Item name, like diamond sword").withStyle(ChatFormatting.DARK_GRAY));
+			addWidget(box);
+			boxes.add(box);
+		}
+
+		@Override int height() { return error.isEmpty() ? 24 : 34; }
+
+		private void add(net.minecraft.world.item.Item item) {
+			if (item == null || item == net.minecraft.world.item.Items.AIR) { error = "No item called that"; return; }
+			String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString();
+			if (!SurgeConfig.get().dropItems.contains(id)) SurgeConfig.get().dropItems.add(id);
+			SurgeConfig.save();
+			needsRebuild = true;
+		}
+
+		private net.minecraft.world.item.Item find(String q) {
+			String t = q.trim().toLowerCase(Locale.ROOT);
+			if (t.isEmpty()) return null;
+			String asId = t.replace(' ', '_');
+			var key = net.minecraft.resources.Identifier.tryParse(asId.contains(":") ? asId : "minecraft:" + asId);
+			if (key != null && net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(key)) return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(key);
+			for (var item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+				if (new ItemStack(item).getHoverName().getString().toLowerCase(Locale.ROOT).equals(t)) return item;
+			}
+			for (var item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+				if (new ItemStack(item).getHoverName().getString().toLowerCase(Locale.ROOT).contains(t)) return item;
+			}
+			return null;
+		}
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			int bw = w - 4 - 50 - 4 - 80 - 4;
+			Ui.box(g, x + 4, y + 4, bw, 16, 0xFF161619, box.isFocused() ? Ui.ACCENT : Ui.EDGE);
+			box.setX(x + 9);
+			box.setY(y + 8);
+			box.setWidth(bw - 10);
+			box.visible = true;
+			box.render(g, mx, my, delta);
+			if (Ui.pill(g, font, mx, my, x + 8 + bw, y + 4, 50, 16, "Add", false) && hov && clickL) action = () -> add(find(box.getValue()));
+			if (Ui.pill(g, font, mx, my, x + 12 + bw + 50, y + 4, 80, 16, "Add held item", false) && hov && clickL) action = () -> {
+				if (minecraft.player != null && !minecraft.player.getMainHandItem().isEmpty()) add(minecraft.player.getMainHandItem().getItem());
+				else error = "Hold an item first";
+			};
+			if (!error.isEmpty()) g.drawString(font, error, x + 6, y + 24, 0xFFFF7A7A, false);
+		}
 	}
 
 	private void keyRows() {

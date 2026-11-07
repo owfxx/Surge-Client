@@ -25,7 +25,7 @@
 		"ItemInHandRendererMixin",
 		"TotemPopMixin",
 		"AvatarNameMixin",
-		"ServerEntryMixin", "OptionsAccessor", "LevelTimeMixin", "LocalPlayerDropMixin", "InventoryScreenMixin", "AvatarRenderStateMixin", "ContainerScreenAccessor", "TextDisplayMixin", "PlayerSkinWidgetAccessor", "KeyMappingMixin"
+		"ServerEntryMixin", "OptionsAccessor", "LevelTimeMixin", "LocalPlayerDropMixin", "InventoryScreenMixin", "AvatarRenderStateMixin", "ContainerScreenAccessor", "TextDisplayMixin", "PlayerSkinWidgetAccessor", "KeyMappingMixin", "AtmosphericFogMixin", "WaterFogMixin", "LavaFogMixin", "SnowFogMixin", "BlindnessFogMixin", "DarknessFogMixin", "FogRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0
