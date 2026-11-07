@@ -13,6 +13,11 @@ public final class Preview {
 	public static volatile float yaw;
 	public static volatile CapturedLook card;
 	public static volatile Float forced;
+	private static volatile float nudge;
+
+	public static void turn(float degrees) {
+		nudge += degrees;
+	}
 
 	private static final class Spin {
 		float yaw, target;
@@ -60,8 +65,17 @@ public final class Preview {
 		double mx = mc.mouseHandler.xpos() / scale, my = mc.mouseHandler.ypos() / scale;
 		boolean down = GLFW.glfwGetMouseButton(mc.getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 		boolean over = mx >= x1 && mx < x2 && my >= y1 && my < y2;
+		if (nudge != 0f) {
+			s.target += nudge;
+			nudge = 0f;
+			forced = null;
+			s.touchedAt = System.currentTimeMillis() + 4000;
+		}
 		if (down && (s.dragging || over)) {
-			if (s.dragging) s.target += (float) (mx - s.lastMouse) * 1.6f;
+			if (s.dragging) {
+				float d = (float) (mx - s.lastMouse) * 1.6f;
+				if (Math.abs(d) > 0.01f) { s.target += d; forced = null; }
+			}
 			s.dragging = true;
 			s.touchedAt = System.currentTimeMillis();
 		} else {
@@ -87,6 +101,5 @@ public final class Preview {
 			clean = false;
 			yaw = 0f;
 		}
-		if (down && over) forced = null;
 	}
 }

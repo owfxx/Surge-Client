@@ -55,15 +55,14 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (p == null) return;
 		float age = state.ageInTicks;
 		boolean elytra = p.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
-		double dx = p.getX() - p.xo, dz = p.getZ() - p.zo;
-		float speed = (float) Math.min(1.0, Math.sqrt(dx * dx + dz * dz) * 4.0);
+		float speed = Math.min(1f, state.walkAnimationSpeed);
 		boolean flying = p.getAbilities().flying || p.isFallFlying();
 
 		CapturedLook look = ((SurgeState) state).surge$look();
 		String cape = look != null ? look.cape() : Cosmetics.forPlayer(p, "cape");
-		if (cape != null && !elytra) cape(ps, q, light, cape, age, speed, p.isShiftKeyDown());
+		if (cape != null && !elytra) cape(ps, q, light, cape, age, state);
 		String wings = look != null ? look.wings() : Cosmetics.forPlayer(p, "wings");
-		if (wings != null && !(elytra && Mods.COS_WINGS_ELYTRA.on())) wings(ps, q, light, wings, age, flying ? 1f : speed);
+		if (wings != null && !(elytra && Mods.COS_WINGS_ELYTRA.on())) wings(ps, q, light, wings, age, flying ? 1f : speed, p.getId() * 2 + (Preview.clean || Preview.card != null ? 1 : 0));
 		String halo = look != null ? look.halo() : Cosmetics.forPlayer(p, "halo");
 		if (halo != null) halo(ps, q, halo, age);
 	}
@@ -98,16 +97,19 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		return new CapeLook(Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_" + style + ".png"), -1, -1, false, false);
 	}
 
-	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float speed, boolean sneaking) {
+	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, AvatarRenderState state) {
 		CapeLook lk = look(style);
 		int lit = lk.glow() ? FULL_BRIGHT : light;
-		float swing = 6f + speed * 55f + (float) Math.sin(age * 0.09f) * (1.5f + speed * 4f) + (sneaking ? 22f : 0f);
-		float side = (float) Math.sin(age * 0.05f) * 2f * (0.3f + speed);
+		boolean preview = Preview.clean || Preview.card != null;
+		float flap = preview ? 0f : state.capeFlap, lean = preview ? 0f : state.capeLean, lean2 = preview ? 0f : state.capeLean2;
+		float swing = 6f + lean / 2f + flap + (preview ? (float) Math.sin(age * 0.06f) * 2.5f : 0f);
+		float side = lean2 / 2f;
 		ps.pushPose();
 		getParentModel().body.translateAndRotate(ps);
 		ps.translate(0f, 0f, 0.125f);
 		ps.mulPose(Axis.XP.rotationDegrees(swing));
 		ps.mulPose(Axis.ZP.rotationDegrees(side));
+		ps.mulPose(Axis.YP.rotationDegrees(-side));
 		int t = lk.top(), b = lk.bottom();
 		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(lk.tex()), (pose, vc) -> {
 			float x0 = -5f / 16, x1 = 5f / 16, y0 = 0f, y1 = 1f, z0 = 0f, z1 = 1f / 16;
@@ -119,18 +121,28 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			face(pose, vc, lit, b, b, 0, 1, 0, x0, y1, z1, x0, y1, z0, x1, y1, z0, x1, y1, z1, 11, 0, 21, 1);
 		});
 		if (lk.shimmer()) {
-			float phase = (age % 70f) / 70f;
-			float v0 = 1.1f - phase * 1.9f, v1 = v0 + 0.8f;
-			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(SHINE), (pose, vc) -> {
-				float x0 = -5f / 16, x1 = 5f / 16, z = 1f / 16 + 0.002f;
-				int c = 0xB0FFFFFF;
-				vc.addVertex(pose, x1, 0f, z).setColor(c).setUv(0f, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-				vc.addVertex(pose, x1, 1f, z).setColor(c).setUv(0f, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-				vc.addVertex(pose, x0, 1f, z).setColor(c).setUv(1f, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-				vc.addVertex(pose, x0, 0f, z).setColor(c).setUv(1f, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+			float phase = (age % 60f) / 60f;
+			float center = -0.35f + phase * 1.7f;
+			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
+				float x0 = -5f / 16, x1 = 5f / 16, z = 1f / 16 + 0.003f, w = 0.16f, skew = 0.12f;
+				float[] ys = {center - w, center, center + w};
+				int[] as = {0, 150, 0};
+				for (int k = 0; k < 2; k++) {
+					float ya = ys[k], yb = ys[k + 1];
+					float la0 = clamp01(ya - skew), la1 = clamp01(yb - skew), ra0 = clamp01(ya + skew), ra1 = clamp01(yb + skew);
+					int ca = (as[k] << 24) | 0xFFFFFF, cb = (as[k + 1] << 24) | 0xFFFFFF;
+					vc.addVertex(pose, x1, ra0, z).setColor(ca).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+					vc.addVertex(pose, x1, ra1, z).setColor(cb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+					vc.addVertex(pose, x0, la1, z).setColor(cb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+					vc.addVertex(pose, x0, la0, z).setColor(ca).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
+				}
 			});
 		}
 		ps.popPose();
+	}
+
+	private static float clamp01(float v) {
+		return Math.max(0f, Math.min(1f, v));
 	}
 
 	private static void face(PoseStack.Pose pose, VertexConsumer vc, int light, int top, int bottom, float nx, float ny, float nz,
@@ -143,13 +155,23 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		vc.addVertex(pose, bx, by, bz).setColor(by < 0.5f ? top : bottom).setUv(u1, v0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, ny, nz);
 	}
 
-	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving) {
+	private static final java.util.Map<Integer, float[]> FLAP = new java.util.HashMap<>();
+
+	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving, int key) {
 		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/wings_" + style + ".png");
 		boolean glows = !("angel".equals(style) || "gold".equals(style));
 		int lit = glows ? FULL_BRIGHT : light;
-		float open = Math.min(1f, moving * 1.4f);
+		float open = Math.min(1f, moving * 1.2f);
 		float flapSpeed = 0.07f + open * 0.18f;
-		float flap = (float) Math.sin(age * flapSpeed) * (4f + open * 22f);
+		float[] st = FLAP.computeIfAbsent(key, k -> new float[]{0f, age, 0f});
+		float dAge = age - st[1];
+		if (dAge < 0f || dAge > 5f) dAge = 0f;
+		st[0] += dAge * flapSpeed;
+		st[1] = age;
+		st[2] += (open - st[2]) * Math.min(1f, dAge * 0.15f);
+		open = st[2];
+		if (FLAP.size() > 256) FLAP.clear();
+		float flap = (float) Math.sin(st[0]) * (4f + open * 22f);
 		float spread = 62f - open * 34f;
 		float lift = 10f + open * 6f;
 

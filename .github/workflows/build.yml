@@ -146,6 +146,18 @@ jobs:
           chmod +x gradlew
           timeout 1200 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest --no-configuration-cache || true
           ls -la run/screenshots || true
+      - name: List game API
+        if: always()
+        run: |
+          mkdir -p shots
+          JARS=$(find ~/.gradle/caches mod/.gradle -name "*.jar" 2>/dev/null | grep -i minecraft | grep -iv sources)
+          CP=""
+          for j in $JARS; do if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/Minecraft.class\|net/minecraft/world/entity/Entity.class\|com/mojang/blaze3d/systems/RenderSystem.class"; then CP="$CP:$j"; fi; done
+          echo "cp: $CP" > shots/api.txt
+          for j in $(echo "$CP" | tr ':' ' '); do unzip -l "$j" | grep -E "renderer/fog/|PlayerSkinWidget|SkinManager|Glint|glint|MobEffectTextureManager|TextureManager" | awk '{print $4}' >> shots/api.txt; done
+          for c in net.minecraft.client.gui.components.PlayerSkinWidget net.minecraft.client.resources.SkinManager net.minecraft.client.renderer.entity.state.AvatarRenderState net.minecraft.client.renderer.texture.DynamicTexture net.minecraft.client.gui.GuiGraphics net.minecraft.client.gui.Gui net.minecraft.client.renderer.texture.TextureManager net.minecraft.client.Screenshot net.minecraft.client.renderer.entity.ItemRenderer net.minecraft.client.renderer.fog.FogRenderer net.minecraft.client.renderer.fog.FogData net.minecraft.client.renderer.fog.environment.FogEnvironment net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment net.minecraft.client.renderer.fog.environment.WaterFogEnvironment net.minecraft.client.renderer.fog.environment.LavaFogEnvironment net.minecraft.client.renderer.fog.environment.PowderedSnowFogEnvironment net.minecraft.client.renderer.fog.environment.BlindnessFogEnvironment net.minecraft.client.renderer.fog.environment.DarknessFogEnvironment net.minecraft.client.renderer.fog.environment.MobEffectFogEnvironment com.mojang.blaze3d.systems.GpuDevice com.mojang.blaze3d.systems.CommandEncoder com.mojang.blaze3d.pipeline.RenderTarget net.minecraft.client.multiplayer.PlayerInfo net.minecraft.world.entity.player.PlayerSkin net.minecraft.client.resources.DefaultPlayerSkin net.minecraft.client.renderer.RenderPipelines; do echo "=== $c" >> shots/api.txt; javap -p -cp "$CP" "$c" >> shots/api.txt 2>&1; done
+          echo "=== Minecraft (filtered)" >> shots/api.txt
+          javap -p -cp "$CP" net.minecraft.client.Minecraft | grep -iE "profile|skin|services|session|window|textureManager|getEntityModels|modelManager" >> shots/api.txt 2>&1
       - name: Publish screenshots
         if: always()
         env:

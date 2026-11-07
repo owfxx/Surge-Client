@@ -575,7 +575,7 @@ public class WardrobeScreen extends Screen {
 
 		int footH = 28;
 		int floorY0 = y2 - footH - 8;
-		int size = Math.max(34, Math.min(110, Math.min((floorY0 - (y1 + headH) - 16) * 100 / 215, stageW * 36 / 100)));
+		int size = Math.max(34, Math.min(130, Math.min((floorY0 - (y1 + headH) - 10) * 100 / 205, stageW * 42 / 100)));
 		int rx = Math.min(stageW / 2 - 14, size + 12);
 		int floorY = floorY0 - Math.max(4, rx * 22 / 100) - 2;
 		pedestal(g, cx, floorY, rx);
@@ -587,7 +587,7 @@ public class WardrobeScreen extends Screen {
 
 		int ay = floorY - 26;
 		boolean lh = Ui.hover(mx, my, cx - rx - 14, ay, 14, 16), rh = Ui.hover(mx, my, cx + rx, ay, 14, 16);
-		if ((lh || rh) && click) action = () -> Preview.forced = (Preview.forced == null ? 0f : Preview.forced) + (lh ? -90f : 90f);
+		if ((lh || rh) && click) action = () -> Preview.turn(lh ? -90f : 90f);
 		Ui.icon(g, LEFT, cx - rx - 10, ay + 4, 1, lh ? Ui.TEXT : 0xFF55555C);
 		Ui.icon(g, RIGHT, cx + rx + 2, ay + 4, 1, rh ? Ui.TEXT : 0xFF55555C);
 
@@ -729,7 +729,7 @@ public class WardrobeScreen extends Screen {
 
 		List<Shop.Item> list = items();
 		int gap = 5, cols = Math.max(2, (gw + gap) / (68 + gap));
-		int tw = (gw - 4 - (cols - 1) * gap) / cols, th = Math.round(tw * 1.18f);
+		int tw = (gw - 4 - (cols - 1) * gap) / cols, th = Math.round(tw * 1.3f);
 		contentH = ((list.size() + cols - 1) / cols) * (th + gap) + 4;
 		scrollTarget = Math.max(0, Math.min(Math.max(0, contentH - gridH), scrollTarget));
 		g.enableScissor(gx - 2, gridTop, gx + gw, gridTop + gridH);
@@ -750,25 +750,29 @@ public class WardrobeScreen extends Screen {
 			float a = Ui.anim("wc:" + item.id(), hov);
 			int edge = sel ? 0xFFFFFFFF : equipped ? Ui.ACCENT_2 : Colors.lerp(0xFF2E2E33, 0xFF6A6A72, a);
 			Ui.cutBox(g, x, y, tw, th, 5, Colors.lerp(0xFF1E1E21, 0xFF27272B, a), edge);
-			g.fillGradient(x + 1, y + th / 2, x + tw - 1, y + th - 14, 0x00000000, Colors.alpha(rc, 0.12f + 0.1f * a));
-			for (int k = 0; k < 7; k++) g.fill(x + 1, y + 1 + k, x + 8 - k, y + 2 + k, k < 4 ? rc : Colors.alpha(rc, 0.5f));
-			drawFocused(g, item, i, x + 1, y + 1, x + tw - 1, y + th - 14);
-			g.fill(x + 1, y + th - 14, x + tw - 1, y + th - 13, 0xFF2A2A2E);
-			g.drawString(font, Ui.fit(font, item.name(), tw - 8), x + 5, y + th - 11, hov || sel ? Ui.TEXT : 0xFFC8C8CD, false);
+			g.fillGradient(x + 1, y + th / 2, x + tw - 1, y + th - 1, 0x00000000, Colors.alpha(rc, 0.12f + 0.1f * a));
+			drawFocused(g, item, i, x + 1, y + 14, x + tw - 1, y + th - 13);
+			g.fill(x + 3, y + 3, x + 6, y + 11, rc);
+			g.drawString(font, Ui.fit(font, item.name(), tw - 12), x + 9, y + 4, hov || sel ? Ui.TEXT : 0xFFC8C8CD, false);
+			g.fill(x + 1, y + 13, x + tw - 1, y + 14, 0xFF2A2A2E);
+			int by2 = y + th - 12;
 			if (owned) {
-				if (equipped) { String eq = "ON"; g.fill(x + tw - font.width(eq) - 9, y + 4, x + tw - 4, y + 14, Ui.ACCENT_2); g.drawString(font, eq, x + tw - font.width(eq) - 6, y + 5, 0xFF141416, false); }
-				else Ui.icon(g, CHECK, x + tw - 12, y + 5, 1, 0xFF6EE07A);
-			} else if (locked) Ui.icon(g, LOCK, x + tw - 12, y + 5, 1, 0xFFFF8C8C);
+				if (equipped) { String eq = "Wearing"; g.drawString(font, eq, x + 5, by2 + 1, Ui.ACCENT_2, false); }
+				else { Ui.icon(g, CHECK, x + 5, by2 + 1, 1, 0xFF6EE07A); g.drawString(font, "Owned", x + 15, by2 + 1, 0xFF8A8A92, false); }
+			} else if (locked) { Ui.icon(g, LOCK, x + 5, by2 + 1, 1, 0xFFFF8C8C); g.drawString(font, "Locked", x + 15, by2 + 1, 0xFF8A8A92, false); }
 			else {
 				String price = String.format("%,d", Shop.price(item));
-				int pw = font.width(price) + 15;
 				int sale = Sales.discount(item);
-				g.fill(x + tw - pw - 4, y + 4, x + tw - 4, y + 15, sale > 0 ? 0xE0E0A21A : 0xC0101012);
-				g.drawString(font, price, x + tw - pw - 1, y + 6, sale > 0 ? 0xFF1A1200 : Ui.TEXT, false);
-				Ui.coin(g, x + tw - 15, y + 5, 9);
+				Ui.coin(g, x + 4, by2, 9);
+				g.drawString(font, price, x + 16, by2 + 1, sale > 0 ? 0xFFFFD25A : Ui.TEXT, false);
+				if (sale > 0) {
+					String pc = "-" + sale + "%";
+					g.fill(x + tw - font.width(pc) - 8, by2 - 1, x + tw - 3, by2 + 9, 0xE0E0A21A);
+					g.drawString(font, pc, x + tw - font.width(pc) - 5, by2, 0xFF1A1200, false);
+				}
 			}
 			Emotes.Emote em = isEmote ? Emotes.Emote.byName(item.key()) : null;
-			if (em != null && em.music != null) Ui.icon(g, NOTE, x + 5, y + th - 25, 1, 0xC0FFFFFF);
+			if (em != null && em.music != null) Ui.icon(g, NOTE, x + tw - 12, y + th - 12, 1, 0xC0FFFFFF);
 			if (hov) hoveredItem = item;
 			if (hov && rclick) itemMenu(mx, my, item);
 			if (hov && click) {
