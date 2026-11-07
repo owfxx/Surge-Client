@@ -153,14 +153,7 @@ public class SocialScreen extends Screen {
 	}
 
 	private void face(GuiGraphics g, String rawUuid, int x, int y, int size) {
-		UUID id = uuid(rawUuid);
-		PlayerSkin skin = null;
-		if (id != null && minecraft.getConnection() != null) {
-			PlayerInfo info = minecraft.getConnection().getPlayerInfo(id);
-			if (info != null) skin = info.getSkin();
-		}
-		if (skin == null) skin = id != null ? DefaultPlayerSkin.get(id) : DefaultPlayerSkin.getDefaultSkin();
-		PlayerFaceRenderer.draw(g, skin, x, y, size);
+		gg.surge.client.net.Skins.face(g, rawUuid, x, y, size);
 	}
 
 	private static String when(long ts) {
@@ -182,6 +175,15 @@ public class SocialScreen extends Screen {
 	private static final String[] ADD = {".XX.....", "XXXX..X.", "XXXX.XXX", ".XX...X.", "XXXX....", "XXXX....", "........", "........"};
 	private static final String[] MENU = {"........", "XXXXXXX.", "........", "XXXXXXX.", "........", "XXXXXXX.", "........", "........"};
 
+	private boolean rclickFrame;
+
+	@Override
+	public boolean shouldCloseOnEsc() {
+		return editingId == 0;
+	}
+	private long editingId;
+	private String editingChat;
+
 	private int railW() {
 		return Math.max(108, Math.min(170, Math.round(this.width * 0.24f)));
 	}
@@ -193,6 +195,7 @@ public class SocialScreen extends Screen {
 		boolean l = GLFW.glfwGetMouseButton(win, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
 		boolean r = GLFW.glfwGetMouseButton(win, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
 		boolean click = l && !wasL, rclick = r && !wasR;
+		rclickFrame = rclick;
 		wasL = l;
 		wasR = r;
 		boolean enter = GLFW.glfwGetKey(win, GLFW.GLFW_KEY_ENTER) == GLFW.GLFW_PRESS;
@@ -366,7 +369,7 @@ public class SocialScreen extends Screen {
 			List<Social.Message> msgs = Social.CHATS.get(f.uuid());
 			Social.Message last = msgs == null || msgs.isEmpty() ? null : msgs.get(msgs.size() - 1);
 			g.drawString(font, Ui.fit(font, f.name(), rw - 36 - (un > 0 ? 14 : 0)), x + 29, y + 3, Ui.TEXT, false);
-			String sub = last != null ? (last.from().equals(Social.myUuid) ? "You: " : "") + last.text() : !f.server().isEmpty() && !"offline".equals(f.status()) ? f.server() : Social.statusLabel(f.status());
+			String sub = last != null ? (last.from().equals(Social.self()) ? "You: " : "") + last.text() : !f.server().isEmpty() && !"offline".equals(f.status()) ? f.server() : Social.statusLabel(f.status());
 			g.drawString(font, Ui.fit(font, sub, rw - 34), x + 29, y + 13, Ui.FAINT, false);
 			if (un > 0) {
 				String b = un > 9 ? "9+" : String.valueOf(un);
@@ -419,9 +422,13 @@ public class SocialScreen extends Screen {
 		for (Social.Message msg : msgs) {
 			String d = day.format(new Date(msg.ts()));
 			if (!d.equals(lastDay)) { rows.add(new Object[]{"day", d}); lastDay = d; lastFrom = ""; }
-			boolean mine = msg.from().equals(Social.myUuid);
+			boolean mine = msg.from().equals(Social.self());
 			if (!msg.from().equals(lastFrom) || msg.ts() - lastTs > 5 * 60_000) rows.add(new Object[]{"head", mine ? "You" : f.name(), clock.format(new Date(msg.ts())), mine, msg.from()});
-			rows.add(new Object[]{"msg", wrap(msg.text(), textW), mine});
+			List<String> ls = new ArrayList<>(wrap(msg.text(), textW));
+			if (msg.edited()) ls.set(ls.size() - 1, ls.get(ls.size() - 1) + " \u00A78(edited)");
+			if (msg.pending()) ls.add("\u00A78sending…");
+			if (msg.failed()) ls.add("\u00A7cNot sent, right click to try again");
+			rows.add(new Object[]{"msg", ls, mine, msg});
 			lastFrom = msg.from();
 			lastTs = msg.ts();
 		}
@@ -452,6 +459,21 @@ public class SocialScreen extends Screen {
 					default -> {
 						@SuppressWarnings("unchecked") List<String> lines = (List<String>) row[1];
 						boolean mine = (Boolean) row[2];
+						Social.Message sm = (Social.Message) row[3];
+						boolean rowHov = Ui.hover(mx, my, x1 + 4, yy, w - 8, h) && my > areaTop && my < areaBottom && menuLabels == null;
+						if (rowHov || (sm.id() == editingId && editingId != 0)) g.fill(x1 + 4, yy - 1, x2 - 4, yy + h - 1, sm.id() == editingId ? 0x30FFFFFF : 0x14FFFFFF);
+						if (rowHov && rclickFrame) {
+							final Social.Friend ff = f;
+							List<String> ml = new ArrayList<>();
+							List<Runnable> ma = new ArrayList<>();
+							if (sm.failed()) { ml.add("Try again"); ma.add(() -> { Social.deleteMessage(ff.uuid(), sm.id(), err -> { }); Social.message(ff.uuid(), sm.text(), err -> note(err, 0xFFFF8C8C)); }); }
+							ml.add("Copy"); ma.add(() -> { minecraft.keyboardHandler.setClipboard(sm.text()); note("Copied", Ui.MUTED); });
+							if (mine && !sm.pending() && !sm.failed()) {
+								ml.add("Edit"); ma.add(() -> { editingId = sm.id(); editingChat = ff.uuid(); input.setValue(sm.text()); input.setFocused(true); setFocused(input); });
+							}
+							if (mine && !sm.pending()) { ml.add("Delete"); ma.add(() -> { Social.deleteMessage(ff.uuid(), sm.id(), err -> note(err, 0xFFFF8C8C)); note("Message deleted", Ui.MUTED); }); }
+							openMenu(mx, my, ml, ma);
+						}
 						g.fill(x1 + 15, yy, x1 + 16, yy + lines.size() * 10 + 1, mine ? Colors.alpha(Ui.ACCENT_2, 0.6f) : 0xFF34343A);
 						for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x1 + 28, yy + 1 + i * 10, mine ? 0xFFE4E4E7 : 0xFFD0D0D4, false);
 					}
@@ -468,6 +490,11 @@ public class SocialScreen extends Screen {
 		int iy = this.height - m - 20;
 		Ui.cutBox(g, x1, iy, w, 20, 4, 0xFF1E1E21, input.isFocused() ? Ui.ACCENT_2 : 0xFF2E2E33);
 		input.visible = true;
+		boolean editing = editingId != 0 && f.uuid().equals(editingChat);
+		if (editing) {
+			g.drawString(font, "Editing message, Esc to cancel", x1 + 4, iy - 11, Ui.ACCENT_2, false);
+			if (GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS) { editingId = 0; input.setValue(""); }
+		}
 		input.setHint(Component.literal("Message " + f.name()).withStyle(ChatFormatting.DARK_GRAY));
 		input.setX(x1 + 8);
 		input.setY(iy + 6);
@@ -478,7 +505,11 @@ public class SocialScreen extends Screen {
 			String text = input.getValue();
 			input.setValue("");
 			scrollTarget = 0;
-			action = () -> Social.message(fr.uuid(), text, err -> note(err, 0xFFFF8C8C));
+			if (editing) {
+				long eid = editingId;
+				editingId = 0;
+				action = () -> Social.editMessage(fr.uuid(), eid, text, err -> note(err, 0xFFFF8C8C));
+			} else action = () -> Social.message(fr.uuid(), text, err -> note(err, 0xFFFF8C8C));
 		}
 		return action;
 	}

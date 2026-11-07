@@ -41,7 +41,19 @@ public abstract class EntityRendererMixin {
 			cir.setReturnValue(Component.literal(String.format("%.1fs", sec)).withStyle(col));
 			return;
 		}
-		if (!(entity instanceof Player)) return;
+		if (!(entity instanceof Player)) {
+			Component tag = cir.getReturnValue();
+			if (tag == null || tag.getString().isBlank()) return;
+			Player owner = entity.getVehicle() instanceof Player vp ? vp : null;
+			if (owner == null && entity instanceof net.minecraft.world.entity.decoration.ArmorStand && entity.isInvisible()) {
+				for (Player pl : entity.level().players()) {
+					double dx = pl.getX() - entity.getX(), dz = pl.getZ() - entity.getZ(), dy = entity.getY() - pl.getY();
+					if (dx * dx + dz * dz < 0.36 && dy > 0.8 && dy < 3.2) { owner = pl; break; }
+				}
+			}
+			if (owner != null && Badges.show(owner.getUUID())) cir.setReturnValue(Badges.prefix(tag));
+			return;
+		}
 		Component name = cir.getReturnValue();
 		if (name == null) return;
 		if (Performance.hideFarNametags) {

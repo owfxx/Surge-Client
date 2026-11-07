@@ -28,10 +28,15 @@ public abstract class ServerEntryMixin {
 		String flag = code.isEmpty() ? "" : gg.surge.client.features.Flags.glyph(code);
 		net.minecraft.network.chat.Component label = code.isEmpty() || flag.isEmpty() ? net.minecraft.network.chat.Component.literal(code.isEmpty() ? region : code)
 			: net.minecraft.network.chat.Component.empty().append(gg.surge.client.features.Flags.icon(flag)).append(" " + code);
-		int x = e.getX() + 37 + font.width(serverData.name) + 6;
-		int y = e.getY() + 3;
-		int max = e.getX() + e.getWidth() - 60;
-		if (x + font.width(label) > max) return;
+		int right = e.getX() + e.getWidth() - 5;
+		int w = font.width(label);
+		int x = right - w;
+		int y = e.getY() + 12;
 		g.drawString(font, label, x, y, 0xFF9CA3AF, false);
+		if (mouseX >= x - 2 && mouseX <= right + 2 && mouseY >= y - 1 && mouseY <= y + 9) {
+			String place = code.isEmpty() ? region : region.substring(0, region.lastIndexOf(", ")) + ", " + gg.surge.client.features.Flags.name(code);
+			var mc = Minecraft.getInstance();
+			gg.surge.client.gui.Ui.tooltip(g, font, "Server location: " + place, mouseX, mouseY, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+		}
 	}
 }

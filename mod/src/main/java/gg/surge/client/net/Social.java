@@ -27,7 +27,10 @@ public final class Social {
 
 	public record Person(String uuid, String name) {}
 
-	public record Message(long id, String from, String to, String text, long ts) {}
+	public record Message(long id, String from, String to, String text, long ts, boolean edited, int state) {
+		public boolean pending() { return state == 1; }
+		public boolean failed() { return state == 2; }
+	}
 
 	public record Toast(String title, String text, long at) {}
 
@@ -43,7 +46,7 @@ public final class Social {
 	public static volatile String lastError = "";
 
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(6)).build();
-	private static long lastSocial, lastMessages, lastId = -1, lastInput = System.currentTimeMillis();
+	private static long lastSocial, lastMessages, lastId = -1, lastChange = 0, lastInput = System.currentTimeMillis();
 	private static double lastMx, lastMy;
 	private static boolean busySocial, busyMsg, loadedOnce;
 	private static Object lastScreen;
@@ -293,27 +296,63 @@ public final class Social {
 		}));
 	}
 
+	public static String self() {
+		return !myUuid.isEmpty() ? myUuid : myId();
+	}
+
+	private static void addMessage(String other, Message msg) {
+		List<Message> list = CHATS.computeIfAbsent(other, k -> new ArrayList<>());
+		for (int i = 0; i < list.size(); i++) {
+			Message m = list.get(i);
+			if (m.id() == msg.id()) { list.set(i, msg); return; }
+			if (m.pending() && msg.state() == 0 && m.from().equals(msg.from()) && m.text().equals(msg.text())) { list.set(i, msg); return; }
+		}
+		list.add(msg);
+		list.sort((x, y) -> Long.compare(x.ts(), y.ts()));
+	}
+
 	private static void pollMessages() {
+		if (self().isEmpty()) return;
 		busyMsg = true;
 		long since = Math.max(0, lastId);
-		call(() -> req("/v1/messages?since=" + since).GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+		long changed = lastChange;
+		call(() -> req("/v1/messages?since=" + since + "&changed=" + changed).GET().build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
 			busyMsg = false;
 			if (o.has("error")) return;
+			if (o.has("me")) myUuid = s(o, "me");
 			JsonArray a = o.getAsJsonArray("messages");
 			if (a == null) return;
 			boolean first = lastId < 0;
+			String me = self();
 			for (JsonElement e : a) {
 				JsonObject m = e.getAsJsonObject();
-				Message msg = new Message(m.get("id").getAsLong(), s(m, "sender"), s(m, "receiver"), s(m, "text"), m.get("ts").getAsLong());
+				boolean edited = m.has("edited") && !m.get("edited").isJsonNull() && m.get("edited").getAsInt() == 1;
+				Message msg = new Message(m.get("id").getAsLong(), s(m, "sender"), s(m, "receiver"), s(m, "text"), m.get("ts").getAsLong(), edited, 0);
 				lastId = Math.max(lastId, msg.id());
-				boolean mine = msg.from().equals(myUuid);
+				boolean mine = msg.from().equals(me);
 				String other = mine ? msg.to() : msg.from();
-				CHATS.computeIfAbsent(other, k -> new ArrayList<>()).add(msg);
+				addMessage(other, msg);
 				if (!mine && !first && !other.equals(openChat)) {
 					UNREAD.merge(other, 1, Integer::sum);
 					if (!muted.contains(other) && !Social.status().equals("busy")) toast(nameOf(other), msg.text());
 				}
 			}
+			JsonArray ch = o.getAsJsonArray("changes");
+			if (ch != null) for (JsonElement e : ch) {
+				JsonObject c = e.getAsJsonObject();
+				long id = c.get("id").getAsLong();
+				boolean del = c.has("deleted") && c.get("deleted").getAsInt() == 1;
+				for (List<Message> list : CHATS.values()) {
+					for (int i = 0; i < list.size(); i++) {
+						Message m = list.get(i);
+						if (m.id() != id) continue;
+						if (del) list.remove(i);
+						else list.set(i, new Message(m.id(), m.from(), m.to(), s(c, "text"), m.ts(), true, 0));
+						break;
+					}
+				}
+			}
+			if (o.has("now")) lastChange = Math.max(lastChange, o.get("now").getAsLong() - 2000);
 			if (first && lastId < 0) lastId = 0;
 		}));
 	}
@@ -382,9 +421,47 @@ public final class Social {
 	public static void message(String uuid, String text, Consumer<String> error) {
 		JsonObject b = uuidBody(uuid);
 		b.addProperty("text", text);
+		long tempId = -System.nanoTime();
+		Message pending = new Message(tempId, self(), uuid, text, System.currentTimeMillis(), false, 1);
+		addMessage(uuid, pending);
 		call(() -> req("/v1/messages").POST(HttpRequest.BodyPublishers.ofString(b.toString())).build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+			List<Message> list = CHATS.computeIfAbsent(uuid, k -> new ArrayList<>());
+			int idx = -1;
+			for (int i = 0; i < list.size(); i++) if (list.get(i).id() == tempId) idx = i;
+			if (o.has("error")) {
+				if (idx >= 0) list.set(idx, new Message(tempId, pending.from(), uuid, text, pending.ts(), false, 2));
+				error.accept(s(o, "error"));
+				return;
+			}
+			long id = o.has("id") ? o.get("id").getAsLong() : tempId;
+			long ts = o.has("ts") ? o.get("ts").getAsLong() : pending.ts();
+			if (idx >= 0) list.remove(idx);
+			addMessage(uuid, new Message(id, pending.from(), uuid, text, ts, false, 0));
+		}));
+	}
+
+	public static void editMessage(String chat, long id, String text, Consumer<String> error) {
+		List<Message> list = CHATS.get(chat);
+		if (list != null) for (int i = 0; i < list.size(); i++) {
+			Message m = list.get(i);
+			if (m.id() == id) list.set(i, new Message(m.id(), m.from(), m.to(), text, m.ts(), true, 0));
+		}
+		JsonObject b = new JsonObject();
+		b.addProperty("id", id);
+		b.addProperty("text", text);
+		call(() -> req("/v1/messages/edit").POST(HttpRequest.BodyPublishers.ofString(b.toString())).build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
 			if (o.has("error")) error.accept(s(o, "error"));
-			else { lastMessages = 0; }
+		}));
+	}
+
+	public static void deleteMessage(String chat, long id, Consumer<String> error) {
+		List<Message> list = CHATS.get(chat);
+		if (list != null) list.removeIf(m -> m.id() == id);
+		if (id < 0) return;
+		JsonObject b = new JsonObject();
+		b.addProperty("id", id);
+		call(() -> req("/v1/messages/delete").POST(HttpRequest.BodyPublishers.ofString(b.toString())).build()).thenAccept(o -> Minecraft.getInstance().execute(() -> {
+			if (o.has("error")) error.accept(s(o, "error"));
 		}));
 	}
 

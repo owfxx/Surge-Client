@@ -145,8 +145,7 @@ public final class Mods {
 	public static final SurgeMod NAMETAGS = mod("nametags", "Nametags", Category.VISUAL, Items.NAME_TAG,
 		"Show your own nametag in third person, and your country's flag if you want", false);
 	public static final Setting.Toggle TAG_OWN = NAMETAGS.toggle("own", "Show your own nametag", true);
-	public static final Setting.Toggle TAG_FLAG = NAMETAGS.toggle("flag", "Show your flag", false);
-	public static final Setting.Choice TAG_COUNTRY = NAMETAGS.choice("country", "Country", "DE", gg.surge.client.features.Flags.CODES).showIf(() -> Mods.TAG_FLAG.on());
+	public static final Setting.Toggle TAG_FLAG = NAMETAGS.toggle("flag", "Show your country flag (from where you connect)", false);
 	public static final Setting.Toggle TAG_OTHERS_FLAGS = NAMETAGS.toggle("othersFlags", "Show other players' flags", true);
 
 	public static final SurgeMod TNT_TIMER = mod("tnt_timer", "TNT Timer", Category.VISUAL, Items.TNT,
@@ -295,7 +294,6 @@ public final class Mods {
 	public static final Setting.Toggle PROFILE_PER_SERVER = PROFILES.toggle("perServer", "Remember a setup for each server", false);
 
 	static {
-		TAG_COUNTRY.label = gg.surge.client.features.Flags::name;
 		DAMAGE_TINT.onToggle(on -> DamageTint.apply(mc())).onChange(() -> DamageTint.apply(mc()));
 		FULLBRIGHT.onToggle(on -> Fullbright.apply(mc())).onChange(() -> Fullbright.apply(mc()));
 		TOGGLE_SNEAK.onToggle(on -> OptionTweaks.apply(mc()));

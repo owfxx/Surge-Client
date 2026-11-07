@@ -24,7 +24,7 @@ public final class SurgeNet {
 		public volatile long emoteAt, emoteStart;
 	}
 
-	private static final Map<UUID, Remote> PLAYERS = new ConcurrentHashMap<>();
+	private static volatile Map<UUID, Remote> PLAYERS = new ConcurrentHashMap<>();
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(6)).build();
 	private static long lastPush, lastPull;
 	private static String lastSent = "";
@@ -70,8 +70,14 @@ public final class SurgeNet {
 		return PLAYERS.get(id);
 	}
 
+	public static volatile String myCountry = "none";
+
 	public static String myFlag() {
-		return gg.surge.client.mods.Mods.NAMETAGS.enabled() && gg.surge.client.mods.Mods.TAG_FLAG.on() ? gg.surge.client.mods.Mods.TAG_COUNTRY.get() : "none";
+		return gg.surge.client.mods.Mods.NAMETAGS.enabled() && gg.surge.client.mods.Mods.TAG_FLAG.on() ? myCountry : "none";
+	}
+
+	private static String sendFlag() {
+		return gg.surge.client.mods.Mods.NAMETAGS.enabled() && gg.surge.client.mods.Mods.TAG_FLAG.on() ? "show" : "none";
 	}
 
 	public static String flagGlyph(UUID id) {
@@ -95,13 +101,13 @@ public final class SurgeNet {
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
 		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + emote + emoteAt
-			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + myFlag();
+			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + sendFlag();
 		if (!busyPush && (now - lastPush > 60_000 || !wear.equals(lastSent))) {
 			lastPush = now;
 			lastSent = wear;
 			push(mc);
 		}
-		if (!busyPull && mc.level != null && now - lastPull > 6_000) {
+		if (!busyPull && mc.level != null && now - lastPull > (PLAYERS.isEmpty() ? 5_000 : 1_500)) {
 			lastPull = now;
 			pull(mc);
 		}
@@ -117,7 +123,7 @@ public final class SurgeNet {
 		o.addProperty("cape", Cosmetics.wire("cape", c.cape));
 		o.addProperty("emote", emote);
 		o.addProperty("emoteAt", emoteAt);
-		o.addProperty("flag", myFlag());
+		o.addProperty("flag", sendFlag());
 		o.addProperty("status", Social.status());
 		o.addProperty("server", Social.server(mc));
 		HttpRequest req;
@@ -130,7 +136,17 @@ public final class SurgeNet {
 			return;
 		}
 		busyPush = true;
-		HTTP.sendAsync(req, HttpResponse.BodyHandlers.discarding()).whenComplete((r, e) -> busyPush = false);
+		HTTP.sendAsync(req, HttpResponse.BodyHandlers.ofString()).whenComplete((r, e) -> {
+			busyPush = false;
+			if (e != null || r == null || r.statusCode() != 200) { lastPush = System.currentTimeMillis() - 50_000; return; }
+			try {
+				JsonObject res = JsonParser.parseString(r.body()).getAsJsonObject();
+				if (res.has("flag")) {
+					String f = res.get("flag").getAsString();
+					if (!"none".equals(f)) myCountry = f;
+				}
+			} catch (Exception ignored) { }
+		});
 	}
 
 	private static void pull(Minecraft mc) {
@@ -141,7 +157,7 @@ public final class SurgeNet {
 			if (ids.length() > 0) ids.append(',');
 			ids.append(p.getUUID().toString().replace("-", ""));
 		}
-		if (ids.length() == 0) { PLAYERS.clear(); return; }
+		if (ids.length() == 0) { PLAYERS = new ConcurrentHashMap<>(); return; }
 		HttpRequest req;
 		try {
 			req = HttpRequest.newBuilder(URI.create(url() + "/v1/players?ids=" + ids)).timeout(Duration.ofSeconds(8)).GET().build();
@@ -174,8 +190,7 @@ public final class SurgeNet {
 					}
 					fresh.put(id, rem);
 				}
-				PLAYERS.clear();
-				PLAYERS.putAll(fresh);
+				PLAYERS = fresh;
 			} catch (Exception ignored) { }
 		});
 	}

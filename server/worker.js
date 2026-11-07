@@ -10,7 +10,10 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 });
 const STATUSES = ['online', 'idle', 'busy', 'invisible'];
 
+let setupDone = false;
+
 async function setup(db) {
+  if (setupDone) return;
   await db.batch([
     db.prepare('CREATE TABLE IF NOT EXISTS players (uuid TEXT PRIMARY KEY, name TEXT, data TEXT, seen INTEGER)'),
     db.prepare('CREATE TABLE IF NOT EXISTS users (uuid TEXT PRIMARY KEY, name TEXT, name_lc TEXT, token TEXT, status TEXT, server TEXT, seen INTEGER)'),
@@ -22,6 +25,23 @@ async function setup(db) {
     db.prepare('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, ts INTEGER)'),
     db.prepare('CREATE INDEX IF NOT EXISTS messages_pair ON messages(receiver, id)'),
   ]);
+  for (const col of ['edited INTEGER DEFAULT 0', 'deleted INTEGER DEFAULT 0', 'updated INTEGER DEFAULT 0']) {
+    try { await db.prepare(`ALTER TABLE messages ADD COLUMN ${col}`).run(); } catch { }
+  }
+  try { await db.prepare('ALTER TABLE users ADD COLUMN country TEXT').run(); } catch { }
+  setupDone = true;
+}
+
+async function lookupName(name) {
+  if (!/^[A-Za-z0-9_]{1,16}$/.test(name || '')) return null;
+  try {
+    const r = await fetch(`https://playerdb.co/api/player/minecraft/${encodeURIComponent(name)}`, { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const p = d && d.data && d.data.player;
+    if (!p || !p.raw_id || !p.username) return null;
+    return { uuid: norm(p.raw_id), name: p.username };
+  } catch { return null; }
 }
 
 const pair = (x, y) => (x < y ? [x, y] : [y, x]);
@@ -244,7 +264,7 @@ export default {
       if (!UUID_RE.test(uuid)) return json({ error: 'bad uuid' }, 400);
       const data = {
         wings: clean(body.wings), halo: clean(body.halo), cape: clean(body.cape),
-        emote: clean(body.emote), emoteAt: Number(body.emoteAt) || 0, flag: /^[A-Z]{2}$/.test(body.flag || '') ? body.flag : 'none',
+        emote: clean(body.emote), emoteAt: Number(body.emoteAt) || 0, flag: body.flag === 'none' ? 'none' : (() => { const c = String((req.cf && req.cf.country) || '').toUpperCase(); return /^[A-Z]{2}$/.test(c) && c !== 'XX' && c !== 'T1' ? c : 'none'; })(),
       };
       const now = Date.now();
       await db.prepare('INSERT INTO players (uuid, name, data, seen) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(uuid) DO UPDATE SET name = ?2, data = ?3, seen = ?4')
@@ -254,7 +274,8 @@ export default {
         const server = typeof body.server === 'string' ? body.server.slice(0, 80) : '';
         await db.prepare('UPDATE users SET status = ?2, server = ?3, seen = ?4 WHERE uuid = ?1').bind(uuid, status, server, now).run();
       }
-      return json({ ok: true, now });
+      const cc = String((req.cf && req.cf.country) || '').toUpperCase();
+      return json({ ok: true, now, flag: /^[A-Z]{2}$/.test(cc) ? cc : 'none' });
     }
 
     if (p === '/v1/players' && req.method === 'GET') {
@@ -292,8 +313,14 @@ export default {
     }
 
     if (p === '/v1/friends/add' && req.method === 'POST') {
-      const other = body.name ? await userByName(db, body.name) : await db.prepare('SELECT uuid, name FROM users WHERE uuid = ?1').bind(target).first();
-      if (!other) return json({ error: 'No Surge player with that name' }, 404);
+      let other = body.name ? await userByName(db, body.name) : await db.prepare('SELECT uuid, name FROM users WHERE uuid = ?1').bind(target).first();
+      if (!other && body.name) {
+        const found = await lookupName(String(body.name).trim());
+        if (!found) return json({ error: 'No Minecraft player with that name' }, 404);
+        await db.prepare("INSERT OR IGNORE INTO users (uuid, name, name_lc, token, status, server, seen) VALUES (?1, ?2, ?3, NULL, 'online', '', 0)").bind(found.uuid, found.name, found.name.toLowerCase()).run();
+        other = found;
+      }
+      if (!other) return json({ error: 'No Minecraft player with that name' }, 404);
       if (other.uuid === id) return json({ error: "You can't add yourself" }, 400);
       if (await blocked(db, id, other.uuid)) return json({ error: "You can't add this player" }, 403);
       const [a, b] = pair(id, other.uuid);
@@ -335,15 +362,38 @@ export default {
       if (!f) return json({ error: 'You can only message friends' }, 403);
       if (await blocked(db, id, target)) return json({ error: "You can't message this player" }, 403);
       const ts = Date.now();
-      const r = await db.prepare('INSERT INTO messages (sender, receiver, text, ts) VALUES (?1, ?2, ?3, ?4)').bind(id, target, text, ts).run();
+      const r = await db.prepare('INSERT INTO messages (sender, receiver, text, ts, updated) VALUES (?1, ?2, ?3, ?4, ?4)').bind(id, target, text, ts).run();
       return json({ ok: true, id: r.meta.last_row_id, ts });
+    }
+
+    if ((p === '/v1/messages/edit' || p === '/v1/messages/delete') && req.method === 'POST') {
+      const mid = Math.floor(Number(body.id) || 0);
+      if (mid <= 0) return json({ error: 'bad request' }, 400);
+      const now = Date.now();
+      if (p.endsWith('edit')) {
+        const text = String(body.text || '').trim().slice(0, 500);
+        if (!text) return json({ error: 'bad request' }, 400);
+        const r = await db.prepare('UPDATE messages SET text = ?3, edited = 1, updated = ?4 WHERE id = ?1 AND sender = ?2 AND deleted = 0').bind(mid, id, text, now).run();
+        if (!r.meta.changes) return json({ error: "You can only edit your own messages" }, 403);
+      } else {
+        const r = await db.prepare("UPDATE messages SET text = '', deleted = 1, updated = ?3 WHERE id = ?1 AND sender = ?2").bind(mid, id, now).run();
+        if (!r.meta.changes) return json({ error: "You can only delete your own messages" }, 403);
+      }
+      return json({ ok: true, now });
     }
 
     if (p === '/v1/messages' && req.method === 'GET') {
       const since = Math.max(0, Number(url.searchParams.get('since')) || 0);
-      const { results } = await db.prepare(`SELECT id, sender, receiver, text, ts FROM messages
-        WHERE id > ?2 AND (sender = ?1 OR receiver = ?1) AND ts > ?3 ORDER BY id LIMIT 300`).bind(id, since, Date.now() - 30 * 86400000).all();
-      return json({ messages: results });
+      const changed = Math.max(0, Number(url.searchParams.get('changed')) || 0);
+      const now = Date.now();
+      const { results } = await db.prepare(`SELECT id, sender, receiver, text, ts, edited FROM messages
+        WHERE id > ?2 AND (sender = ?1 OR receiver = ?1) AND ts > ?3 AND deleted = 0 ORDER BY id LIMIT 300`).bind(id, since, now - 30 * 86400000).all();
+      let changes = [];
+      if (changed > 0) {
+        const c = await db.prepare(`SELECT id, text, edited, deleted FROM messages WHERE (sender = ?1 OR receiver = ?1) AND updated > ?2 AND id <= ?3 AND (edited = 1 OR deleted = 1) LIMIT 300`).bind(id, changed, since).all();
+        changes = c.results;
+      }
+      return json({ messages: results, changes, now, me: id });
     }
 
     return json({ error: 'not found' }, 404);
