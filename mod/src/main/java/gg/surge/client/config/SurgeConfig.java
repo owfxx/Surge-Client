@@ -15,7 +15,8 @@ import java.util.Map;
 
 public class SurgeConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("surge.json");
+	private static final Path LOCAL = FabricLoader.getInstance().getConfigDir().resolve("surge.json");
+	private static final Path FILE = Path.of(System.getProperty("user.home"), ".surgeclient", "surge.json");
 	private static SurgeConfig instance;
 
 	public static class ModuleState {
@@ -72,10 +73,14 @@ public class SurgeConfig {
 		public String design = "logo";
 		public String top = "8F50F2", bottom = "EC68B0";
 		public boolean shimmer = true, glow = true;
+		public String color = "141418", logo = "FFFFFF", text = "beta_tester";
 	}
+
+	public String capeColor = "8F50F2";
 
 	public BetaCape betaCape = new BetaCape();
 	public boolean welcomed = false;
+	public int defaultsVersion = 0;
 
 	public List<List<String>> emotePages = null;
 	public List<String> dropItems = new ArrayList<>();
@@ -92,6 +97,10 @@ public class SurgeConfig {
 	}
 
 	public static void load() {
+		try {
+			Files.createDirectories(FILE.getParent());
+			if (!Files.exists(FILE) && Files.exists(LOCAL)) Files.copy(LOCAL, FILE);
+		} catch (Exception ignored) { }
 		if (Files.exists(FILE)) {
 			try (Reader r = Files.newBufferedReader(FILE)) {
 				instance = GSON.fromJson(r, SurgeConfig.class);
@@ -110,6 +119,11 @@ public class SurgeConfig {
 		if (instance.wings == null) instance.wings = "none";
 		if (instance.cape == null) instance.cape = "none";
 		if (instance.betaCape == null) instance.betaCape = new BetaCape();
+		if (instance.betaCape.color == null) instance.betaCape.color = "141418";
+		if (instance.betaCape.logo == null) instance.betaCape.logo = "FFFFFF";
+		if (instance.betaCape.text == null) instance.betaCape.text = "beta_tester";
+		if (instance.capeColor == null) instance.capeColor = "8F50F2";
+		if (instance.cape.startsWith("classic_")) instance.cape = "custom";
 	}
 
 	private static boolean dirty;

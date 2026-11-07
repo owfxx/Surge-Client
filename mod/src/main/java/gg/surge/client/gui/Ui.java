@@ -158,6 +158,11 @@ public final class Ui {
 		return 0;
 	}
 
+	public static final ItemStack IT_SOCIAL = new ItemStack(net.minecraft.world.item.Items.PLAYER_HEAD);
+	public static final ItemStack IT_SETTINGS = new ItemStack(net.minecraft.world.item.Items.COMPARATOR);
+	public static final ItemStack IT_WARDROBE = new ItemStack(net.minecraft.world.item.Items.LEATHER_CHESTPLATE);
+	public static final ItemStack IT_MODS = new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK);
+	public static final ItemStack IT_COINS = new ItemStack(net.minecraft.world.item.Items.GOLD_NUGGET);
 	public static final String[] I_SOCIAL = {"XXXXXXXX", "XXXXXXXX", "XX.XX.XX", "XXXXXXXX", "XXXXXXXX", ".XX.....", ".X......", "........"};
 	public static final String[] I_MODS = {"..X.....", "XXXXXXXX", "..X.....", "......X.", "XXXXXXXX", "......X.", "...X....", "XXXXXXXX"};
 	public static final String[] I_GEAR = {"..X..X..", ".XXXXXX.", "XXX..XXX", ".X....X.", ".X....X.", "XXX..XXX", ".XXXXXX.", "..X..X.."};

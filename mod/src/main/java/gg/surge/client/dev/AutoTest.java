@@ -63,6 +63,7 @@ public final class AutoTest {
 		STEPS.add(new Step("01-title", 80, mc -> { mc.options.onboardAccessibility = false; open(mc, new TitleScreen()); }));
 		STEPS.add(new Step("01b-title-log", 30, mc -> gg.surge.client.gui.SurgeTitleScreen.autotestLog()));
 		STEPS.add(new Step("01c-title-hover", 30, mc -> hover(mc, 0.85, 0.068)));
+		STEPS.add(new Step("01d-title-wardrobe", 40, mc -> { SurgeConfig.get().wings = "angel"; open(mc, new gg.surge.client.gui.WardrobeScreen(mc.screen)); }));
 		STEPS.add(new Step("02-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(mc.screen))));
 		STEPS.add(new Step("03-settings", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
 		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
@@ -75,6 +76,9 @@ public final class AutoTest {
 		STEPS.add(new Step("07-emote-disco", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.DISCO); }));
 		STEPS.add(new Step("07c-emote-cry", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CRY); }));
 		STEPS.add(new Step("07d-emote-flustered", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLUSTERED); }));
+		STEPS.add(new Step("07f-emote-heart", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.HEART); }));
+		STEPS.add(new Step("07g-emote-floss", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLOSS); }));
+		STEPS.add(new Step("07h-emote-tpose", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.TPOSE); }));
 		STEPS.add(new Step("07e-emote-cheer", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CHEER); }));
 		STEPS.add(new Step("07b-featured", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.FEATURED)); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));

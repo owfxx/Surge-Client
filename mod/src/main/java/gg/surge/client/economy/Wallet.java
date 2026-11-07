@@ -65,7 +65,11 @@ public final class Wallet {
 		} catch (Exception ignored) { }
 	}
 
-	public boolean owns(String itemId) { return owned.contains(itemId); }
+	public boolean owns(String itemId) {
+		if (owned.contains(itemId)) return true;
+		if ("cape:custom".equals(itemId)) for (String o : owned) if (o.startsWith("cape:classic_")) return true;
+		return false;
+	}
 
 	public String buy(Shop.Item item) {
 		if (owns(item.id())) return null;

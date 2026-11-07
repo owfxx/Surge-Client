@@ -126,6 +126,15 @@ public final class Waypoints {
 	public static void tick(Minecraft mc) {
 		if (mc.player == null) { wasDead = false; return; }
 		boolean dead = mc.player.isDeadOrDying();
+		if (!dead && mc.player.tickCount % 10 == 0) {
+			String here = worldKey(mc);
+			double px = mc.player.getX(), py = mc.player.getY(), pz = mc.player.getZ();
+			if (SurgeConfig.get().waypoints.removeIf(w -> "Death".equals(w.name) && w.world.equals(here)
+				&& (w.x + 0.5 - px) * (w.x + 0.5 - px) + (w.z + 0.5 - pz) * (w.z + 0.5 - pz) < 9 && Math.abs(w.y - py) < 4)) {
+				SurgeConfig.save();
+				mc.player.displayClientMessage(net.minecraft.network.chat.Component.literal("Death waypoint cleared"), true);
+			}
+		}
 		if (dead && !wasDead && Mods.WAYPOINTS.enabled() && Mods.WP_DEATH.on()) {
 			String key = worldKey(mc);
 			SurgeConfig.get().waypoints.removeIf(w -> "Death".equals(w.name) && w.world.equals(key));

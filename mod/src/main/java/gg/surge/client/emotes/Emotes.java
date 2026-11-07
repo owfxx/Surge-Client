@@ -46,7 +46,7 @@ public final class Emotes {
 	}
 
 	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.SHRUG, Emote.SALUTE,
-		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.YAWN);
+		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.YAWN, Emote.TPOSE, Emote.DAB, Emote.CRY, Emote.FLUSTERED);
 	public static volatile boolean walking;
 
 	private static Emote current;
@@ -119,8 +119,12 @@ public final class Emotes {
 		if (e != null) run(m, e, t, previewing);
 	}
 
+	public static Object[] previewLook() {
+		return preview == null ? null : new Object[]{preview, (System.nanoTime() - previewStart) / 1e9f};
+	}
+
 	public static Object[] localLook() {
-		if (preview != null) return new Object[]{preview, (System.nanoTime() - previewStart) / 1e9f, true};
+		if (preview != null && gg.surge.client.cosmetics.Preview.clean) return new Object[]{preview, (System.nanoTime() - previewStart) / 1e9f, true};
 		if (current != null) return new Object[]{current, (System.nanoTime() - startNanos) / 1e9f, false};
 		return null;
 	}
@@ -128,7 +132,7 @@ public final class Emotes {
 	public static void animate(PlayerModel m) {
 		Emote e;
 		float t;
-		if (preview != null) { e = preview; t = (System.nanoTime() - previewStart) / 1e9f; }
+		if (preview != null && gg.surge.client.cosmetics.Preview.clean) { e = preview; t = (System.nanoTime() - previewStart) / 1e9f; }
 		else if (current != null) { e = current; t = (System.nanoTime() - startNanos) / 1e9f; }
 		else return;
 		run(m, e, t, preview != null);

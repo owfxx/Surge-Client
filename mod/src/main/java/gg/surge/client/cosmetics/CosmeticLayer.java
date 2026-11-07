@@ -52,7 +52,14 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		CapturedLook fxLook = ((SurgeState) state).surge$look();
 		if (fxLook != null && fxLook.emote() != null) gg.surge.client.emotes.EmoteFx.submit(getParentModel(), ps, q, fxLook.emote(), fxLook.emoteTime(), fxLook.emotePreview());
 		Player p = playerOf(state);
-		if (p == null) return;
+		if (p == null) {
+			CapturedLook lk = ((SurgeState) state).surge$look();
+			if (lk == null || Minecraft.getInstance().level != null && !Preview.clean) return;
+			if (lk.cape() != null) cape(ps, q, light, lk.cape(), state.ageInTicks, state);
+			if (lk.wings() != null) wings(ps, q, light, lk.wings(), state.ageInTicks, 0f, state.id * 2 + 1);
+			if (lk.halo() != null) halo(ps, q, lk.halo(), state.ageInTicks);
+			return;
+		}
 		float age = state.ageInTicks;
 		boolean elytra = p.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
 		float speed = Math.min(1f, state.walkAnimationSpeed);
@@ -67,39 +74,10 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (halo != null) halo(ps, q, halo, age);
 	}
 
-	private record CapeLook(Identifier tex, int top, int bottom, boolean shimmer, boolean glow) {}
-
-	private static final Identifier SHINE = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_shine.png");
-
-	private static int hex(String s, int def) {
-		try { return 0xFF000000 | Integer.parseInt(s, 16); } catch (Exception e) { return def; }
-	}
-
-	private static CapeLook look(String style) {
-		if (style.equals("beta") || style.startsWith("beta_")) {
-			String design, top, bottom;
-			boolean shimmer, glow;
-			if (style.equals("beta")) {
-				var b = gg.surge.client.config.SurgeConfig.get().betaCape;
-				design = b.design; top = b.top; bottom = b.bottom; shimmer = b.shimmer; glow = b.glow;
-			} else {
-				String[] p = style.split("_");
-				design = p.length > 1 ? p[1] : "logo";
-				top = p.length > 2 ? p[2] : "8f50f2";
-				bottom = p.length > 3 ? p[3] : "ec68b0";
-				String f = p.length > 4 ? p[4] : "11";
-				shimmer = f.length() > 0 && f.charAt(0) == '1';
-				glow = f.length() > 1 && f.charAt(1) == '1';
-			}
-			if (!BetaCapes.DESIGNS.contains(design)) design = "logo";
-			return new CapeLook(Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_beta_" + design + ".png"), hex(top, 0xFF8F50F2), hex(bottom, 0xFFEC68B0), shimmer, glow);
-		}
-		return new CapeLook(Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_" + style + ".png"), -1, -1, false, false);
-	}
-
 	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, AvatarRenderState state) {
-		CapeLook lk = look(style);
-		int lit = lk.glow() ? FULL_BRIGHT : light;
+		Identifier tex = CapeTextures.get(style);
+		if (tex == null) return;
+		int lit = light;
 		boolean preview = Preview.clean || Preview.card != null;
 		float flap = preview ? 0f : state.capeFlap, lean = preview ? 0f : state.capeLean, lean2 = preview ? 0f : state.capeLean2;
 		float swing = 6f + lean / 2f + flap + (preview ? (float) Math.sin(age * 0.06f) * 2.5f : 0f);
@@ -110,8 +88,8 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.mulPose(Axis.XP.rotationDegrees(swing));
 		ps.mulPose(Axis.ZP.rotationDegrees(side));
 		ps.mulPose(Axis.YP.rotationDegrees(-side));
-		int t = lk.top(), b = lk.bottom();
-		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(lk.tex()), (pose, vc) -> {
+		int t = -1, b = -1;
+		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
 			float x0 = -5f / 16, x1 = 5f / 16, y0 = 0f, y1 = 1f, z0 = 0f, z1 = 1f / 16;
 			face(pose, vc, lit, t, b, 0, 0, 1, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1, 1, 1, 11, 17);
 			face(pose, vc, lit, t, b, 0, 0, -1, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0, 12, 1, 22, 17);
@@ -120,24 +98,6 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			face(pose, vc, lit, t, t, 0, -1, 0, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0, 1, 0, 11, 1);
 			face(pose, vc, lit, b, b, 0, 1, 0, x0, y1, z1, x0, y1, z0, x1, y1, z0, x1, y1, z1, 11, 0, 21, 1);
 		});
-		if (lk.shimmer()) {
-			float phase = (age % 60f) / 60f;
-			float center = -0.35f + phase * 1.7f;
-			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
-				float x0 = -5f / 16, x1 = 5f / 16, z = 1f / 16 + 0.003f, w = 0.16f, skew = 0.12f;
-				float[] ys = {center - w, center, center + w};
-				int[] as = {0, 150, 0};
-				for (int k = 0; k < 2; k++) {
-					float ya = ys[k], yb = ys[k + 1];
-					float la0 = clamp01(ya - skew), la1 = clamp01(yb - skew), ra0 = clamp01(ya + skew), ra1 = clamp01(yb + skew);
-					int ca = (as[k] << 24) | 0xFFFFFF, cb = (as[k + 1] << 24) | 0xFFFFFF;
-					vc.addVertex(pose, x1, ra0, z).setColor(ca).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-					vc.addVertex(pose, x1, ra1, z).setColor(cb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-					vc.addVertex(pose, x0, la1, z).setColor(cb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-					vc.addVertex(pose, x0, la0, z).setColor(ca).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0, 0, 1);
-				}
-			});
-		}
 		ps.popPose();
 	}
 

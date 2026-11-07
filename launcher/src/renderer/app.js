@@ -552,11 +552,13 @@ function renderPacks() {
 
 async function newPackModal() {
   if (!state.versions.length) state.versions = (await safe(() => S.fabricVersions())) || ['1.21.11'];
-  const def = state.versions.includes('1.21.11') ? '1.21.11' : state.versions[0];
+  const withSurge = (await safe(() => S.surgeVersions())) || ['1.21.11'];
+  const ordered = withSurge.filter(v => state.versions.includes(v)).concat(state.versions.filter(v => !withSurge.includes(v)));
+  const def = ordered.find(v => withSurge.includes(v)) || ordered[0];
   modal(`<h2>New modpack</h2>
     <div class="form">
       <label>Name<input class="input" id="npName" maxlength="40" placeholder="My modpack"></label>
-      <label>Minecraft version${selectWrap(`<select class="input" id="npVer" style="width:100%">${state.versions.map(v => `<option ${v === def ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`)}</label>
+      <label>Minecraft version${selectWrap(`<select class="input" id="npVer" style="width:100%">${ordered.map(v => `<option value="${esc(v)}" ${v === def ? 'selected' : ''}>${esc(v)}${withSurge.includes(v) ? '' : ' (no Surge menu)'}</option>`).join('')}</select>`)}</label>
       <label class="check"><input type="checkbox" id="npOpt" checked> Add performance mods</label>
     </div>
     <div class="modal-actions"><button class="btn" id="npCancel">Cancel</button><button class="btn primary" id="npCreate">Create</button></div>`,

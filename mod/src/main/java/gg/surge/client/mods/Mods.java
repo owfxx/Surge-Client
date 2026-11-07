@@ -209,6 +209,7 @@ public final class Mods {
 		"Wings, halos and capes from the wardrobe", true);
 	public static final Setting.Toggle COS_OTHERS = COSMETICS.toggle("others", "Show other players' cosmetics", true);
 	public static final Setting.Toggle COS_WINGS_ELYTRA = COSMETICS.toggle("hideWithElytra", "Hide wings while wearing an elytra", true);
+	public static final Setting.Toggle COS_CAPE_ELYTRA = COSMETICS.toggle("capeElytra", "Your cape also changes your elytra", true);
 
 	public static final SurgeMod MAIN_MENU = mod("main_menu", "Surge Main Menu", Category.VISUAL, Items.PAINTING,
 		"Use Surge's main menu instead of the vanilla one", true);
@@ -227,7 +228,11 @@ public final class Mods {
 	public static final Setting.Toggle FREELOOK_INVERT = FREELOOK.toggle("invert", "Invert up and down", false);
 
 	public static final SurgeMod CHAT = mod("chat", "Chat", Category.UTILITY, Items.WRITABLE_BOOK,
-		"Timestamps in front of chat messages", false);
+		"Timestamps, stacked repeat messages, mentions and a longer chat history", false);
+	public static final Setting.Toggle CHAT_STACK = CHAT.toggle("stack", "Stack repeated messages, like [x14]", true);
+	public static final Setting.Toggle CHAT_MENTION = CHAT.toggle("mention", "Ping when someone says your name", true);
+	public static final Setting.Toggle CHAT_HIDE_JOINS = CHAT.toggle("hideJoins", "Hide join and leave messages", false);
+	public static final Setting.Toggle CHAT_LONG = CHAT.toggle("longHistory", "Keep 1000 messages instead of 100", true);
 	public static final Setting.Toggle CHAT_TIME = CHAT.toggle("timestamps", "Timestamps", true);
 	public static final Setting.Toggle CHAT_24H = CHAT.toggle("24h", "24-hour time", true).showIf(() -> Mods.CHAT_TIME.on());
 	public static final Setting.Toggle CHAT_SECONDS = CHAT.toggle("seconds", "Show seconds", false).showIf(() -> Mods.CHAT_TIME.on());
@@ -305,14 +310,14 @@ public final class Mods {
 
 	public static final SurgeMod FOG = mod("fog", "Fog Customizer", Category.VISUAL, Items.WHITE_STAINED_GLASS,
 		"Pick which fog you see, how thick it is and what color it has", false);
+	public static final Setting.Toggle FOG_NONE = FOG.toggle("none", "Remove all fog", false);
 	public static final Setting.Header H_FOG_TYPES = FOG.header("Fog types");
-	public static final Setting.Toggle FOG_WORLD = FOG.toggle("world", "Distance fog", true);
-	public static final Setting.Slider FOG_WORLD_DIST = FOG.slider("worldDist", "Distance fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WORLD.on());
-	public static final Setting.Toggle FOG_WATER = FOG.toggle("water", "Water fog", true);
-	public static final Setting.Slider FOG_WATER_DIST = FOG.slider("waterDist", "Water fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WATER.on());
-	public static final Setting.Toggle FOG_LAVA = FOG.toggle("lava", "Lava fog", true);
-	public static final Setting.Toggle FOG_SNOW = FOG.toggle("snow", "Powder snow fog", true);
-	public static final Setting.Toggle FOG_EFFECTS = FOG.toggle("effects", "Blindness and darkness fog", true);
+	public static final Setting.Toggle FOG_WORLD = FOG.toggle("world", "Distance fog", true).showIf(() -> !Mods.FOG_NONE.on());
+	public static final Setting.Slider FOG_WORLD_DIST = FOG.slider("worldDist", "Distance fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WORLD.on() && !Mods.FOG_NONE.on());
+	public static final Setting.Toggle FOG_WATER = FOG.toggle("water", "Water fog", true).showIf(() -> !Mods.FOG_NONE.on());
+	public static final Setting.Slider FOG_WATER_DIST = FOG.slider("waterDist", "Water fog range", 100, 25, 400, 5, "%").showIf(() -> Mods.FOG_WATER.on() && !Mods.FOG_NONE.on());
+	public static final Setting.Toggle FOG_LAVA = FOG.toggle("lava", "Lava fog", true).showIf(() -> !Mods.FOG_NONE.on());
+	public static final Setting.Toggle FOG_SNOW = FOG.toggle("snow", "Powder snow fog", true).showIf(() -> !Mods.FOG_NONE.on());
 	public static final Setting.Header H_FOG_COLOR = FOG.header("Color");
 	public static final Setting.Toggle FOG_TINT = FOG.toggle("tint", "Custom fog color", false);
 	public static final Setting.Color FOG_COLOR = FOG.color("color", "Fog color", "B483FF").showIf(() -> Mods.FOG_TINT.on());
@@ -340,6 +345,12 @@ public final class Mods {
 		CHAT.onToggle(on -> OptionTweaks.apply(mc()));
 		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
 		GLINT.onToggle(on -> gg.surge.client.features.Extras.applyGlint(mc())).onChange(() -> gg.surge.client.features.Extras.applyGlint(mc()));
+		var cfg = gg.surge.client.config.SurgeConfig.get();
+		if (cfg.defaultsVersion < 2) {
+			for (SurgeMod m : new SurgeMod[]{SERVER_REGION, CLIPS, DISCORD, COMMAND_KEYS, COSMETICS}) m.state().enabled = true;
+			cfg.defaultsVersion = 2;
+			gg.surge.client.config.SurgeConfig.save();
+		}
 	}
 
 	public static List<SurgeMod> all() {

@@ -32,7 +32,10 @@ public final class Preview {
 
 	public static void drawCard(GuiGraphics g, int x1, int y1, int x2, int y2, int size, float turn, CapturedLook look) {
 		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null) return;
+		if (mc.player == null) {
+			MenuAvatar.render(g, x1, y1, x2, y2, size, turn, look != null ? look : MenuAvatar.ownLook());
+			return;
+		}
 		int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
 		clean = true;
 		yaw = turn;
@@ -55,7 +58,6 @@ public final class Preview {
 
 	public static void draw(GuiGraphics g, int x1, int y1, int x2, int y2, int size) {
 		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null) return;
 		Spin s = SPINS.computeIfAbsent(x1 + ":" + y1 + ":" + x2 + ":" + y2, k -> new Spin());
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - s.frameAt) / 1e9f);
@@ -91,6 +93,10 @@ public final class Preview {
 		}
 		s.yaw += (s.target - s.yaw) * (1f - (float) Math.exp(-dt * 14f));
 
+		if (mc.player == null) {
+			MenuAvatar.render(g, x1, y1, x2, y2, size, s.yaw, MenuAvatar.ownLook());
+			return;
+		}
 		int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
 		int lookX = cx, lookY = cy - size / 2;
 		clean = true;

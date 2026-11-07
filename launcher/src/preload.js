@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('surge', {
   open: url => call('shell:open', url),
   auth: { list: () => call('auth:list'), login: () => call('auth:login'), logout: u => call('auth:logout', u), setActive: u => call('auth:active', u) },
   fabricVersions: () => call('fabric:versions'),
+  surgeVersions: () => call('surge:versions'),
   instances: {
     list: () => call('instances:list'),
     ensureDefault: () => call('instances:ensureDefault'),

@@ -169,17 +169,17 @@ public class SurgeTitleScreen extends Screen {
 		float kc = since(450, 400);
 		int ty = 8 - Math.round((1 - kc) * 8);
 		int x = this.width - 8 - 24;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, COIN, Wallet.get().coins + " Surge Coins", true, kc) && click) action = () -> minecraft.setScreen(WardrobeScreen.open(this, WardrobeScreen.Section.CURRENCY));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IT_COINS, Wallet.get().coins + " Surge Coins", true, kc) && click) action = () -> minecraft.setScreen(WardrobeScreen.open(this, WardrobeScreen.Section.CURRENCY));
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_MODS, "Surge mods", true, kc) && click) action = () -> minecraft.setScreen(new SurgeMenuScreen(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IT_MODS, "Surge mods", true, kc) && click) action = () -> minecraft.setScreen(new SurgeMenuScreen(this));
 		if (this.width < 400) {
 			x -= 30;
-			if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_SHIRT, "Wardrobe", true, kc) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
+			if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IT_WARDROBE, "Wardrobe", true, kc) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
 		}
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_GEAR, "Settings", true, kc) && click) action = () -> minecraft.setScreen(SurgeMenuScreen.general(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IT_SETTINGS, "Settings", true, kc) && click) action = () -> minecraft.setScreen(SurgeMenuScreen.general(this));
 		x -= 30;
-		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.I_SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IT_SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
 		MenuOverlay.unreadBadge(g, minecraft, x, ty, 24);
 
 		String name = minecraft.getUser().getName();

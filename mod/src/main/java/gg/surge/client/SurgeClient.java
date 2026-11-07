@@ -257,10 +257,13 @@ public class SurgeClient implements ClientModInitializer {
 			g.drawString(mc.font, t, x + 8, 8, 0xFFE4E4E7, false);
 		}
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
-		Waypoints.render(g, mc);
-		gg.surge.client.features.Extras.render(g, mc);
-		for (HudModule m : HudModules.ALL) {
-			if (m.enabled()) m.draw(g, mc);
+		boolean debug = mc.getDebugOverlay().showDebugScreen();
+		if (!debug) {
+			Waypoints.render(g, mc);
+			gg.surge.client.features.Extras.render(g, mc);
+			for (HudModule m : HudModules.ALL) {
+				if (m.enabled()) m.draw(g, mc);
+			}
 		}
 		if (mc.screen == null) gg.surge.client.gui.SocialToasts.render(g, mc, g.guiWidth());
 	}

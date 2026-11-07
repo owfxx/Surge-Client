@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityRendererMixin {
 	@Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
 	private void surge$cullFar(Entity entity, Frustum frustum, double camX, double camY, double camZ, CallbackInfoReturnable<Boolean> cir) {
+		if (Performance.occlusion && gg.surge.client.perf.Occlusion.hidden(entity, camX, camY, camZ)) { cir.setReturnValue(false); return; }
 		if (!Performance.cullEntities) return;
 		EntityType<?> type = entity.getType();
 		double max;

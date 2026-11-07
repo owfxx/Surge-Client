@@ -89,6 +89,30 @@ async function syncSurgeMod(inst, onProgress) {
   return dest;
 }
 
+const SHARED_FILES = ['options.txt', 'servers.dat', 'optionsof.txt'];
+
+function pullShared(inst) {
+  const shared = path.join(paths.root, 'shared');
+  fs.mkdirSync(shared, { recursive: true });
+  const dir = instances.dirOf(inst.id);
+  for (const f of SHARED_FILES) {
+    const src = path.join(shared, f), dst = path.join(dir, f);
+    try {
+      if (!fs.existsSync(src)) { if (fs.existsSync(dst)) fs.copyFileSync(dst, src); continue; }
+      if (!fs.existsSync(dst) || fs.statSync(src).mtimeMs > fs.statSync(dst).mtimeMs) fs.copyFileSync(src, dst);
+    } catch { }
+  }
+}
+
+function pushShared(inst) {
+  const shared = path.join(paths.root, 'shared');
+  const dir = instances.dirOf(inst.id);
+  for (const f of SHARED_FILES) {
+    const src = path.join(dir, f);
+    try { if (fs.existsSync(src)) fs.copyFileSync(src, path.join(shared, f)); } catch { }
+  }
+}
+
 const hide = m => String(m)
   .replace(/(--accessToken\s+)\S+/g, '$1[hidden]')
   .replace(/(--xuid\s+)\S+/g, '$1[hidden]')
@@ -125,6 +149,7 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
     } catch { }
   }
   const surgeJar = await syncSurgeMod(inst, onProgress);
+  pullShared(inst);
   await social.refreshService();
   let surgeToken = '';
   try {
@@ -146,7 +171,7 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
   client.on('data', m => onLog(m));
   let started = false;
   client.on('data', () => { if (!started) { started = true; onProgress({ stage: 'running' }); } });
-  client.on('close', code => { running = null; onExit(code); });
+  client.on('close', code => { running = null; pushShared(inst); onExit(code); });
 
   instances.update(inst.id, { lastPlayed: Date.now() });
   config.save({ selectedInstance: inst.id });
@@ -168,4 +193,11 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
 
 function isRunning() { return !!running; }
 
-module.exports = { launch, isRunning, surgeModAvailable };
+function surgeVersions() {
+  const base = process.resourcesPath && fs.existsSync(path.join(process.resourcesPath, 'mods'))
+    ? path.join(process.resourcesPath, 'mods')
+    : path.join(__dirname, '..', '..', 'resources', 'mods');
+  try { return fs.readdirSync(base).filter(v => surgeModAvailable(v)); } catch { return []; }
+}
+
+module.exports = { launch, isRunning, surgeModAvailable, surgeVersions };

@@ -249,7 +249,7 @@ public class WardrobeScreen extends Screen {
 		}
 		Shop.Item beta = Shop.byId("cape:beta");
 		if (beta != null && Wallet.get().owns(beta.id()) && !out.contains(beta)) out.add(0, beta);
-		for (Shop.Item i : Shop.bySub("cosmetic", "cape")) if (i.key().startsWith("classic_") && !out.contains(i) && out.size() < 24) out.add(i);
+		for (Shop.Item i : Shop.bySub("cosmetic", "cape")) if (i.key().equals("custom") && !out.contains(i) && out.size() < 24) out.add(i);
 		if (!q.isEmpty()) out.removeIf(i -> !i.name().toLowerCase().contains(q));
 		return out;
 	}
@@ -349,6 +349,7 @@ public class WardrobeScreen extends Screen {
 			boolean eq = item.key().equals(equippedKey(typeOf(item)));
 			l.add(eq ? "Take off" : "Equip"); a.add(() -> setEquipped(typeOf(item), eq ? "none" : item.key()));
 			if (item.id().equals("cape:beta")) { l.add("Customize"); a.add(() -> minecraft.setScreen(new BetaCapeScreen(this))); }
+			if (item.id().equals("cape:custom")) { l.add("Pick color"); a.add(() -> minecraft.setScreen(new BetaCapeScreen(this, false))); }
 		}
 		if (l.isEmpty()) { l.add(item.id().equals("cape:beta") ? "Only for beta testers" : "Not available"); a.add(() -> { }); }
 		openMenu(x, y, l, a);
@@ -595,13 +596,13 @@ public class WardrobeScreen extends Screen {
 		Shop.Item act = selected != null && section != Section.OUTFITS && section != Section.SKINS && section != Section.CURRENCY ? selected : null;
 		if (act != null) {
 			Primary p = primary(act);
-			boolean beta = act.id().equals("cape:beta") && Wallet.get().owns(act.id());
+			boolean beta = (act.id().equals("cape:beta") || act.id().equals("cape:custom")) && Wallet.get().owns(act.id());
 			int bw = beta ? stageW - 8 - 74 : stageW - 8;
 			boolean coin = p.label().startsWith("Buy") || p.label().startsWith("Confirm");
 			String label = p.label();
 			if (focus != act) label = label + "  " + Ui.fit(font, act.name(), 90);
 			if (bigButton(g, mx, my, x1 + 4, by, bw, 22, label, true, p.enabled(), coin) && click) action = p.run();
-			if (beta && bigButton(g, mx, my, x1 + 8 + bw, by, 70, 22, "Customize", false, true, false) && click) action = () -> minecraft.setScreen(new BetaCapeScreen(this));
+			if (beta && bigButton(g, mx, my, x1 + 8 + bw, by, 70, 22, "Customize", false, true, false) && click) action = () -> minecraft.setScreen(new BetaCapeScreen(this, act.id().equals("cape:beta")));
 			if (!p.enabled() && p.label().startsWith("Buy")) {
 				String need = "Need " + (Shop.price(act) - Wallet.get().coins) + " more coins";
 				Ui.centered(g, font, need, cx, by - 12, 0xFFFF8C8C);

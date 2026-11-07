@@ -21,6 +21,7 @@ import java.util.function.Function;
 public final class Performance {
 	public static volatile boolean hideFoliage;
 	public static volatile boolean cullEntities = true;
+	public static volatile boolean occlusion = true;
 	public static volatile boolean cullBlockEntities = true;
 	public static volatile boolean cullParticles = true;
 
@@ -36,6 +37,7 @@ public final class Performance {
 
 	public static final List<Feature> FEATURES = List.of(
 		new Feature("cullEntities", "Entity Culling", "Skip far-away dropped items, XP orbs, arrows, armor stands and item frames", true, false, Items.ARMOR_STAND, List.of()),
+		new Feature("occlusion", "Hidden Mob Culling", "Skip mobs and items hidden behind walls. Players are always drawn", true, false, Items.STONE_BRICKS, List.of()),
 		new Feature("cullBlockEntities", "Block Entity Culling", "Skip chests, signs, banners and heads more than 64 blocks away", true, false, Items.CHEST, List.of()),
 		new Feature("cullParticles", "Particle Culling", "Skip particles more than 32 blocks away", true, false, Items.FIREWORK_STAR, List.of()),
 		new Feature("farNametags", "Far Nametag Culling", "Skip drawing nametags of players far away (lots of FPS on busy servers)", true, false, Items.NAME_TAG, List.of()),
@@ -150,6 +152,7 @@ public final class Performance {
 		}
 
 		cullEntities = enabled(byKey("cullEntities"));
+		occlusion = enabled(byKey("occlusion"));
 		cullBlockEntities = enabled(byKey("cullBlockEntities"));
 		cullParticles = enabled(byKey("cullParticles"));
 		hideFarNametags = enabled(byKey("farNametags"));

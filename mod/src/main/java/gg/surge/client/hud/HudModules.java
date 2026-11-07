@@ -498,6 +498,29 @@ public final class HudModules {
 		final Setting.Toggle held = toggle("held", "Show held item", true);
 		final Setting.Toggle offhand = toggle("offhand", "Show offhand item", false);
 		final Setting.Toggle bars = toggle("bars", "Durability bars (Uku)", true).showIf(() -> layout.is("Uku"));
+		final Setting.Choice anchor = choice("anchor", "Position", "Free", "Free", "Left of hotbar", "Right of hotbar", "Above hotbar");
+		final Setting.Toggle reverse = toggle("reverse", "Reverse order", false);
+
+		private boolean anchored() { return !anchor.is("Free"); }
+
+		@Override public int screenX(GuiGraphics g, Minecraft mc) {
+			if (!anchored()) return super.screenX(g, mc);
+			int cx = g.guiWidth() / 2, w = scaledWidth(mc);
+			boolean offLeft = mc.player != null && !mc.player.getOffhandItem().isEmpty() && mc.options.mainHand().get() == net.minecraft.world.entity.HumanoidArm.RIGHT;
+			boolean offRight = mc.player != null && !mc.player.getOffhandItem().isEmpty() && !offLeft;
+			return switch (anchor.get()) {
+				case "Left of hotbar" -> cx - 91 - 4 - w - (offLeft ? 29 : 0);
+				case "Right of hotbar" -> cx + 91 + 4 + (offRight ? 29 : 0);
+				default -> cx - w / 2;
+			};
+		}
+
+		@Override public int screenY(GuiGraphics g, Minecraft mc) {
+			if (!anchored()) return super.screenY(g, mc);
+			int h = scaledHeight(mc);
+			if (anchor.is("Above hotbar")) return g.guiHeight() - 22 - 30 - h;
+			return g.guiHeight() - Math.max(h, 20) - 1 + Math.max(0, (Math.max(h, 20) - h) / 2);
+		}
 
 		ArmorStatus() { super("armor", "Armor Status", Items.DIAMOND_CHESTPLATE, "Your armor and held item with durability", false, 0.005f, 0.64f); }
 
@@ -515,6 +538,7 @@ public final class HudModules {
 			for (EquipmentSlot s : ARMOR) out.add(mc.player.getItemBySlot(s));
 			if (held.on()) out.add(mc.player.getItemBySlot(EquipmentSlot.MAINHAND));
 			if (offhand.on()) out.add(mc.player.getItemBySlot(EquipmentSlot.OFFHAND));
+			if (reverse.on()) java.util.Collections.reverse(out);
 			return out;
 		}
 

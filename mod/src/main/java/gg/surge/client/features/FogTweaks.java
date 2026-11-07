@@ -24,18 +24,18 @@ public final class FogTweaks {
 
 	public static void world(FogData d) {
 		if (!Mods.FOG.enabled()) return;
-		if (!Mods.FOG_WORLD.on()) none(d);
+		if (Mods.FOG_NONE.on() || !Mods.FOG_WORLD.on()) none(d);
 		else scale(d, Mods.FOG_WORLD_DIST.get() / 100f);
 	}
 
 	public static void water(FogData d) {
 		if (!Mods.FOG.enabled()) return;
-		if (!Mods.FOG_WATER.on()) none(d);
+		if (Mods.FOG_NONE.on() || !Mods.FOG_WATER.on()) none(d);
 		else scale(d, Mods.FOG_WATER_DIST.get() / 100f);
 	}
 
 	public static void simple(FogData d, boolean keep) {
-		if (Mods.FOG.enabled() && !keep) none(d);
+		if (Mods.FOG.enabled() && (!keep || Mods.FOG_NONE.on())) none(d);
 	}
 
 	public static void color(org.joml.Vector4f c) {

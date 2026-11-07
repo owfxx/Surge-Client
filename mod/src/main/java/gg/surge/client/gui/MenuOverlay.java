@@ -39,7 +39,6 @@ public final class MenuOverlay {
 				}
 			}
 			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> {
-				if (!buttons.isEmpty()) restyle(client, g, mx, my, buttons);
 				draw(client, s, g, mx, my, wasDown);
 			});
 		});
@@ -55,15 +54,15 @@ public final class MenuOverlay {
 		Ui.frame();
 		g.nextStratum();
 		int size = 22, x = w - size - 8, y = h / 2 - 66;
-		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, Ui.I_SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, Ui.IT_SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
 		unreadBadge(g, mc, x, y - 26, size);
-		if (Ui.tile(g, mc.font, mx, my, x, y, size, Ui.I_GEAR, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IT_SETTINGS, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
 		y += 26;
 		boolean underPerson = screen instanceof PauseScreen && mc.player != null && (w / 2 - 112) - Math.max(8, w / 2 - 202) >= 50;
-		if (!underPerson && Ui.tile(g, mc.font, mx, my, x, y, size, Ui.I_SHIRT, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
+		if (!underPerson && Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IT_WARDROBE, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
 		if (underPerson) y -= 26;
-		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, Ui.I_MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
-		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, COIN, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
+		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, Ui.IT_MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, Ui.IT_COINS, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
 
 		if (screen instanceof PauseScreen && mc.player != null) {
 			int x2 = w / 2 - 112;
@@ -73,10 +72,9 @@ public final class MenuOverlay {
 				gg.surge.client.cosmetics.Preview.draw(g, x1, y1, x2, y2, 46);
 				int bw = Math.min(84, x2 - x1), bx = (x1 + x2) / 2 - bw / 2, by = y2 + 6;
 				boolean hov = Ui.hover(mx, my, bx, by, bw, 18);
-				float a = Ui.anim("pausewardrobe", hov);
-				Ui.cutBox(g, bx, by, bw, 18, 4, Colors.lerp(0xE01A1A1D, 0xF02A2A2F, a), Colors.lerp(0x50FFFFFF, 0xE0FFFFFF, a));
-				Ui.icon(g, Ui.I_SHIRT, bx + 6, by + 5, 1, 0xFFFFFFFF);
-				g.drawString(mc.font, "Wardrobe", bx + 18, by + 5, 0xFFFFFFFF, false);
+				Ui.mcButton(g, bx, by, bw, 18, hov, false, 1f);
+				Ui.item(g, Ui.IT_WARDROBE, bx + 4, by + 2, 14);
+				g.drawString(mc.font, "Wardrobe", bx + 21, by + 5, hov ? 0xFFFFFFA0 : 0xFFFFFFFF, true);
 				if (hov && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
 			}
 		}

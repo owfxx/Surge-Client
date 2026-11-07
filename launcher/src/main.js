@@ -81,6 +81,8 @@ handle('instances:update', (id, patch) => instances.update(id, patch));
 handle('instances:remove', id => instances.remove(id));
 handle('instances:folder', id => shell.openPath(instances.dirOf(id)));
 
+handle('surge:versions', () => launcher.surgeVersions());
+
 handle('instances:create', async ({ name, mcVersion, optimized }) => {
   const loaderVersion = await fabric.latestLoader(mcVersion);
   const inst = instances.create({ name, mcVersion, loaderVersion, surgeOptimized: !!optimized });

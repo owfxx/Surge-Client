@@ -331,13 +331,18 @@ final class ExtraModules {
 					g.fill(wx - 2, wy - 2, wx + 2, wy + 2, 0xFF000000 | Colors.parse(wp.color));
 				}
 			}
-			double yaw = Math.toRadians(p.getYRot());
-			double fx = -Math.sin(yaw), fz = Math.cos(yaw);
-			for (int k = 0; k <= 5; k++) {
-				int ax = cx + (int) Math.round(fx * k), ay = cy + (int) Math.round(fz * k);
-				g.fill(ax - (k < 3 ? 1 : 0), ay - (k < 3 ? 1 : 0), ax + 1, ay + 1, 0xFFFF4040);
+			g.pose().pushMatrix();
+			g.pose().translate(cx + 0.5f, cy + 0.5f);
+			g.pose().rotate((float) Math.toRadians(p.getYRot() + 180f));
+			String[] arrow = {"...X...", "..XXX..", "..XXX..", ".XXXXX.", ".XXXXX.", "XXXXXXX", "XXX.XXX", "XX...XX"};
+			int[][] off = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+			for (int[] o : off) for (int r = 0; r < arrow.length; r++) for (int c = 0; c < 7; c++) {
+				if (arrow[r].charAt(c) == 'X') g.fill(c - 3 + o[0], r - 4 + o[1], c - 2 + o[0], r - 3 + o[1], 0xFF000000);
 			}
-			g.fill(cx - 1, cy - 1, cx + 2, cy + 2, 0xFFFFFFFF);
+			for (int r = 0; r < arrow.length; r++) for (int c = 0; c < 7; c++) {
+				if (arrow[r].charAt(c) == 'X') g.fill(c - 3, r - 4, c - 2, r - 3, r < 2 ? 0xFFFF5555 : 0xFFFFFFFF);
+			}
+			g.pose().popMatrix();
 			g.drawString(mc.font, "N", cx - 2, y + 2, 0xFFFFFFFF, true);
 			if (showCoords.on()) {
 				String c = p.getBlockX() + ", " + p.getBlockY() + ", " + p.getBlockZ();
