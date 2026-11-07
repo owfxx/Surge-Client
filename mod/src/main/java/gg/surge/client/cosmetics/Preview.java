@@ -37,8 +37,9 @@ public final class Preview {
 		clean = true;
 		card = look;
 		try {
-			var raw = mc.getEntityRenderDispatcher().extractEntity(mc.player, 1f);
-			if (!(raw instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState st)) return;
+			var renderer = mc.getEntityRenderDispatcher().getPlayerRenderer(mc.player);
+			net.minecraft.client.renderer.entity.state.AvatarRenderState st = renderer.createRenderState();
+			renderer.extractRenderState(mc.player, st, 1f);
 			st.bodyRot = 180f + turn;
 			st.yRot = 0f;
 			st.xRot = 0f;

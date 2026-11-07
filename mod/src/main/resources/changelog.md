@@ -1,3 +1,6 @@
+## 1.5.9
+- Wardrobe and pause previews each show their own item again, instead of all copying the one you hover
+
 ## 1.5.8
 - You can turn your skin in the pause menu and wardrobe again, not just on the title screen
 - Beta Tester cape and Color Cape can be a gradient

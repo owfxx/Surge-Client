@@ -15,7 +15,6 @@ import java.util.function.Supplier;
 
 public final class MenuAvatar {
 	private static Supplier<PlayerSkin> lookup;
-	private static final AvatarRenderState STATE = new AvatarRenderState();
 
 	private MenuAvatar() {}
 
@@ -52,7 +51,7 @@ public final class MenuAvatar {
 	}
 
 	public static void render(GuiGraphics g, int x1, int y1, int x2, int y2, float size, float yaw, CapturedLook look) {
-		AvatarRenderState st = STATE;
+		AvatarRenderState st = new AvatarRenderState();
 		PlayerSkin skin = skin();
 		st.entityType = EntityType.PLAYER;
 		st.skin = skin;
