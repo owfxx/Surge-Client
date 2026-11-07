@@ -30,23 +30,42 @@ public final class Preview {
 
 	private Preview() {}
 
+	private static void renderPlayer(GuiGraphics g, int x1, int y1, int x2, int y2, float size, float turn, CapturedLook look) {
+		Minecraft mc = Minecraft.getInstance();
+		boolean wasClean = clean;
+		CapturedLook wasCard = card;
+		clean = true;
+		card = look;
+		try {
+			var raw = mc.getEntityRenderDispatcher().extractEntity(mc.player, 1f);
+			if (!(raw instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState st)) return;
+			st.bodyRot = 180f + turn;
+			st.yRot = 0f;
+			st.xRot = 0f;
+			st.nameTag = null;
+			st.shadowRadius = 0f;
+			st.shadowPieces.clear();
+			st.leashStates = null;
+			st.lightCoords = 0xF000F0;
+			st.outlineColor = 0;
+			st.displayFireAnimation = false;
+			st.isInvisible = false;
+			org.joml.Quaternionf rot = new org.joml.Quaternionf().rotateZ((float) Math.PI);
+			g.submitEntityRenderState(st, size / Math.max(0.1f, st.scale), new org.joml.Vector3f(0f, st.boundingBoxHeight / 2f + 0.0625f, 0f), rot, new org.joml.Quaternionf(), x1, y1, x2, y2);
+		} catch (Throwable ignored) {
+		} finally {
+			clean = wasClean;
+			card = wasCard;
+		}
+	}
+
 	public static void drawCard(GuiGraphics g, int x1, int y1, int x2, int y2, int size, float turn, CapturedLook look) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null) {
 			MenuAvatar.render(g, x1, y1, x2, y2, size, turn, look != null ? look : MenuAvatar.ownLook());
 			return;
 		}
-		int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-		clean = true;
-		yaw = turn;
-		card = look;
-		try {
-			InventoryScreen.renderEntityInInventoryFollowsMouse(g, x1, y1, x2, y2, size, 0.0625F, cx, cy - size / 2f, mc.player);
-		} finally {
-			clean = false;
-			yaw = 0f;
-			card = null;
-		}
+		renderPlayer(g, x1, y1, x2, y2, size, turn, look);
 	}
 
 	private static float facing() {
@@ -97,15 +116,6 @@ public final class Preview {
 			MenuAvatar.render(g, x1, y1, x2, y2, size, s.yaw, MenuAvatar.ownLook());
 			return;
 		}
-		int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
-		int lookX = cx, lookY = cy - size / 2;
-		clean = true;
-		yaw = s.yaw;
-		try {
-			InventoryScreen.renderEntityInInventoryFollowsMouse(g, x1, y1, x2, y2, size, 0.0625F, lookX, lookY, mc.player);
-		} finally {
-			clean = false;
-			yaw = 0f;
-		}
+		renderPlayer(g, x1, y1, x2, y2, size, s.yaw, null);
 	}
 }

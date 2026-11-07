@@ -16,7 +16,7 @@ public class BetaCapeScreen extends Screen {
 	private final Screen parent;
 	private final boolean beta;
 	private boolean wasDown = true;
-	private boolean editingLogo;
+	private int editing;
 	private long openedAt;
 	private EditBox hexBox;
 
@@ -46,14 +46,15 @@ public class BetaCapeScreen extends Screen {
 
 	private String current() {
 		SurgeConfig c = SurgeConfig.get();
-		if (!beta) return c.capeColor;
-		return editingLogo ? c.betaCape.logo : c.betaCape.color;
+		if (!beta) return editing == 1 ? c.capeColor2 : c.capeColor;
+		return editing == 2 ? c.betaCape.logo : editing == 1 ? c.betaCape.color2 : c.betaCape.color;
 	}
 
 	private void set(String hx) {
 		SurgeConfig c = SurgeConfig.get();
-		if (!beta) c.capeColor = hx;
-		else if (editingLogo) c.betaCape.logo = hx;
+		if (!beta) { if (editing == 1) c.capeColor2 = hx; else c.capeColor = hx; }
+		else if (editing == 2) c.betaCape.logo = hx;
+		else if (editing == 1) c.betaCape.color2 = hx;
 		else c.betaCape.color = hx;
 		SurgeConfig.markDirty();
 	}
@@ -111,13 +112,23 @@ public class BetaCapeScreen extends Screen {
 				if (Ui.pill(g, font, mx, my, tx, ty, tw, 16, CapeTextures.TEXT_NAMES.get(i), t.equals(b.text)) && click) action = () -> b.text = t;
 			}
 			y += ((CapeTextures.TEXTS.size() + 2) / 3) * 20 + 6;
-			if (Ui.pill(g, font, mx, my, ox, y, half, 16, "Cape color", !editingLogo) && click) action = () -> { editingLogo = false; hexBox.setValue(current()); };
-			if (Ui.pill(g, font, mx, my, ox + half + 4, y, half, 16, "Logo and text", editingLogo) && click) action = () -> { editingLogo = true; hexBox.setValue(current()); };
-			y += 22;
-		} else {
-			g.drawString(font, "Color", ox, y, Ui.ACCENT_2, false);
-			y += 12;
 		}
+		boolean grad = beta ? b.gradient : c.capeGradient;
+		java.util.List<String> modes = new java.util.ArrayList<>();
+		modes.add(grad ? "Top" : "Color");
+		if (grad) modes.add("Bottom");
+		if (beta) modes.add("Logo and text");
+		int mw = (ow - 4 - 70) / modes.size();
+		for (int i = 0; i < modes.size(); i++) {
+			int mode = i == 0 ? 0 : modes.get(i).equals("Bottom") ? 1 : 2;
+			if (Ui.pill(g, font, mx, my, ox + i * (mw + 2), y, mw, 16, modes.get(i), editing == mode) && click) action = () -> { editing = mode; hexBox.setValue(current()); };
+		}
+		if (Ui.pill(g, font, mx, my, ox + ow - 68, y, 68, 16, "Gradient", grad) && click) action = () -> {
+			if (beta) b.gradient = !b.gradient; else c.capeGradient = !c.capeGradient;
+			if (editing == 1) editing = 0;
+			hexBox.setValue(current());
+		};
+		y += 22;
 		int cols = 8, sw = Math.min(18, (ow - (cols - 1) * 3) / cols);
 		String cur = current();
 		for (int i = 0; i < CapeTextures.PALETTE.size(); i++) {

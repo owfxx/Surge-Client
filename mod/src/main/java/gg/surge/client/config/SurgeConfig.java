@@ -73,10 +73,12 @@ public class SurgeConfig {
 		public String design = "logo";
 		public String top = "8F50F2", bottom = "EC68B0";
 		public boolean shimmer = true, glow = true;
-		public String color = "141418", logo = "FFFFFF", text = "beta_tester";
+		public String color = "141418", logo = "FFFFFF", text = "beta_tester", color2 = "8F50F2";
+		public boolean gradient = false;
 	}
 
-	public String capeColor = "8F50F2";
+	public String capeColor = "8F50F2", capeColor2 = "EC68B0";
+	public boolean capeGradient = false;
 
 	public BetaCape betaCape = new BetaCape();
 	public boolean welcomed = false;
@@ -123,6 +125,9 @@ public class SurgeConfig {
 		if (instance.betaCape.logo == null) instance.betaCape.logo = "FFFFFF";
 		if (instance.betaCape.text == null) instance.betaCape.text = "beta_tester";
 		if (instance.capeColor == null) instance.capeColor = "8F50F2";
+		if (instance.capeColor2 == null) instance.capeColor2 = "EC68B0";
+		if (instance.betaCape.color2 == null) instance.betaCape.color2 = "8F50F2";
+		if ("founder".equals(instance.betaCape.text)) instance.betaCape.text = "beta_tester";
 		if (instance.cape.startsWith("classic_")) instance.cape = "custom";
 	}
 

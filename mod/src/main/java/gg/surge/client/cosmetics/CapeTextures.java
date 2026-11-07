@@ -13,8 +13,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class CapeTextures {
-	public static final List<String> TEXTS = List.of("beta_tester", "beta", "early", "surge", "og", "founder", "none");
-	public static final List<String> TEXT_NAMES = List.of("Beta Tester", "Beta", "Early Access", "Surge", "OG", "Founder", "No text");
+	public static final List<String> TEXTS = List.of("beta_tester", "beta", "early", "surge", "og", "none");
+	public static final List<String> TEXT_NAMES = List.of("Beta Tester", "Beta", "Early Access", "Surge", "OG", "No text");
 	public static final List<String> PALETTE = List.of(
 		"141418", "FFFFFF", "A1A1AA", "52525B", "8F50F2", "B483FF", "EC68B0", "F43F5E",
 		"E2363F", "F0842A", "F2C430", "78CE46", "1C965A", "22BED4", "3468E8", "1E3A8A");
@@ -26,10 +26,13 @@ public final class CapeTextures {
 
 	public static String resolve(String style) {
 		if (style == null) return null;
-		if (style.equals("custom")) return "custom_" + SurgeConfig.get().capeColor.toLowerCase(Locale.ROOT);
+		if (style.equals("custom")) {
+			var c = SurgeConfig.get();
+			return "custom_" + c.capeColor.toLowerCase(Locale.ROOT) + (c.capeGradient ? "-" + c.capeColor2.toLowerCase(Locale.ROOT) : "");
+		}
 		if (style.equals("beta")) {
 			var b = SurgeConfig.get().betaCape;
-			return "beta2_" + b.color.toLowerCase(Locale.ROOT) + "_" + b.logo.toLowerCase(Locale.ROOT) + "_" + b.text;
+			return "beta2_" + b.color.toLowerCase(Locale.ROOT) + (b.gradient ? "-" + b.color2.toLowerCase(Locale.ROOT) : "") + "_" + b.logo.toLowerCase(Locale.ROOT) + "_" + b.text;
 		}
 		if (style.startsWith("beta_")) {
 			String[] p = style.split("_");
@@ -92,27 +95,47 @@ public final class CapeTextures {
 		}
 	}
 
-	private static void fill(NativeImage img, int color) {
-		int w = img.getWidth(), h = img.getHeight();
-		for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) img.setPixel(x, y, color);
+	private static int lerp(int a, int b, float t) {
+		int r = Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * t);
+		int g = Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * t);
+		int bl = Math.round((a & 255) + ((b & 255) - (a & 255)) * t);
+		return 0xFF000000 | (r << 16) | (g << 8) | bl;
+	}
+
+	private static void fill(NativeImage img, String spec) {
+		String[] parts = spec.split("-");
+		int top = hex(parts[0], 0xFF8F50F2), bottom = parts.length > 1 ? hex(parts[1], top) : top;
+		int w = img.getWidth(), h = img.getHeight(), s = w / 64;
+		for (int y = 0; y < h; y++) {
+			float t = parts.length > 1 ? Math.max(0f, Math.min(1f, (y / (float) s - 1f) / 16f)) : 0f;
+			if (y >= 22 * s) t = 0.5f;
+			int c = lerp(top, bottom, t);
+			for (int x = 0; x < w; x++) {
+				if (x >= 22 * s && x < 46 * s && y < 22 * s) {
+					float te = parts.length > 1 ? Math.max(0f, Math.min(1f, (y / (float) s - 2f) / 20f)) : 0f;
+					img.setPixel(x, y, lerp(top, bottom, te));
+				} else img.setPixel(x, y, c);
+			}
+		}
 	}
 
 	private static NativeImage build(String key) {
 		int w = 512, h = 256;
 		if (key.startsWith("custom_")) {
 			NativeImage img = new NativeImage(w, h, true);
-			fill(img, hex(key.substring(7), 0xFF8F50F2));
+			fill(img, key.substring(7));
 			return img;
 		}
 		if (key.startsWith("beta2_")) {
 			String[] p = key.split("_", 4);
 			NativeImage img = new NativeImage(w, h, true);
-			int base = hex(p.length > 1 ? p[1] : "141418", 0xFF141418);
+			String base = p.length > 1 ? p[1] : "141418";
 			int tint = hex(p.length > 2 ? p[2] : "ffffff", 0xFFFFFFFF);
 			String text = p.length > 3 ? p[3] : "beta_tester";
 			fill(img, base);
-			overlay(img, source("textures/cosmetic/cape_overlay_logo.png"), tint);
-			if (TEXTS.contains(text) && !text.equals("none")) overlay(img, source("textures/cosmetic/cape_text_" + text + ".png"), tint);
+			boolean hasText = TEXTS.contains(text) && !text.equals("none");
+			overlay(img, source(hasText ? "textures/cosmetic/cape_overlay_logo.png" : "textures/cosmetic/cape_overlay_logo_center.png"), tint);
+			if (hasText) overlay(img, source("textures/cosmetic/cape_text_" + text + ".png"), tint);
 			return img;
 		}
 		NativeImage src = source("textures/cosmetic/cape_" + key + ".png");

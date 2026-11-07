@@ -1,3 +1,9 @@
+## 1.5.8
+- You can turn your skin in the pause menu and wardrobe again, not just on the title screen
+- Beta Tester cape and Color Cape can be a gradient
+- Without text, the logo sits in the middle of the Beta Tester cape
+- Founder text removed from the Beta Tester cape
+
 ## 1.5.7
 - The pause menu buttons are visible again
 - New hand-drawn icons for Social, Settings, Wardrobe and Surge mods
