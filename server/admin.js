@@ -81,7 +81,14 @@ async function state(db) {
   return { codes, sales, servers, locked, items: ITEMS };
 }
 
+const OWNERS = ['baea491cd9724afc9858ca377d3cfbf9'];
+
 async function authed(req, db) {
+  const u = (req.headers.get('authorization') || '').match(/^Bearer ([a-f0-9]{48})$/);
+  if (u) {
+    const row = await db.prepare('SELECT uuid FROM users WHERE token = ?1').bind(u[1]).first();
+    return !!row && OWNERS.includes(String(row.uuid).replace(/-/g, '').toLowerCase());
+  }
   const m = (req.headers.get('authorization') || '').match(/^Bearer ([a-f0-9]{64})$/);
   if (!m) return false;
   const s = await db.prepare('SELECT expires FROM admin_sessions WHERE token = ?1').bind(m[1]).first();

@@ -48,6 +48,7 @@ public class AdminScreen extends Screen {
 	private JsonArray codes = new JsonArray(), sales = new JsonArray(), servers = new JsonArray();
 	private final Set<String> locked = new LinkedHashSet<>();
 	private boolean loaded;
+	private List<gg.surge.client.economy.AdminCodes.Code> oldCodes = List.of();
 
 	public AdminScreen(Screen parent) {
 		super(Component.literal("Admin"));
@@ -84,6 +85,7 @@ public class AdminScreen extends Screen {
 		srvName = box("Name", 32, srvName == null ? "" : srvName.getValue());
 		srvIp = box("play.example.net", 64, srvIp == null ? "" : srvIp.getValue());
 		srvDesc = box("Short description", 80, srvDesc == null ? "" : srvDesc.getValue());
+		oldCodes = gg.surge.client.economy.AdminCodes.list();
 		if (AdminApi.signedIn() && !loaded) refresh();
 	}
 
@@ -280,6 +282,8 @@ public class AdminScreen extends Screen {
 			post("codes", b, null);
 		};
 		g.drawString(font, "Codes (click to copy)", lx, top + 106, Ui.ACCENT_2, false);
+		List<gg.surge.client.economy.AdminCodes.Code> old = oldCodes;
+		if (!old.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 120, top + 102, 120, 16, "Put " + old.size() + " old code" + (old.size() == 1 ? "" : "s") + " online", false) && click && !loading) action = () -> moveOld(old);
 		int ly = top + 118, lh = py + ph - 28 - ly;
 		listScroll = Math.min(listScroll, Math.max(0, codes.size() * 22 - lh));
 		g.enableScissor(lx, ly, lx + lw, ly + lh);
@@ -315,6 +319,28 @@ public class AdminScreen extends Screen {
 		Runnable ga = grid(g, gx, top + 10, gw, py + ph - 28 - top - 10, mx, my, click, it -> picked.contains(it.id()), it -> locked.contains(it.id()),
 			it -> { if (!picked.remove(it.id())) picked.add(it.id()); });
 		return ga != null ? ga : action;
+	}
+
+	private void moveOld(List<gg.surge.client.economy.AdminCodes.Code> old) {
+		int[] left = {old.size()};
+		loading = true;
+		for (gg.surge.client.economy.AdminCodes.Code c : old) {
+			JsonObject b = new JsonObject();
+			b.addProperty("code", c.code());
+			b.addProperty("coins", c.coins());
+			b.addProperty("count", 1);
+			b.addProperty("uses", 0);
+			JsonArray it = new JsonArray();
+			for (String i : c.items()) it.add(i);
+			b.add("items", it);
+			AdminApi.call("codes", b, o -> {
+				gg.surge.client.economy.AdminCodes.remove(c.code());
+				if (--left[0] == 0) { loading = false; oldCodes = gg.surge.client.economy.AdminCodes.list(); toast("Old codes are online now and work for everyone", Ui.ON); refresh(); }
+			}, e -> {
+				if (e.contains("already exists")) gg.surge.client.economy.AdminCodes.remove(c.code());
+				if (--left[0] == 0) { loading = false; oldCodes = gg.surge.client.economy.AdminCodes.list(); toast(e.contains("already exists") ? "Old codes are online now" : e, e.contains("already exists") ? Ui.ON : 0xFFFF7A7A); refresh(); }
+			});
+		}
 	}
 
 	private Runnable salesTab(GuiGraphics g, int mx, int my, boolean click, float delta) {

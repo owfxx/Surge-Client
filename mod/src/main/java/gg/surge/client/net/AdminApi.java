@@ -18,10 +18,18 @@ public final class AdminApi {
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).build();
 	private static final Path TOKEN = Path.of(System.getProperty("user.home"), ".surgeclient", "admin-session");
 	private static String token;
+	private static boolean ownerFailed;
 
 	private AdminApi() {}
 
+	private static String bearer() {
+		if (token != null) return token;
+		String t = Social.token();
+		return t == null || t.isBlank() ? null : t;
+	}
+
 	public static boolean signedIn() {
+		if (bearer() != null && !ownerFailed) return true;
 		if (token == null) {
 			try { if (Files.exists(TOKEN)) token = Files.readString(TOKEN).trim(); } catch (Exception ignored) { }
 			if (token != null && token.isEmpty()) token = null;
@@ -36,7 +44,8 @@ public final class AdminApi {
 
 	public static void call(String path, JsonObject body, Consumer<JsonObject> ok, Consumer<String> err) {
 		HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(SurgeNet.publicUrl() + "/admin/api/" + path)).timeout(Duration.ofSeconds(12)).header("content-type", "application/json");
-		if (token != null) b.header("authorization", "Bearer " + token);
+		String br = bearer();
+		if (br != null && !path.equals("login")) b.header("authorization", "Bearer " + br);
 		b = body == null ? b.GET() : b.POST(HttpRequest.BodyPublishers.ofString(body.toString()));
 		HTTP.sendAsync(b.build(), HttpResponse.BodyHandlers.ofString()).whenComplete((r, e) -> Minecraft.getInstance().execute(() -> {
 			if (e != null || r == null) { err.accept("Couldn't reach the Surge service"); return; }
@@ -47,7 +56,7 @@ public final class AdminApi {
 			} catch (Exception ex) {
 				o = new JsonObject();
 			}
-			if (r.statusCode() == 401 && !path.equals("login")) { signOut(); err.accept("Please sign in again"); return; }
+			if (r.statusCode() == 401 && !path.equals("login")) { if (token == null) ownerFailed = true; signOut(); err.accept(ownerFailed ? "Sign in with the admin password" : "Please sign in again"); return; }
 			if (r.statusCode() != 200) { err.accept(o.has("error") ? o.get("error").getAsString() : "Something went wrong (" + r.statusCode() + ")"); return; }
 			ok.accept(o);
 		}));
