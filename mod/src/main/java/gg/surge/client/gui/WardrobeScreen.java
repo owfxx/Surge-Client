@@ -580,11 +580,11 @@ public class WardrobeScreen extends Screen {
 		int rx = Math.min(stageW / 2 - 14, size + 12);
 		int floorY = floorY0 - Math.max(4, rx * 22 / 100) - 2;
 		pedestal(g, cx, floorY, rx);
-		if (minecraft.player != null) {
+		{
 			int cy = floorY - Math.round(size * 0.97f);
 			int half = Math.round(size * 1.2f);
 			Preview.draw(g, x1 + 10, cy - half, x2 - 10, cy + half, size);
-		} else Ui.centered(g, font, "Join a world to see yourself", cx, (y1 + floorY) / 2, Ui.FAINT);
+		}
 
 		int ay = floorY - 26;
 		boolean lh = Ui.hover(mx, my, cx - rx - 14, ay, 14, 16), rh = Ui.hover(mx, my, cx + rx, ay, 14, 16);

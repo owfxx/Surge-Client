@@ -72,12 +72,12 @@ final class EmoteAnimations {
 			case HEART -> {
 				float beat = Math.max(0, sin(t * 7f));
 				float s = sin(t * 2f);
-				p.rArm(-168, 0, 24 + beat * 5).lArm(-168, 0, -24 - beat * 5).head(-16, 0, s * 6).sway(s * 0.6f).body(0, s * 6, 0).bob(-beat * 0.4f);
+				p.rArm(-82 - beat * 4, -36, 0).lArm(-82 - beat * 4, 36, 0).head(-6, 0, s * 6).sway(s * 0.6f).body(0, s * 5, 0).bob(-beat * 0.4f);
 			}
 			case FLOSS -> {
 				float f = sin(t * 7f);
 				float swing = sin(t * 14f);
-				p.rArm(18 * swing, 0, 30 * f).lArm(-18 * swing, 0, 30 * f).body(0, 0, -5 * f).sway(-1.5f * f).head(0, 0, 6 * f);
+				p.rArm(26 * swing, 0, 42 * f).lArm(-26 * swing, 0, 42 * f).body(0, 0, -7 * f).sway(-2f * f).head(0, 0, 7 * f).rLeg(0, 0, -4 * f).lLeg(0, 0, -4 * f);
 			}
 			case TPOSE -> p.rArm(0, 0, 90).lArm(0, 0, -90).head(0, 0, 0).body(0, 0, 0);
 			case SIT -> {

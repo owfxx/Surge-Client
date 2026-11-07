@@ -89,7 +89,7 @@ public final class EmoteFx {
 				head(model, ps, q, (pose, vc) -> blush(pose, vc, tt, k * 0.6f));
 				body(model, ps, q, (pose, vc) -> {
 					float beat = 1f + 0.18f * (float) Math.max(0, Math.sin(tt * 7f));
-					sprite(pose, vc, HEART, 0, -1.05f, -0.2f, PX * 1.1f * beat, alpha(0xFF4D7A, k));
+					sprite(pose, vc, HEART, 0, -0.5f, -0.6f, PX * 0.9f * beat, alpha(0xFF4D7A, k));
 					floaters(pose, vc, HEART, 0xFF8FB4, tt, k, 4, 1.1f, 0.7f);
 				});
 			}
