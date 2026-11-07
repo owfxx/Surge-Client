@@ -110,6 +110,7 @@ public class WardrobeScreen extends Screen {
 
 	@Override
 	protected void init() {
+		gg.surge.client.economy.Wallet.refreshRemote(true);
 		if (openedAt == 0) openedAt = System.currentTimeMillis();
 		m = this.width < 480 ? 6 : 12;
 		top = m + 24;

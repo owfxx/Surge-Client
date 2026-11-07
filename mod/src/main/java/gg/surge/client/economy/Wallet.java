@@ -130,6 +130,19 @@ public final class Wallet {
 		return out;
 	}
 
+	private static volatile long lastRefresh;
+
+	public static void refreshRemote(boolean force) {
+		if (!force && System.currentTimeMillis() - lastRefresh < 120_000) return;
+		lastRefresh = System.currentTimeMillis();
+		CompletableFuture.runAsync(() -> {
+			remoteAt = 0;
+			JsonElement r = fetchRemote();
+			Sales.applyRemote(r);
+			Locks.applyRemote(r);
+		});
+	}
+
 	public record Reward(int coins, java.util.List<String> items, int error) {
 		public boolean ok() { return error == 0; }
 	}

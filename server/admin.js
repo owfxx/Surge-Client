@@ -93,6 +93,8 @@ export async function adminApi(req, env, db, path) {
   let body = {};
   if (req.method === 'POST') { try { body = await req.json(); } catch { body = {}; } }
 
+  if (path === 'status' && req.method === 'GET') return json({ configured: !!env.ADMIN_PASSWORD });
+
   if (path === 'login' && req.method === 'POST') {
     if (!env.ADMIN_PASSWORD) return json({ error: 'The admin password is not set up yet' }, 503);
     const f = await db.prepare('SELECT count, at FROM admin_fails WHERE ip = ?1').bind(ip).first();

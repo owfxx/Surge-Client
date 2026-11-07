@@ -56,6 +56,11 @@ public final class Sales {
 		});
 	}
 
+	public static void applyRemote(JsonElement root) {
+		List<Sale> r = parse(root);
+		if (root != null) remote = r;
+	}
+
 	public static List<Sale> local() {
 		if (!loaded) load();
 		return local;

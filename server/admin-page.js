@@ -86,6 +86,16 @@ function picker(el, opts) {
 }
 const TARGETS = () => [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...data.items.map(i => [i.id, i.name])];
 
+async function setupCheck() {
+  try {
+    const r = await fetch('/admin/api/status');
+    const d = await r.json();
+    if (d.configured) return true;
+  } catch { return true; }
+  $('#app').innerHTML = '<div class="login card"><h1>Surge Admin</h1><p>The admin password isn\\'t set up yet.</p><ol class="muted" style="line-height:1.7"><li>Open your GitHub repository, then Settings, Secrets and variables, Actions.</li><li>Add a secret named <b>ADMIN_PASSWORD</b> with the password you want.</li><li>Release a new version (or re-run the latest build). Then reload this page.</li></ol></div>';
+  return false;
+}
+
 function login(msg) {
   $('#app').innerHTML = '<div class="login card"><h1>Surge Admin</h1><p class="muted">Enter your admin password.</p><form id="lf"><label>Password<input id="pw" type="password" autocomplete="current-password" required></label><p id="lerr" style="color:var(--bad);min-height:1.5em;margin:8px 0">' + esc(msg || '') + '</p><button class="btn" style="width:100%">Sign in</button></form></div>';
   $('#pw').focus();
@@ -112,7 +122,7 @@ function codes() {
     + '<label style="max-width:120px">Coins<input id="cCoins" type="number" min="0" value="0"></label>'
     + '<label style="max-width:130px">Max uses<input id="cUses" type="number" min="0" value="0" title="0 means unlimited"></label>'
     + '<label style="max-width:110px" id="cCountL">How many<input id="cCount" type="number" min="1" max="100" value="1"></label></div>'
-    + '<p class="muted" style="margin:8px 0 0">Max uses counts players, each player can redeem a code once. 0 means unlimited.</p>'
+    + '<p class="muted" style="margin:8px 0 0">Players type the code in the game under Wardrobe, Coins, Redeem a code. It works right away, no publishing needed. Each player can use a code once. Max uses limits how many players can use it, 0 means no limit.</p>'
     + '<h2 style="margin-top:16px">Unlocks</h2><div class="picker" id="cPick"></div>'
     + '<div class="row" style="margin-top:12px"><button class="btn" id="cMake">Create</button></div></div>'
     + '<div class="card"><h2>Codes (' + data.codes.length + ')</h2><div class="list">' + (data.codes.map(c => '<div class="item"><div class="grow"><div class="code">' + esc(c.code) + '</div><div class="sub">' + (c.coins ? c.coins + ' coins' : '') + (c.coins && c.items.length ? ' + ' : '') + c.items.map(name).map(cleanName).map(esc).join(', ') + '</div></div><span class="uses">' + (c.max_uses ? (c.used || 0) + ' / ' + c.max_uses + ' used' : (c.used || 0) + ' used') + '</span><button class="btn ghost small" data-copy="' + esc(c.code) + '">Copy</button><button class="btn ghost small" data-del="' + c.hash + '">Delete</button></div>').join('') || '<p class="muted">No codes yet.</p>') + '</div></div>';
@@ -158,5 +168,5 @@ function servers() {
   document.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { try { await api('servers/delete', { id: +b.dataset.rm }); load(); } catch (e) { toast(e.message, true); } });
 }
 
-token ? load() : login();
+setupCheck().then(ok => { if (ok) token ? load() : login(); });
 </script></body></html>`;

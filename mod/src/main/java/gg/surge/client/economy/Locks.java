@@ -46,6 +46,10 @@ public final class Locks {
 		return DEFAULT;
 	}
 
+	public static void applyRemote(com.google.gson.JsonElement root) {
+		if (root != null) remote = parse(root);
+	}
+
 	public static boolean locked(Shop.Item item) {
 		return active().contains(item.id());
 	}
