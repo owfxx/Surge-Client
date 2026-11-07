@@ -1,3 +1,35 @@
+## 1.5.5
+- Your skin on the title screen is now 3D: drag it or use the arrows to spin it
+- Menus look more like Minecraft: real Minecraft buttons, sliders and tooltips
+- Every mod can be given its own toggle key
+- Friends: real player heads, messages send instantly, and you can edit, copy and delete them
+- You can add anyone as a friend, even if they don't play Surge yet
+- Profiles have their own tab, can be named and work across all your instances
+- Fog Customizer: turn off or thin out distance, water, lava, snow and blindness fog, and pick a fog color
+- Glint Customizer can now change the enchantment color, with hex and hue picking
+- Every color setting has a hex box
+- Potion Effects has a new Icons style, side by side or stacked, with level, time and a shrinking bar
+- AppleSkin's saturation now follows your hunger bar texture
+- Drop Protection has a list where you add and remove your own items
+- Clips: keep the last 10 to 30 seconds and save them as a video with F8
+- AutoGG also says gg when you kill someone
+- Toggle Sprint and Toggle Sneak work reliably
+- Minimap is much faster and hides while a menu is open
+- Waypoint block outlines no longer tank your FPS
+- FPS check looks at more things, like missing performance mods, entity distance and your graphics chip
+- Smoother capes and wings while moving, fixed Beta cape shimmer
+- Fewer but better emotes, with new music that fits each dance
+- Movement emotes like T-Pose stop when you walk
+- Faster emote sync between players
+- Surge badge shows on servers that change nametags
+- Server list shows the server's region under the ping
+- Discord status hides the server address unless you turn it on
+- New installs start with only FPS and Ping on
+- Command Keys moved into its own mod
+- New modpacks come with Sodium, Lithium, C2ME, FerriteCore, BadOptimizations, Very Many Players, Clumps, Mod Menu, Shield Fixes, Shulker Box Tooltip and Simple Voice Chat
+- Codes and sales from the admin page now show up in game right away
+- Removed the CurseForge key and service link fields from launcher settings
+
 ## 1.5.4
 - Minecraft Ten font for big headings in the game and launcher
 - Your skin on the title screen, with the wardrobe right under you

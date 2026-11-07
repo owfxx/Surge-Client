@@ -321,7 +321,7 @@ public class WardrobeScreen extends Screen {
 
 	private static float cardTurn(Shop.Item item) {
 		if (item.category().equals("emote")) return 18f;
-		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 180f; case "halo" -> 20f; default -> 0f; };
+		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 30f; case "halo" -> 20f; default -> 0f; };
 	}
 
 	private void openMenu(int x, int y, List<String> labels, List<Runnable> actions) {

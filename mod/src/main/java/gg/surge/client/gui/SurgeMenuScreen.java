@@ -545,19 +545,18 @@ public class SurgeMenuScreen extends Screen {
 
 	private boolean topButton(GuiGraphics g, int mx, int my, int x, int y, int w, String label, ItemStack icon, boolean primary) {
 		boolean hov = Ui.hover(mx, my, x, y, w, 18);
-		float a = Ui.anim("tb:" + label, hov);
-		Ui.cutBox(g, x, y, w, 18, 3, primary ? Colors.lerp(0xFFE4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xFF232327, 0xFF34343A, a), primary ? 0xFFFFFFFF : 0xFF3A3A40);
+		Ui.mcButton(g, x, y, w, 18, hov, false, 1f);
 		int tx = x + 6;
 		if (icon != null) { Ui.item(g, icon, x + 4, y + 2, 14); tx = x + 21; }
-		g.drawString(font, label, tx, y + 5, primary ? 0xFF141416 : Ui.TEXT, false);
+		g.drawString(font, label, tx, y + 5, hov ? 0xFFFFFFA0 : Ui.TEXT, true);
 		return hov;
 	}
 
 	private void header(GuiGraphics g, int mx, int my, float delta) {
 		int y = py;
 		boolean bh = Ui.hover(mx, my, px, y, 18, 18);
-		Ui.cutBox(g, px, y, 18, 18, 3, bh ? 0xFF34343A : 0xFF232327, 0xFF3A3A40);
-		Ui.icon(g, LEFT, px + 5, y + 5, 1, Ui.TEXT);
+		Ui.mcButton(g, px, y, 18, 18, bh, false, 1f);
+		Ui.icon(g, LEFT, px + 5, y + 5, 1, bh ? 0xFFFFFFA0 : Ui.TEXT);
 		if (bh && clickL) action = this::onClose;
 		Ui.logo(g, px + 25, y + 1, 16);
 		g.drawString(font, Ui.ten("SURGE"), px + 45, y + 5, Ui.TEXT, true);
@@ -869,13 +868,12 @@ public class SurgeMenuScreen extends Screen {
 			int bw = Math.min(110, w / 2 - 10);
 			int bx = x + w - 4 - bw;
 			boolean over = hov && Ui.hover(mx, my, bx, y + 3, bw, 16);
-			float a = Ui.anim("choice:" + this, over);
-			Ui.cutBox(g, bx, y + 3, bw, 16, 3, Colors.lerp(0xFF202023, 0xFF303035, a), Colors.lerp(0xFF34343A, 0xFF55555C, a));
+			Ui.mcButton(g, bx, y + 3, bw, 16, over, false, 1f);
 			boolean left = mx < bx + bw / 2;
-			g.drawString(font, "<", bx + 5, y + 7, over && left ? Ui.TEXT : Ui.FAINT, false);
-			g.drawString(font, ">", bx + bw - 10, y + 7, over && !left ? Ui.TEXT : Ui.FAINT, false);
+			g.drawString(font, "<", bx + 5, y + 7, over && left ? 0xFFFFFFA0 : 0xFFA0A0A0, true);
+			g.drawString(font, ">", bx + bw - 10, y + 7, over && !left ? 0xFFFFFFA0 : 0xFFA0A0A0, true);
 			String v = Ui.fit(font, value.get(), bw - 26);
-			g.drawString(font, v, bx + (bw - font.width(v)) / 2, y + 7, Ui.TEXT, false);
+			g.drawString(font, v, bx + (bw - font.width(v)) / 2, y + 7, over ? 0xFFFFFFA0 : Ui.TEXT, true);
 			if (over && clickL) action = () -> cycle.accept(left ? -1 : 1);
 			else if (hov && clickL) action = () -> cycle.accept(1);
 		}
