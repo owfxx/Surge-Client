@@ -1,3 +1,28 @@
+## 1.5.6
+- Your skin on the title screen shows your cosmetics, spins on its own and can be dragged or turned with the arrows
+- The wardrobe works from the title screen too, with your skin and cosmetics
+- All the colored capes are now one Color Cape where you pick any color
+- New Beta Tester cape: one solid color with the Surge cloud and bolt, and text you can pick
+- Capes also change how your elytra looks
+- Cosmetics are on by default
+- Chat stacks repeated messages, like [x14], pings you when someone says your name, can hide join and leave messages and keeps 1000 messages
+- Fog Customizer has a Remove all fog switch
+- Pressing F3 hides your Surge HUD
+- Armor Status can sit left or right of your hotbar, or above it, and can reverse its order
+- Death waypoints clear themselves when you get back to them
+- New minimap arrow
+- New pause and title screen icons
+- Surge icon on nametags and in tab is now the cloud and bolt
+- Hidden Mob Culling skips mobs and items behind walls (FPS boost, can be turned off)
+- Clips record properly now
+- Server Region, Clips, Discord Status, Command Keys and Chat are on by default
+- Command Keys can be set up again
+- T-Pose, Dab, Cry and Flustered can be played while walking
+- Hovering an emote in the wheel or wardrobe no longer plays it on you in game
+- Your Surge settings, Minecraft options and server list are shared between all your modpacks
+- New modpacks show which Minecraft versions have the Surge menu
+- The admin panel works online: codes, sales, locked items and featured servers, with a picker that shows every cosmetic
+
 ## 1.5.5
 - Your skin on the title screen is now 3D: drag it or use the arrows to spin it
 - Menus look more like Minecraft: real Minecraft buttons, sliders and tooltips
