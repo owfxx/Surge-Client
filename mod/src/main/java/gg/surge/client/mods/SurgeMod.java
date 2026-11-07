@@ -34,8 +34,10 @@ public class SurgeMod {
 		this.category = category;
 		this.icon = icon;
 		this.description = description;
-		this.defEnabled = defEnabled;
+		this.defEnabled = defEnabled || "ping".equals(id) ? DEFAULT_ON.contains(id) : false;
 	}
+
+	private static final java.util.Set<String> DEFAULT_ON = java.util.Set.of("fps", "ping", "general", "cosmetics", "main_menu", "discord", "profiles");
 
 	public ItemStack icon() {
 		if (iconStack == null) iconStack = new ItemStack(icon);

@@ -223,8 +223,14 @@ public final class Ui {
 	}
 
 	public static void cutBox(GuiGraphics g, int x, int y, int w, int h, int c, int fill, int edge) {
+		c = Math.min(c, 2);
 		cut(g, x, y, w, h, c, edge);
 		cut(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, c - 1), fill);
+		if (h >= 8 && w >= 8 && ((fill >>> 24) & 0xFF) > 0x80) {
+			int a = (fill >>> 24) & 0xFF;
+			g.fill(x + 2, y + 1, x + w - 2, y + 2, ((a * 0x22 / 255) << 24) | 0xFFFFFF);
+			g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, ((a * 0x50 / 255) << 24));
+		}
 	}
 
 	public static void outline(GuiGraphics g, int x, int y, int w, int h, int color) {

@@ -32,12 +32,16 @@ public final class PerfMods {
 		new Mod("sodium", "sodium", "Sodium", "Rewrites how the game draws chunks. Often doubles your FPS."),
 		new Mod("lithium", "lithium", "Lithium", "Faster game logic, mostly helps in singleplayer."),
 		new Mod("ferrite-core", "ferritecore", "FerriteCore", "Uses a lot less RAM."),
+		new Mod("c2me-fabric", "c2me", "C2ME", "Loads and generates chunks on more CPU cores."),
+		new Mod("badoptimizations", "badoptimizations", "BadOptimizations", "Many small speedups for lighting, sky and more."),
+		new Mod("vmp-fabric", "vmp", "Very Many Players", "Smoother play on busy servers and with lots of entities."),
+		new Mod("clumps", "clumps", "Clumps", "Merges XP orbs so farms don't lag."),
 		new Mod("entityculling", "entityculling", "Entity Culling", "Skips mobs and chests hidden behind walls."),
 		new Mod("immediatelyfast", "immediatelyfast", "ImmediatelyFast", "Faster HUD, text and item rendering."),
 		new Mod("modernfix", "modernfix", "ModernFix", "Faster start-up and less RAM."),
-		new Mod("moreculling", "moreculling", "More Culling", "Skips hidden block faces like leaves."),
 		new Mod("dynamic-fps", "dynamic_fps", "Dynamic FPS", "Lower FPS when the game is in the background.")
 	);
+
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Map<String, String> status = new LinkedHashMap<>();

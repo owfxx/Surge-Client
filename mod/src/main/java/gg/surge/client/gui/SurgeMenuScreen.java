@@ -34,7 +34,7 @@ public class SurgeMenuScreen extends Screen {
 	private enum Tab {
 		ALL("All mods", Items.NETHER_STAR), HUD("HUD", Items.ITEM_FRAME), PVP("PvP", Items.NETHERITE_SWORD),
 		VISUAL("Visual", Items.AMETHYST_CLUSTER), UTILITY("Utility", Items.IRON_PICKAXE),
-		KEYS("Command Keys", Items.COMMAND_BLOCK), FPS("Settings", Items.COMPARATOR), PERF("FPS check", Items.CLOCK);
+		PROFILES("Profiles", Items.BOOKSHELF), FPS("Settings", Items.COMPARATOR), PERF("FPS check", Items.CLOCK);
 		final String label;
 		final Item icon;
 		ItemStack stack;
@@ -159,7 +159,7 @@ public class SurgeMenuScreen extends Screen {
 	}
 
 	private boolean gridMode() {
-		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.KEYS && tab != Tab.PERF));
+		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.PROFILES && tab != Tab.PERF));
 	}
 
 	private void buildPage() {
@@ -168,9 +168,10 @@ public class SurgeMenuScreen extends Screen {
 		rows.clear();
 		addWidget(search);
 		scroll = scrollTarget = 0;
-		if (openMod != null) settingsRows(openMod);
+		if (openMod == Mods.COMMAND_KEYS) { settingsRows(openMod); keyRows(); }
+		else if (openMod != null) settingsRows(openMod);
 		else if (query.isEmpty() && tab == Tab.FPS) { settingsRows(Mods.GENERAL); rows.add(new HeaderRow(() -> "FPS boost")); fpsRows(); }
-		else if (query.isEmpty() && tab == Tab.KEYS) keyRows();
+		else if (query.isEmpty() && tab == Tab.PROFILES) profileRows();
 		else if (query.isEmpty() && tab == Tab.PERF) rows.add(new PerfRow());
 	}
 
@@ -190,6 +191,7 @@ public class SurgeMenuScreen extends Screen {
 		List<SurgeMod> out = new ArrayList<>();
 		String q = query.toLowerCase(Locale.ROOT).trim();
 		for (SurgeMod m : Mods.all()) {
+			if (m == Mods.PROFILES || m == Mods.GENERAL) continue;
 			if (!q.isEmpty()) {
 				if (m.name.toLowerCase(Locale.ROOT).contains(q) || m.description.toLowerCase(Locale.ROOT).contains(q)) out.add(m);
 				continue;
@@ -232,9 +234,6 @@ public class SurgeMenuScreen extends Screen {
 			}
 		}
 		if (mod == Mods.WAYPOINTS) waypointRows();
-		if (mod == Mods.COMMAND_KEYS) {
-			rows.add(new ButtonRow("Your command keys", "Edit", () -> { openMod = null; tab = Tab.KEYS; buildPage(); }));
-		}
 		if (mod == Mods.ZOOM || mod == Mods.FREELOOK) {
 			rows.add(new InfoRow("Change the key in Options > Controls > Key Binds, under Surge Client."));
 		}
@@ -325,8 +324,25 @@ public class SurgeMenuScreen extends Screen {
 		};
 	}
 
+	private void profileRows() {
+		rows.add(new InfoRow("A profile saves every mod, setting and HUD position. Profiles are shared between all your modpacks."));
+		rows.add(new NewProfileRow());
+		List<String> names = gg.surge.client.features.Profiles.names();
+		if (!names.isEmpty()) rows.add(new HeaderRow(() -> "Saved profiles"));
+		for (String n : names) rows.add(new ProfileRow(n));
+		rows.add(new HeaderRow(() -> "Servers"));
+		rows.add(new ToggleRow("Remember a setup for each server", null, Mods.PROFILE_PER_SERVER::on, Mods.PROFILE_PER_SERVER::flip, "pf:server"));
+		rows.add(new HeaderRow(() -> "Share"));
+		rows.add(new ButtonRow("Copy your setup to send to a friend", "Export", gg.surge.client.features.Profiles::export));
+		rows.add(new ButtonRow("Paste a setup someone sent you", "Import", gg.surge.client.features.Profiles::importClipboard));
+		rows.add(new HeaderRow(() -> "Everything"));
+		rows.add(new ButtonRow("Turn every mod off", "All off", () -> gg.surge.client.features.Profiles.allMods(false)));
+		rows.add(new ButtonRow("Turn every mod on", "All on", () -> gg.surge.client.features.Profiles.allMods(true)));
+		rows.add(new ButtonRow("Reset all settings", "Reset", gg.surge.client.features.Profiles::reset));
+	}
+
 	private void keyRows() {
-		rows.add(new ToggleRow("Command Keys", null, () -> Mods.COMMAND_KEYS.state().enabled, Mods.COMMAND_KEYS::toggle, "ck:on"));
+		rows.add(new HeaderRow(() -> "Your command keys"));
 		rows.add(new InfoRow("Pick a key, then type what it sends. Start with / for a command. {x} {y} {z} {name} {server} are filled in for you."));
 		List<SurgeConfig.CommandKey> list = SurgeConfig.get().commandKeys;
 		for (SurgeConfig.CommandKey k : list) rows.add(new CommandKeyRow(k));
@@ -489,7 +505,7 @@ public class SurgeMenuScreen extends Screen {
 		int y = py + HEADER_H + 6;
 		int rowH = ph < 230 ? 18 : 21;
 		for (Tab t : Tab.values()) {
-			if (t == Tab.KEYS) { g.fill(px + 4, y + 2, px + SIDEBAR_W - 4, y + 3, 0xFF26262A); y += 7; }
+			if (t == Tab.PROFILES) { g.fill(px + 4, y + 2, px + SIDEBAR_W - 4, y + 3, 0xFF26262A); y += 7; }
 			boolean sel = t == tab && openMod == null && query.isEmpty();
 			boolean selSoft = t == tab && (openMod != null || !query.isEmpty());
 			if (Ui.flat(g, mx, my, px, y, SIDEBAR_W, rowH - 2, sel || selSoft, "tab:" + t) && clickL) {
@@ -1109,6 +1125,94 @@ public class SurgeMenuScreen extends Screen {
 				SurgeConfig.save();
 				needsRebuild = true;
 			};
+		}
+	}
+
+	private final class NewProfileRow extends Row {
+		final EditBox box;
+
+		NewProfileRow() {
+			box = new EditBox(font, 0, 0, 100, 10, Component.literal("Name"));
+			box.setBordered(false);
+			box.setMaxLength(32);
+			box.setHint(Component.literal("Name, like PvP or Building").withStyle(ChatFormatting.DARK_GRAY));
+			addWidget(box);
+			boxes.add(box);
+		}
+
+		@Override int height() { return 26; }
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			int bw = 120;
+			Ui.box(g, x, y + 4, w - bw - 6, 18, 0xFF161619, box.isFocused() ? Ui.ACCENT_2 : Ui.EDGE);
+			box.setX(x + 6);
+			box.setY(y + 9);
+			box.setWidth(w - bw - 18);
+			box.visible = true;
+			box.render(g, mx, my, delta);
+			boolean enter = box.isFocused() && GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_ENTER) == GLFW.GLFW_PRESS;
+			if ((Ui.pill(g, font, mx, my, x + w - bw, y + 4, bw, 18, "Save current setup", true) && clickL) || enter) action = () -> {
+				if (gg.surge.client.features.Profiles.saveAs(box.getValue())) { box.setValue(""); needsRebuild = true; }
+			};
+		}
+	}
+
+	private final class ProfileRow extends Row {
+		final String name;
+		final EditBox box;
+		boolean renaming;
+		long confirmDelete;
+
+		ProfileRow(String name) {
+			this.name = name;
+			box = new EditBox(font, 0, 0, 100, 10, Component.literal("Name"));
+			box.setBordered(false);
+			box.setMaxLength(32);
+			box.setValue(name);
+			addWidget(box);
+			boxes.add(box);
+		}
+
+		@Override int height() { return 26; }
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			boolean active = name.equals(gg.surge.client.features.Profiles.active());
+			float a = Ui.anim(this, hov);
+			Ui.cutBox(g, x, y + 2, w, 22, 3, Colors.lerp(0xFF1C1C1F, 0xFF242428, a), active ? Ui.ACCENT_2 : 0xFF2A2A2E);
+			int bx = x + w - 4;
+			String[] labels = renaming ? new String[]{"Cancel", "Done"} : new String[]{System.currentTimeMillis() - confirmDelete < 3000 ? "Sure?" : "Delete", "Rename", "Save", active ? "Loaded" : "Load"};
+			int[] widths = new int[labels.length];
+			for (int i = 0; i < labels.length; i++) widths[i] = font.width(labels[i]) + 12;
+			for (int i = 0; i < labels.length; i++) {
+				bx -= widths[i];
+				boolean primary = i == labels.length - 1 && !active;
+				boolean hit = Ui.pill(g, font, mx, my, bx, y + 5, widths[i], 16, labels[i], primary) && clickL;
+				String lab = labels[i];
+				if (hit) action = () -> {
+					switch (lab) {
+						case "Load" -> gg.surge.client.features.Profiles.load(name);
+						case "Save" -> gg.surge.client.features.Profiles.saveAs(name);
+						case "Rename" -> { renaming = true; box.setValue(name); box.setFocused(true); setFocused(box); }
+						case "Cancel" -> renaming = false;
+						case "Done" -> { if (gg.surge.client.features.Profiles.rename(name, box.getValue())) needsRebuild = true; renaming = false; }
+						case "Delete" -> confirmDelete = System.currentTimeMillis();
+						case "Sure?" -> { gg.surge.client.features.Profiles.delete(name); needsRebuild = true; }
+						default -> { }
+					}
+				};
+				bx -= 4;
+			}
+			if (renaming) {
+				Ui.box(g, x + 6, y + 5, bx - x - 10, 16, 0xFF161619, Ui.ACCENT_2);
+				box.setX(x + 11);
+				box.setY(y + 9);
+				box.setWidth(bx - x - 20);
+				box.visible = true;
+				box.render(g, mx, my, delta);
+			} else {
+				box.visible = false;
+				g.drawString(font, Ui.fit(font, name, bx - x - 20), x + 10, y + 9, Ui.TEXT, false);
+			}
 		}
 	}
 

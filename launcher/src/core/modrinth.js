@@ -135,20 +135,13 @@ const PERFORMANCE_MODS = [
   ['sodium'],
   ['lithium'],
   ['ferrite-core'],
-  ['entityculling'],
-  ['immediatelyfast'],
-  ['moreculling'],
+  ['c2me-fabric'],
   ['badoptimizations'],
-  ['dynamic-fps'],
-  ['particle-core'],
-  ['better-block-entities'],
-  ['scalablelux'],
-  ['krypton'],
-  ['modernfix', 'modernfix-mvus'],
-  ['memoryleakfix'],
+  ['vmp-fabric'],
+  ['clumps'],
 ];
 
-const EXTRA_MODS = ['simple-voice-chat'];
+const EXTRA_MODS = ['modmenu', 'complete-shield-fixes', 'walksylib', 'shulkerboxtooltip', 'simple-voice-chat'];
 
 async function installPerformanceStack(instanceId, onProgress = () => {}) {
   const seen = new Set();

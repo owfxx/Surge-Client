@@ -25,8 +25,23 @@ public final class Profiles {
 
 	private Profiles() {}
 
+	private static boolean migrated;
+
 	private static Path dir() {
-		return FabricLoader.getInstance().getConfigDir().resolve("surge").resolve("profiles");
+		Path d = Path.of(System.getProperty("user.home"), ".surgeclient", "profiles");
+		if (!migrated) {
+			migrated = true;
+			try {
+				Files.createDirectories(d.resolve("servers"));
+				Path old = FabricLoader.getInstance().getConfigDir().resolve("surge").resolve("profiles");
+				for (int i = 1; i <= 3; i++) {
+					Path f = old.resolve("setup" + i + ".json");
+					Path to = d.resolve("Setup " + i + ".json");
+					if (Files.exists(f) && !Files.exists(to)) Files.copy(f, to);
+				}
+			} catch (Exception ignored) { }
+		}
+		return d;
 	}
 
 	private static String snapshot() {
@@ -71,29 +86,84 @@ public final class Profiles {
 		}
 	}
 
-	private static void saveSlot(int n) {
-		save("setup" + n, snapshot());
-		Social.notice("Setup " + n + " saved", "Load it any time from Profiles");
+	public static String clean(String name) {
+		String n = name == null ? "" : name.replaceAll("[^A-Za-z0-9 _\\-]", "").trim();
+		if (n.length() > 32) n = n.substring(0, 32).trim();
+		return n;
 	}
 
-	private static void loadSlot(int n) {
-		String json = read("setup" + n);
-		if (json == null) { Social.notice("Setup " + n + " is empty", "Save your current setup there first"); return; }
-		try { restore(json); Social.notice("Setup " + n + " loaded", "Your mods and HUD switched over"); }
-		catch (Exception e) { Social.notice("Couldn't load setup " + n, "The file is damaged"); }
+	public static java.util.List<String> names() {
+		java.util.List<String> out = new java.util.ArrayList<>();
+		try (var st = Files.list(dir())) {
+			st.filter(p -> p.getFileName().toString().endsWith(".json") && !p.getFileName().toString().startsWith("_"))
+				.sorted(java.util.Comparator.comparing(p -> p.getFileName().toString().toLowerCase()))
+				.forEach(p -> { String f = p.getFileName().toString(); out.add(f.substring(0, f.length() - 5)); });
+		} catch (Exception ignored) { }
+		return out;
 	}
 
-	private static void export() {
+	public static String active() {
+		try {
+			Path f = dir().resolve("_active.txt");
+			return Files.exists(f) ? Files.readString(f).trim() : "";
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
+	private static void setActive(String name) {
+		try { Files.writeString(dir().resolve("_active.txt"), name); } catch (Exception ignored) { }
+	}
+
+	public static boolean saveAs(String raw) {
+		String name = clean(raw);
+		if (name.isEmpty()) { Social.notice("Name your profile", "Type a name first"); return false; }
+		save(name, snapshot());
+		setActive(name);
+		Social.notice("Saved " + name, "Your mods, settings and HUD are in this profile");
+		return true;
+	}
+
+	public static void load(String name) {
+		String json = read(name);
+		if (json == null) return;
+		try {
+			restore(json);
+			setActive(name);
+			Social.notice("Switched to " + name, "Your mods and HUD switched over");
+		} catch (Exception e) {
+			Social.notice("Couldn't load " + name, "The file is damaged");
+		}
+	}
+
+	public static void delete(String name) {
+		try { Files.deleteIfExists(dir().resolve(name + ".json")); } catch (Exception ignored) { }
+		if (name.equals(active())) setActive("");
+	}
+
+	public static boolean rename(String from, String raw) {
+		String to = clean(raw);
+		if (to.isEmpty() || to.equals(from)) return false;
+		try {
+			Files.move(dir().resolve(from + ".json"), dir().resolve(to + ".json"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			if (from.equals(active())) setActive(to);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public static void export() {
 		String code = PREFIX + Base64.getEncoder().encodeToString(snapshot().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 		Minecraft.getInstance().keyboardHandler.setClipboard(code);
 		Social.notice("Setup copied", "Paste it to a friend so they can import it");
 	}
 
-	private static void importClipboard() {
+	public static void importClipboard() {
 		String clip = Minecraft.getInstance().keyboardHandler.getClipboard().trim();
 		try {
 			String json = clip.startsWith(PREFIX) ? new String(Base64.getDecoder().decode(clip.substring(PREFIX.length())), java.nio.charset.StandardCharsets.UTF_8) : clip;
-			save("before-import", snapshot());
+			save("_before-import", snapshot());
 			restore(json);
 			Social.notice("Setup imported", "Your old setup was saved as a backup");
 		} catch (Exception e) {
@@ -101,36 +171,20 @@ public final class Profiles {
 		}
 	}
 
-	private static void allMods(boolean on) {
+	public static void allMods(boolean on) {
 		for (SurgeMod m : Mods.all()) if (m.toggleable) m.setEnabled(on);
 		refresh();
-		Social.notice(on ? "Every mod turned on" : "Every mod turned off", "Use a saved setup to go back");
+		Social.notice(on ? "Every mod turned on" : "Every mod turned off", "Use a saved profile to go back");
 	}
 
-	private static void reset() {
-		save("before-reset", snapshot());
+	public static void reset() {
+		save("_before-reset", snapshot());
 		SurgeConfig c = SurgeConfig.get();
 		SurgeConfig.ModuleState keep = c.modules.get(Mods.PROFILES.id);
 		c.modules.clear();
 		if (keep != null) c.modules.put(Mods.PROFILES.id, keep);
 		refresh();
 		Social.notice("Everything reset", "Your old setup was saved as a backup");
-	}
-
-	public static void buttons(SurgeMod m) {
-		m.header("Saved setups");
-		for (int i = 1; i <= 3; i++) {
-			final int n = i;
-			m.button("Save what I have now as setup " + n, "Save", () -> saveSlot(n));
-			m.button("Switch to setup " + n, "Load", () -> loadSlot(n));
-		}
-		m.header("Share");
-		m.button("Copy my setup", "Export", Profiles::export);
-		m.button("Paste a setup", "Import", Profiles::importClipboard);
-		m.header("Everything");
-		m.button("Turn every mod off", "All off", () -> allMods(false));
-		m.button("Turn every mod on", "All on", () -> allMods(true));
-		m.button("Reset all settings", "Reset", Profiles::reset);
 	}
 
 	private static String key(String server) {

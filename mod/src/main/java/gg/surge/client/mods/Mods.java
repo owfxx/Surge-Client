@@ -242,7 +242,7 @@ public final class Mods {
 
 	public static final SurgeMod DISCORD = mod("discord", "Discord Status", Category.UTILITY, Items.AMETHYST_CLUSTER,
 		"Show what you're playing on your Discord profile", true);
-	public static final Setting.Toggle DISCORD_SERVER = DISCORD.toggle("server", "Show the server address", true);
+	public static final Setting.Toggle DISCORD_SERVER = DISCORD.toggle("showIp", "Show the server address", false);
 	public static final Setting.Toggle DISCORD_PACK = DISCORD.toggle("pack", "Show the modpack name", true);
 
 	public static final SurgeMod AUTO_GG = mod("auto_gg", "AutoGG", Category.UTILITY, Items.CAKE,
@@ -304,7 +304,6 @@ public final class Mods {
 		CHAT.onToggle(on -> OptionTweaks.apply(mc()));
 		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
 		GLINT.onToggle(on -> gg.surge.client.features.Extras.applyGlint(mc())).onChange(() -> gg.surge.client.features.Extras.applyGlint(mc()));
-		gg.surge.client.features.Profiles.buttons(PROFILES);
 	}
 
 	public static List<SurgeMod> all() {
