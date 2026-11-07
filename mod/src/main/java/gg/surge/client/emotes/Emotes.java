@@ -13,18 +13,9 @@ public final class Emotes {
 		FACEPALM("Facepalm", 3.0f, false), DAB("Dab", 2.2f, false), SHRUG("Shrug", 2.4f, false),
 		SALUTE("Salute", 3.0f, false), CHEER("Cheer", 3.5f, false), THINKING("Thinking", 4.0f, false),
 		LAUGH("Laugh", 3.5f, false), BOW("Bow", 3.0f, false), HEART("Heart", 3.5f, false),
-		BOXING("Boxing", 4.0f, true), FLOSS("Floss", 4.0f, true), GROOVE("Groove", 4.0f, true),
-		ZOMBIE("Zombie", 4.0f, true), TPOSE("T-Pose", 4.0f, true), CRY("Cry", 4.0f, false),
-		SIT("Sit", 6.0f, true), POINT("Point", 2.5f, false), PEACE("Peace", 2.5f, false), STRETCH("Stretch", 3.2f, false),
-		TWIRL("Twirl", 1.6f, false), JUMP("Jump for Joy", 3.0f, false), MEDITATE("Meditate", 6.0f, true),
-		HEADBANG("Headbang", 4.0f, true), YAWN("Yawn", 3.2f, false),
-		GUITAR("Air Guitar", 4.0f, true), ROBOT("Robot", 4.0f, true), CHICKEN("Chicken Dance", 4.0f, true),
-		WAVE_BOTH("Big Wave", 3.0f, false), VICTORY("Victory", 3.0f, false), SHY("Shy", 3.5f, false),
-		KICK("Kick", 1.8f, false), SALSA("Salsa", 4.0f, true), DRUMS("Drums", 4.0f, true), SWIM("Swim", 4.0f, true),
-		GRIDDY("Griddy", 13.2f, "griddy", 146), MOONWALK("Moonwalk", 16.6f, "moonwalk", 116), SHUFFLE("Shuffle", 15.2f, "shuffle", 126),
-		RUNNING_MAN("Running Man", 19.6f, "running_man", 98), DISCO("Disco Fever", 16.0f, "disco", 120), TWIST("The Twist", 12.3f, "twist", 156),
-		CHARLESTON("Charleston", 10.9f, "charleston", 176), PONY("Pony", 14.8f, "pony", 130), TOPROCK("Toprock", 18.5f, "toprock", 104),
-		WOAH("The Woah", 13.7f, "woah", 140);
+		FLOSS("Floss", 4.0f, true), TPOSE("T-Pose", 4.0f, true), CRY("Cry", 4.0f, false),
+		SIT("Sit", 6.0f, true), YAWN("Yawn", 3.2f, false), GRIDDY("Griddy", 13.2f, "griddy", 146),
+		MOONWALK("Moonwalk", 16.6f, "moonwalk", 116), SHUFFLE("Shuffle", 15.2f, "shuffle", 126), DISCO("Disco Fever", 16.0f, "disco", 120);
 
 		public final String label;
 		public final float seconds;
@@ -54,8 +45,8 @@ public final class Emotes {
 		}
 	}
 
-	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.DAB, Emote.SHRUG, Emote.SALUTE,
-		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.ZOMBIE, Emote.TPOSE, Emote.POINT, Emote.PEACE, Emote.WAVE_BOTH, Emote.VICTORY, Emote.CRY, Emote.YAWN, Emote.FLUSTERED, Emote.GUITAR, Emote.DRUMS);
+	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.SHRUG, Emote.SALUTE,
+		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.YAWN);
 	public static volatile boolean walking;
 
 	private static Emote current;

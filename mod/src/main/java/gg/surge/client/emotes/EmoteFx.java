@@ -81,7 +81,7 @@ public final class EmoteFx {
 		if (fade <= 0.01f) return;
 		final float tt = t, k = fade;
 		switch (e) {
-			case FLUSTERED, SHY -> {
+			case FLUSTERED -> {
 				head(model, ps, q, (pose, vc) -> blush(pose, vc, tt, k));
 				if (e == Emote.FLUSTERED) body(model, ps, q, (pose, vc) -> floaters(pose, vc, HEART, 0xFF6FA0, tt, k, 3, 1.4f, 0.55f));
 			}
@@ -98,7 +98,7 @@ public final class EmoteFx {
 				float d = frac(tt * 0.6f);
 				sprite(pose, vc, DROP, 0.29f, -0.42f + d * 0.18f, -0.1f, PX * 0.55f, alpha(0x7FC8FF, k * (1f - d * 0.6f)));
 			});
-			case YAWN, MEDITATE -> body(model, ps, q, (pose, vc) -> {
+			case YAWN -> body(model, ps, q, (pose, vc) -> {
 				for (int i = 0; i < 3; i++) {
 					float p = frac(tt * 0.45f + i / 3f);
 					sprite(pose, vc, ZED, 0.22f + p * 0.25f + (float) Math.sin(p * 6f) * 0.04f, -0.75f - p * 0.6f, 0f, PX * (0.35f + p * 0.35f), alpha(0xDDE6FF, k * (1f - p)));
@@ -110,7 +110,7 @@ public final class EmoteFx {
 				for (int i = 0; i < n; i++) sprite(pose, vc, DOT, 0.22f + i * 0.09f, -0.82f - i * 0.08f, 0f, PX * (0.45f + i * 0.15f), alpha(0xFFFFFF, k));
 				if (cycle > 1.6f) sprite(pose, vc, BANG, 0.52f, -1.1f, 0f, PX * 0.55f, alpha(0xFFE066, k));
 			});
-			case CHEER, VICTORY, JUMP, WAVE_BOTH -> body(model, ps, q, (pose, vc) -> confetti(pose, vc, tt, k));
+			case CHEER -> body(model, ps, q, (pose, vc) -> confetti(pose, vc, tt, k));
 			case DAB -> body(model, ps, q, (pose, vc) -> {
 				float hit = Math.max(0f, 1f - Math.abs(tt - 0.35f) * 2.5f);
 				if (hit > 0) for (int i = 0; i < 6; i++) {
@@ -125,13 +125,8 @@ public final class EmoteFx {
 					sprite(pose, vc, DROP, side * (0.31f + p * 0.12f), -0.28f + p * p * 0.25f, -0.2f, PX * 0.6f, alpha(0x9AD8FF, k * (1 - p)));
 				}
 			});
-			case HEADBANG -> head(model, ps, q, (pose, vc) -> {
-				float p = frac(tt * 2.2f);
-				sprite(pose, vc, DROP, 0.3f + p * 0.1f, -0.5f + p * 0.2f, 0f, PX * 0.65f, alpha(0x9AD8FF, k * (1 - p)));
-				sprite(pose, vc, DROP, -0.3f - p * 0.1f, -0.45f + p * 0.2f, 0f, PX * 0.65f, alpha(0x9AD8FF, k * (1 - p)));
-			});
 			default -> {
-				if (e.music != null || e == Emote.GUITAR || e == Emote.DRUMS || e == Emote.GROOVE || e == Emote.SALSA)
+				if (e.music != null || e == Emote.FLOSS)
 					body(model, ps, q, (pose, vc) -> floaters(pose, vc, NOTE, 0xFFFFFF, tt, k, 3, 0.9f, 0.6f));
 			}
 		}

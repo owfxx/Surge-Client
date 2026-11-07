@@ -43,7 +43,7 @@ public class WardrobeScreen extends Screen {
 	private static final String[] COSMETIC_SUBS = {"All", "Capes", "Wings", "Halos"};
 	private static final String[] EMOTE_SUBS = {"All", "Dances", "With music", "Basic", "Expressive"};
 	private static final String[] SORTS = {"Featured", "Price", "Owned first", "Name"};
-	private static final Set<String> DANCES = Set.of("FLOSS", "GROOVE", "SALSA", "ROBOT", "CHICKEN", "HEADBANG", "GUITAR", "DRUMS", "TWIRL", "SWIM", "ZOMBIE", "BOXING");
+	private static final Set<String> DANCES = Set.of("FLOSS", "TPOSE", "SIT");
 	private static final Set<String> EXPRESSIVE = Set.of("FLUSTERED", "FACEPALM", "SHRUG", "THINKING", "LAUGH", "CRY", "HEART", "SHY", "YAWN", "BOW", "TPOSE");
 	private static final int[] WHEEL_COL = {1, 2, 2, 2, 1, 0, 0, 0};
 	private static final int[] WHEEL_ROW = {0, 0, 1, 2, 2, 2, 1, 0};

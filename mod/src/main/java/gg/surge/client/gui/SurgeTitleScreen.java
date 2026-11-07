@@ -198,14 +198,26 @@ public class SurgeTitleScreen extends Screen {
 		float ks = since(300, 500);
 		if (this.width >= 400 && ks > 0) {
 			int skin = Math.max(2, Math.min(5, (this.height - 120) / 40));
-			int fx = Math.max(16 + 8 * skin, this.width / 2 - bw / 2 - 30 - 12 * skin);
-			fx = Math.min(fx, this.width / 5 + 8 * skin);
-			int fy = (this.height - 33 * skin) / 2 - 14 + Math.round((1 - ks) * 10 + (float) Math.sin((System.currentTimeMillis() - openedAt) / 1100.0) * 1.5f);
-			if (SkinArt.draw(g, fx, fy, skin)) {
-				int bwW = 84, bxW = fx - bwW / 2, byW = (this.height + 33 * skin) / 2 - 2;
+			int fx = Math.max(34 + 10 * skin, this.width / 2 - bw / 2 - 30 - 12 * skin);
+			fx = Math.min(fx, this.width / 5 + 10 * skin);
+			int sh = SkinArt.height(skin);
+			int fy = (this.height - sh) / 2 - 14 + Math.round((1 - ks) * 10);
+			if (SkinArt.draw(g, fx, fy, skin, mx, my, delta)) {
+				int half = SkinArt.width(skin) / 2 + 6;
+				int ay = fy + sh / 2 - 7;
+				for (int side = -1; side <= 1; side += 2) {
+					int ax = side < 0 ? fx - half - 14 : fx + half;
+					boolean hov = Ui.hover(mx, my, ax, ay, 14, 14) && !SkinArt.dragging();
+					float ha = Ui.anim("title:arrow" + side, hov);
+					Ui.cutBox(g, ax, ay, 14, 14, 2, Colors.alpha(Colors.lerp(0x90141416, 0xD8232327, ha), ks), Colors.alpha(Colors.lerp(0x30FFFFFF, 0xC0FFFFFF, ha), ks));
+					Ui.icon(g, side < 0 ? new String[]{"....X...", "...XX...", "..XXX...", ".XXXX...", "..XXX...", "...XX...", "....X...", "........"} : new String[]{"...X....", "...XX...", "...XXX..", "...XXXX.", "...XXX..", "...XX...", "...X....", "........"}, ax + 3, ay + 3, 1, Colors.alpha(0xFFFFFFFF, ks));
+					int dir = side;
+					if (hov && click) action = () -> SkinArt.turn(dir * 90f);
+				}
+				int bwW = 84, bxW = fx - bwW / 2, byW = fy + sh + 4;
 				if (glass(g, mx, my, bxW, byW, bwW, 18, "Wardrobe", false, ks) && click) action = () -> minecraft.setScreen(new WardrobeScreen(this));
 				String nm = minecraft.getUser().getName();
-				g.drawString(font, nm, fx - font.width(nm) / 2, fy - 14, Colors.alpha(0xFFFFFFFF, ks), true);
+				g.drawString(font, nm, fx - font.width(nm) / 2, fy - 12, Colors.alpha(0xFFFFFFFF, ks), true);
 			}
 		}
 

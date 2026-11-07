@@ -71,7 +71,7 @@ public final class AutoTest {
 		STEPS.add(new Step("05b-back-view", 30, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK)));
 		STEPS.add(new Step("05c-halo-front", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
-		STEPS.add(new Step("07-emote-pony", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.PONY); }));
+		STEPS.add(new Step("07-emote-disco", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.DISCO); }));
 		STEPS.add(new Step("07c-emote-cry", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CRY); }));
 		STEPS.add(new Step("07d-emote-flustered", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLUSTERED); }));
 		STEPS.add(new Step("07e-emote-cheer", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CHEER); }));
