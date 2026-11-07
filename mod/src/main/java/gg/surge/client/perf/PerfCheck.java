@@ -196,6 +196,30 @@ public final class PerfCheck {
 				PerfMods.Mod sodium = PerfMods.KNOWN.get(0);
 				if (!PerfMods.wanted(sodium)) PerfMods.toggle(sodium);
 			}));
+		for (String[] pm : new String[][]{{"lithium", "Lithium isn't installed", "Makes the game logic faster, mostly in singleplayer."},
+			{"ferrite-core", "FerriteCore isn't installed", "Cuts how much RAM the game needs, which means fewer freezes."},
+			{"entityculling", "Entity Culling isn't installed", "Skips drawing mobs and chests you can't see. Big help on servers and in bases."},
+			{"immediatelyfast", "ImmediatelyFast isn't installed", "Speeds up drawing text, items and the HUD."}}) {
+			PerfMods.Mod m = null;
+			for (PerfMods.Mod k : PerfMods.KNOWN) if (k.slug().equals(pm[0])) m = k;
+			if (m == null || PerfMods.loaded(m) || PerfMods.wanted(m)) continue;
+			PerfMods.Mod mod = m;
+			out.add(new Finding(avg < 60 ? 1 : 0, pm[1], pm[2] + " Surge can download it, it starts working the next time you open the game.", "Download", () -> { if (!PerfMods.wanted(mod)) PerfMods.toggle(mod); }));
+		}
+		if (o.entityShadows().get() && avg < 90) out.add(new Finding(0, "Entity shadows are on", "The round shadows under mobs and items cost FPS when lots of them are around.", "Turn off", () -> Performance.set(mc, Performance.byKey("noShadows"), true)));
+		if (o.biomeBlendRadius().get() > 2 && moveS > 0) out.add(new Finding(1, "High biome blend", "Biome blend is set to " + o.biomeBlendRadius().get() + ". Every new chunk takes longer to build. 1 or 2 looks almost the same.", "Lower it", () -> Performance.set(mc, Performance.byKey("lightBiomeBlend"), true)));
+		if (o.entityDistanceScaling().get() > 1.0 && maxEntities > 80) out.add(new Finding(1, "Entity distance above 100%", "Mobs and players are drawn from further away than normal while a lot of them are around you.", "Set to 100%", () -> { o.entityDistanceScaling().set(1.0); o.save(); }));
+		if (o.mipmapLevels().get() > 2 && avg < 60) out.add(new Finding(0, "High mipmap levels", "Mipmaps above 2 rarely look different but use more video memory.", "Lower it", () -> Performance.set(mc, Performance.byKey("lowMipmaps"), true)));
+		if (gg.surge.client.mods.Mods.CLIPS.enabled() && avg < 60) out.add(new Finding(1, "Clips are recording", "Clips keep grabbing frames in the background. On a slow PC that costs FPS.", "Turn off", () -> gg.surge.client.mods.Mods.CLIPS.setEnabled(false)));
+		try {
+			String gpu = com.mojang.blaze3d.systems.RenderSystem.getDevice().getRenderer();
+			String lower = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
+			boolean integrated = lower.contains("intel") && !lower.contains("arc") || lower.contains("vega") && lower.contains("radeon(tm) graphics") || lower.contains("microsoft basic") || lower.contains("llvmpipe");
+			if (integrated && avg < 90) out.add(new Finding(avg < 45 ? 2 : 1, "Running on a weak graphics chip", "Minecraft is using " + gpu + ". If your PC has a gaming graphics card, set Java (javaw.exe) to High performance in Windows Graphics settings.", null, null));
+		} catch (Throwable ignored) { }
+		if (FabricLoader.getInstance().isModLoaded("iris") && avg < 60) out.add(new Finding(1, "Shaders mod installed", "Iris is installed. If you use a shader pack, it is likely the biggest reason for low FPS. Try a lighter pack or turn shaders off.", null, null));
+		int mods = FabricLoader.getInstance().getAllMods().size();
+		if (mods > 150 && avg < 60) out.add(new Finding(1, "A lot of mods", mods + " mods are loaded. Every mod adds some work, especially ones that add HUDs or particles.", null, null));
 		if (Runtime.getRuntime().availableProcessors() < 4)
 			out.add(new Finding(0, "Few CPU cores", "Your PC has " + Runtime.getRuntime().availableProcessors() + " CPU threads. Closing other programs while playing helps.", null, null));
 		out.sort((a, b) -> Integer.compare(b.severity, a.severity));

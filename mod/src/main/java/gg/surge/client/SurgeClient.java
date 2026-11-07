@@ -50,7 +50,7 @@ import org.lwjgl.glfw.GLFW;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SurgeClient implements ClientModInitializer {
 	public static final String MOD_ID = "surge";
-	private static KeyMapping menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey;
+	private static KeyMapping menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey, clipKey;
 	private static boolean menuKeyWasDown, adminWasDown;
 
 	private static KeyMapping key(String name, int glfw, KeyMapping.Category category) {
@@ -73,6 +73,7 @@ public class SurgeClient implements ClientModInitializer {
 		waypointKey = key("waypoint", GLFW.GLFW_KEY_UNKNOWN, category);
 		stopwatchKey = key("stopwatch", GLFW.GLFW_KEY_UNKNOWN, category);
 		wardrobeKey = key("wardrobe", GLFW.GLFW_KEY_UNKNOWN, category);
+		clipKey = key("save_clip", GLFW.GLFW_KEY_F8, category);
 
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
 			CombatStats.onAttack(player, entity);
@@ -192,6 +193,7 @@ public class SurgeClient implements ClientModInitializer {
 		while (fullbrightKey.consumeClick()) Mods.FULLBRIGHT.toggle();
 		while (waypointKey.consumeClick()) Waypoints.addHere(mc);
 		while (stopwatchKey.consumeClick()) HudModules.toggleStopwatch();
+		while (clipKey.consumeClick()) gg.surge.client.features.Clips.save(mc);
 		while (sprintKey.consumeClick()) Mods.flipSprint();
 
 		Zoom.setActive(mc, mc.screen == null && mc.player != null && zoomKey.isDown());
@@ -240,6 +242,7 @@ public class SurgeClient implements ClientModInitializer {
 
 	private static void renderHud(GuiGraphics g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
+		gg.surge.client.features.Clips.frame(mc);
 		HudModules.pollClicks(mc);
 		boolean wasRecording = gg.surge.client.perf.PerfCheck.state == gg.surge.client.perf.PerfCheck.State.RECORDING;
 		gg.surge.client.perf.PerfCheck.frame(mc);

@@ -260,6 +260,19 @@ public final class Mods {
 	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
 		"Bind keys that send a chat message or command, like /home or gg", true);
 
+	public static final SurgeMod CLIPS = mod("clips", "Clips", Category.UTILITY, Items.SPYGLASS,
+		"Keeps the last few seconds of gameplay. Press the Save clip key (F8) to save them as a video in your clips folder", false);
+	public static final Setting.Slider CLIP_LENGTH = CLIPS.slider("length", "Clip length", 15, 10, 30, 5, "s");
+	public static final Setting.Choice CLIP_FPS = CLIPS.choice("fps", "Frame rate", "20", "15", "20", "30");
+	public static final Setting.Slider CLIP_QUALITY = CLIPS.slider("quality", "Quality", 70, 30, 95, 5, "%");
+	public static final Setting.Button CLIP_FOLDER = CLIPS.button("Clips folder", "Open", () -> {
+		try {
+			java.nio.file.Path dir = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("clips");
+			java.nio.file.Files.createDirectories(dir);
+			net.minecraft.util.Util.getPlatform().openPath(dir);
+		} catch (Exception ignored) { }
+	});
+
 	public static final SurgeMod NICK_HIDER = mod("nick_hider", "Nick Hider", Category.VISUAL, Items.LEATHER_HELMET,
 		"Hide your name in chat, the tab list and your nametag, great for recording", false);
 	public static final Setting.Choice NICK_NAME = NICK_HIDER.choice("nick", "Show me as", "You", "You", "Player", "Surge", "Hidden", "Me");
