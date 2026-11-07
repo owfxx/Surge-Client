@@ -51,24 +51,35 @@ public final class Clips {
 		long now = System.nanoTime();
 		if (now - lastGrab < 1_000_000_000L / fps() || PENDING.get() > 3) return;
 		lastGrab = now;
-		int scale = mc.getWindow().getWidth() > 2200 ? 3 : 2;
 		PENDING.incrementAndGet();
 		try {
-			Screenshot.takeScreenshot(mc.getMainRenderTarget(), scale, img -> WORKER.execute(() -> {
-				try { encode(img); } finally { img.close(); PENDING.decrementAndGet(); }
-			}));
+			Screenshot.takeScreenshot(mc.getMainRenderTarget(), img -> {
+				try {
+					WORKER.execute(() -> {
+						try { encode(img); } finally { img.close(); PENDING.decrementAndGet(); }
+					});
+				} catch (Throwable t) {
+					img.close();
+					PENDING.decrementAndGet();
+				}
+			});
 		} catch (Throwable t) {
 			PENDING.decrementAndGet();
+			fail("grab", t);
 		}
 	}
 
 	private static void encode(NativeImage img) {
 		try {
-			int w = img.getWidth() & ~1, h = img.getHeight() & ~1;
+			int step = Math.max(1, Math.round(img.getWidth() / 720f));
+			int w = (img.getWidth() / step) & ~1, h = (img.getHeight() / step) & ~1;
 			BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 			int[] row = new int[w];
 			for (int y = 0; y < h; y++) {
-				for (int x = 0; x < w; x++) row[x] = img.getPixel(x, y) & 0xFFFFFF;
+				for (int x = 0; x < w; x++) {
+					int c = img.getPixel(x * step, y * step);
+					row[x] = c & 0xFFFFFF;
+				}
 				bi.setRGB(0, y, w, 1, row, 0, w);
 			}
 			ByteArrayOutputStream out = new ByteArrayOutputStream(48_000);
@@ -87,7 +98,21 @@ public final class Clips {
 				FRAMES.addLast(new Frame(out.toByteArray(), w, h, now));
 				while (!FRAMES.isEmpty() && now - FRAMES.peekFirst().at() > keep) FRAMES.pollFirst();
 			}
-		} catch (Throwable ignored) { }
+		} catch (Throwable t) {
+			fail("encode", t);
+		}
+	}
+
+	private static boolean warned;
+
+	private static void fail(String where, Throwable t) {
+		if (warned) return;
+		warned = true;
+		org.slf4j.LoggerFactory.getLogger("surge").warn("Clips " + where + " failed", t);
+	}
+
+	public static int frames() {
+		synchronized (FRAMES) { return FRAMES.size(); }
 	}
 
 	public static void save(Minecraft mc) {
@@ -114,6 +139,7 @@ public final class Clips {
 				double secs = Math.max(0.5, (use.get(use.size() - 1).at() - use.get(0).at()) / 1000.0);
 				int realFps = (int) Math.max(5, Math.min(60, Math.round(use.size() / secs)));
 				try (OutputStream os = Files.newOutputStream(file)) { writeAvi(os, use, first.w(), first.h(), realFps > 0 ? realFps : fps); }
+				org.slf4j.LoggerFactory.getLogger("surge").info("Clip saved " + file + " frames=" + use.size() + " bytes=" + Files.size(file));
 				Minecraft.getInstance().execute(() -> gg.surge.client.net.Social.notice("Clip saved", "clips/" + file.getFileName()));
 			} catch (Exception e) {
 				Minecraft.getInstance().execute(() -> gg.surge.client.net.Social.notice("Couldn't save the clip", String.valueOf(e.getMessage())));

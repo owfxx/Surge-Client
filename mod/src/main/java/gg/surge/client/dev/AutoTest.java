@@ -66,10 +66,11 @@ public final class AutoTest {
 		STEPS.add(new Step("02-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(mc.screen))));
 		STEPS.add(new Step("03-settings", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
 		STEPS.add(new Step("world", 0, mc -> createWorld(mc)));
-		STEPS.add(new Step("04-hud", 60, mc -> { open(mc, null); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
+		STEPS.add(new Step("04-hud", 60, mc -> { open(mc, null); Mods.CLIPS.setEnabled(true); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
 		STEPS.add(new Step("05-third-person", 40, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT)));
 		STEPS.add(new Step("05b-back-view", 30, mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK)));
 		STEPS.add(new Step("05c-halo-front", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
+		STEPS.add(new Step("05d-clip", 20, mc -> { org.slf4j.LoggerFactory.getLogger("surge").info("Clips buffered frames: " + gg.surge.client.features.Clips.frames()); gg.surge.client.features.Clips.save(mc); }));
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
 		STEPS.add(new Step("07-emote-disco", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.DISCO); }));
 		STEPS.add(new Step("07c-emote-cry", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CRY); }));
