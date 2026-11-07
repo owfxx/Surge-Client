@@ -1,3 +1,9 @@
+## 1.5.7
+- The pause menu buttons are visible again
+- New hand-drawn icons for Social, Settings, Wardrobe and Surge mods
+- Heart and Floss emotes reworked
+- The wardrobe shows you even when opened from the title screen
+
 ## 1.5.6
 - Your skin on the title screen shows your cosmetics, spins on its own and can be dragged or turned with the arrows
 - The wardrobe works from the title screen too, with your skin and cosmetics

@@ -35,7 +35,7 @@ public final class MenuOverlay {
 			java.util.List<net.minecraft.client.gui.components.Button> buttons = new java.util.ArrayList<>();
 			if (screen instanceof PauseScreen) {
 				for (var w2 : net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen)) {
-					if (w2 instanceof net.minecraft.client.gui.components.Button b) { b.setAlpha(0f); buttons.add(b); }
+					if (w2 instanceof net.minecraft.client.gui.components.Button b) { b.setAlpha(1f); buttons.add(b); }
 				}
 			}
 			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> {
@@ -54,15 +54,15 @@ public final class MenuOverlay {
 		Ui.frame();
 		g.nextStratum();
 		int size = 22, x = w - size - 8, y = h / 2 - 66;
-		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, Ui.IT_SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y - 26, size, Ui.IC_SOCIAL, socialLabel(), true, 1f) && click) action = () -> mc.setScreen(gg.surge.client.net.Social.screen(screen));
 		unreadBadge(g, mc, x, y - 26, size);
-		if (Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IT_SETTINGS, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IC_SETTINGS, "Settings", true, 1f) && click) action = () -> mc.setScreen(SurgeMenuScreen.general(screen));
 		y += 26;
 		boolean underPerson = screen instanceof PauseScreen && mc.player != null && (w / 2 - 112) - Math.max(8, w / 2 - 202) >= 50;
-		if (!underPerson && Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IT_WARDROBE, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
+		if (!underPerson && Ui.tile(g, mc.font, mx, my, x, y, size, Ui.IC_WARDROBE, "Wardrobe", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
 		if (underPerson) y -= 26;
-		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, Ui.IT_MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
-		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, Ui.IT_COINS, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
+		if (Ui.tile(g, mc.font, mx, my, x, y + 26, size, Ui.IC_MODS, "Surge mods", true, 1f) && click) action = () -> mc.setScreen(new SurgeMenuScreen(screen));
+		if (Ui.tile(g, mc.font, mx, my, x, y + 52, size, Ui.COIN_ITEM, Wallet.get().coins + " Surge Coins", true, 1f) && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.CURRENCY));
 
 		if (screen instanceof PauseScreen && mc.player != null) {
 			int x2 = w / 2 - 112;
@@ -73,7 +73,7 @@ public final class MenuOverlay {
 				int bw = Math.min(84, x2 - x1), bx = (x1 + x2) / 2 - bw / 2, by = y2 + 6;
 				boolean hov = Ui.hover(mx, my, bx, by, bw, 18);
 				Ui.mcButton(g, bx, by, bw, 18, hov, false, 1f);
-				Ui.item(g, Ui.IT_WARDROBE, bx + 4, by + 2, 14);
+				Ui.iconTex(g, Ui.IC_WARDROBE, bx + 4, by + 1, 16, 1f);
 				g.drawString(mc.font, "Wardrobe", bx + 21, by + 5, hov ? 0xFFFFFFA0 : 0xFFFFFFFF, true);
 				if (hov && click) action = () -> mc.setScreen(WardrobeScreen.open(screen, WardrobeScreen.Section.FEATURED));
 			}
