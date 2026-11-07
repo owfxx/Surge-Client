@@ -65,6 +65,7 @@ final class ExtraModules {
 		if (lastTarget != null && !targetCounted && lastTarget.isDeadOrDying()) {
 			targetCounted = true;
 			if (lastTarget instanceof Player || KillCounter.mobs()) { kills++; streak++; }
+			if (lastTarget instanceof Player && lastTarget != p) gg.surge.client.features.AutoGG.onKill();
 		}
 		long now = System.currentTimeMillis();
 		if (now - lastCpsSample >= 100) {

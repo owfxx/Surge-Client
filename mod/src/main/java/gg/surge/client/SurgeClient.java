@@ -204,6 +204,7 @@ public class SurgeClient implements ClientModInitializer {
 		Fullbright.tick(mc);
 		gg.surge.client.features.MotionBlur.tick(mc);
 		Waypoints.tick(mc);
+		gg.surge.client.features.GlintColor.tick(mc);
 		gg.surge.client.net.SurgeNet.tick(mc);
 		gg.surge.client.net.Social.tick(mc);
 		gg.surge.client.features.Extras.tick(mc);

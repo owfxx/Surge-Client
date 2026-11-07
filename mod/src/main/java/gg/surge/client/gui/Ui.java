@@ -189,7 +189,7 @@ public final class Ui {
 		g.pose().translate(x + size / 2f, y + size / 2f);
 		g.pose().scale(pop, pop);
 		g.pose().translate(-(x + size / 2f), -(y + size / 2f));
-		cutBox(g, x, y, size, size, 4, Colors.alpha(Colors.lerp(0xC0141416, 0xE0232327, a), alpha), Colors.alpha(Colors.lerp(0x40FFFFFF, 0xFFFFFFFF, a), alpha));
+		mcButton(g, x, y, size, size, hov, false, alpha);
 		drawIcon.run();
 		g.pose().popMatrix();
 		float l = approach(key + ":label", hov && held > 350 ? 1f : 0f, 14f);
@@ -199,8 +199,8 @@ public final class Ui {
 			int lx = below ? Math.min(x + size - tw, x + (size - tw) / 2) : labelLeft ? x - tw - 6 + Math.round((1 - l) * 6) : x + size + 6 - Math.round((1 - l) * 6);
 			int ly = below ? y + size + 5 - Math.round((1 - l) * 4) : y + (size - 14) / 2;
 			g.nextStratum();
-			cutBox(g, lx, ly, tw, 14, 3, Colors.alpha(0xF0141416, l), Colors.alpha(0xFF45454C, l));
-			g.drawString(font, label, lx + 5, ly + 3, Colors.alpha(0xFFFFFFFF, l), false);
+			vanillaTooltip(g, lx, ly, tw, 14);
+			g.drawString(font, label, lx + 5, ly + 3, Colors.alpha(0xFFFFFFFF, l), true);
 		});
 		return hov;
 	}
@@ -223,14 +223,33 @@ public final class Ui {
 	}
 
 	public static void cutBox(GuiGraphics g, int x, int y, int w, int h, int c, int fill, int edge) {
-		c = Math.min(c, 2);
-		cut(g, x, y, w, h, c, edge);
-		cut(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, c - 1), fill);
-		if (h >= 8 && w >= 8 && ((fill >>> 24) & 0xFF) > 0x80) {
-			int a = (fill >>> 24) & 0xFF;
-			g.fill(x + 2, y + 1, x + w - 2, y + 2, ((a * 0x22 / 255) << 24) | 0xFFFFFF);
-			g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, ((a * 0x50 / 255) << 24));
+		int a = (fill >>> 24) & 0xFF;
+		int ea = Math.max(a, (edge >>> 24) & 0xFF);
+		g.fill(x, y, x + w, y + h, (ea << 24));
+		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
+		if (w >= 6 && h >= 6 && a > 0x40) {
+			g.fill(x + 1, y + 1, x + w - 1, y + 2, ((a * 0x30 / 255) << 24) | 0xFFFFFF);
+			g.fill(x + 1, y + 2, x + 2, y + h - 1, ((a * 0x30 / 255) << 24) | 0xFFFFFF);
+			g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, ((a * 0x60 / 255) << 24));
+			g.fill(x + w - 2, y + 1, x + w - 1, y + h - 2, ((a * 0x60 / 255) << 24));
 		}
+		if (((edge >>> 24) & 0xFF) > 0x60 && (edge & 0xFFFFFF) > 0x606060) {
+			g.fill(x, y, x + w, y + 1, edge);
+			g.fill(x, y + h - 1, x + w, y + h, edge);
+			g.fill(x, y + 1, x + 1, y + h - 1, edge);
+			g.fill(x + w - 1, y + 1, x + w, y + h - 1, edge);
+		}
+	}
+
+	public static final Identifier BUTTON_SPRITE = Identifier.withDefaultNamespace("widget/button");
+	public static final Identifier BUTTON_HOVER_SPRITE = Identifier.withDefaultNamespace("widget/button_highlighted");
+	public static final Identifier BUTTON_OFF_SPRITE = Identifier.withDefaultNamespace("widget/button_disabled");
+	public static final Identifier SLIDER_SPRITE = Identifier.withDefaultNamespace("widget/slider");
+	public static final Identifier HANDLE_SPRITE = Identifier.withDefaultNamespace("widget/slider_handle");
+	public static final Identifier HANDLE_HOVER_SPRITE = Identifier.withDefaultNamespace("widget/slider_handle_highlighted");
+
+	public static void mcButton(GuiGraphics g, int x, int y, int w, int h, boolean hov, boolean disabled, float alpha) {
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, disabled ? BUTTON_OFF_SPRITE : hov ? BUTTON_HOVER_SPRITE : BUTTON_SPRITE, x, y, w, h, alpha);
 	}
 
 	public static void outline(GuiGraphics g, int x, int y, int w, int h, int color) {
@@ -254,11 +273,10 @@ public final class Ui {
 	public static boolean pill(GuiGraphics g, Font font, int mx, int my, int x, int y, int w, int h, String label, boolean active) {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick("pill:" + label + "@" + x + "," + y, hov);
-		float a = anim("pill:" + label + "@" + x + "," + y, hov);
-		int fill = active ? Colors.lerp(0xFFE4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xFF2A2A2E, 0xFF36363B, a);
-		cutBox(g, x, y, w, h, 3, fill, active ? 0xFFFFFFFF : 0xFF3A3A40);
+		mcButton(g, x, y, w, h, hov || active, false, 1f);
+		if (active) g.fill(x + 2, y + h - 3, x + w - 2, y + h - 2, 0xFFFFFF55);
 		String text = fit(font, label, w - 6);
-		g.drawString(font, text, x + (w - font.width(text)) / 2, y + (h - 8) / 2, active ? 0xFF141416 : TEXT, false);
+		g.drawString(font, text, x + (w - font.width(text)) / 2, y + (h - 8) / 2, active ? 0xFFFFFF55 : hov ? 0xFFFFFFA0 : TEXT, true);
 		return hov;
 	}
 
@@ -273,17 +291,17 @@ public final class Ui {
 
 	public static void toggleSwitch(GuiGraphics g, int x, int y, boolean on, Object key) {
 		float a = anim(key, on);
-		cutBox(g, x, y, 22, 12, 3, Colors.lerp(0xFF202023, ACCENT_2, a), Colors.lerp(0xFF3A3A40, ACCENT_2, a));
-		int kx = x + 2 + Math.round(a * 10);
-		cut(g, kx, y + 2, 8, 8, 2, Colors.lerp(0xFF6E6F74, 0xFF141416, a));
+		g.fill(x, y, x + 22, y + 12, 0xFF000000);
+		g.fill(x + 1, y + 1, x + 21, y + 11, Colors.lerp(0xFF8B2B2B, 0xFF3C8527, a));
+		g.fill(x + 1, y + 1, x + 21, y + 2, 0x40000000);
+		int kx = x + Math.round(a * 14);
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, HANDLE_SPRITE, kx, y, 8, 12);
 	}
 
 	public static void slider(GuiGraphics g, int x, int y, int w, float fraction, boolean active) {
-		int cy = y + 5;
-		g.fill(x, cy, x + w, cy + 2, 0xFF2E2E33);
-		int fx = x + Math.round((w - 1) * Math.max(0, Math.min(1, fraction)));
-		g.fill(x, cy, fx, cy + 2, ACCENT_2);
-		cutBox(g, fx - 3, y + 1, 7, 9, 2, active ? 0xFFFFFFFF : 0xFFE4E4E7, 0xFF141416);
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, SLIDER_SPRITE, x, y + 2, w, 8);
+		int fx = x + Math.round((w - 6) * Math.max(0, Math.min(1, fraction)));
+		g.blitSprite(RenderPipelines.GUI_TEXTURED, active ? HANDLE_HOVER_SPRITE : HANDLE_SPRITE, fx, y, 6, 12);
 	}
 
 	public static String fit(Font font, String s, int maxW) {
@@ -337,18 +355,17 @@ public final class Ui {
 
 	public static boolean iconButton(GuiGraphics g, int mx, int my, int x, int y, int size, String[] px) {
 		boolean hov = hover(mx, my, x, y, size, size);
-		float a = anim("ib@" + x + "," + y, hov);
-		cutBox(g, x, y, size, size, 3, Colors.lerp(0xFF232327, 0xFF34343A, a), 0xFF3A3A40);
-		icon(g, px, x + (size - 8) / 2, y + (size - 8) / 2, 1, TEXT);
+		mcButton(g, x, y, size, size, hov, false, 1f);
+		icon(g, px, x + (size - 8) / 2 + 1, y + (size - 8) / 2 + 1, 1, 0xFF3F3F3F);
+		icon(g, px, x + (size - 8) / 2, y + (size - 8) / 2, 1, hov ? 0xFFFFFFA0 : TEXT);
 		return hov;
 	}
 
 	public static boolean itemButton(GuiGraphics g, int mx, int my, int x, int y, int size, ItemStack stack) {
 		boolean hov = hover(mx, my, x, y, size, size);
-		float a = anim("itb@" + x + "," + y, hov);
-		cutBox(g, x, y, size, size, 3, Colors.lerp(0xFF232327, 0xFF34343A, a), 0xFF3A3A40);
+		mcButton(g, x, y, size, size, hov, false, 1f);
 		int s = Math.min(16, size - 6);
-		item(g, stack, x + (size - s) / 2, y + (size - s) / 2 - 1, s);
+		item(g, stack, x + (size - s) / 2, y + (size - s) / 2, s);
 		return hov;
 	}
 
@@ -368,7 +385,18 @@ public final class Ui {
 		int x = Math.min(mx + 10, screenW - w - 12);
 		int y = Math.min(my + 12, screenH - h - 4);
 		g.nextStratum();
-		cutBox(g, x, y, w + 10, h, 3, 0xF8141418, 0xFF45454C);
-		for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x + 5, y + 4 + i * 10, TEXT, false);
+		vanillaTooltip(g, x, y, w + 10, h);
+		for (int i = 0; i < lines.size(); i++) g.drawString(font, lines.get(i), x + 5, y + 4 + i * 10, TEXT, true);
+	}
+
+	public static void vanillaTooltip(GuiGraphics g, int x, int y, int w, int h) {
+		int bg = 0xF0100010;
+		g.fill(x + 1, y, x + w - 1, y + h, bg);
+		g.fill(x, y + 1, x + 1, y + h - 1, bg);
+		g.fill(x + w - 1, y + 1, x + w, y + h - 1, bg);
+		g.fillGradient(x + 1, y + 1, x + 2, y + h - 1, 0x505000FF, 0x5028007F);
+		g.fillGradient(x + w - 2, y + 1, x + w - 1, y + h - 1, 0x505000FF, 0x5028007F);
+		g.fill(x + 1, y + 1, x + w - 1, y + 2, 0x505000FF);
+		g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0x5028007F);
 	}
 }

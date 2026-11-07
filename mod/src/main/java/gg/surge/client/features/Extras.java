@@ -137,5 +137,6 @@ public final class Extras {
 		boolean on = Mods.GLINT.enabled();
 		o.surge$glintSpeed().set(on ? Mods.GLINT_SPEED.get() / 100.0 : 0.5);
 		o.surge$glintStrength().set(on ? Mods.GLINT_STRENGTH.get() / 100.0 : 0.75);
+		GlintColor.apply(mc);
 	}
 }

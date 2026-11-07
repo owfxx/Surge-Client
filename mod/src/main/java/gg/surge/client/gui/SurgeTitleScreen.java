@@ -53,12 +53,9 @@ public class SurgeTitleScreen extends Screen {
 
 	private boolean glass(GuiGraphics g, int mx, int my, int x, int y, int w, int h, String label, boolean primary, float alpha) {
 		boolean hov = Ui.hover(mx, my, x, y, w, h) && alpha > 0.95f;
-		float a = Ui.anim("title:" + label, hov);
-		int fill = primary ? Colors.lerp(0xF0E4E4E7, 0xFFFFFFFF, a) : Colors.lerp(0xB0141416, 0xD8232327, a);
-		int border = primary ? 0xFFFFFFFF : Colors.lerp(0x40FFFFFF, 0xD0FFFFFF, a);
-		Ui.cutBox(g, x, y, w, h, 5, Colors.alpha(fill, alpha), Colors.alpha(border, alpha));
-		int tc = Colors.alpha(primary ? 0xFF141416 : 0xFFFFFFFF, alpha);
-		g.drawString(font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, tc, !primary);
+		Ui.mcButton(g, x, y, w, h, hov, false, alpha);
+		int tc = Colors.alpha(hov ? 0xFFFFFFA0 : 0xFFFFFFFF, alpha);
+		g.drawString(font, label, x + (w - font.width(label)) / 2, y + (h - 8) / 2, tc, true);
 		return hov;
 	}
 

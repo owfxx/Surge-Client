@@ -801,7 +801,24 @@ public class SurgeMenuScreen extends Screen {
 		boolean open;
 		float hue, sat = 1f, val = 1f;
 
-		ColorRow(Setting.Color setting) { this.setting = setting; }
+		final EditBox hex;
+		boolean typing;
+
+		ColorRow(Setting.Color setting) {
+			this.setting = setting;
+			hex = new EditBox(font, 0, 0, 48, 10, Component.literal("Hex"));
+			hex.setBordered(false);
+			hex.setMaxLength(7);
+			hex.setValue(setting.chroma() ? "" : setting.get().toUpperCase());
+			hex.setHint(Component.literal("FFFFFF").withStyle(ChatFormatting.DARK_GRAY));
+			hex.setResponder(v -> {
+				String c = v.trim().replace("#", "");
+				if (c.matches("[0-9a-fA-F]{6}")) { typing = true; setting.set(c.toUpperCase()); loadHsv(); typing = false; }
+			});
+			hex.visible = false;
+			addWidget(hex);
+			boxes.add(hex);
+		}
 
 		@Override int height() { return open ? 22 + 64 : 22; }
 
@@ -818,10 +835,12 @@ public class SurgeMenuScreen extends Screen {
 
 		private void store() {
 			setting.set(String.format("%06X", Colors.hsv(hue, sat, val) & 0xFFFFFF));
+			if (!typing) hex.setValue(setting.get());
 		}
 
 		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
 			base(g, x, y, w, hov && my < y + 22, setting.name, null);
+			hex.visible = false;
 			String[] pal = Setting.Color.PALETTE;
 			int sz = 10, gap = 2;
 			int n = pal.length + 1;
@@ -839,7 +858,7 @@ public class SurgeMenuScreen extends Screen {
 				if (pick) {
 					g.fill(bx, by, bx + sz, by + sz, custom ? Colors.parse(setting.get()) : 0xFF2A2A2E);
 					Ui.icon(g, new String[]{"..X..", "..X..", "XXXXX", "..X..", "..X.."}, bx + 3, by + 3, 1, custom ? 0xFF000000 : 0xFFFFFFFF);
-					if (over && clickL) action = () -> { open = !open; if (open) loadHsv(); };
+					if (over && clickL) action = () -> { open = !open; if (open) { loadHsv(); hex.setValue(setting.chroma() ? "" : setting.get().toUpperCase()); } };
 					if (over) setTip("picker:" + setting.key, "Pick any color");
 				} else if ("chroma".equals(v)) {
 					for (int c = 0; c < sz; c++) g.fill(bx + c, by, bx + c + 1, by + sz, Colors.chroma(c / (float) sz));
@@ -868,7 +887,14 @@ public class SurgeMenuScreen extends Screen {
 			int cx2 = px + pw + 8;
 			g.fill(cx2, py, cx2 + 30, py + 24, Ui.EDGE);
 			g.fill(cx2 + 1, py + 1, cx2 + 29, py + 23, Colors.hsv(hue, sat, val));
-			g.drawString(font, "#" + (setting.chroma() ? "------" : setting.get().toUpperCase()), cx2 - 2, py + 30, Ui.MUTED, false);
+			Ui.box(g, cx2 - 4, py + 27, 42, 14, 0xFF161619, hex.isFocused() ? Ui.ACCENT : Ui.EDGE);
+			g.drawString(font, "#", cx2 - 1, py + 30, Ui.MUTED, false);
+			hex.setX(cx2 + 5);
+			hex.setY(py + 30);
+			hex.setWidth(32);
+			hex.visible = true;
+			if (!hex.isFocused() && !setting.chroma() && !hex.getValue().equalsIgnoreCase(setting.get())) hex.setValue(setting.get().toUpperCase());
+			hex.render(g, mx, my, delta);
 			if (clickL && Ui.hover(mx, my, px - 2, py - 2, pw + 4, ph + 4)) drag2d = (ax, ay) -> {
 				sat = Math.max(0, Math.min(1, (ax - px) / (float) (pw - 1)));
 				val = 1 - Math.max(0, Math.min(1, (ay - py) / (float) (ph - 1)));

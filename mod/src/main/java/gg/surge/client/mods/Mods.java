@@ -252,9 +252,10 @@ public final class Mods {
 	public static final Setting.Toggle DISCORD_PACK = DISCORD.toggle("pack", "Show the modpack name", true);
 
 	public static final SurgeMod AUTO_GG = mod("auto_gg", "AutoGG", Category.UTILITY, Items.CAKE,
-		"Says gg in chat when a game ends (works on most minigame servers)", false);
+		"Says gg in chat when you kill someone or a game ends", false);
 	public static final Setting.Choice GG_TEXT = AUTO_GG.choice("text", "Message", "gg", "gg", "GG", "gg wp", "Good game");
 	public static final Setting.Slider GG_DELAY = AUTO_GG.slider("delay", "Delay", 1, 0, 5, 0.5f, "s");
+	public static final Setting.Toggle GG_KILLS = AUTO_GG.toggle("kills", "Also when you kill someone", true);
 
 	public static final SurgeMod COMMAND_KEYS = mod("command_keys", "Command Keys", Category.UTILITY, Items.COMMAND_BLOCK,
 		"Bind keys that send a chat message or command, like /home or gg", true);
@@ -283,7 +284,9 @@ public final class Mods {
 	public static final Setting.Toggle DROP_ALL = DROP_PROTECT.toggle("all", "Every item", false);
 
 	public static final SurgeMod GLINT = mod("glint", "Glint Customizer", Category.VISUAL, Items.ENCHANTED_BOOK,
-		"Change how fast and how strong the enchantment shine is", false);
+		"Change the color, speed and strength of the enchantment shine", false);
+	public static final Setting.Toggle GLINT_TINT = GLINT.toggle("tint", "Custom color", true);
+	public static final Setting.Color GLINT_COLOR = GLINT.color("color", "Color", "FF55FF").showIf(() -> Mods.GLINT_TINT.on());
 	public static final Setting.Slider GLINT_SPEED = GLINT.slider("speed", "Speed", 50, 0, 100, 5, "%");
 	public static final Setting.Slider GLINT_STRENGTH = GLINT.slider("strength", "Strength", 75, 0, 100, 5, "%");
 
