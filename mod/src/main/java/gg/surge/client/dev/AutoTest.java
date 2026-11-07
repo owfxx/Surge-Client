@@ -144,7 +144,7 @@ public final class AutoTest {
 		m.add(new gg.surge.client.net.Social.Message(3, n, me, "bedwars on hypixel, want to join? we need one more for the team", now - 300000, false, 0));
 		m.add(new gg.surge.client.net.Social.Message(4, me, n, "omw", now - 120000, false, 0));
 		gg.surge.client.net.Social.CHATS.put(n, m);
-		gg.surge.client.net.Social.CHATS.put("853c80ef3c3749fdaa49938b674adae6", new ArrayList<>(java.util.List.of(new gg.surge.client.net.Social.Message(5, "853c80ef3c3749fdaa49938b674adae6", me, "check out the new cape", now - 3600000)), false, 0));
+		gg.surge.client.net.Social.CHATS.put("853c80ef3c3749fdaa49938b674adae6", new ArrayList<>(java.util.List.of(new gg.surge.client.net.Social.Message(5, "853c80ef3c3749fdaa49938b674adae6", me, "check out the new cape", now - 3600000, false, 0))));
 		gg.surge.client.net.Social.UNREAD.put("853c80ef3c3749fdaa49938b674adae6", 2);
 	}
 

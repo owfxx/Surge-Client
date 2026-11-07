@@ -88,6 +88,7 @@ public class SocialScreen extends Screen {
 	@Override
 	public boolean shouldCloseOnEsc() {
 		if (menuLabels != null) { menuLabels = null; return false; }
+		if (editingId != 0) { editingId = 0; input.setValue(""); return false; }
 		return !(getFocused() instanceof EditBox e && !e.getValue().isEmpty());
 	}
 
@@ -177,10 +178,6 @@ public class SocialScreen extends Screen {
 
 	private boolean rclickFrame;
 
-	@Override
-	public boolean shouldCloseOnEsc() {
-		return editingId == 0;
-	}
 	private long editingId;
 	private String editingChat;
 
@@ -493,7 +490,6 @@ public class SocialScreen extends Screen {
 		boolean editing = editingId != 0 && f.uuid().equals(editingChat);
 		if (editing) {
 			g.drawString(font, "Editing message, Esc to cancel", x1 + 4, iy - 11, Ui.ACCENT_2, false);
-			if (GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS) { editingId = 0; input.setValue(""); }
 		}
 		input.setHint(Component.literal("Message " + f.name()).withStyle(ChatFormatting.DARK_GRAY));
 		input.setX(x1 + 8);
