@@ -957,9 +957,11 @@ function renderBrowse() {
   const target = state.packs.find(p => p.id === B.target) || state.selected;
   if (target) B.target = target.id;
   const forPack = B.type !== 'modpack';
+  const hasCf = !!(state.cfg && state.cfg.curseforgeKey);
+  if (!hasCf) B.source = 'modrinth';
   view.innerHTML = `<div class="page">
     <div class="view-head"><h1 class="view-title">Browse</h1>
-      <div class="seg" id="bSource"><button data-s="modrinth" class="${B.source === 'modrinth' ? 'on' : ''}">Modrinth</button><button data-s="curseforge" class="${B.source === 'curseforge' ? 'on' : ''}">CurseForge</button></div></div>
+      <div class="seg" id="bSource" ${hasCf ? '' : 'hidden'}><button data-s="modrinth" class="${B.source === 'modrinth' ? 'on' : ''}">Modrinth</button><button data-s="curseforge" class="${B.source === 'curseforge' ? 'on' : ''}">CurseForge</button></div></div>
     <div class="toolbar">
       <div class="seg" id="bType">${Object.entries(TYPE_LABEL).map(([k, v]) => `<button data-t="${k}" class="${B.type === k ? 'on' : ''}">${v}</button>`).join('')}</div>
       <input class="input search" id="bQuery" placeholder="Search ${TYPE_LABEL[B.type].toLowerCase()}" value="${esc(B.query)}">
@@ -1057,13 +1059,9 @@ function renderSettings() {
         ${row('Window size', `<input class="input" id="sW" type="number" style="width:92px" value="${c.width}" aria-label="Width"><span class="muted">by</span><input class="input" id="sH" type="number" style="width:92px" value="${c.height}" aria-label="Height">`)}
       </div></section>
       <section><h2>Launcher</h2><div class="panel">
-        ${row('CurseForge API key', `<input class="input" id="sCf" type="password" style="width:230px" value="${esc(c.curseforgeKey)}" aria-label="CurseForge API key"><button class="btn sm" id="sCfLink">Get a key</button>`)}
         ${row('Hide launcher while playing', `<button class="toggle ${c.closeOnLaunch ? 'on' : ''}" id="sHide" aria-label="Hide launcher while playing"></button>`)}
         ${row('Click sounds', `<button class="toggle ${c.uiSounds !== false ? 'on' : ''}" id="sSound" aria-label="Click sounds"></button>`)}
         ${row('Game folder', `<button class="btn sm" id="sData">Open folder</button>`)}
-      </div></section>
-      <section><h2>Online</h2><div class="panel">
-        ${row('Surge service link', `<input class="input" id="sApi" style="width:280px" value="${esc(c.apiUrl || '')}" placeholder="https://surge-client.you.workers.dev" aria-label="Surge service link">`)}
       </div></section>
     </div></div>`;
   const save = async patch => { state.cfg = { ...state.cfg, ...(await safe(() => S.config.set(patch))) }; };
@@ -1075,12 +1073,9 @@ function renderSettings() {
   if ($('#sJavaReset')) $('#sJavaReset').onclick = async () => { await save({ javaPath: '' }); renderSettings(); };
   $('#sW').onchange = e => save({ width: +e.target.value || 1280 });
   $('#sH').onchange = e => save({ height: +e.target.value || 720 });
-  $('#sCf').onchange = e => { save({ curseforgeKey: e.target.value.trim() }); state.browse.results = null; toast('CurseForge key saved'); };
-  $('#sCfLink').onclick = () => S.open('https://console.curseforge.com/');
   $('#sHide').onclick = async () => { await save({ closeOnLaunch: !state.cfg.closeOnLaunch }); renderSettings(); };
   $('#sSound').onclick = async () => { await save({ uiSounds: state.cfg.uiSounds === false }); renderSettings(); };
   $('#sData').onclick = () => S.config.openDataDir();
-  $('#sApi').onchange = async e => { await save({ apiUrl: e.target.value.trim() }); toast(e.target.value.trim() ? 'Cosmetics and badges are now shared' : 'Sharing off'); };
 }
 
 window.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.code === 'F4') { e.preventDefault(); openAdmin(); } });

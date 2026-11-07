@@ -210,6 +210,7 @@ public class SurgeMenuScreen extends Screen {
 	}
 
 	private void settingsRows(SurgeMod mod) {
+		if (mod.toggleable && mod != Mods.GENERAL) rows.add(new ModKeyRow(mod));
 		List<Setting<?>> list = mod.pageSettings();
 		for (int i = 0; i < list.size(); i++) {
 			Setting<?> s = list.get(i);
@@ -895,6 +896,17 @@ public class SurgeMenuScreen extends Screen {
 			int bw = Math.max(60, font.width(button) + 16);
 			int bx = x + w - 4 - bw;
 			if (Ui.pill(g, font, mx, my, bx, y + 3, bw, 16, button, false) && hov && clickL) action = () -> { run.run(); needsRebuild = true; };
+		}
+	}
+
+	private final class ModKeyRow extends Row {
+		final SurgeMod mod;
+
+		ModKeyRow(SurgeMod mod) { this.mod = mod; }
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			base(g, x, y, w, hov, "Toggle key", null);
+			keyButton.draw(g, x + w - 4 - 90, y + 3, 90, mx, my, hov, () -> mod.state().key, k -> { mod.state().key = k; SurgeConfig.markDirty(); }, mod);
 		}
 	}
 

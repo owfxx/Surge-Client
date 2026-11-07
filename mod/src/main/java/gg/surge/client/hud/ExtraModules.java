@@ -223,9 +223,12 @@ final class ExtraModules {
 		final Setting.Toggle showWaypoints = toggle("waypoints", "Show waypoints", true);
 		final Setting.Toggle showCoords = toggle("coords", "Show coordinates", true);
 
-		private int[] colors = new int[0];
-		private int cacheN, cacheX, cacheZ, cacheScale;
-		private long cacheAt;
+		private int[] work = new int[0], heights = new int[0];
+		private int jobN, jobX, jobZ, jobScale, jobRow = -1;
+		private int shownN, shownX, shownZ;
+		private com.mojang.blaze3d.platform.NativeImage image;
+		private net.minecraft.client.renderer.texture.DynamicTexture texture;
+		private static final net.minecraft.resources.Identifier TEX = net.minecraft.resources.Identifier.fromNamespaceAndPath("surge", "minimap");
 
 		Minimap() { super("minimap", "Minimap", Items.MAP, "A live map of the area around you", false, 0.84f, 0.02f); }
 
@@ -239,21 +242,26 @@ final class ExtraModules {
 
 		@Override public int height(Minecraft mc) { return size.asInt() + (showCoords.on() ? 12 : 0); }
 
-		private void rebuild(Minecraft mc, int n, int sc) {
+		private void startJob(Minecraft mc, int n, int sc) {
+			if (work.length != n * n) { work = new int[n * n]; heights = new int[n * n]; }
+			jobN = n; jobScale = sc; jobX = mc.player.getBlockX(); jobZ = mc.player.getBlockZ(); jobRow = 0;
+		}
+
+		private void step(Minecraft mc, int rows) {
 			LocalPlayer p = mc.player;
-			int ox = p.getBlockX(), oz = p.getBlockZ();
-			int[] out = new int[n * n];
-			int[] heights = new int[n * n];
+			int n = jobN, sc = jobScale;
 			boolean ceiling = mc.level.dimensionType().hasCeiling();
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			for (int j = 0; j < n; j++) {
+			int end = Math.min(n, jobRow + rows);
+			for (int j = jobRow; j < end; j++) {
 				for (int i = 0; i < n; i++) {
-					int wx = ox + (i - n / 2) * sc, wz = oz + (j - n / 2) * sc;
+					int wx = jobX + (i - n / 2) * sc, wz = jobZ + (j - n / 2) * sc;
 					int top;
 					if (ceiling) {
 						top = p.getBlockY() + 1;
 						pos.set(wx, top, wz);
-						while (top > mc.level.getMinY() && mc.level.getBlockState(pos).isAir()) { top--; pos.setY(top); }
+						int floor = Math.max(mc.level.getMinY(), top - 48);
+						while (top > floor && mc.level.getBlockState(pos).isAir()) { top--; pos.setY(top); }
 					} else {
 						top = mc.level.getHeight(Heightmap.Types.WORLD_SURFACE, wx, wz) - 1;
 						pos.set(wx, top, wz);
@@ -261,20 +269,36 @@ final class ExtraModules {
 					BlockState st = mc.level.getBlockState(pos);
 					MapColor mcol = st.getMapColor(mc.level, pos);
 					int col = mcol == MapColor.NONE ? 0x101014 : mcol.col;
-					out[j * n + i] = col;
 					heights[j * n + i] = top;
+					if (j > 0) {
+						int d = top - heights[(j - 1) * n + i];
+						if (d > 0) col = Colors.lerp(0xFF000000 | col, 0xFFFFFFFF, 0.12f) & 0xFFFFFF;
+						else if (d < 0) col = Colors.lerp(0xFF000000 | col, 0xFF000000, 0.2f) & 0xFFFFFF;
+					}
+					work[j * n + i] = col;
 				}
 			}
-			for (int j = 1; j < n; j++) {
-				for (int i = 0; i < n; i++) {
-					int d = heights[j * n + i] - heights[(j - 1) * n + i];
-					int c = out[j * n + i];
-					out[j * n + i] = d > 0 ? Colors.lerp(0xFF000000 | c, 0xFFFFFFFF, 0.12f) & 0xFFFFFF : d < 0 ? Colors.lerp(0xFF000000 | c, 0xFF000000, 0.2f) & 0xFFFFFF : c;
-				}
+			jobRow = end;
+			if (jobRow >= n) { publish(mc); jobRow = -1; }
+		}
+
+		private void publish(Minecraft mc) {
+			int n = jobN;
+			if (image == null || image.getWidth() != n) {
+				if (texture != null) mc.getTextureManager().release(TEX);
+				image = new com.mojang.blaze3d.platform.NativeImage(n, n, true);
+				texture = new net.minecraft.client.renderer.texture.DynamicTexture(() -> "surge minimap", image);
+				mc.getTextureManager().register(TEX, texture);
 			}
-			colors = out;
-			cacheN = n; cacheX = ox; cacheZ = oz; cacheScale = sc;
-			cacheAt = System.currentTimeMillis();
+			boolean round = shape.is("Round");
+			int r2 = (n / 2) * (n / 2);
+			for (int j = 0; j < n; j++) for (int i = 0; i < n; i++) {
+				int dx = i - n / 2, dy = j - n / 2;
+				int a = !round || dx * dx + dy * dy <= r2 ? 0xFF000000 : 0;
+				image.setPixel(i, j, a | work[j * n + i]);
+			}
+			texture.upload();
+			shownN = n; shownX = jobX; shownZ = jobZ;
 		}
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
@@ -285,25 +309,17 @@ final class ExtraModules {
 				g.fill(x, y, x + s, y + s, 0xFF3B6B2A);
 				return;
 			}
+			if (mc.screen != null && !(mc.screen instanceof gg.surge.client.gui.HudEditorScreen)) return;
 			LocalPlayer p = mc.player;
-			boolean moved = Math.abs(p.getBlockX() - cacheX) >= sc * 2 || Math.abs(p.getBlockZ() - cacheZ) >= sc * 2;
-			if (cacheN != n || cacheScale != sc || moved || System.currentTimeMillis() - cacheAt > 1000) rebuild(mc, n, sc);
-			int r2 = (s / 2) * (s / 2);
-			g.fill(x - 1, y - 1, x + s + 1, y + s + 1, 0xFF0C0C0D);
-			for (int j = 0; j < n; j++) {
-				int runStart = -1, runCol = 0;
-				for (int i = 0; i <= n; i++) {
-					int col = -1;
-					if (i < n) {
-						int dx = i * ppx + ppx / 2 - s / 2, dy = j * ppx + ppx / 2 - s / 2;
-						if (!round || dx * dx + dy * dy <= r2) col = colors[j * n + i];
-					}
-					if (col != runCol || col == -1) {
-						if (runStart >= 0 && runCol != -1) g.fill(x + runStart * ppx, y + j * ppx, x + i * ppx, y + (j + 1) * ppx, 0xFF000000 | runCol);
-						runStart = col == -1 ? -1 : i;
-						runCol = col;
-					}
-				}
+			if (jobRow < 0 || jobN != n || jobScale != sc) startJob(mc, n, sc);
+			step(mc, Math.max(6, n / (shownN == n ? 10 : 1)));
+			if (!round) g.fill(x - 1, y - 1, x + s + 1, y + s + 1, 0xFF0C0C0D);
+			if (texture != null && shownN == n) {
+				int ox = Math.round((shownX - p.getBlockX()) / (float) sc * ppx), oz = Math.round((shownZ - p.getBlockZ()) / (float) sc * ppx);
+				if (round) ox = oz = 0;
+				g.enableScissor(x, y, x + s, y + s);
+				g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TEX, x + ox, y + oz, 0f, 0f, n * ppx, n * ppx, n, n, n, n);
+				g.disableScissor();
 			}
 			int cx = x + s / 2, cy = y + s / 2;
 			double perPx = sc / (double) ppx;

@@ -228,7 +228,7 @@ public final class Social {
 		try {
 			r = make.get();
 		} catch (Exception e) {
-			return failed("The Surge service link in the launcher settings isn't valid");
+			return failed("Couldn't reach Surge right now, try again in a bit");
 		}
 		return HTTP.sendAsync(r, HttpResponse.BodyHandlers.ofString()).thenApply(res -> {
 			JsonObject o;

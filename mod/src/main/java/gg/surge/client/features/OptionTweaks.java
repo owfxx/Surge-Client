@@ -32,7 +32,8 @@ public final class OptionTweaks {
 
 	public static void apply(Minecraft mc) {
 		var o = mc.options;
-		tweak("toggleCrouch", o.toggleCrouch(), Mods.TOGGLE_SNEAK.enabled(), true);
+		tweak("toggleCrouch", o.toggleCrouch(), false, true);
+		tweak("toggleSprint", o.toggleSprint(), false, true);
 		tweak("damageTilt", o.damageTiltStrength(), Mods.HURT_CAM.enabled(), Mods.HURT_STRENGTH.get() / 100.0);
 		tweak("bobView", o.bobView(), Mods.NO_BOBBING.enabled(), false);
 		tweak("fovEffect", o.fovEffectScale(), Mods.FOV_EFFECTS.enabled(), Mods.FOV_AMOUNT.get() / 100.0);

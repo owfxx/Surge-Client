@@ -779,7 +779,7 @@ public final class HudModules {
 	static String action(Minecraft mc, boolean showToggled) {
 		LocalPlayer p = mc.player;
 		boolean sprintMod = Mods.TOGGLE_SPRINT.enabled() && Mods.sprintToggled();
-		boolean sneakMod = Mods.TOGGLE_SNEAK.enabled();
+		boolean sneakMod = Mods.TOGGLE_SNEAK.enabled() && Mods.sneakToggled();
 		if (p == null) return "Sprinting (Toggled)";
 		String a;
 		if (p.getAbilities().flying) a = "Flying";

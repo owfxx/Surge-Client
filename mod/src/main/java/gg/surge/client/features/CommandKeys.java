@@ -22,7 +22,28 @@ public final class CommandKeys {
 		return key >= 0 && GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
 	}
 
+	private static final Map<String, Boolean> MOD_WAS = new HashMap<>();
+
+	private static void modKeys(Minecraft mc) {
+		long window = mc.getWindow().handle();
+		for (gg.surge.client.mods.SurgeMod m : Mods.all()) {
+			if (!m.toggleable) continue;
+			int key = m.state().key;
+			if (key < 0) { MOD_WAS.remove(m.id); continue; }
+			boolean down = down(window, key);
+			boolean was = MOD_WAS.getOrDefault(m.id, true);
+			MOD_WAS.put(m.id, down);
+			if (down && !was && mc.screen == null) {
+				m.toggle();
+				if (mc.player != null) mc.player.displayClientMessage(net.minecraft.network.chat.Component.literal(m.name + " ").append(m.enabled()
+					? net.minecraft.network.chat.Component.literal("on").withStyle(net.minecraft.ChatFormatting.GREEN)
+					: net.minecraft.network.chat.Component.literal("off").withStyle(net.minecraft.ChatFormatting.RED)), true);
+			}
+		}
+	}
+
 	public static void tick(Minecraft mc) {
+		modKeys(mc);
 		if (!Mods.COMMAND_KEYS.enabled() || mc.player == null || mc.getConnection() == null) return;
 		long window = mc.getWindow().handle();
 		for (SurgeConfig.CommandKey ck : SurgeConfig.get().commandKeys) {

@@ -76,29 +76,48 @@ public final class Waypoints {
 		return new double[]{halfW + cx / cz * focal, halfH - cy / cz * focal, cz};
 	}
 
-	private static void line(GuiGraphics g, double[] a, double[] b, int col) {
+	private static void line(GuiGraphics g, double[] a, double[] b, int col, float width) {
 		if (a == null || b == null) return;
-		double dx = b[0] - a[0], dy = b[1] - a[1];
-		int steps = (int) Math.min(1200, Math.max(Math.abs(dx), Math.abs(dy)));
-		if (steps == 0) return;
-		for (int i = 0; i <= steps; i++) {
-			int x = (int) Math.round(a[0] + dx * i / steps), y = (int) Math.round(a[1] + dy * i / steps);
-			g.fill(x, y, x + 1, y + 1, col);
+		double x0 = a[0], y0 = a[1], x1 = b[0], y1 = b[1];
+		double w = halfW * 2, h = halfH * 2, t0 = 0, t1 = 1, dx = x1 - x0, dy = y1 - y0;
+		double[] pp = {-dx, dx, -dy, dy}, qq = {x0 + 50, w + 50 - x0, y0 + 50, h + 50 - y0};
+		for (int i = 0; i < 4; i++) {
+			if (pp[i] == 0) { if (qq[i] < 0) return; continue; }
+			double r = qq[i] / pp[i];
+			if (pp[i] < 0) { if (r > t1) return; if (r > t0) t0 = r; }
+			else { if (r < t0) return; if (r < t1) t1 = r; }
 		}
+		double sx = x0 + dx * t0, sy = y0 + dy * t0, len = Math.hypot(dx, dy) * (t1 - t0);
+		if (len < 0.5) return;
+		g.pose().pushMatrix();
+		g.pose().translate((float) sx, (float) sy);
+		g.pose().rotate((float) Math.atan2(dy, dx));
+		g.pose().translate(0f, -width / 2f);
+		g.pose().scale((float) len, width);
+		g.fill(0, 0, 1, 1, col);
+		g.pose().popMatrix();
+	}
+
+	private static double[][] clip3(double[] p, double[] q) {
+		double nz = 0.06;
+		double pz = (p[0] - ex) * fx + (p[1] - ey) * fy + (p[2] - ez) * fz, qz = (q[0] - ex) * fx + (q[1] - ey) * fy + (q[2] - ez) * fz;
+		if (pz < nz && qz < nz) return null;
+		if (pz < nz) { double t = (nz - pz) / (qz - pz); p = new double[]{p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t}; }
+		else if (qz < nz) { double t = (nz - qz) / (pz - qz); q = new double[]{q[0] + (p[0] - q[0]) * t, q[1] + (p[1] - q[1]) * t, q[2] + (p[2] - q[2]) * t}; }
+		return new double[][]{project(p[0], p[1], p[2]), project(q[0], q[1], q[2])};
 	}
 
 	private static final int[][] EDGES = {{0, 1}, {1, 3}, {3, 2}, {2, 0}, {4, 5}, {5, 7}, {7, 6}, {6, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
 
 	private static void blockGlow(GuiGraphics g, SurgeConfig.Waypoint wp, int rgb, float pulse) {
-		double[][] c = new double[8][];
-		for (int i = 0; i < 8; i++) c[i] = project(wp.x + (i & 1), wp.y + ((i >> 1) & 1), wp.z + ((i >> 2) & 1));
 		int glow = ((int) (70 * pulse) << 24) | rgb, core = ((int) (230 * pulse) << 24) | rgb;
 		for (int[] e : EDGES) {
-			double[] a = c[e[0]], b = c[e[1]];
-			if (a == null || b == null) continue;
-			line(g, new double[]{a[0] + 1, a[1]}, new double[]{b[0] + 1, b[1]}, glow);
-			line(g, new double[]{a[0], a[1] + 1}, new double[]{b[0], b[1] + 1}, glow);
-			line(g, a, b, core);
+			double[] p = {wp.x + (e[0] & 1), wp.y + ((e[0] >> 1) & 1), wp.z + ((e[0] >> 2) & 1)};
+			double[] q = {wp.x + (e[1] & 1), wp.y + ((e[1] >> 1) & 1), wp.z + ((e[1] >> 2) & 1)};
+			double[][] ab = clip3(p, q);
+			if (ab == null || ab[0] == null || ab[1] == null) continue;
+			line(g, ab[0], ab[1], glow, 3f);
+			line(g, ab[0], ab[1], core, 1f);
 		}
 	}
 
@@ -140,15 +159,12 @@ public final class Waypoints {
 			int col = 0xFF000000 | rgb;
 
 			if (Mods.WP_BEAM.on()) {
-				double[] base = project(cx, wp.y + 1, cz), top = project(cx, wp.y + 1 + Math.max(40, dist * 0.8), cz);
-				if (base != null && top != null) {
-					double dx = top[0] - base[0], dy = top[1] - base[1];
-					int steps = (int) Math.min(800, Math.max(Math.abs(dx), Math.abs(dy)));
-					for (int i = 0; i <= steps; i++) {
-						float fade = 1f - i / (float) Math.max(1, steps);
-						int x = (int) Math.round(base[0] + dx * i / Math.max(1, steps)), y = (int) Math.round(base[1] + dy * i / Math.max(1, steps));
-						g.fill(x - 1, y, x + 2, y + 1, ((int) (120 * fade * pulse) << 24) | rgb);
-					}
+				double topY = wp.y + 1 + Math.max(40, dist * 0.8);
+				for (int k = 0; k < 10; k++) {
+					double ya = wp.y + 1 + (topY - wp.y - 1) * k / 10.0, yb = wp.y + 1 + (topY - wp.y - 1) * (k + 1) / 10.0;
+					double[][] ab = clip3(new double[]{cx, ya, cz}, new double[]{cx, yb, cz});
+					if (ab == null || ab[0] == null || ab[1] == null) continue;
+					line(g, ab[0], ab[1], ((int) (120 * (1f - k / 10f) * pulse) << 24) | rgb, 3f);
 				}
 			}
 			if (Mods.WP_GLOW.on() && dist <= Mods.WP_GLOW_RANGE.get()) blockGlow(g, wp, rgb, pulse);

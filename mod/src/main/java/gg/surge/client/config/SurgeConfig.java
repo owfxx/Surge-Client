@@ -23,6 +23,7 @@ public class SurgeConfig {
 		public float x;
 		public float y;
 		public float scale = 1f;
+		public int key = -1;
 		public Map<String, Object> opts = new LinkedHashMap<>();
 
 		public ModuleState() {}

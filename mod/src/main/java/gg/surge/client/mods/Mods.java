@@ -67,6 +67,12 @@ public final class Mods {
 
 	public static void flipSprint() { sprintToggled = !sprintToggled; }
 
+	private static boolean sneakToggled;
+
+	public static boolean sneakToggled() { return sneakToggled; }
+
+	public static void setSneak(boolean on) { sneakToggled = on; }
+
 	public static final SurgeMod TOGGLE_SNEAK = mod("toggle_sneak", "Toggle Sneak", Category.PVP, Items.LEATHER_BOOTS,
 		"Tap sneak to start sneaking, tap again to stop", false);
 

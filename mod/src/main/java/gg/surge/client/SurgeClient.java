@@ -222,14 +222,12 @@ public class SurgeClient implements ClientModInitializer {
 			gg.surge.client.net.Social.notice("Wardrobe and friends", "In the Esc menu, on the right");
 		}
 
-		if (Mods.TOGGLE_SPRINT.enabled()) {
-			var o = mc.options;
-			while (o.keySprint.consumeClick()) Mods.flipSprint();
-			if (Mods.sprintToggled() && !Emotes.playing() && o.keyUp.isDown() && !p.isShiftKeyDown() && !p.isUsingItem() && !p.horizontalCollision
-				&& (p.getFoodData().getFoodLevel() > 6 || p.getAbilities().mayfly)) {
-				p.setSprinting(true);
-			}
-		}
+		var opts = mc.options;
+		if (Mods.TOGGLE_SPRINT.enabled()) while (opts.keySprint.consumeClick()) Mods.flipSprint();
+		if (Mods.TOGGLE_SNEAK.enabled()) {
+			while (opts.keyShift.consumeClick()) Mods.setSneak(!Mods.sneakToggled());
+			if (p.isDeadOrDying() || p.getAbilities().flying) Mods.setSneak(false);
+		} else Mods.setSneak(false);
 		Emotes.tick(mc);
 	}
 

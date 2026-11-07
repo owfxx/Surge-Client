@@ -203,10 +203,10 @@ public class SurgeTitleScreen extends Screen {
 			int sh = SkinArt.height(skin);
 			int fy = (this.height - sh) / 2 - 14 + Math.round((1 - ks) * 10);
 			if (SkinArt.draw(g, fx, fy, skin, mx, my, delta)) {
-				int half = SkinArt.width(skin) / 2 + 6;
+				int sideOff = SkinArt.width(skin) / 2 + 6;
 				int ay = fy + sh / 2 - 7;
 				for (int side = -1; side <= 1; side += 2) {
-					int ax = side < 0 ? fx - half - 14 : fx + half;
+					int ax = side < 0 ? fx - sideOff - 14 : fx + sideOff;
 					boolean hov = Ui.hover(mx, my, ax, ay, 14, 14) && !SkinArt.dragging();
 					float ha = Ui.anim("title:arrow" + side, hov);
 					Ui.cutBox(g, ax, ay, 14, 14, 2, Colors.alpha(Colors.lerp(0x90141416, 0xD8232327, ha), ks), Colors.alpha(Colors.lerp(0x30FFFFFF, 0xC0FFFFFF, ha), ks));
