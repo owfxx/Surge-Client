@@ -85,9 +85,20 @@ jobs:
           for i in 1 2 3 4; do ./gradlew.bat build && exit 0; echo "retry $i"; sleep 20; done
           exit 1
 
+      - name: Cache Electron downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('launcher/package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
       - name: Build launcher
         working-directory: launcher
         shell: bash
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
           for i in 1 2 3; do npm ci && break; sleep 15; done
           for i in 1 2 3 4; do npx electron-builder --win portable --x64 --publish never && exit 0; echo "retry $i"; sleep 20; done
