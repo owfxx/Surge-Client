@@ -13,7 +13,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Gui.class)
 public abstract class GuiScaleMixin {
-	@Unique private boolean surge$hotbar, surge$chat, surge$tab, surge$title, surge$side;
+	@Unique private boolean surge$hotbar, surge$chat, surge$tab, surge$title, surge$side, surge$comp;
+
+	@Inject(method = "render", at = @At("HEAD"))
+	private void surge$compIn(GuiGraphics g, DeltaTracker d, CallbackInfo ci) {
+		float k = GuiScales.compensation();
+		surge$comp = k != 1f;
+		if (surge$comp) {
+			GuiScales.hudFactor = k;
+			g.pose().pushMatrix();
+			g.pose().scale(k, k);
+		}
+	}
+
+	@Inject(method = "render", at = @At("RETURN"))
+	private void surge$compOut(GuiGraphics g, DeltaTracker d, CallbackInfo ci) {
+		if (surge$comp) g.pose().popMatrix();
+		surge$comp = false;
+		GuiScales.hudFactor = 1f;
+	}
 
 	@Inject(method = "renderHotbarAndDecorations", at = @At("HEAD"))
 	private void surge$hotbarIn(GuiGraphics g, DeltaTracker d, CallbackInfo ci) {

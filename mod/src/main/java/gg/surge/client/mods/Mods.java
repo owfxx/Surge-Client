@@ -281,7 +281,8 @@ public final class Mods {
 	public static final SurgeMod CLIPS = mod("clips", "Clips", Category.UTILITY, Items.SPYGLASS,
 		"Keeps the last few seconds of gameplay. Press the Save clip key (F8) to save them as a video in your clips folder", false);
 	public static final Setting.Slider CLIP_LENGTH = CLIPS.slider("length", "Clip length", 15, 10, 30, 5, "s");
-	public static final Setting.Choice CLIP_FPS = CLIPS.choice("fps", "Frame rate", "20", "15", "20", "30");
+	public static final Setting.Choice CLIP_FPS = CLIPS.choice("fps", "Frame rate", "30", "20", "30", "60", "90", "120");
+	public static final Setting.Choice CLIP_RES = CLIPS.choice("res", "Resolution", "720p", "480p", "720p", "1080p", "Full");
 	public static final Setting.Slider CLIP_QUALITY = CLIPS.slider("quality", "Quality", 70, 30, 95, 5, "%");
 	public static final Setting.Button CLIP_FOLDER = CLIPS.button("Clips folder", "Open", () -> {
 		try {
@@ -313,6 +314,15 @@ public final class Mods {
 	public static final Setting.Toggle DROP_RARE = DROP_PROTECT.toggle("rare", "Netherite, diamond gear, totems and elytras", true);
 	public static final Setting.Toggle DROP_NAMED = DROP_PROTECT.toggle("named", "Renamed items", true);
 	public static final Setting.Toggle DROP_ALL = DROP_PROTECT.toggle("all", "Every item", false);
+
+	public static final SurgeMod HITBOXES = mod("hitboxes", "Hitboxes", Category.PVP, Items.IRON_SWORD,
+		"Custom colors for F3 + B hitboxes, with combat colors when someone gets hit or is in your crosshair", true);
+	public static final Setting.Color HB_COLOR = HITBOXES.color("color", "Hitbox color", "FFFFFF");
+	public static final Setting.Toggle HB_COMBAT = HITBOXES.toggle("combat", "Combat colors", true);
+	public static final Setting.Color HB_HIT = HITBOXES.color("hit", "When hurt", "FF4040").showIf(() -> Mods.HB_COMBAT.on());
+	public static final Setting.Color HB_TARGET = HITBOXES.color("target", "In your crosshair", "40FF7A").showIf(() -> Mods.HB_COMBAT.on());
+	public static final Setting.Toggle HB_EYES = HITBOXES.toggle("eyes", "Show eye line", true);
+	public static final Setting.Toggle HB_PLAYERS = HITBOXES.toggle("players", "Only players", false);
 
 	public static final SurgeMod GLINT = mod("glint", "Glint Customizer", Category.VISUAL, Items.ENCHANTED_BOOK,
 		"Change the color, speed and strength of the enchantment shine", false);

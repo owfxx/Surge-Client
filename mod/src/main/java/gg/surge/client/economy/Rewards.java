@@ -18,7 +18,7 @@ public final class Rewards {
 	public static void tick(Minecraft mc) {
 		if (mc.player == null || mc.level == null) return;
 		Wallet w = Wallet.get();
-		if (mc.player.tickCount == 100) daily(w);
+		if (mc.player.tickCount >= 100 && mc.player.tickCount % 40 == 0 && gg.surge.client.net.SurgeNet.hasServerTime()) daily(w);
 		if (mc.isPaused()) return;
 		if (++tickCounter < 20) return;
 		tickCounter = 0;
@@ -32,9 +32,11 @@ public final class Rewards {
 	}
 
 	private static void daily(Wallet w) {
-		String today = LocalDate.now().toString();
+		LocalDate now = java.time.Instant.ofEpochMilli(gg.surge.client.net.SurgeNet.serverTime()).atZone(java.time.ZoneOffset.UTC).toLocalDate();
+		String today = now.toString();
 		if (today.equals(w.lastDaily)) return;
-		String yesterday = LocalDate.now().minusDays(1).toString();
+		if (!w.lastDaily.isEmpty() && today.compareTo(w.lastDaily) < 0) return;
+		String yesterday = now.minusDays(1).toString();
 		w.streak = yesterday.equals(w.lastDaily) ? w.streak + 1 : 1;
 		w.lastDaily = today;
 		int amount = dailyAmount(w.streak);

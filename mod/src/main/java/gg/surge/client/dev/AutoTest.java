@@ -90,6 +90,15 @@ public final class AutoTest {
 		STEPS.add(new Step("07h-emote-tpose", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.TPOSE); }));
 		STEPS.add(new Step("07e-emote-cheer", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CHEER); }));
 		STEPS.add(new Step("07l-emote-shuffle", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SHUFFLE); }));
+		STEPS.add(new Step("07m-pet-plush", 50, mc -> { Emotes.stop(mc); SurgeConfig.get().halo = "none"; SurgeConfig.get().pet = "plush"; SurgeConfig.get().petName = "Notch"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
+		STEPS.add(new Step("07n-pet-plush-dance", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
+		STEPS.add(new Step("07o-pet-bee", 30, mc -> { Emotes.stop(mc); SurgeConfig.get().pet = "bee"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
+		STEPS.add(new Step("07p-pet-warden", 25, mc -> SurgeConfig.get().pet = "warden"));
+		STEPS.add(new Step("07q-pet-allay", 25, mc -> SurgeConfig.get().pet = "allay"));
+		STEPS.add(new Step("07r-pet-fox", 25, mc -> SurgeConfig.get().pet = "fox"));
+		STEPS.add(new Step("07s-idle-stretch", 120, mc -> { SurgeConfig.get().pet = "axolotl"; SurgeConfig.get().idle = "IDLE_STRETCH"; }));
+		STEPS.add(new Step("07t-elytra-emote", 40, mc -> { SurgeConfig.get().idle = "none"; SurgeConfig.get().pet = "none"; Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); Emotes.play(mc, Emotes.Emote.DAB); mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
+		STEPS.add(new Step("07u-cleanup", 5, mc -> { Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY); }));
 		STEPS.add(new Step("07b-featured", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.FEATURED)); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
 		STEPS.add(new Step("08b-angles", 40, mc -> open(mc, new Screen(net.minecraft.network.chat.Component.literal("angles")) {

@@ -29,7 +29,9 @@ public final class Shop {
 			{"cape:galaxy", "Galaxy Cape", "1100"},
 			{"cape:custom", "Color Cape", "300"},
 			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
-			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"}};
+			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"},
+			{"pet:plush", "Skin Plush", "1500"}, {"pet:bee", "Bee Buddy", "900"}, {"pet:warden", "Tiny Warden", "1600"},
+			{"pet:allay", "Allay Friend", "1100"}, {"pet:axolotl", "Axolotl", "1000"}, {"pet:fox", "Sleepy Fox", "1000"}, {"pet:frog", "Frog", "800"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
 		String[][] emotes = {
@@ -38,6 +40,8 @@ public final class Shop {
 			{"BOW", "650"}, {"HEART", "850"}, {"FLOSS", "1000"}, {"TPOSE", "600"}, {"CRY", "750"},
 			{"SIT", "600"}, {"GRIDDY", "1200"}, {"SHUFFLE", "1100"},
 			{"DISCO", "1000"}};
+		String[][] idles = {{"IDLE_LOOK", "400"}, {"IDLE_STRETCH", "500"}, {"IDLE_YAWN", "500"}, {"IDLE_TAP", "450"}, {"IDLE_CROSS", "450"}, {"IDLE_VIBE", "600"}};
+		for (String[] e : idles) add("idle:" + e[0], "emote", "idle", gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]).label, Integer.parseInt(e[1]));
 		for (String[] e : emotes) {
 			gg.surge.client.emotes.Emotes.Emote em = gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]);
 			add("emote:" + e[0], "emote", "", em.label, Integer.parseInt(e[1]));

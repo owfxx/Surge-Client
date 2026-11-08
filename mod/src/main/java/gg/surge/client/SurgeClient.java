@@ -258,7 +258,7 @@ public class SurgeClient implements ClientModInitializer {
 			g.drawString(mc.font, t, x + 8, 8, 0xFFE4E4E7, false);
 		}
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
-		boolean debug = mc.getDebugOverlay().showDebugScreen();
+		boolean debug = mc.debugEntries.isOverlayVisible();
 		if (!debug) {
 			Waypoints.render(g, mc);
 			gg.surge.client.features.Extras.render(g, mc);

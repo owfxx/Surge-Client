@@ -44,6 +44,20 @@ public final class GuiScales {
 		mc.execute(() -> { applied = wants(mc.screen); mc.resizeDisplay(); });
 	}
 
+	public static float hudFactor = 1f;
+
+	public static float compensation() {
+		Minecraft mc = Minecraft.getInstance();
+		if (!applied || mc == null || mc.getWindow() == null) return 1f;
+		try {
+			int normal = mc.getWindow().calculateScale(mc.options.guiScale().get(), mc.options.forceUnicodeFont().get());
+			int cur = mc.getWindow().getGuiScale();
+			return cur <= 0 || normal == cur ? 1f : normal / (float) cur;
+		} catch (Throwable t) {
+			return 1f;
+		}
+	}
+
 	public static float scale(int pct) {
 		return Mods.GUI_SCALES.enabled() ? pct / 100f : 1f;
 	}

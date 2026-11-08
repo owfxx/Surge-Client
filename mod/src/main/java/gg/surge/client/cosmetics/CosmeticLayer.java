@@ -58,6 +58,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			if (lk.cape() != null) cape(ps, q, light, lk.cape(), state.ageInTicks, state);
 			if (lk.wings() != null) wings(ps, q, light, lk.wings(), state.ageInTicks, 0f, state.id * 2 + 1);
 			if (lk.halo() != null) halo(ps, q, lk.halo(), state.ageInTicks, false);
+			if (lk.pet() != null) Pets.submit(getParentModel(), ps, q, light, lk.pet(), state.ageInTicks, lk.emote(), lk.emoteTime(), state.id * 2 + 1);
 			return;
 		}
 		float age = state.ageInTicks;
@@ -72,6 +73,8 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		if (wings != null && !(elytra && Mods.COS_WINGS_ELYTRA.on())) wings(ps, q, light, wings, age, flying ? 1f : speed, p.getId() * 2 + (Preview.clean || Preview.card != null ? 1 : 0));
 		String halo = look != null ? look.halo() : Cosmetics.forPlayer(p, "halo");
 		if (halo != null) halo(ps, q, halo, age, !p.getItemBySlot(EquipmentSlot.HEAD).isEmpty());
+		String pet = look != null ? look.pet() : Cosmetics.forPlayer(p, "pet");
+		if (pet != null && !p.isFallFlying() && !p.isSwimming()) Pets.submit(getParentModel(), ps, q, light, pet, age, look != null ? look.emote() : null, look != null ? look.emoteTime() : 0f, p.getId() * 2 + (Preview.clean || Preview.card != null ? 1 : 0));
 	}
 
 	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, AvatarRenderState state) {

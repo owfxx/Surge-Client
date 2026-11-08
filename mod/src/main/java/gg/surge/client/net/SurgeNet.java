@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class SurgeNet {
 	public static final class Remote {
-		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none", badge = "";
+		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none", badge = "", pet = "none";
 		public volatile long emoteAt, emoteStart;
 	}
 
@@ -89,6 +89,17 @@ public final class SurgeNet {
 		return r == null ? "" : gg.surge.client.features.Flags.glyph(r.flag);
 	}
 
+	private static volatile long serverOffset;
+	private static volatile boolean serverKnown;
+
+	public static boolean hasServerTime() {
+		return serverKnown;
+	}
+
+	public static long serverTime() {
+		return System.currentTimeMillis() + serverOffset;
+	}
+
 	public static void playedEmote(String name) {
 		emote = name;
 		emoteAt = Math.max(emoteAt + 1, System.currentTimeMillis());
@@ -101,7 +112,7 @@ public final class SurgeNet {
 		if (mc.player == null && Social.token().isEmpty()) return;
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
-		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + emote + emoteAt
+		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + Cosmetics.petWire() + "|" + emote + emoteAt
 			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + sendFlag();
 		if (!busyPush && (now - lastPush > 60_000 || !wear.equals(lastSent))) {
 			lastPush = now;
@@ -122,6 +133,7 @@ public final class SurgeNet {
 		o.addProperty("wings", Cosmetics.equipped("wings", c.wings));
 		o.addProperty("halo", Cosmetics.equipped("halo", c.halo));
 		o.addProperty("cape", Cosmetics.wire("cape", c.cape));
+		o.addProperty("pet", Cosmetics.petWire());
 		o.addProperty("emote", emote);
 		o.addProperty("emoteAt", emoteAt);
 		o.addProperty("flag", sendFlag());
@@ -188,6 +200,7 @@ public final class SurgeNet {
 				JsonObject root = JsonParser.parseString(r.body()).getAsJsonObject();
 				JsonObject players = root.getAsJsonObject("players");
 				long serverNow = root.has("now") ? root.get("now").getAsLong() : System.currentTimeMillis();
+				if (root.has("now")) { serverOffset = serverNow - System.currentTimeMillis(); serverKnown = true; }
 				Map<UUID, Remote> fresh = new ConcurrentHashMap<>();
 				java.util.Set<UUID> online = new java.util.HashSet<>();
 				if (Minecraft.getInstance().getConnection() != null) for (var info : Minecraft.getInstance().getConnection().getOnlinePlayers()) online.add(info.getProfile().id());
@@ -199,6 +212,7 @@ public final class SurgeNet {
 					Remote rem = PLAYERS.getOrDefault(id, new Remote());
 					rem.wings = str(d, "wings");
 					rem.halo = str(d, "halo");
+					rem.pet = str(d, "pet");
 					rem.cape = str(d, "cape");
 					rem.flag = str(d, "flag");
 					rem.badge = d.has("badge") && !d.get("badge").isJsonNull() ? d.get("badge").getAsString() : "";
@@ -211,7 +225,7 @@ public final class SurgeNet {
 						rem.emote = em;
 						long age = d.has("emoteSrv") ? Math.max(0, serverNow - d.get("emoteSrv").getAsLong()) : 0;
 						Emotes.Emote played = Emotes.Emote.byName(em);
-						float len = played == null ? 0 : (played.loops ? played.seconds * 3 : played.seconds) * 1000;
+						float len = played == null ? 0 : played.idle() ? Float.MAX_VALUE : (played.loops ? played.seconds * 3 : played.seconds) * 1000;
 						rem.emoteStart = firstSight && age > len ? 0 : System.currentTimeMillis() - (firstSight ? age : Math.min(age, 1500));
 					}
 					fresh.put(id, rem);
@@ -240,7 +254,7 @@ public final class SurgeNet {
 		Emotes.Emote e = Emotes.Emote.byName(r.emote);
 		if (e == null) return null;
 		float t = (System.currentTimeMillis() - r.emoteStart) / 1000f;
-		if (t > (e.loops ? e.seconds * 3 : e.seconds)) return null;
+		if (!e.idle() && t > (e.loops ? e.seconds * 3 : e.seconds)) return null;
 		startOut[0] = r.emoteStart;
 		return e;
 	}

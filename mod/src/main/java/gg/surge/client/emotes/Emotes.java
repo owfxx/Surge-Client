@@ -14,13 +14,19 @@ public final class Emotes {
 		CHEER("Cheer", 3.5f, false), LAUGH("Laugh", 3.5f, false), BOW("Bow", 3.0f, false),
 		HEART("Heart", 3.5f, false), FLOSS("Floss", 4.0f, true), TPOSE("T-Pose", 4.0f, true),
 		CRY("Cry", 4.0f, false), SIT("Sit", 6.0f, true), GRIDDY("Griddy", 13.2f, "griddy", 146),
-		SHUFFLE("Shuffle", 15.2f, "shuffle", 126), DISCO("Disco Fever", 16.0f, "disco", 120);
+		SHUFFLE("Shuffle", 15.2f, "shuffle", 126), DISCO("Disco Fever", 16.0f, "disco", 120),
+		IDLE_LOOK("Look Around", 8f, true), IDLE_STRETCH("Big Stretch", 6f, true), IDLE_YAWN("Sleepy", 7f, true),
+		IDLE_TAP("Foot Tap", 4f, true), IDLE_CROSS("Arms Crossed", 6f, true), IDLE_VIBE("Vibing", 4f, true);
 
 		public final String label;
 		public final float seconds;
 		public final boolean loops;
 		public final String music;
 		public final float bpm;
+
+		public boolean idle() {
+			return name().startsWith("IDLE_");
+		}
 
 		Emote(String label, float seconds, boolean loops) {
 			this.label = label;
@@ -69,9 +75,44 @@ public final class Emotes {
 		preview = e;
 	}
 
+	private static long stillSince;
+	private static float lastYaw, lastPitch;
+	private static boolean idling;
+
+	private static void playIdle(Minecraft mc, Emote emote) {
+		current = emote;
+		idling = true;
+		startNanos = System.nanoTime();
+		previousCamera = null;
+		gg.surge.client.net.SurgeNet.playedEmote(emote.name());
+	}
+
+	private static void idleTick(Minecraft mc, LocalPlayer p) {
+		String key = gg.surge.client.config.SurgeConfig.get().idle;
+		Emote idle = key == null || "none".equals(key) ? null : Emote.byName(key);
+		var o = mc.options;
+		boolean busy = o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown() || o.keyShift.isDown()
+			|| o.keyAttack.isDown() || o.keyUse.isDown() || !p.onGround() || p.isPassenger() || p.isSleeping() || p.isSwimming() || p.isFallFlying()
+			|| p.getDeltaMovement().horizontalDistanceSqr() > 1.0E-4 || Math.abs(p.getYRot() - lastYaw) > 0.5f || Math.abs(p.getXRot() - lastPitch) > 0.5f;
+		lastYaw = p.getYRot();
+		lastPitch = p.getXRot();
+		long now = System.currentTimeMillis();
+		if (idling && current != null) {
+			if (busy || idle == null || current != idle) { idling = false; current = null; gg.surge.client.net.SurgeNet.playedEmote("none"); stillSince = now; }
+			return;
+		}
+		if (busy || mc.screen != null) { stillSince = now; return; }
+		if (current == null && idle != null && Wallet.get().owns("idle:" + idle.name()) && now - stillSince > 2000) playIdle(mc, idle);
+	}
+
+	public static boolean idling() {
+		return idling && current != null;
+	}
+
 	public static void play(Minecraft mc, Emote emote) {
 		LocalPlayer p = mc.player;
 		if (p == null || !owned(emote)) return;
+		idling = false;
 		if (current != null) stop(mc);
 		current = emote;
 		startNanos = System.nanoTime();
@@ -84,6 +125,8 @@ public final class Emotes {
 
 	public static void stop(Minecraft mc) {
 		if (current == null) return;
+		idling = false;
+		stillSince = System.currentTimeMillis();
 		if (previousCamera != null) mc.options.setCameraType(previousCamera);
 		current = null;
 		if (mc.player != null) EmoteMusic.stop(mc.player.getUUID());
@@ -93,6 +136,7 @@ public final class Emotes {
 	public static void tick(Minecraft mc) {
 		EmoteMusic.tick(mc);
 		LocalPlayer p = mc.player;
+		if (p != null && (current == null || idling)) { idleTick(mc, p); return; }
 		if (current == null) return;
 		if (p == null) { current = null; return; }
 		var o = mc.options;

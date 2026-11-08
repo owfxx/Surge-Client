@@ -32,7 +32,8 @@ public final class Clips {
 	private record Frame(byte[] jpg, int w, int h, long at) {}
 
 	private static final Deque<Frame> FRAMES = new ArrayDeque<>();
-	private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "Surge Clips"); t.setDaemon(true); return t; });
+	private static final int THREADS = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() - 2));
+	private static final ExecutorService WORKER = Executors.newFixedThreadPool(THREADS, r -> { Thread t = new Thread(r, "Surge Clips"); t.setDaemon(true); t.setPriority(Thread.MIN_PRIORITY + 1); return t; });
 	private static final AtomicInteger PENDING = new AtomicInteger();
 	private static long lastGrab;
 	private static boolean saving;
@@ -40,7 +41,11 @@ public final class Clips {
 	private Clips() {}
 
 	private static int fps() {
-		return switch (Mods.CLIP_FPS.get()) { case "15" -> 15; case "30" -> 30; default -> 20; };
+		try { return Math.max(10, Math.min(120, Integer.parseInt(Mods.CLIP_FPS.get()))); } catch (Exception e) { return 30; }
+	}
+
+	private static int targetHeight() {
+		return switch (Mods.CLIP_RES.get()) { case "480p" -> 480; case "1080p" -> 1080; case "Full" -> 100_000; default -> 720; };
 	}
 
 	public static void frame(Minecraft mc) {
@@ -49,14 +54,16 @@ public final class Clips {
 			return;
 		}
 		long now = System.nanoTime();
-		if (now - lastGrab < 1_000_000_000L / fps() || PENDING.get() > 3) return;
-		lastGrab = now;
+		long gap = 1_000_000_000L / fps();
+		if (now - lastGrab < gap || PENDING.get() > THREADS * 2 + 1) return;
+		lastGrab = now - Math.min(gap, Math.max(0, now - lastGrab - gap));
+		long at = System.currentTimeMillis();
 		PENDING.incrementAndGet();
 		try {
 			Screenshot.takeScreenshot(mc.getMainRenderTarget(), img -> {
 				try {
 					WORKER.execute(() -> {
-						try { encode(img); } finally { img.close(); PENDING.decrementAndGet(); }
+						try { encode(img, at); } finally { img.close(); PENDING.decrementAndGet(); }
 					});
 				} catch (Throwable t) {
 					img.close();
@@ -69,18 +76,18 @@ public final class Clips {
 		}
 	}
 
-	private static void encode(NativeImage img) {
+	private static void encode(NativeImage img, long at) {
 		try {
-			int step = Math.max(1, Math.round(img.getWidth() / 720f));
-			int w = (img.getWidth() / step) & ~1, h = (img.getHeight() / step) & ~1;
+			int sw = img.getWidth(), sh = img.getHeight();
+			float k = Math.min(1f, targetHeight() / (float) sh);
+			int w = Math.max(2, Math.round(sw * k)) & ~1, h = Math.max(2, Math.round(sh * k)) & ~1;
+			int[] src = img.getPixels();
 			BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-			int[] row = new int[w];
+			int[] dst = ((java.awt.image.DataBufferInt) bi.getRaster().getDataBuffer()).getData();
 			for (int y = 0; y < h; y++) {
-				for (int x = 0; x < w; x++) {
-					int c = img.getPixel(x * step, y * step);
-					row[x] = c & 0xFFFFFF;
-				}
-				bi.setRGB(0, y, w, 1, row, 0, w);
+				int sy = Math.min(sh - 1, (int) (y / k)) * sw;
+				int dy = y * w;
+				for (int x = 0; x < w; x++) dst[dy + x] = src[sy + Math.min(sw - 1, (int) (x / k))] & 0xFFFFFF;
 			}
 			ByteArrayOutputStream out = new ByteArrayOutputStream(48_000);
 			ImageWriter wr = ImageIO.getImageWritersByFormatName("jpeg").next();
@@ -92,11 +99,16 @@ public final class Clips {
 				wr.write(null, new IIOImage(bi, null, null), p);
 			}
 			wr.dispose();
-			long now = System.currentTimeMillis();
 			long keep = Math.round(Mods.CLIP_LENGTH.get() * 1000);
 			synchronized (FRAMES) {
-				FRAMES.addLast(new Frame(out.toByteArray(), w, h, now));
-				while (!FRAMES.isEmpty() && now - FRAMES.peekFirst().at() > keep) FRAMES.pollFirst();
+				FRAMES.addLast(new Frame(out.toByteArray(), w, h, at));
+				long newest = 0;
+				for (Frame f : FRAMES) newest = Math.max(newest, f.at());
+				while (!FRAMES.isEmpty() && newest - FRAMES.peekFirst().at() > keep) FRAMES.pollFirst();
+				long total = 0;
+				for (Frame f : FRAMES) total += f.jpg().length;
+				long cap = Math.min(900L << 20, Runtime.getRuntime().maxMemory() / 4);
+				while (total > cap && FRAMES.size() > 10) total -= FRAMES.pollFirst().jpg().length;
 			}
 		} catch (Throwable t) {
 			fail("encode", t);
@@ -122,6 +134,7 @@ public final class Clips {
 		}
 		List<Frame> copy;
 		synchronized (FRAMES) { copy = new ArrayList<>(FRAMES); }
+		copy.sort(java.util.Comparator.comparingLong(Frame::at));
 		if (copy.size() < 10) {
 			gg.surge.client.net.Social.notice("Nothing to save yet", "Play for a few seconds, then try again");
 			return;
@@ -137,7 +150,7 @@ public final class Clips {
 				List<Frame> use = new ArrayList<>();
 				for (Frame f : copy) if (f.w() == first.w() && f.h() == first.h()) use.add(f);
 				double secs = Math.max(0.5, (use.get(use.size() - 1).at() - use.get(0).at()) / 1000.0);
-				int realFps = (int) Math.max(5, Math.min(60, Math.round(use.size() / secs)));
+				int realFps = (int) Math.max(5, Math.min(120, Math.round(use.size() / secs)));
 				try (OutputStream os = Files.newOutputStream(file)) { writeAvi(os, use, first.w(), first.h(), realFps > 0 ? realFps : fps); }
 				org.slf4j.LoggerFactory.getLogger("surge").info("Clip saved " + file + " frames=" + use.size() + " bytes=" + Files.size(file));
 				Minecraft.getInstance().execute(() -> gg.surge.client.net.Social.notice("Clip saved", "clips/" + file.getFileName()));

@@ -66,6 +66,32 @@ final class EmoteAnimations {
 				float swing = sin(t * 14f);
 				p.rArm(26 * swing, 0, 42 * f).lArm(-26 * swing, 0, 42 * f).body(0, 0, -7 * f).sway(-2f * f).head(0, 0, 7 * f).rLeg(0, 0, -4 * f).lLeg(0, 0, -4 * f);
 			}
+			case IDLE_LOOK -> {
+				float look = sin(t * 0.8f) * 42 * Math.min(1f, t);
+				p.head(-4 + sin(t * 0.4f) * 6, look, 0).sway(sin(t * 0.8f) * 0.25f).rArm(-4, 0, 4).lArm(-4, 0, -4);
+			}
+			case IDLE_STRETCH -> {
+				float c = (t % 6f) / 6f;
+				float up = Emotes.ease(Math.max(0f, Math.min(1f, Math.min(c * 4f, (1f - c) * 4f - 1.2f))));
+				p.rArm(0, 0, 170 * up).lArm(0, 0, -170 * up).head(-25 * up, 0, 0).lean(-8 * up).bob(-0.6f * up);
+			}
+			case IDLE_YAWN -> {
+				float c = (t % 7f) / 7f;
+				float y = Emotes.ease(Math.max(0f, Math.min(1f, Math.min(c * 5f, (0.6f - c) * 5f))));
+				p.rArm(-130 * y, -30 * y, 10 * y).head(-20 * y + 6 * (1 - y), 0, 6 * (1 - y)).lArm(-6, 0, -4).bob(0.3f * (1 - y));
+			}
+			case IDLE_TAP -> {
+				float tap = Math.max(0f, sin(t * 9f));
+				p.rLeg(-14 * tap, 0, 3).lArm(-50, 35, -6).rArm(-50, -35, 6).head(4, 0, sin(t * 4.5f) * 3);
+			}
+			case IDLE_CROSS -> {
+				float br = sin(t * 1.6f);
+				p.rArm(-62 + br * 2, -42, 12).lArm(-58 + br * 2, 42, -12).head(-3 + br, sin(t * 0.5f) * 10, 0).lean(-2);
+			}
+			case IDLE_VIBE -> {
+				float b = sin(t * 2f * (float) Math.PI);
+				p.head(10 * Math.abs(b), sin(t * (float) Math.PI) * 10, 0).bob(-Math.abs(b) * 0.6f).rArm(-10, 0, 8 + 6 * Math.abs(b)).lArm(-10, 0, -8 - 6 * Math.abs(b)).sway(b * 0.4f);
+			}
 			case TPOSE -> p.rArm(0, 0, 90).lArm(0, 0, -90).head(0, 0, 0).body(0, 0, 0);
 			case SIT -> {
 				float br = sin(t * 2f);
