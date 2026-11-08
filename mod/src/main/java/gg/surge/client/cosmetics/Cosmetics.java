@@ -1,5 +1,6 @@
 package gg.surge.client.cosmetics;
 
+import gg.surge.client.config.SurgeConfig;
 import gg.surge.client.economy.Wallet;
 import gg.surge.client.mods.Mods;
 import gg.surge.client.net.SurgeNet;
