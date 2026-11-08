@@ -101,6 +101,7 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
           for i in 1 2 3; do npm ci && break; sleep 15; done
+          node scripts/sync-cosmetics.js
           for i in 1 2 3 4; do npx electron-builder --win nsis-web portable --x64 --publish never && exit 0; echo "retry $i"; sleep 20; done
           exit 1
 

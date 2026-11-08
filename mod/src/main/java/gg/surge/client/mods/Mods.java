@@ -110,6 +110,10 @@ public final class Mods {
 		"Change how much your screen shakes when you take damage", false);
 	public static final Setting.Slider HURT_STRENGTH = HURT_CAM.slider("strength", "Shake", 0, 0, 100, 5, "%");
 
+	public static final SurgeMod LOCATOR_HEADS = mod("locator_heads", "Locator Bar Heads", Category.VISUAL, Items.PLAYER_HEAD,
+		"Show each player's head on the locator bar instead of a dot", true);
+	public static final Setting.Toggle LH_OUTLINE = LOCATOR_HEADS.toggle("outline", "Colored outline", true);
+
 	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Scales", Category.VISUAL, Items.SPYGLASS,
 		"Give your hotbar, chat, tab list, titles and inventories their own size", false);
 	public static final Setting.Slider GS_HOTBAR = GUI_SCALES.slider("hotbar", "Hotbar, health and hunger", 100, 50, 150, 5, "%");

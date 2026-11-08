@@ -101,4 +101,4 @@ async function call(method, pth, body) {
 const messages = since => call('GET', `/v1/messages?since=${Math.max(0, Number(since) || 0)}`);
 const sendMessage = (uuid, text) => call('POST', '/v1/messages', { uuid, text });
 
-module.exports = { refreshService, apiUrl, signIn, social, token, forget, messages, sendMessage };
+module.exports = { refreshService, apiUrl, signIn, social, token, forget, messages, sendMessage, call };

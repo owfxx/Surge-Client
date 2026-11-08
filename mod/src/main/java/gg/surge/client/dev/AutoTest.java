@@ -73,6 +73,9 @@ public final class AutoTest {
 		STEPS.add(new Step("05e-rune-cape", 25, mc -> { SurgeConfig.get().cape = "runes"; SurgeConfig.get().wings = "none"; }));
 		STEPS.add(new Step("05f-flame-cape", 25, mc -> { SurgeConfig.get().cape = "flame"; }));
 		STEPS.add(new Step("05g-cat-cape", 25, mc -> { SurgeConfig.get().cape = "blinkcat"; }));
+		STEPS.add(new Step("05h-galaxy-cape", 25, mc -> { SurgeConfig.get().cape = "galaxy"; }));
+		STEPS.add(new Step("05i-angel-wings", 25, mc -> { SurgeConfig.get().cape = "none"; SurgeConfig.get().wings = "angel"; }));
+		STEPS.add(new Step("05j-halo-helmet", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "angel"; mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET)); mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("05c-halo-front", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("05d-clip", 20, mc -> { org.slf4j.LoggerFactory.getLogger("surge").info("Clips buffered frames: " + gg.surge.client.features.Clips.frames()); gg.surge.client.features.Clips.save(mc); }));
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
@@ -86,6 +89,7 @@ public final class AutoTest {
 		STEPS.add(new Step("07g-emote-floss", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLOSS); }));
 		STEPS.add(new Step("07h-emote-tpose", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.TPOSE); }));
 		STEPS.add(new Step("07e-emote-cheer", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CHEER); }));
+		STEPS.add(new Step("07l-emote-shuffle", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SHUFFLE); }));
 		STEPS.add(new Step("07b-featured", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.FEATURED)); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));
 		STEPS.add(new Step("08b-angles", 40, mc -> open(mc, new Screen(net.minecraft.network.chat.Component.literal("angles")) {
@@ -122,6 +126,7 @@ public final class AutoTest {
 		STEPS.add(new Step("19b-minimap-settings", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("minimap"), null))));
 		STEPS.add(new Step("19c-profiles", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.PROFILES, null))));
 		STEPS.add(new Step("19d-inventory", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
+		STEPS.add(new Step("19e-gift", 40, mc -> gg.surge.client.gui.GiftScreen.show("You've been gifted 2 items!", "Thanks for testing Surge.", 500, java.util.List.of("cape:galaxy", "emote:SHUFFLE"))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
 	}
 

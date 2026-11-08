@@ -4,3 +4,4 @@ mod/build/
 mod/.gradle/
 launcher/resources/mods/*/
 launcher/node_modules
+launcher/src/renderer/assets/cosmetics/

@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('surge', {
     discover: () => call('admin:discover'), addDiscover: o => call('admin:addDiscover', o), removeDiscover: i => call('admin:removeDiscover', i),
     moveDiscover: (i, d) => call('admin:moveDiscover', [i, d]), publishDiscover: () => call('admin:publishDiscover'),
   },
+  wardrobe: { get: () => call('wardrobe:get'), buy: id => call('wardrobe:buy', id), equip: (t, k) => call('wardrobe:equip', t, k), wheel: k => call('wardrobe:wheel', k), redeem: c => call('wardrobe:redeem', c) },
   selfUpdate: { check: () => call('selfupdate:check'), apply: url => call('selfupdate:apply', url) },
   launch: { start: (id, target) => call('launch:start', id, target), running: () => call('launch:running') },
   worlds: id => call('instances:worlds', id),

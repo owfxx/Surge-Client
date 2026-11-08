@@ -205,7 +205,8 @@ function render() {
   view.classList.toggle('home', state.view === 'home');
   if (state.view !== 'home') disposeScene();
   if (state.view !== 'skins') disposeSkinPreview();
-  ({ home: renderHome, packs: renderPacks, skins: renderSkins, servers: renderServers, browse: renderBrowse, settings: renderSettings })[state.view]();
+  if (state.view !== 'wardrobe') disposeWardrobe();
+  ({ home: renderHome, packs: renderPacks, skins: renderSkins, wardrobe: renderWardrobe, servers: renderServers, browse: renderBrowse, settings: renderSettings })[state.view]();
 }
 
 const PLACEHOLDER_SKIN = 'chroynic';
@@ -842,6 +843,270 @@ function skinFront(dataUrl, canvas) {
 }
 
 let skinViewer = null;
+const ANIM_CAPES = { flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
+const HALO_COLORS = { angel: 0xffec9a, surge: 0xc66bff, fire: 0xff8c28, enchanted: 0x78c8ff, void: 0x6a2bd9, rose: 0xff6fae };
+const WARD_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['halo', 'Halos'], ['emote', 'Emotes']];
+const ward = { data: null, tab: 'cape', preview: null, elytra: false, viewer: null, raf: 0, imgs: {}, capeCanvas: null, capeKey: '', frame: -1, extras: [] };
+
+function disposeWardrobe() {
+  cancelAnimationFrame(ward.raf);
+  if (ward.viewer) { ward.viewer.dispose(); ward.viewer = null; }
+}
+
+function wardImg(src) {
+  if (ward.imgs[src]) return ward.imgs[src];
+  const img = new Image();
+  img.src = src;
+  ward.imgs[src] = img;
+  return img;
+}
+
+function blinkFrame(now) {
+  const cycle = Math.floor(now / 11000), at = 1500 + ((cycle * 2654435761) >>> 0) % 7500, d = now % 11000 - at;
+  return d >= 0 && d < 270 ? 1 : 0;
+}
+
+function hexToRgb(h) { const n = parseInt(String(h || '8F50F2'), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+function drawGenerated(g, key, data) {
+  const w = 512, h = 256;
+  g.clearRect(0, 0, w, h);
+  if (key === 'custom') {
+    const [r, gg, b] = hexToRgb(data.capeColor);
+    g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, w, h);
+  } else if (key === 'runes' || key === 'beta') {
+    g.fillStyle = key === 'runes' ? '#111114' : '#141418'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#fff';
+    const t = Date.now() / 600;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 5; c++) {
+      g.globalAlpha = key === 'runes' ? 0.45 + 0.55 * (0.5 + 0.5 * Math.cos(t - r * 0.8)) : 0;
+      const x = 12 + c * 16, y = 12 + r * 16;
+      g.fillRect(x, y, 2, 10); g.fillRect(x, y, 8, 2); if ((r + c) % 2) g.fillRect(x + 6, y + 4, 2, 6); else g.fillRect(x + 2, y + 8, 6, 2);
+    }
+    g.globalAlpha = 1;
+    if (key === 'beta') { g.font = 'bold 22px Monocraft, monospace'; g.textAlign = 'center'; g.fillText('BETA', 48, 80); }
+  } else if (key === 'image') {
+    const acc = activeAccount();
+    const img = acc && wardImg(`${state.cfg.apiUrl || 'https://surge-client.remvuxd.workers.dev'}/v1/cape/${acc.uuid.replace(/-/g, '')}`);
+    g.fillStyle = '#1b1b1f'; g.fillRect(0, 0, w, h);
+    if (img && img.complete && img.naturalWidth) {
+      if (img.naturalWidth === img.naturalHeight * 2) g.drawImage(img, 0, 0, w, h);
+      else { const k = Math.max(80 / img.naturalWidth, 128 / img.naturalHeight); const sw = 80 / k, sh = 128 / k; g.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 8, 8, 80, 128); }
+    }
+  }
+}
+
+function capeFrameCanvas(key, data) {
+  if (!ward.capeCanvas) { ward.capeCanvas = document.createElement('canvas'); ward.capeCanvas.width = 512; ward.capeCanvas.height = 256; }
+  const g = ward.capeCanvas.getContext('2d');
+  const now = Date.now();
+  const anim = ANIM_CAPES[key];
+  let frame = 0;
+  if (anim) frame = anim[1] === 0 ? blinkFrame(now) : Math.floor(now / anim[1]) % anim[0];
+  if (['custom', 'runes', 'beta', 'image'].includes(key)) { drawGenerated(g, key, data); return { canvas: ward.capeCanvas, changed: key === 'runes' || key !== ward.capeKey || key === 'image' }; }
+  const img = wardImg(`assets/cosmetics/cape_${key}.png`);
+  if (!img.complete || !img.naturalWidth) return { canvas: null, changed: false };
+  if (key === ward.capeKey && frame === ward.frame) return { canvas: ward.capeCanvas, changed: false };
+  g.clearRect(0, 0, 512, 256);
+  const fh = img.naturalWidth / 2;
+  g.drawImage(img, 0, frame * fh, img.naturalWidth, fh, 0, 0, 512, 256);
+  ward.frame = frame;
+  return { canvas: ward.capeCanvas, changed: true };
+}
+
+function wardThumb(item, data) {
+  const c = document.createElement('canvas');
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = true;
+  if (item.type === 'cape') {
+    c.width = 80; c.height = 128;
+    if (['custom', 'runes', 'beta', 'image'].includes(item.key)) {
+      const t = document.createElement('canvas'); t.width = 512; t.height = 256;
+      drawGenerated(t.getContext('2d'), item.key, data);
+      g.drawImage(t, 8, 8, 80, 128, 0, 0, 80, 128);
+    } else {
+      const img = wardImg(`assets/cosmetics/cape_${item.key}.png`);
+      const draw = () => g.drawImage(img, 8, 8, 80, 128, 0, 0, 80, 128);
+      if (img.complete && img.naturalWidth) draw(); else img.addEventListener('load', draw, { once: true });
+    }
+  } else if (item.type === 'wings') {
+    c.width = 128; c.height = 64;
+    const img = wardImg(`assets/cosmetics/wings_${item.key}.png`);
+    const draw = () => { g.save(); g.translate(64, 0); g.drawImage(img, 0, 0, 64, 64 * img.naturalHeight / img.naturalWidth * 2); g.scale(-1, 1); g.drawImage(img, 0, 0, 64, 64 * img.naturalHeight / img.naturalWidth * 2); g.restore(); };
+    if (img.complete && img.naturalWidth) draw(); else img.addEventListener('load', draw, { once: true });
+  } else if (item.type === 'halo') {
+    c.width = 96; c.height = 64;
+    const col = '#' + (HALO_COLORS[item.key] || 0xffffff).toString(16).padStart(6, '0');
+    g.shadowColor = col; g.shadowBlur = 14; g.strokeStyle = col; g.lineWidth = 6;
+    g.beginPath(); g.ellipse(48, 32, 34, 12, 0, 0, Math.PI * 2); g.stroke();
+  } else {
+    c.width = 64; c.height = 64;
+    g.fillStyle = '#e4e4e7'; g.font = '30px Monocraft, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(item.name.slice(0, 1), 32, 34);
+  }
+  return c;
+}
+
+function wardExtras(data) {
+  const T = window.THREE, v = ward.viewer;
+  if (!T || !v) return;
+  for (const o of ward.extras) o.parent?.remove(o);
+  ward.extras = [];
+  const look = ward.preview || {};
+  const wings = look.wings !== undefined ? look.wings : data.equipped.wings;
+  const halo = look.halo !== undefined ? look.halo : data.equipped.halo;
+  if (wings && wings !== 'none' && !ward.elytra) {
+    const tex = new T.TextureLoader().load(`assets/cosmetics/wings_${wings}.png`);
+    tex.magFilter = T.LinearFilter;
+    for (const side of [-1, 1]) {
+      const pivot = new T.Group();
+      pivot.position.set(side * 1, 6, -2.6);
+      const mat = new T.MeshLambertMaterial({ map: tex, transparent: true, side: T.DoubleSide, alphaTest: 0.05, emissive: 0x111111 });
+      const mesh = new T.Mesh(new T.PlaneGeometry(18, 9), mat);
+      mesh.position.set(side * 9, -2, 0);
+      mesh.scale.x = side;
+      pivot.add(mesh);
+      pivot.rotation.y = side * -0.55;
+      pivot.rotation.z = side * 0.22;
+      pivot.userData.side = side;
+      v.playerObject.add(pivot);
+      ward.extras.push(pivot);
+    }
+  }
+  if (halo && halo !== 'none') {
+    const color = HALO_COLORS[halo] || 0xffffff;
+    const ring = new T.Mesh(new T.TorusGeometry(4.2, 0.5, 10, 40), new T.MeshBasicMaterial({ color }));
+    ring.rotation.x = Math.PI / 2 - 0.15;
+    ring.position.y = 10.5;
+    const glow = new T.Mesh(new T.RingGeometry(3.2, 5.8, 40), new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.25, side: T.DoubleSide, depthWrite: false }));
+    glow.rotation.x = -Math.PI / 2 - 0.15;
+    glow.position.y = 10.5;
+    v.playerObject.skin.head.add(ring); v.playerObject.skin.head.add(glow);
+    ward.extras.push(ring, glow);
+  }
+}
+
+async function mountWardrobeViewer(data) {
+  disposeWardrobe();
+  const canvas = $('#wdCanvas');
+  if (!canvas || !window.skinview3d) return;
+  const box = canvas.parentElement.getBoundingClientRect();
+  const v = ward.viewer = new skinview3d.SkinViewer({ canvas, width: box.width, height: box.height, zoom: 0.8, fov: 40 });
+  v.animation = new skinview3d.IdleAnimation();
+  v.autoRotate = true;
+  v.autoRotateSpeed = 0.55;
+  v.controls.enableZoom = false;
+  v.playerObject.rotation.y = Math.PI;
+  const acc = activeAccount();
+  let ok = false;
+  for (const u of acc ? [`https://mc-heads.net/skin/${acc.uuid}`, `https://crafatar.com/skins/${acc.uuid}`] : []) { try { await v.loadSkin(u); ok = true; break; } catch { } }
+  if (!ward.viewer) return;
+  if (!ok) v.loadSkin(unknownSkin());
+  ward.capeKey = ''; ward.frame = -1;
+  wardExtras(data);
+  const loop = () => {
+    if (!ward.viewer) return;
+    const look = ward.preview || {};
+    const cape = look.cape !== undefined ? look.cape : data.equipped.cape;
+    if (cape && cape !== 'none') {
+      const { canvas: cc, changed } = capeFrameCanvas(cape, data);
+      if (cc && (changed || ward.capeKey !== cape)) {
+        v.loadCape(cc, { backEquipment: ward.elytra ? 'elytra' : 'cape' });
+        ward.capeKey = cape;
+      }
+    } else if (ward.capeKey) { v.loadCape(null); ward.capeKey = ''; }
+    const t = performance.now() / 1000;
+    for (const e of ward.extras) if (e.userData.side) e.rotation.y = e.userData.side * (-0.55 - Math.sin(t * 1.6) * 0.12);
+    ward.raf = requestAnimationFrame(loop);
+  };
+  ward.raf = requestAnimationFrame(loop);
+}
+
+function showGiftModal(title, coins, items, note) {
+  modal(`<h2>${esc(title)}</h2>${note ? `<p class="muted" style="margin:0 0 10px">${esc(note)}</p>` : ''}
+    <div class="gift-list">${coins > 0 ? `<div class="gift-row"><b>+${coins}</b> Surge Coins</div>` : ''}${items.map(i => `<div class="gift-row">${esc(i.name)}</div>`).join('')}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" id="gOk">Awesome</button></div>`, (card, close) => { card.querySelector('#gOk').onclick = close; });
+}
+
+async function renderWardrobe() {
+  view.innerHTML = `<div class="page">
+    <div class="view-head"><h1 class="view-title">Wardrobe</h1>
+      <div class="ward-top"><span class="chip accent" id="wdCoins">… coins</span>
+        <input class="input" id="wdCode" placeholder="Redeem a code" style="width:170px" aria-label="Code">
+        <button class="btn" id="wdRedeem">Redeem</button></div></div>
+    <div class="skins-layout">
+      <div class="panel skin-preview">
+        <div class="skin-stage"><canvas id="wdCanvas"></canvas></div>
+        <div class="skin-actions"><div class="seg" id="wdBack"><button data-v="cape" class="${ward.elytra ? '' : 'on'}">Cape</button><button data-v="elytra" class="${ward.elytra ? 'on' : ''}">Elytra</button></div></div>
+        <div class="muted small" id="wdNote" style="text-align:center">Changes show the next time you play</div>
+      </div>
+      <div class="skins-side">
+        <div class="seg" id="wdTabs">${WARD_TABS.map(([k, l]) => `<button data-t="${k}" class="${ward.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <div class="ward-grid" id="wdGrid"><div class="muted small">Loading…</div></div>
+      </div>
+    </div></div>`;
+  const data = await safe(() => S.wardrobe.get());
+  if (state.view !== 'wardrobe') return;
+  if (!data) { $('#wdGrid').innerHTML = '<div class="muted small">Your wardrobe could not be loaded</div>'; return; }
+  ward.data = data;
+  if (data.playing) $('#wdNote').textContent = 'Minecraft is open. Use the Wardrobe in the game, or close it to change things here.';
+  if ((data.gifts || []).length) {
+    const coins = data.gifts.reduce((a, g) => a + (g.coins || 0), 0), items = data.gifts.flatMap(g => g.items), note = data.gifts.map(g => g.note).filter(Boolean).join(' ');
+    showGiftModal(items.length === 1 ? `You've been gifted ${items[0].name}!` : items.length ? `You've been gifted ${items.length} items!` : "You've been gifted coins!", coins, items, note);
+  }
+  view.querySelectorAll('#wdTabs [data-t]').forEach(b => b.onclick = () => { ward.tab = b.dataset.t; ward.preview = null; view.querySelectorAll('#wdTabs button').forEach(x => x.classList.toggle('on', x === b)); drawWardGrid(); });
+  view.querySelectorAll('#wdBack [data-v]').forEach(b => b.onclick = () => { ward.elytra = b.dataset.v === 'elytra'; view.querySelectorAll('#wdBack button').forEach(x => x.classList.toggle('on', x === b)); ward.capeKey = ''; wardExtras(ward.data); });
+  const redeem = async () => {
+    const code = $('#wdCode').value.trim();
+    if (!code) return;
+    const r = await safe(() => S.wardrobe.redeem(code));
+    if (!r) return;
+    $('#wdCode').value = '';
+    ward.data = r;
+    showGiftModal('Code redeemed!', r.redeemed.coins, r.redeemed.items, '');
+    drawWardGrid();
+  };
+  $('#wdRedeem').onclick = redeem;
+  $('#wdCode').onkeydown = e => { if (e.key === 'Enter' && !e.repeat) redeem(); };
+  drawWardGrid();
+  mountWardrobeViewer(data);
+}
+
+function drawWardGrid() {
+  const data = ward.data, grid = $('#wdGrid');
+  if (!data || !grid) return;
+  $('#wdCoins').textContent = `${data.coins.toLocaleString()} coins`;
+  const items = data.items.filter(i => i.type === ward.tab && (!i.locked || i.owned || i.id === 'cape:beta'));
+  grid.innerHTML = '';
+  for (const it of items) {
+    const card = document.createElement('div');
+    const equipped = it.type === 'emote' ? data.wheel.includes(it.key) : data.equipped[it.type] === it.key;
+    card.className = `ward-card${equipped ? ' on' : ''}`;
+    const thumb = wardThumb(it, data);
+    const price = it.discount ? `<s>${it.base}</s> ${it.price}` : `${it.price}`;
+    const status = it.owned ? (equipped ? (it.type === 'emote' ? 'On your wheel' : 'Wearing') : 'Owned') : it.locked ? (it.id === 'cape:beta' ? 'Beta testers only' : 'Not for sale') : `${price} coins`;
+    let action = '';
+    if (it.owned) action = it.type === 'emote' ? (equipped ? 'Take off wheel' : 'Put on wheel') : (equipped ? 'Take off' : 'Wear');
+    else if (!it.locked) action = 'Buy';
+    card.innerHTML = `<div class="ward-thumb"></div><div class="ward-name">${esc(it.name)}</div><div class="ward-status${it.discount && !it.owned ? ' sale' : ''}">${status}</div>${action ? `<button class="btn sm ${action === 'Buy' ? 'primary' : ''}">${action}</button>` : ''}`;
+    card.querySelector('.ward-thumb').appendChild(thumb);
+    if (it.type !== 'emote') card.onmouseenter = () => { ward.preview = { [it.type]: it.key }; ward.capeKey = '-'; wardExtras(data); };
+    card.onmouseleave = () => { ward.preview = null; ward.capeKey = '-'; wardExtras(ward.data); };
+    const btn = card.querySelector('button');
+    if (btn) btn.onclick = async () => {
+      let r;
+      if (action === 'Buy') {
+        r = await safe(() => S.wardrobe.buy(it.id), `Unlocked ${it.name}`);
+        if (r && it.type !== 'emote') r = (await safe(() => S.wardrobe.equip(it.type, it.key))) || r;
+      } else if (it.type === 'emote') r = await safe(() => S.wardrobe.wheel(it.key));
+      else r = await safe(() => S.wardrobe.equip(it.type, equipped ? 'none' : it.key));
+      if (r) { ward.data = r; ward.preview = null; ward.capeKey = '-'; wardExtras(r); drawWardGrid(); }
+    };
+    grid.appendChild(card);
+  }
+  if (!items.length) grid.innerHTML = '<div class="muted small">Nothing here yet</div>';
+}
+
 function disposeSkinPreview() { if (skinViewer) { skinViewer.dispose(); skinViewer = null; } }
 const skinState = { selected: null, variant: 'classic', profile: null, library: [] };
 
@@ -1227,7 +1492,7 @@ async function openAdmin() {
   S.open(base + '/admin');
 }
 
-const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}];
+const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}];
 const shopName = id => (SHOP_ITEMS.find(i => i.id === id) || { name: id }).name;
 
 const SALE_TARGETS = [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...SHOP_ITEMS.map(i => [i.id, i.name])];
