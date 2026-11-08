@@ -39,6 +39,9 @@ public final class PerfMods {
 		new Mod("entityculling", "entityculling", "Entity Culling", "Skips mobs and chests hidden behind walls."),
 		new Mod("immediatelyfast", "immediatelyfast", "ImmediatelyFast", "Faster HUD, text and item rendering."),
 		new Mod("modernfix", "modernfix", "ModernFix", "Faster start-up and less RAM."),
+		new Mod("moreculling", "moreculling", "More Culling", "Skips drawing block faces you can't see, like inside leaves."),
+		new Mod("krypton", "krypton", "Krypton", "Lighter networking, smoother on busy servers."),
+		new Mod("scalablelux", "scalablelux", "ScalableLux", "Faster lighting updates when blocks change."),
 		new Mod("dynamic-fps", "dynamic_fps", "Dynamic FPS", "Lower FPS when the game is in the background.")
 	);
 

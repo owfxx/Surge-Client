@@ -303,6 +303,24 @@ public final class Mods {
 		try { net.minecraft.util.Util.getPlatform().openPath(gg.surge.client.features.CustomSounds.folder()); } catch (Exception ignored) { }
 	});
 
+	public static final SurgeMod LOW_HEALTH = mod("low_health", "Low Health Warning", Category.PVP, Items.RED_DYE,
+		"Your screen edges pulse red and you hear a heartbeat when your health gets low", false);
+	public static final Setting.Slider LH_HEALTH = LOW_HEALTH.slider("health", "Warn at or below", 6, 2, 14, 1, " HP");
+	public static final Setting.Toggle LH_VIGNETTE = LOW_HEALTH.toggle("vignette", "Red screen edges", true);
+	public static final Setting.Toggle LH_SOUND = LOW_HEALTH.toggle("sound", "Heartbeat sound", true);
+
+	public static final SurgeMod ITEM_PICKUPS = mod("item_pickups", "Item Pickups", Category.UTILITY, Items.HOPPER,
+		"Shows what you just picked up next to your hotbar", false);
+
+	public static final SurgeMod DEATH_COORDS = mod("death_coords", "Death Coordinates", Category.UTILITY, Items.SKELETON_SKULL,
+		"Tells you in chat where you died, click the coordinates to copy them", true);
+
+	public static final SurgeMod TOOLTIPS = mod("tooltips", "Better Tooltips", Category.UTILITY, Items.BOOK,
+		"Adds durability, food values and stack size to item tooltips", true);
+	public static final Setting.Toggle TT_DURABILITY = TOOLTIPS.toggle("durability", "Durability numbers", true);
+	public static final Setting.Toggle TT_FOOD = TOOLTIPS.toggle("food", "Food and saturation", true);
+	public static final Setting.Toggle TT_STACK = TOOLTIPS.toggle("stack", "Stack size", false);
+
 	public static final SurgeMod NICK_HIDER = mod("nick_hider", "Nick Hider", Category.VISUAL, Items.LEATHER_HELMET,
 		"Hide your name in chat, the tab list and your nametag, great for recording", false);
 	public static final Setting.Choice NICK_NAME = NICK_HIDER.choice("nick", "Show me as", "You", "You", "Player", "Surge", "Hidden", "Me");

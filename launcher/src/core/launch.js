@@ -136,10 +136,10 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
 
   onProgress({ stage: 'Syncing Surge mod…' });
   applyPendingModToggles(inst);
-  if (inst.loader === 'fabric' && inst.perfChecked !== 3 && inst.autoPerf !== false) {
+  if (inst.loader === 'fabric' && inst.perfChecked !== 4 && inst.autoPerf !== false) {
     onProgress({ stage: 'Adding performance mods…' });
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
-    instances.update(inst.id, { perfChecked: 3 });
+    instances.update(inst.id, { perfChecked: 4 });
   }
   if (inst.loader === 'fabric' && !inst.voiceChecked) {
     onProgress({ stage: 'Adding Simple Voice Chat…' });

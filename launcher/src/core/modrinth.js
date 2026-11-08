@@ -139,6 +139,12 @@ const PERFORMANCE_MODS = [
   ['badoptimizations'],
   ['vmp-fabric'],
   ['clumps'],
+  ['entityculling'],
+  ['immediatelyfast'],
+  ['modernfix'],
+  ['moreculling'],
+  ['krypton'],
+  ['scalablelux'],
 ];
 
 const EXTRA_MODS = ['modmenu', 'complete-shield-fixes', 'walksylib', 'shulkerboxtooltip', 'simple-voice-chat'];

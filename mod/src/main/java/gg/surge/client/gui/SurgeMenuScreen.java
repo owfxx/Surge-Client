@@ -691,21 +691,23 @@ public class SurgeMenuScreen extends Screen {
 		float a = Ui.anim("card:" + m.id, hov);
 		float on = Ui.anim("on:" + m.id, m.enabled() || !m.toggleable);
 		int yy = y;
-		Ui.cutBox(g, x, yy, w, CARD_H, 5, Colors.lerp(0xFF1E1E21, 0xFF27272B, a), Colors.lerp(Colors.lerp(0xFF2A2A2E, 0xFF4A4A52, on), 0xFF8A8A92, a));
-		if (m.toggleable) g.fillGradient(x + 1, yy + 1, x + w - 1, yy + 30, Colors.alpha(Ui.ACCENT_2, 0.10f * on), 0x00000000);
-		Ui.item(g, m.icon(), x + w / 2 - 11, yy + 7, 22);
+		boolean en = m.enabled() || !m.toggleable;
+		int lift = Math.round(a * 1.5f);
+		yy -= lift;
+		g.fill(x + 1, yy + CARD_H - 1 + lift, x + w - 1, yy + CARD_H + 1 + lift, 0x40000000);
+		Ui.cutBox(g, x, yy, w, CARD_H, 4, Colors.lerp(0xF0141417, 0xF01C1C21, a), Colors.lerp(0xFF26262D, 0xFF3A3A44, a));
+		int iconCol = Colors.lerp(0xFF8A8A93, 0xFFFFFFFF, Math.max(on, a));
+		Ui.modIcon(g, m, x + w / 2 - 10, yy + 8, 20, iconCol);
 		String name = Ui.fit(font, m.name, w - 10);
 		g.drawString(font, name, x + (w - font.width(name)) / 2, yy + 33, Colors.lerp(Ui.MUTED, Ui.TEXT, Math.max(on, a)), false);
 
-		int by = yy + CARD_H - 16;
-		g.fill(x + 1, by - 3, x + w - 1, by - 2, 0xFF26262A);
-		if (!m.toggleable) {
-			g.drawString(font, "Open", x + 7, by + 2, Ui.MUTED, false);
-			Ui.icon(g, new String[]{"...X....", "...XX...", "...XXX..", "...XXXX.", "...XXX..", "...XX...", "...X....", "........"}, x + w - 14, by + 2, 1, Ui.MUTED);
-		} else {
-			g.drawString(font, m.enabled() ? "On" : "Off", x + 7, by + 2, m.enabled() ? Ui.ACCENT_2 : Ui.FAINT, false);
-			Ui.toggleSwitch(g, x + w - 28, by + 1, m.enabled(), "cardsw:" + m.id);
-		}
+		int by = yy + CARD_H - 17;
+		int barCol = !m.toggleable ? Colors.lerp(0xFF202026, 0xFF2A2A32, a) : Colors.lerp(0xFF2A1A1C, 0xFF1F4D2A, on);
+		if (m.toggleable && hov) barCol = Colors.lerp(barCol, 0xFFFFFFFF, 0.06f);
+		Ui.cut(g, x + 3, by, w - 6, 14, 2, barCol);
+		String label = !m.toggleable ? "Open" : m.enabled() ? "Enabled" : "Disabled";
+		int lc = !m.toggleable ? Ui.MUTED : Colors.lerp(0xFFE07A7A, 0xFF8CFFA8, on);
+		g.drawString(font, label, x + (w - font.width(label)) / 2, by + 3, lc, false);
 
 		boolean gearHov = false;
 		if (m.hasSettings()) {
@@ -743,7 +745,7 @@ public class SurgeMenuScreen extends Screen {
 		if (openMod != null) {
 			SurgeMod m = openMod;
 			if (Ui.iconButton(g, mx, my, cx, cy, 20, Ui.BACK) && clickL) action = this::back;
-			Ui.item(g, m.icon(), cx + 26, cy + 2, 16);
+			Ui.modIcon(g, m, cx + 26, cy + 2, 16, Ui.TEXT);
 			g.drawString(font, Component.literal(m.name).withStyle(ChatFormatting.BOLD), cx + 46, cy + 1, Ui.TEXT, true);
 			int descW = cw - 46 - (m.toggleable ? 32 : 0);
 			g.drawString(font, Ui.fit(font, m.description, descW), cx + 46, cy + 12, Ui.MUTED, false);

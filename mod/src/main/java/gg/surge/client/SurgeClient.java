@@ -140,6 +140,7 @@ public class SurgeClient implements ClientModInitializer {
 			gg.surge.client.economy.Locks.load();
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(SurgeClient::tick);
+		net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback.EVENT.register((stack, ctx, type, lines) -> gg.surge.client.features.Qol.tooltip(stack, lines));
 		if (gg.surge.client.dev.AutoTest.active()) ClientTickEvents.END_CLIENT_TICK.register(gg.surge.client.dev.AutoTest::tick);
 		MenuOverlay.register();
 		LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, ctx) -> {

@@ -183,6 +183,20 @@ public final class Ui {
 	public static final Identifier IC_DISCORD = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_discord_32.png");
 	public static final String DISCORD = "https://discord.gg/7wGxqGN86R";
 
+	private static final Map<String, Identifier> MOD_ICONS = new HashMap<>();
+
+	public static void modIcon(GuiGraphics g, gg.surge.client.mods.SurgeMod m, int x, int y, int size, int color) {
+		if (!MOD_ICONS.containsKey(m.id)) {
+			Identifier t = Identifier.fromNamespaceAndPath("surge", "textures/gui/modicons/" + m.id + ".png");
+			boolean ok;
+			try { ok = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(t).isPresent(); } catch (Exception e) { ok = false; }
+			MOD_ICONS.put(m.id, ok ? t : null);
+		}
+		Identifier tex = MOD_ICONS.get(m.id);
+		if (tex != null) g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 64, 64, 64, 64, color);
+		else item(g, m.icon(), x, y, size);
+	}
+
 	public static void iconTex(GuiGraphics g, Identifier tex, int x, int y, int size, float alpha) {
 		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 32, 32, 32, 32, Colors.alpha(0xFFFFFFFF, alpha));
 	}

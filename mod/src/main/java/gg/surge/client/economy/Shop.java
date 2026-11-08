@@ -27,6 +27,7 @@ public final class Shop {
 			{"cape:ocean", "Ocean Cape", "700"}, {"cape:aurora", "Aurora Cape", "900"}, {"cape:sakura", "Sakura Cape", "700"},
 			{"cape:midnight", "Midnight Cape", "750"}, {"cape:royal", "Royal Cape", "950"}, {"cape:emerald", "Emerald Cape", "700"},
 			{"cape:galaxy", "Galaxy Cape", "1100"},
+			{"cape:chroma", "Chroma Cape", "1400"}, {"cape:lava", "Lava Cape", "1200"}, {"cape:matrix", "Matrix Cape", "1300"}, {"cape:storm", "Storm Cape", "1500"}, {"cape:frost", "Frost Cape", "1000"}, {"cape:neon", "Neon Cape", "1300"},
 			{"cape:custom", "Color Cape", "300"},
 			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
 			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"}};

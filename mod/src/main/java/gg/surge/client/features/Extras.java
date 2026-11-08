@@ -36,6 +36,7 @@ public final class Extras {
 		tick++;
 		if (Mods.TRAILS.enabled()) trails(mc);
 		if (Mods.DURABILITY.enabled() && tick % 10 == 0) durability(mc);
+		Qol.tick(mc);
 	}
 
 	private static ParticleOptions trailParticle() {
@@ -69,6 +70,7 @@ public final class Extras {
 	}
 
 	public static void render(GuiGraphics g, Minecraft mc) {
+		Qol.render(g, mc);
 	}
 
 	private static void durability(Minecraft mc) {

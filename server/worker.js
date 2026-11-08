@@ -100,6 +100,7 @@ async function download(env, mod) {
 }
 
 const DISCORD = 'https://discord.gg/7wGxqGN86R';
+const SHOWCASE = [['storm', 'Storm', 24, 110], ['chroma', 'Chroma', 24, 90], ['galaxy', 'Galaxy', 24, 120], ['lava', 'Lava', 20, 110], ['neon', 'Neon', 16, 100], ['aurora', 'Aurora', 16, 140], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
 
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 
@@ -191,6 +192,13 @@ summary::-webkit-details-marker{display:none}
 summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
 details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
 details p{margin:0 0 18px;color:var(--muted)}
+.capes{display:flex;gap:18px;overflow-x:auto;padding:6px 2px 18px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.cape{flex:none;scroll-snap-align:start;text-align:center;width:132px}
+.cape .c{width:120px;height:192px;margin:0 auto 10px;border-radius:6px;background-repeat:no-repeat;image-rendering:pixelated;box-shadow:0 18px 40px -16px #000,0 0 0 1px #ffffff14;transition:transform .25s cubic-bezier(.2,.8,.3,1.3)}
+.cape:hover .c{transform:translateY(-6px) rotate(-2deg)}
+.cape b{font:700 16px "Pixelify Sans",sans-serif}
+.navdl{display:none!important;background:var(--gold)!important;color:#1a1405!important;border-color:var(--gold)!important;font-weight:600}
+nav.scrolled .navdl{display:inline-block!important}
 .band{margin:40px 0 0;border:1px solid var(--line);border-radius:8px;padding:38px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:linear-gradient(120deg,#1a1a2e,#16161a 60%)}
 .band h2{margin:0 0 4px}.band p{margin:0;color:var(--muted)}
 footer{color:var(--faint);font-size:13px;padding:40px 0 50px;text-align:center}
@@ -203,7 +211,7 @@ footer a{color:var(--muted);text-underline-offset:3px}
 @keyframes in{to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in,.rv{opacity:1;transform:none}#rain{display:none}}
 </style></head><body>
-<nav><div class="wrap"><a class="brand" href="#top">${MARK}Surge</a><div class="links"><a href="#features">Features</a><a href="#start">Get started</a><a href="#faq">FAQ</a><a class="pill" href="${DISCORD}" rel="noopener">Discord</a></div></div></nav>
+<nav><div class="wrap"><a class="brand" href="#top">${MARK}Surge</a><div class="links"><a href="#features">Features</a><a href="#start">Get started</a><a href="#faq">FAQ</a><a href="#capes">Cosmetics</a><a class="pill" href="${DISCORD}" rel="noopener">Discord</a><a class="pill navdl" href="/download">Download</a></div></div></nav>
 <header class="hero" id="top"><canvas id="rain" aria-hidden="true"></canvas><div class="flash" id="flash"></div>
 <div class="wrap">
 <div class="storm in"><svg viewBox="0 0 120 140" aria-hidden="true"><path class="cloud" fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path class="bolt" id="bolt" fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg></div>
@@ -225,6 +233,8 @@ footer a{color:var(--muted);text-underline-offset:3px}
 <div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div><h3>Clips</h3><p>Press F8 to save the last few seconds of gameplay as a video, up to 120 FPS.</p></div>
 <div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Custom Sounds</h3><p>Swap any game sound for a built in one or your own mp3, wav or ogg.</p></div>
 </div></section>
+<section id="capes"><h2>Look the part</h2><p class="sub">Animated capes, wings, halos and emotes. Every Surge player sees them, and you can try them all on in the launcher.</p>
+<div class="capes rv">${SHOWCASE.map(([k, n, f, ms]) => `<div class="cape"><div class="c" style="background-image:url(/img/cape/${k}.png);background-size:768px auto;background-position:-12px -12px;animation:cape-${k} ${f * ms}ms steps(${f}) infinite"></div><b>${n}</b></div><style>@keyframes cape-${k}{to{background-position:-12px ${-12 - 384 * f}px}}</style>`).join('')}</div></section>
 <section id="start"><div class="split">
 <div><h2>Get started</h2><p class="sub">From download to playing in about a minute.</p>
 <ol class="steps rv">
@@ -239,6 +249,8 @@ ${notes ? `<div class="new rv"><h3>What's new <span>${esc(l.version)}</span></h3
 <details><summary>Can I get banned for using it?</summary><p>Surge Client has no cheat features, so it is fine on normal servers. Some servers have their own rules about clients, so check them if you are unsure.</p></details>
 <details><summary>Why does Windows warn me about the installer?</summary><p>New programs without a code signing certificate often get this warning. Choose More info, then Run anyway. Only download Surge Client from this website.</p></details>
 <details><summary>Can other players see my cosmetics?</summary><p>Everyone else using Surge Client sees your capes, wings, halos and emotes.</p></details>
+<details><summary>What do I need to run it?</summary><p>Windows 10 or 11 and a Minecraft Java account. Java is downloaded for you, and 4 GB of RAM or more is recommended.</p></details>
+<details><summary>How do I get Surge Coins?</summary><p>Claim your daily reward, redeem codes from giveaways and events on our Discord, and watch for gifts from the team.</p></details>
 <details><summary>Does it work on Mac or Linux?</summary><p>The launcher is Windows only for now. On other systems you can use the mod on its own with any Fabric 1.21.11 launcher.</p></details>
 </section>
 <div class="band rv"><div><h2>Join the community</h2><p>Updates, giveaways, codes and help from other players.</p></div><a class="dl" href="${DISCORD}" rel="noopener">Join our Discord</a></div>
@@ -247,6 +259,7 @@ ${notes ? `<div class="new rv"><h3>What's new <span>${esc(l.version)}</span></h3
 <footer class="wrap">Surge Client by owfx. Not affiliated with Mojang or Microsoft. <a href="${DISCORD}" rel="noopener">Discord</a></footer>
 <script>
 (function(){
+var nv=document.querySelector('nav');addEventListener('scroll',function(){nv.classList.toggle('scrolled',scrollY>420)},{passive:true});
 var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 var c=document.getElementById('rain'),x=c.getContext('2d'),drops=[],w,h,dpr=Math.min(2,devicePixelRatio||1);
 function size(){w=c.clientWidth;h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);drops=[];var n=Math.round(w*h/9000);for(var i=0;i<n;i++)drops.push({x:Math.random()*w,y:Math.random()*h,l:8+Math.random()*14,v:5+Math.random()*6});}
@@ -338,6 +351,13 @@ export default {
     if (req.method === 'GET' && p === '/download/mod') return download(env, true);
     if (req.method === 'GET' && p === '/download/package') return packageFile(env);
     if (req.method === 'GET' && p === '/discord') return Response.redirect(DISCORD, 302);
+    if (req.method === 'GET' && p.startsWith('/img/cape/')) {
+      const key = p.slice('/img/cape/'.length).replace(/\.png$/, '');
+      if (!SHOWCASE.some(c => c[0] === key)) return new Response('not found', { status: 404 });
+      const r = await fetch(`https://raw.githubusercontent.com/${REPO(env)}/main/mod/src/main/resources/assets/surge/textures/cosmetic/cape_${key}.png`, { cf: { cacheTtl: 86400, cacheEverything: true } });
+      if (!r.ok) return new Response('not found', { status: 404 });
+      return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } });
+    }
     if (req.method === 'GET' && (p === '/admin' || p === '/admin/')) {
       return new Response(ADMIN_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' } });
     }
