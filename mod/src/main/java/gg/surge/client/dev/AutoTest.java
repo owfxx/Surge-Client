@@ -94,6 +94,10 @@ public final class AutoTest {
 		STEPS.add(new Step("07t-elytra-emote", 40, mc -> { SurgeConfig.get().idle = "none"; Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); Emotes.play(mc, Emotes.Emote.DAB); mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
 		STEPS.add(new Step("07v-lod-collect", 300, mc -> { gg.surge.client.mods.Mods.LOD.setEnabled(true); mc.player.connection.sendCommand("gamemode spectator"); mc.player.connection.sendCommand("tp @s ~ ~100 ~"); mc.options.setCameraType(CameraType.FIRST_PERSON); mc.player.setXRot(40f); }));
 		STEPS.add(new Step("07w-lod-far", 120, mc -> { org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats() + " rd=" + mc.options.getEffectiveRenderDistance()); mc.options.renderDistance().set(3); mc.player.setYRot(mc.player.getYRot() + 180f); mc.player.setXRot(35f); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
+		STEPS.add(new Step("07w1-lod-low", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Low")));
+		STEPS.add(new Step("07w2-lod-medium", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Medium")));
+		STEPS.add(new Step("07w3-lod-high", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("High")));
+		STEPS.add(new Step("07w4-lod-ultra", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Ultra")));
 		STEPS.add(new Step("07x-lod-stats", 20, mc -> org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats())));
 		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); mc.player.connection.sendCommand("tp @s ~ ~-100 ~"); mc.player.connection.sendCommand("gamemode creative"); }));
 		STEPS.add(new Step("07y-custom-sounds", 40, mc -> { Mods.CUSTOM_SOUNDS.setEnabled(true); gg.surge.client.features.CustomSounds.set("minecraft:entity.player.levelup", "preset:chime"); mc.setScreen(new gg.surge.client.gui.CustomSoundsScreen(null)); gg.surge.client.features.CustomSounds.preview("preset:ding"); }));

@@ -52,7 +52,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 public final class Lod {
-	static final int CELLS = 4;
+	static final int CELLS = 8;
+	static final int CELL_BLOCKS = 16 / CELLS;
 	static final int REGION_CHUNKS = 32;
 	static final int RC = REGION_CHUNKS * CELLS;
 	static final short EMPTY = Short.MIN_VALUE;
@@ -189,7 +190,7 @@ public final class Lod {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean changed = false;
 		for (int i = 0; i < CELLS; i++) for (int j = 0; j < CELLS; j++) {
-			int lx = i * 4 + 2, lz = j * 4 + 2;
+			int lx = i * CELL_BLOCKS + CELL_BLOCKS / 2, lz = j * CELL_BLOCKS + CELL_BLOCKS / 2;
 			int top = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, lx, lz);
 			short h = EMPTY;
 			int col = 0;
@@ -310,7 +311,7 @@ public final class Lod {
 		Path f = dir().resolve("r." + r.rx + "." + r.rz + ".lod");
 		if (Files.exists(f)) {
 			try (DataInputStream in = new DataInputStream(new InflaterInputStream(new java.io.BufferedInputStream(Files.newInputStream(f))))) {
-				if (in.readInt() == 1) {
+				if (in.readInt() == 2) {
 					for (int i = 0; i < RC * RC; i++) {
 						short h = in.readShort();
 						int c = in.readInt();
@@ -335,7 +336,7 @@ public final class Lod {
 				for (Region r : dirty) {
 					Path tmp = d.resolve("r." + r.rx + "." + r.rz + ".tmp");
 					try (DataOutputStream out = new DataOutputStream(new DeflaterOutputStream(new java.io.BufferedOutputStream(Files.newOutputStream(tmp))))) {
-						out.writeInt(1);
+						out.writeInt(2);
 						for (int i = 0; i < RC * RC; i++) { out.writeShort(r.height[i]); out.writeInt(r.color[i]); }
 					}
 					Files.move(tmp, d.resolve("r." + r.rx + "." + r.rz + ".lod"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -378,12 +379,17 @@ public final class Lod {
 	}
 
 	private static int levelFor(int regionDist) {
-		int q = switch (Mods.LOD_QUALITY.get()) { case "Low" -> 0; case "High" -> 2; default -> 1; };
-		int near = 1 + q;
-		if (regionDist <= near) return 0;
-		if (regionDist <= near * 2 + 1) return 1;
-		if (regionDist <= near * 4 + 3) return 2;
-		return 3;
+		int base;
+		int[] steps;
+		switch (Mods.LOD_QUALITY.get()) {
+			case "Low" -> { base = 2; steps = new int[]{2, 5}; }
+			case "Medium" -> { base = 1; steps = new int[]{1, 3, 7}; }
+			case "Ultra" -> { base = 0; steps = new int[]{1, 3, 7}; }
+			default -> { base = 1; steps = new int[]{2, 5, 11}; }
+		}
+		int lvl = base;
+		for (int t : steps) if (regionDist > t) lvl++;
+		return Math.min(4, lvl);
 	}
 
 	private static int lastCam = Integer.MIN_VALUE;
@@ -437,6 +443,7 @@ public final class Lod {
 			}
 		}
 
+		REGIONS.values().removeIf(r -> Math.max(Math.abs(r.rx - prx), Math.abs(r.rz - prz)) > regionRange + 2 && r.loaded && (!r.dirty || !Mods.LOD_SAVE.on()));
 		for (Region r : REGIONS.values()) {
 			int rdist = Math.max(Math.abs(r.rx - prx), Math.abs(r.rz - prz));
 			if (rdist > regionRange) continue;
@@ -505,7 +512,7 @@ public final class Lod {
 		try {
 			int step = 1 << lvl;
 			int n = RC / step;
-			float cell = 4f * step;
+			float cell = (float) CELL_BLOCKS * step;
 			short[] hs = new short[n * n];
 			int[] cs = new int[n * n];
 			int x0c = r.rx * REGION_CHUNKS, z0c = r.rz * REGION_CHUNKS;
