@@ -51,7 +51,7 @@ public final class Locks {
 	}
 
 	public static boolean locked(Shop.Item item) {
-		if (item.id().equals("cape:image")) return true;
+		if (item.id().equals("cape:image") || item.id().equals("cape:galaxy") || item.id().equals("cape:aurora")) return true;
 		return active().contains(item.id());
 	}
 
