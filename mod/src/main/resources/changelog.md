@@ -1,3 +1,7 @@
+## 1.8.6
+- Hidden Mob Culling now also skips chests, signs and other block entities behind walls, and checks are faster and more accurate
+- Surge's built in performance features now replace the extra performance mods added in 1.8.4, which are removed from your instances automatically
+
 ## 1.8.5
 - 8 new emotes: Zombie, Robot, Air Guitar, Jumping Jacks, Flex, Blow a Kiss, Spin and Faint
 - 5 new idle animations: Check Watch, Head Scratch, Shadow Box, Scrolling and Whistling
@@ -6,7 +10,6 @@
 - Emotes now show up for other players almost instantly instead of after a few seconds
 - You can no longer emote while falling, flying, gliding with an elytra, swimming or riding, and emotes stop if you start falling
 - Hit Delay is now the Cooldown Indicator: see your bow draw, eating, block breaking and item cooldowns like ender pearls
-- New Home tab in the admin menu with live stats, who is online, announcements and gifts for everyone
 - Surge now checks for cosmetic updates less often when live emotes are connected, which saves data
 
 ## 1.8.4
@@ -18,7 +21,6 @@
 - New Item Pickups mod: see what you just picked up next to your hotbar
 - New Death Coordinates mod: chat tells you where you died, click to copy
 - New Better Tooltips mod: durability numbers, food values and stack size on items
-- More performance mods are added for you: Entity Culling, ImmediatelyFast, ModernFix, More Culling, Krypton and ScalableLux
 - Fixed your cape and wings not showing in the wardrobe while wearing an elytra
 - The website now shows the animated capes and has a download button in the menu bar
 
@@ -28,7 +30,6 @@
 - Wardrobe previews in the launcher show capes and wings at full detail with bigger cards
 - Your idle animation now plays in the launcher wardrobe, and hovering an emote or idle previews it
 - Announcements from the Surge team now show in the launcher and in game
-- Gifts can now be sent to every player at once
 - Chat mentions now play a ding instead of highlighting the message
 - Your player preview in the menus no longer looks like spectator mode when you are in spectator
 - New sounds in game for opening the Surge menu, buying cosmetics and getting gifts
@@ -151,7 +152,6 @@
 - Hovering an emote in the wheel or wardrobe no longer plays it on you in game
 - Your Surge settings, Minecraft options and server list are shared between all your modpacks
 - New modpacks show which Minecraft versions have the Surge menu
-- The admin panel works online: codes, sales, locked items and featured servers, with a picker that shows every cosmetic
 
 ## 1.5.5
 - Your skin on the title screen is now 3D: drag it or use the arrows to spin it
@@ -182,7 +182,6 @@
 - New installs start with only FPS and Ping on
 - Command Keys moved into its own mod
 - New modpacks come with Sodium, Lithium, C2ME, FerriteCore, BadOptimizations, Very Many Players, Clumps, Mod Menu, Shield Fixes, Shulker Box Tooltip and Simple Voice Chat
-- Codes and sales from the admin page now show up in game right away
 - Removed the CurseForge key and service link fields from launcher settings
 
 ## 1.5.4
@@ -193,7 +192,6 @@
 - Surge Client label in the corner of every menu, pick bottom right or under your inventory in Settings
 - Bigger, clearer emote particles
 - Codes can now have a limited number of uses
-- Admin page has proper pickers for code unlocks, sales and locked items
 
 ## 1.5.3
 - Friends and chat sign-in fixed, it now works with the launcher and with the standalone mod

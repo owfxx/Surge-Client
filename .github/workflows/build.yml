@@ -130,7 +130,7 @@ jobs:
         run: |
           V="${{ steps.ver.outputs.version }}"
           [ -z "$V" ] && V="${GITHUB_REF_NAME#v}"
-          awk -v v="## $V" '$0==v{f=1;next} /^## /{f=0} f' mod/src/main/resources/changelog.md | sed '/^[[:space:]]*$/d' > notes.md
+          awk -v v="## $V" '$0==v{f=1;next} /^## /{f=0} f' mod/src/main/resources/changelog.md | sed '/^[[:space:]]*$/d' | grep -vi 'admin' > notes.md || true
           [ -s notes.md ] || echo "- Fixes and improvements" > notes.md
           cat notes.md
 

@@ -17,11 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class BlockEntityRenderDispatcherMixin {
 	@Inject(method = "tryExtractRenderState", at = @At("HEAD"), cancellable = true)
 	private void surge$cullFar(BlockEntity blockEntity, float partialTick, ModelFeatureRenderer.CrumblingOverlay overlay, CallbackInfoReturnable<?> cir) {
-		if (!Performance.cullBlockEntities) return;
+		if (!Performance.cullBlockEntities && !Performance.occlusion) return;
 		BlockEntityType<?> type = blockEntity.getType();
-		if (type == BlockEntityType.BEACON || type == BlockEntityType.END_GATEWAY) return;
+		if (type == BlockEntityType.BEACON || type == BlockEntityType.END_GATEWAY || type == BlockEntityType.END_PORTAL || type == BlockEntityType.STRUCTURE_BLOCK) return;
 		Vec3 cam = Minecraft.getInstance().gameRenderer.getMainCamera().position();
 		BlockPos pos = blockEntity.getBlockPos();
+		if (Performance.occlusion && gg.surge.client.perf.Occlusion.hidden(pos, cam.x, cam.y, cam.z)) { cir.setReturnValue(null); return; }
+		if (!Performance.cullBlockEntities) return;
 		double dx = pos.getX() + 0.5 - cam.x, dy = pos.getY() + 0.5 - cam.y, dz = pos.getZ() + 0.5 - cam.z;
 		double max = Performance.BLOCK_ENTITY_DISTANCE;
 		if (dx * dx + dy * dy + dz * dz > max * max) cir.setReturnValue(null);
