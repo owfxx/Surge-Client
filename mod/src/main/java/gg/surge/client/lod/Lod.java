@@ -1,6 +1,7 @@
 package gg.surge.client.lod;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.shaders.UniformType;
@@ -411,12 +412,11 @@ public final class Lod {
 		for (Mesh m : MESHES.values()) maxIndex = Math.max(maxIndex, m.indexCount);
 		if (maxIndex == 0) return;
 		GpuBuffer indexBuffer = idx.getBuffer(maxIndex);
-		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "surge distant terrain", target.getColorTextureView(), OptionalInt.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-			pass.setPipeline(PIPELINE);
-			RenderSystem.bindDefaultUniforms(pass);
-			pass.setIndexBuffer(indexBuffer, idx.type());
-			Vector4f white = new Vector4f(1f, 1f, 1f, 1f);
-			Matrix4f identity = new Matrix4f();
+		Vector4f white = new Vector4f(1f, 1f, 1f, 1f);
+		Matrix4f identity = new Matrix4f();
+		List<Mesh> draw = new ArrayList<>();
+		List<GpuBufferSlice> slices = new ArrayList<>();
+		try {
 			for (Map.Entry<Long, Mesh> e : MESHES.entrySet()) {
 				Mesh m = e.getValue();
 				if (m.buffer == null || m.indexCount == 0) continue;
@@ -424,11 +424,21 @@ public final class Lod {
 				double bx = rx * REGION_CHUNKS * 16.0, bz = rz * REGION_CHUNKS * 16.0;
 				if (frustum != null && !frustum.isVisible(new AABB(bx, m.minY - 1, bz, bx + REGION_CHUNKS * 16, m.maxY + 1, bz + REGION_CHUNKS * 16))) continue;
 				Matrix4f mv = new Matrix4f(modelView).translate((float) (bx - cam.x), (float) -cam.y, (float) (bz - cam.z));
-				var transform = RenderSystem.getDynamicUniforms().writeTransform(mv, white, new Vector3f(), identity);
-				pass.setUniform("DynamicTransforms", transform);
-				pass.setVertexBuffer(0, m.buffer);
-				pass.drawIndexed(0, 0, m.indexCount, 1);
-				drawn++;
+				slices.add(RenderSystem.getDynamicUniforms().writeTransform(mv, white, new Vector3f(), identity));
+				draw.add(m);
+			}
+			if (draw.isEmpty()) return;
+			try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "surge distant terrain", target.getColorTextureView(), OptionalInt.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+				pass.setPipeline(PIPELINE);
+				RenderSystem.bindDefaultUniforms(pass);
+				pass.setIndexBuffer(indexBuffer, idx.type());
+				for (int i = 0; i < draw.size(); i++) {
+					Mesh m = draw.get(i);
+					pass.setUniform("DynamicTransforms", slices.get(i));
+					pass.setVertexBuffer(0, m.buffer);
+					pass.drawIndexed(0, 0, m.indexCount, 1);
+					drawn++;
+				}
 			}
 		} catch (Throwable t) {
 			fail("render", t);
