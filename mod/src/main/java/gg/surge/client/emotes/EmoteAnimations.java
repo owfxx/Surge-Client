@@ -80,6 +80,22 @@ final class EmoteAnimations {
 				else p.rArm(-60 - 40 * side, -10, 12).lArm(-60 + 40 * side, 10, -12).head(6 * hop, side * 6, 0);
 				p.rLeg(-35 * Math.max(0, side), 0, 4).lLeg(-35 * Math.max(0, -side), 0, -4).lean(10).bob(-hop * 1.5f).sway(side * 0.6f);
 			}
+			case SHUFFLE -> {
+				float b = t * e.bpm / 60f;
+				float ph = b * (float) Math.PI;
+				float step = sin(ph);
+				float lift = Math.max(0, sin(ph * 2f));
+				boolean tstep = ((int) (b / 8)) % 2 == 1;
+				if (tstep) {
+					float tw = sin(ph * 2f);
+					p.rLeg(-10 * lift, 25 * tw, 8 + 10 * Math.max(0, tw)).lLeg(-10 * (1 - lift), -25 * tw, -8 - 10 * Math.max(0, -tw))
+						.rArm(-35 - 15 * lift, -20, 18).lArm(-35 - 15 * lift, 20, -18).body(0, 12 * tw, 0).sway(step * 0.9f);
+				} else {
+					p.rLeg(-55 * Math.max(0, step) + 18 * Math.max(0, -step), 0, 3).lLeg(-55 * Math.max(0, -step) + 18 * Math.max(0, step), 0, -3)
+						.rArm(-45 + 35 * step, 0, 10).lArm(-45 - 35 * step, 0, -10).lean(6);
+				}
+				p.bob(-Math.abs(sin(ph * 2f)) * 1.4f).head(6 * lift, step * 8, 0);
+			}
 			case DISCO -> {
 				float b = t * e.bpm / 60f;
 				boolean upBeat = ((int) (b / 2)) % 2 == 0;

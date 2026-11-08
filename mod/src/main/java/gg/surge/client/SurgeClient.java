@@ -209,6 +209,7 @@ public class SurgeClient implements ClientModInitializer {
 		gg.surge.client.features.GlintColor.tick(mc);
 		gg.surge.client.net.SurgeNet.tick(mc);
 		gg.surge.client.net.Social.tick(mc);
+		gg.surge.client.net.Inbox.tick(mc);
 		gg.surge.client.features.Extras.tick(mc);
 		gg.surge.client.economy.Rewards.tick(mc);
 		gg.surge.client.economy.Wallet.refreshRemote(false);

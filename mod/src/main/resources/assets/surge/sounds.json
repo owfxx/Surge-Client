@@ -14,5 +14,13 @@
     "stream": true
    }
   ]
+ },
+ "emote.shuffle": {
+  "sounds": [
+   {
+    "name": "surge:emote/shuffle",
+    "stream": true
+   }
+  ]
  }
 }

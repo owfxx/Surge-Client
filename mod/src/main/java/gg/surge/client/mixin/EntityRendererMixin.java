@@ -52,7 +52,7 @@ public abstract class EntityRendererMixin {
 					if (dx * dx + dz * dz < 0.36 && dy > 0.8 && dy < 3.2) { owner = pl; break; }
 				}
 			}
-			if (owner != null && Badges.show(owner.getUUID())) cir.setReturnValue(Badges.prefix(tag));
+			if (owner != null && Badges.show(owner.getUUID())) cir.setReturnValue(Badges.prefix(owner.getUUID(), tag));
 			return;
 		}
 		Component name = cir.getReturnValue();
@@ -68,7 +68,7 @@ public abstract class EntityRendererMixin {
 		Component out = entity == Minecraft.getInstance().player ? gg.surge.client.features.NickHider.apply(name) : name;
 		String flag = gg.surge.client.net.SurgeNet.flagGlyph(entity.getUUID());
 		if (!flag.isEmpty()) out = Component.empty().append(out).append(Component.literal(" ")).append(gg.surge.client.features.Flags.icon(flag));
-		if (Badges.show(entity.getUUID())) out = Badges.prefix(out);
+		if (Badges.show(entity.getUUID())) out = Badges.prefix(entity.getUUID(), out);
 		if (out != name) cir.setReturnValue(out);
 	}
 }

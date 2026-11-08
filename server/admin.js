@@ -1,4 +1,4 @@
-const ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}];
+const ITEMS = [{"id": "wings:angel", "name": "Angel Wings", "price": 1200}, {"id": "wings:surge", "name": "Surge Wings", "price": 1500}, {"id": "wings:soul", "name": "Soul Wings", "price": 1100}, {"id": "wings:flame", "name": "Flame Wings", "price": 1100}, {"id": "wings:void", "name": "Void Wings", "price": 1300}, {"id": "wings:crystal", "name": "Crystal Wings", "price": 1400}, {"id": "wings:gold", "name": "Golden Wings", "price": 1600}, {"id": "halo:angel", "name": "Angel Halo", "price": 900}, {"id": "halo:surge", "name": "Surge Halo", "price": 1000}, {"id": "halo:fire", "name": "Fire Halo", "price": 750}, {"id": "halo:enchanted", "name": "Enchanted Halo", "price": 800}, {"id": "halo:void", "name": "Void Halo", "price": 850}, {"id": "halo:rose", "name": "Rose Halo", "price": 700}, {"id": "cape:surge", "name": "Surge Cape", "price": 1000}, {"id": "cape:void", "name": "Void Cape", "price": 800}, {"id": "cape:flame", "name": "Flame Cape", "price": 1200}, {"id": "cape:ocean", "name": "Ocean Cape", "price": 700}, {"id": "cape:aurora", "name": "Aurora Cape", "price": 900}, {"id": "cape:sakura", "name": "Sakura Cape", "price": 700}, {"id": "cape:midnight", "name": "Midnight Cape", "price": 750}, {"id": "cape:royal", "name": "Royal Cape", "price": 950}, {"id": "cape:emerald", "name": "Emerald Cape", "price": 700}, {"id": "cape:galaxy", "name": "Galaxy Cape", "price": 1100}, {"id": "cape:custom", "name": "Color Cape", "price": 300}, {"id": "cape:blinkcat", "name": "Blink Cat Cape", "price": 1500}, {"id": "cape:enchanted", "name": "Enchanted Cape", "price": 1800}, {"id": "cape:runes", "name": "Rune Cape", "price": 1600}, {"id": "cape:beta", "name": "Beta Tester Cape", "price": 0}, {"id": "cape:image", "name": "Picture Cape", "price": 0}, {"id": "emote:WAVE", "name": "Wave (emote)", "price": 600}, {"id": "emote:CLAP", "name": "Clap (emote)", "price": 600}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)", "price": 650}, {"id": "emote:DAB", "name": "Dab (emote)", "price": 750}, {"id": "emote:SHRUG", "name": "Shrug (emote)", "price": 600}, {"id": "emote:SALUTE", "name": "Salute (emote)", "price": 600}, {"id": "emote:CHEER", "name": "Cheer (emote)", "price": 800}, {"id": "emote:LAUGH", "name": "Laugh (emote)", "price": 700}, {"id": "emote:BOW", "name": "Bow (emote)", "price": 650}, {"id": "emote:HEART", "name": "Heart (emote)", "price": 850}, {"id": "emote:FLOSS", "name": "Floss (emote)", "price": 1000}, {"id": "emote:TPOSE", "name": "T-Pose (emote)", "price": 600}, {"id": "emote:CRY", "name": "Cry (emote)", "price": 750}, {"id": "emote:SIT", "name": "Sit (emote)", "price": 600}, {"id": "emote:GRIDDY", "name": "Griddy (emote)", "price": 1200}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)", "price": 1100}, {"id": "emote:DISCO", "name": "Disco Fever (emote)", "price": 1000}];
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -34,7 +34,85 @@ export async function adminSetup(db) {
     db.prepare('CREATE TABLE IF NOT EXISTS admin_fails (ip TEXT PRIMARY KEY, count INTEGER, at INTEGER)'),
     db.prepare('CREATE TABLE IF NOT EXISTS code_uses (hash TEXT, uuid TEXT, at INTEGER, PRIMARY KEY (hash, uuid))'),
   ]);
+  await db.batch([
+    db.prepare('CREATE TABLE IF NOT EXISTS admin_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT, name TEXT, coins INTEGER, items TEXT, note TEXT, created INTEGER, claimed INTEGER DEFAULT 0)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS admin_gifts_uuid ON admin_gifts(uuid, claimed)'),
+    db.prepare('CREATE TABLE IF NOT EXISTS admin_badges (uuid TEXT PRIMARY KEY, name TEXT, badge TEXT)'),
+    db.prepare('CREATE TABLE IF NOT EXISTS admin_capes (uuid TEXT PRIMARY KEY, name TEXT, png TEXT, v INTEGER)'),
+  ]);
   try { await db.prepare('ALTER TABLE admin_codes ADD COLUMN max_uses INTEGER DEFAULT 0').run(); } catch { }
+  try { await db.prepare("ALTER TABLE admin_sales ADD COLUMN uuid TEXT DEFAULT ''").run(); } catch { }
+  try { await db.prepare("ALTER TABLE admin_sales ADD COLUMN name TEXT DEFAULT ''").run(); } catch { }
+}
+
+export const BADGES = ['owner', 'staff', 'booster', 'beta', 'media', 'vip', 'early', 'dev'];
+export const OWNERS = ['baea491cd9724afc9858ca377d3cfbf9'];
+
+async function prices(db) {
+  const row = await db.prepare("SELECT v FROM admin_settings WHERE k = 'prices'").first();
+  try { return row ? JSON.parse(row.v) : {}; } catch { return {}; }
+}
+
+async function findPlayer(db, raw) {
+  const q = String(raw || '').trim();
+  const hex = q.replace(/-/g, '').toLowerCase();
+  if (/^[0-9a-f]{32}$/.test(hex)) {
+    const u = await db.prepare('SELECT uuid, name FROM users WHERE uuid = ?1').bind(hex).first();
+    return u || { uuid: hex, name: hex.slice(0, 8) };
+  }
+  if (!/^[A-Za-z0-9_]{1,16}$/.test(q)) return null;
+  const u = await db.prepare('SELECT uuid, name FROM users WHERE name_lc = ?1').bind(q.toLowerCase()).first();
+  if (u) return u;
+  try {
+    const r = await fetch(`https://playerdb.co/api/player/minecraft/${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'SurgeClient/1.0' } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const p = d && d.data && d.data.player;
+    if (!p || !p.raw_id) return null;
+    return { uuid: String(p.raw_id).toLowerCase(), name: p.username };
+  } catch { return null; }
+}
+
+export async function inbox(db, uuid) {
+  await adminSetup(db);
+  const now = Date.now();
+  const gifts = (await db.prepare('SELECT id, coins, items, note FROM admin_gifts WHERE uuid = ?1 AND claimed = 0 ORDER BY id LIMIT 20').bind(uuid).all()).results.map(g => ({ ...g, items: JSON.parse(g.items || '[]') }));
+  const sales = (await db.prepare("SELECT target, percent, until FROM admin_sales WHERE uuid = ?1 AND (until = 0 OR until > ?2)").bind(uuid, now).all()).results;
+  const b = await db.prepare('SELECT badge FROM admin_badges WHERE uuid = ?1').bind(uuid).first();
+  const c = await db.prepare('SELECT v FROM admin_capes WHERE uuid = ?1').bind(uuid).first();
+  return { gifts, sales, badge: b ? b.badge : (OWNERS.includes(uuid) ? 'owner' : ''), capev: c ? c.v : 0 };
+}
+
+export async function claimGifts(db, uuid, ids) {
+  await adminSetup(db);
+  const list = (Array.isArray(ids) ? ids : []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 20);
+  const claimed = [];
+  for (const id of list) {
+    const r = await db.prepare('UPDATE admin_gifts SET claimed = ?3 WHERE id = ?1 AND uuid = ?2 AND claimed = 0').bind(id, uuid, Date.now()).run();
+    if (r.meta.changes) {
+      const g = await db.prepare('SELECT id, coins, items, note FROM admin_gifts WHERE id = ?1').bind(id).first();
+      if (g) claimed.push({ ...g, items: JSON.parse(g.items || '[]') });
+    }
+  }
+  return { claimed };
+}
+
+export async function playerExtras(db, ids) {
+  await adminSetup(db);
+  const out = {};
+  if (!ids.length) return out;
+  const marks = ids.map((_, i) => `?${i + 1}`).join(',');
+  for (const r of (await db.prepare(`SELECT uuid, badge FROM admin_badges WHERE uuid IN (${marks})`).bind(...ids).all()).results) (out[r.uuid] = out[r.uuid] || {}).badge = r.badge;
+  for (const r of (await db.prepare(`SELECT uuid, v FROM admin_capes WHERE uuid IN (${marks})`).bind(...ids).all()).results) (out[r.uuid] = out[r.uuid] || {}).capev = r.v;
+  for (const id of ids) if (OWNERS.includes(id) && !(out[id] && out[id].badge)) (out[id] = out[id] || {}).badge = 'owner';
+  return out;
+}
+
+export async function capeImage(db, uuid) {
+  await adminSetup(db);
+  const c = await db.prepare('SELECT png FROM admin_capes WHERE uuid = ?1').bind(uuid).first();
+  if (!c) return null;
+  return Uint8Array.from(atob(c.png), ch => ch.charCodeAt(0));
 }
 
 export async function redeemCode(db, uuid, raw) {
@@ -64,9 +142,9 @@ async function lockedList(db) {
 export async function publicData(db) {
   const now = Date.now();
   const codes = (await db.prepare('SELECT hash, coins, items FROM admin_codes WHERE max_uses IS NULL OR max_uses = 0').all()).results.map(c => ({ hash: c.hash, coins: c.coins, items: JSON.parse(c.items || '[]') }));
-  const sales = (await db.prepare('SELECT target, percent, until FROM admin_sales WHERE until = 0 OR until > ?1').bind(now).all()).results;
+  const sales = (await db.prepare("SELECT target, percent, until FROM admin_sales WHERE (uuid IS NULL OR uuid = '') AND (until = 0 OR until > ?1)").bind(now).all()).results;
   const servers = (await db.prepare('SELECT name, ip, description, tag FROM admin_servers ORDER BY id').all()).results;
-  const out = { codes, sales, servers };
+  const out = { codes, sales, servers, prices: await prices(db) };
   const locked = await lockedList(db);
   if (locked) out.locked = locked;
   return out;
@@ -75,13 +153,15 @@ export async function publicData(db) {
 async function state(db) {
   const now = Date.now();
   const codes = (await db.prepare('SELECT c.hash, c.code, c.coins, c.items, c.created, c.max_uses, (SELECT COUNT(*) FROM code_uses u WHERE u.hash = c.hash) AS used FROM admin_codes c ORDER BY c.created DESC').all()).results.map(c => ({ ...c, items: JSON.parse(c.items || '[]') }));
-  const sales = (await db.prepare('SELECT id, target, percent, until FROM admin_sales WHERE until = 0 OR until > ?1 ORDER BY id').bind(now).all()).results;
+  const sales = (await db.prepare('SELECT id, target, percent, until, uuid, name FROM admin_sales WHERE until = 0 OR until > ?1 ORDER BY id').bind(now).all()).results;
   const servers = (await db.prepare('SELECT id, name, ip, description, tag FROM admin_servers ORDER BY id').all()).results;
   const locked = (await lockedList(db)) || ['cape:beta'];
-  return { codes, sales, servers, locked, items: ITEMS };
+  const gifts = (await db.prepare('SELECT id, uuid, name, coins, items, note, created, claimed FROM admin_gifts ORDER BY id DESC LIMIT 60').all()).results.map(g => ({ ...g, items: JSON.parse(g.items || '[]') }));
+  const badges = (await db.prepare('SELECT uuid, name, badge FROM admin_badges ORDER BY name').all()).results;
+  const capes = (await db.prepare('SELECT uuid, name, v FROM admin_capes ORDER BY name').all()).results;
+  return { codes, sales, servers, locked, items: ITEMS, gifts, badges, capes, prices: await prices(db), badgeKinds: BADGES };
 }
 
-const OWNERS = ['baea491cd9724afc9858ca377d3cfbf9'];
 
 async function authed(req, db) {
   const u = (req.headers.get('authorization') || '').match(/^Bearer ([a-f0-9]{48})$/);
@@ -152,11 +232,76 @@ export async function adminApi(req, env, db, path) {
     return json({ ok: true });
   }
   if (path === 'sales' && req.method === 'POST') {
-    const percent = Math.max(5, Math.min(90, Math.floor(Number(body.percent) || 20)));
+    const percent = Math.max(5, Math.min(100, Math.floor(Number(body.percent) || 20)));
     const hours = Math.max(0, Math.min(24 * 90, Number(body.hours) || 0));
     const target = String(body.target || 'all').slice(0, 60);
-    await db.prepare('INSERT INTO admin_sales (target, percent, until) VALUES (?1, ?2, ?3)').bind(target, percent, hours ? Date.now() + hours * 3600000 : 0).run();
+    let who = { uuid: '', name: '' };
+    if (String(body.player || '').trim()) {
+      who = await findPlayer(db, body.player);
+      if (!who) return json({ error: "Couldn't find that player" }, 404);
+    }
+    await db.prepare('INSERT INTO admin_sales (target, percent, until, uuid, name) VALUES (?1, ?2, ?3, ?4, ?5)').bind(target, percent, hours ? Date.now() + hours * 3600000 : 0, who.uuid, who.name).run();
     return json({ ok: true });
+  }
+  if (path === 'gifts' && req.method === 'POST') {
+    const who = await findPlayer(db, body.player);
+    if (!who) return json({ error: "Couldn't find that player" }, 404);
+    const coins = Math.max(0, Math.min(1000000, Math.floor(Number(body.coins) || 0)));
+    const valid = new Set(ITEMS.map(i => i.id));
+    const items = (Array.isArray(body.items) ? body.items : []).filter(i => valid.has(i)).slice(0, 20);
+    if (!coins && !items.length) return json({ error: 'A gift needs coins or an item' }, 400);
+    const note = String(body.note || '').slice(0, 140);
+    await db.prepare('INSERT INTO admin_gifts (uuid, name, coins, items, note, created) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(who.uuid, who.name, coins, JSON.stringify(items), note, Date.now()).run();
+    return json({ ok: true, name: who.name });
+  }
+  if (path === 'gifts/delete' && req.method === 'POST') {
+    await db.prepare('DELETE FROM admin_gifts WHERE id = ?1 AND claimed = 0').bind(Number(body.id) || 0).run();
+    return json({ ok: true });
+  }
+  if (path === 'badges' && req.method === 'POST') {
+    const who = await findPlayer(db, body.player);
+    if (!who) return json({ error: "Couldn't find that player" }, 404);
+    const badge = String(body.badge || '');
+    if (!badge) await db.prepare('DELETE FROM admin_badges WHERE uuid = ?1').bind(who.uuid).run();
+    else if (!BADGES.includes(badge)) return json({ error: 'Unknown icon' }, 400);
+    else await db.prepare('INSERT OR REPLACE INTO admin_badges (uuid, name, badge) VALUES (?1, ?2, ?3)').bind(who.uuid, who.name, badge).run();
+    return json({ ok: true, name: who.name });
+  }
+  if (path === 'capes' && req.method === 'POST') {
+    const who = await findPlayer(db, body.player);
+    if (!who) return json({ error: "Couldn't find that player" }, 404);
+    const png = String(body.png || '').replace(/^data:image\/png;base64,/, '').replace(/\s+/g, '');
+    if (!/^[A-Za-z0-9+/=]+$/.test(png) || png.length < 100) return json({ error: 'Pick a PNG image' }, 400);
+    if (png.length > 900000) return json({ error: 'That image is too big. Keep it under 600 KB.' }, 400);
+    const bytes = Uint8Array.from(atob(png.slice(0, 16)), c => c.charCodeAt(0));
+    if (bytes[0] !== 0x89 || bytes[1] !== 0x50) return json({ error: 'Only PNG images work' }, 400);
+    await db.prepare('INSERT OR REPLACE INTO admin_capes (uuid, name, png, v) VALUES (?1, ?2, ?3, ?4)').bind(who.uuid, who.name, png, Date.now()).run();
+    if (body.gift !== false) await db.prepare('INSERT INTO admin_gifts (uuid, name, coins, items, note, created) VALUES (?1, ?2, 0, ?3, ?4, ?5)').bind(who.uuid, who.name, JSON.stringify(['cape:image']), String(body.note || 'Your own picture cape is ready.').slice(0, 140), Date.now()).run();
+    return json({ ok: true, name: who.name });
+  }
+  if (path === 'capes/delete' && req.method === 'POST') {
+    await db.prepare('DELETE FROM admin_capes WHERE uuid = ?1').bind(String(body.uuid || '')).run();
+    return json({ ok: true });
+  }
+  if (path === 'prices' && req.method === 'POST') {
+    const item = String(body.item || '');
+    if (!ITEMS.some(i => i.id === item)) return json({ error: 'Unknown item' }, 400);
+    const p = await prices(db);
+    if (body.price === null || body.price === '' || body.price === undefined) delete p[item];
+    else p[item] = Math.max(0, Math.min(1000000, Math.floor(Number(body.price) || 0)));
+    await db.prepare("INSERT OR REPLACE INTO admin_settings (k, v) VALUES ('prices', ?1)").bind(JSON.stringify(p)).run();
+    return json({ ok: true, prices: p });
+  }
+  if (path === 'prices/scale' && req.method === 'POST') {
+    const pct = Math.max(1, Math.min(1000, Math.floor(Number(body.percent) || 100)));
+    const base = body.base && typeof body.base === 'object' ? body.base : {};
+    const p = {};
+    for (const it of ITEMS) {
+      const b = Number(base[it.id]);
+      if (Number.isFinite(b) && b > 0 && pct !== 100) p[it.id] = Math.round(b * pct / 100);
+    }
+    await db.prepare("INSERT OR REPLACE INTO admin_settings (k, v) VALUES ('prices', ?1)").bind(JSON.stringify(p)).run();
+    return json({ ok: true, prices: p });
   }
   if (path === 'sales/delete' && req.method === 'POST') {
     await db.prepare('DELETE FROM admin_sales WHERE id = ?1').bind(Number(body.id) || 0).run();

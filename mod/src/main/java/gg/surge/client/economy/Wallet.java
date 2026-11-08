@@ -127,6 +127,7 @@ public final class Wallet {
 		if (gh == null && svc == null) return remoteCache;
 		JsonObject out = new JsonObject();
 		for (String k : new String[]{"codes", "sales", "servers"}) { addAll(out, gh, k); addAll(out, svc, k); }
+		if (svc != null && svc.has("prices")) out.add("prices", svc.get("prices"));
 		if (svc != null && svc.has("locked")) out.add("locked", svc.get("locked"));
 		else if (gh != null && gh.has("locked")) out.add("locked", gh.get("locked"));
 		remoteCache = out;
@@ -144,6 +145,7 @@ public final class Wallet {
 			JsonElement r = fetchRemote();
 			Sales.applyRemote(r);
 			Locks.applyRemote(r);
+			Shop.applyRemote(r);
 		});
 	}
 

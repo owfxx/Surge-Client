@@ -108,12 +108,12 @@ function login(msg) {
 async function load() { try { data = await api('state'); render(); } catch (e) { if (token) toast(e.message, true); } }
 
 function render() {
-  const tabs = [['codes', 'Codes'], ['sales', 'Sales'], ['locks', 'Locked items'], ['servers', 'Discover']];
+  const tabs = [['codes', 'Codes'], ['gifts', 'Gifts'], ['sales', 'Sales'], ['prices', 'Prices'], ['players', 'Icons and capes'], ['locks', 'Locked items'], ['servers', 'Discover']];
   $('#app').innerHTML = '<header><h1>Surge Admin</h1><button class="btn ghost small" id="out">Sign out</button></header>'
     + '<nav class="tabs">' + tabs.map(([k, l]) => '<button class="tab ' + (tab === k ? 'on' : '') + '" data-tab="' + k + '">' + l + '</button>').join('') + '</nav><div id="page"></div>';
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
   $('#out').onclick = async () => { try { await api('logout', {}); } catch {} token = ''; try { sessionStorage.removeItem('surgeAdmin'); } catch {} login(); };
-  ({ codes, sales, locks, servers })[tab]();
+  ({ codes, gifts, sales, prices, players, locks, servers })[tab]();
 }
 
 function codes() {
@@ -143,15 +143,91 @@ function codes() {
 function sales() {
   const tn = t => (TARGETS().find(x => x[0] === t) || [t, t])[1];
   $('#page').innerHTML = '<div class="card"><h2>Start a sale</h2><div class="row">'
-    + '<label style="max-width:120px">Percent off<input id="sP" type="number" min="5" max="90" value="20"></label>'
+    + '<label style="max-width:120px">Percent off<input id="sP" type="number" min="5" max="100" value="20"></label>'
+    + '<label>Only for one player (optional)<input id="sWho" maxlength="36" placeholder="Minecraft name, empty for everyone"></label>'
     + '<label style="max-width:140px">Length<select id="sL"><option value="24">1 day</option><option value="72">3 days</option><option value="168">1 week</option><option value="0">No end</option></select></label>'
     + '</div><h2 style="margin-top:16px">On <span id="sOn" style="color:var(--text)">Everything</span></h2><div class="picker" id="sPick"></div>'
     + '<div class="row" style="margin-top:12px"><button class="btn" id="sAdd">Start sale</button></div></div>'
-    + '<div class="card"><h2>Running sales</h2><div class="list">' + (data.sales.map(s => '<div class="item"><div class="grow"><div>' + s.percent + '% off ' + esc(tn(s.target)) + '</div><div class="sub">' + (s.until ? 'Ends ' + new Date(s.until).toLocaleString() : 'No end') + '</div></div><button class="btn ghost small" data-end="' + s.id + '">End</button></div>').join('') || '<p class="muted">No sales running.</p>') + '</div></div>';
+    + '<div class="card"><h2>Running sales</h2><div class="list">' + (data.sales.map(s => '<div class="item"><div class="grow"><div>' + s.percent + '% off ' + esc(tn(s.target)) + (s.name ? ' for ' + esc(s.name) : '') + '</div><div class="sub">' + (s.until ? 'Ends ' + new Date(s.until).toLocaleString() : 'No end') + '</div></div><button class="btn ghost small" data-end="' + s.id + '">End</button></div>').join('') || '<p class="muted">No sales running.</p>') + '</div></div>';
   let target = 'all';
   picker($('#sPick'), { groups: TARGETS().slice(0, 6), value: () => [target], pick: v => { target = v; $('#sOn').textContent = tn(v); } });
-  $('#sAdd').onclick = async () => { try { await api('sales', { target, percent: +$('#sP').value, hours: +$('#sL').value }); toast('Sale started'); load(); } catch (e) { toast(e.message, true); } };
+  $('#sAdd').onclick = async () => { try { await api('sales', { target, percent: +$('#sP').value, hours: +$('#sL').value, player: $('#sWho').value.trim() }); toast('Sale started'); load(); } catch (e) { toast(e.message, true); } };
   document.querySelectorAll('[data-end]').forEach(b => b.onclick = async () => { try { await api('sales/delete', { id: +b.dataset.end }); load(); } catch (e) { toast(e.message, true); } });
+}
+
+const BADGE_LABEL = { owner: 'Owner', staff: 'Staff', booster: 'Server Booster', beta: 'Beta Tester', media: 'Creator', vip: 'VIP', early: 'Early Supporter', dev: 'Developer' };
+const BADGE_COLOR = { owner: '#f2c430', staff: '#ff6060', booster: '#fa8cff', beta: '#5aa0ff', media: '#ff4f6d', vip: '#ffd25a', early: '#5fd67a', dev: '#ff9a3c' };
+let giftPicked = [];
+function gifts() {
+  $('#page').innerHTML = '<div class="card"><h2>Send a gift</h2><div class="row">'
+    + '<label>Player<input id="gWho" maxlength="36" placeholder="Minecraft name"></label>'
+    + '<label style="max-width:120px">Coins<input id="gCoins" type="number" min="0" value="0"></label></div>'
+    + '<div class="row" style="margin-top:10px"><label>Message (optional)<input id="gNote" maxlength="140" placeholder="Thanks for boosting the server!"></label></div>'
+    + '<p class="muted" style="margin:8px 0 0">The player gets it the next time they open Surge, with a popup that shows what they got.</p>'
+    + '<h2 style="margin-top:16px">Items</h2><div class="picker" id="gPick"></div>'
+    + '<div class="row" style="margin-top:12px"><button class="btn" id="gSend">Send gift</button></div></div>'
+    + '<div class="card"><h2>Recent gifts</h2><div class="list">' + (data.gifts.map(g => '<div class="item"><div class="grow"><div><b>' + esc(g.name) + '</b></div><div class="sub">' + [g.coins ? g.coins + ' coins' : '', ...g.items.map(name)].filter(Boolean).map(esc).join(', ') + (g.note ? ' · ' + esc(g.note) : '') + '</div></div><span class="uses">' + (g.claimed ? 'Received' : 'Waiting') + '</span>' + (g.claimed ? '' : '<button class="btn ghost small" data-gdel="' + g.id + '">Cancel</button>') + '</div>').join('') || '<p class="muted">No gifts yet.</p>') + '</div></div>';
+  picker($('#gPick'), { multi: true, value: () => giftPicked, pick: v => { giftPicked = giftPicked.includes(v) ? giftPicked.filter(x => x !== v) : [...giftPicked, v]; } });
+  $('#gSend').onclick = async () => {
+    try { const r = await api('gifts', { player: $('#gWho').value.trim(), coins: +$('#gCoins').value, note: $('#gNote').value.trim(), items: giftPicked }); toast('Gift sent to ' + r.name); giftPicked = []; load(); }
+    catch (e) { toast(e.message, true); }
+  };
+  document.querySelectorAll('[data-gdel]').forEach(b => b.onclick = async () => { try { await api('gifts/delete', { id: +b.dataset.gdel }); load(); } catch (e) { toast(e.message, true); } });
+}
+function prices() {
+  let sel = data.items[0].id;
+  const cur = id => data.prices[id] ?? (data.items.find(i => i.id === id) || {}).price;
+  $('#page').innerHTML = '<div class="card"><h2>Change a price</h2><p class="muted">The new price shows for everyone right away. Sales are taken off the new price.</p>'
+    + '<div class="row"><label>Item<select id="pItem">' + data.items.map(i => '<option value="' + esc(i.id) + '">' + esc(cleanName(i.name)) + '</option>').join('') + '</select></label>'
+    + '<label style="max-width:140px">Price<input id="pVal" type="number" min="0"></label><button class="btn" id="pSet">Save</button><button class="btn ghost" id="pReset">Back to normal</button></div>'
+    + '<p class="muted" id="pNote"></p></div>'
+    + '<div class="card"><h2>Change all prices</h2><div class="row"><label style="max-width:160px">Percent of normal price<input id="pPct" type="number" min="1" max="1000" value="100"></label><button class="btn" id="pAll">Apply to everything</button></div><p class="muted">100% puts every price back to normal.</p></div>'
+    + '<div class="card"><h2>Changed prices</h2><div class="list">' + (Object.keys(data.prices).map(id => '<div class="item"><div class="grow">' + esc(cleanName(name(id))) + '</div><span class="uses">' + data.prices[id] + ' coins (normally ' + ((data.items.find(i => i.id === id) || {}).price ?? '?') + ')</span></div>').join('') || '<p class="muted">Every item has its normal price.</p>') + '</div></div>';
+  const show = () => { sel = $('#pItem').value; $('#pVal').value = cur(sel); const it = data.items.find(i => i.id === sel); $('#pNote').textContent = 'Normal price: ' + it.price + ' coins'; };
+  $('#pItem').onchange = show; show();
+  $('#pSet').onclick = async () => { try { await api('prices', { item: sel, price: +$('#pVal').value }); toast('Price saved'); load(); } catch (e) { toast(e.message, true); } };
+  $('#pReset').onclick = async () => { try { await api('prices', { item: sel, price: null }); toast('Price reset'); load(); } catch (e) { toast(e.message, true); } };
+  $('#pAll').onclick = async () => { const base = {}; data.items.forEach(i => base[i.id] = i.price); try { await api('prices/scale', { percent: +$('#pPct').value, base }); toast('Prices updated'); load(); } catch (e) { toast(e.message, true); } };
+}
+function players() {
+  let badge = 'booster';
+  $('#page').innerHTML = '<div class="card"><h2>Give a name icon</h2><p class="muted">Shows next to their name above their head and in the tab list, instead of the normal Surge icon.</p>'
+    + '<div class="row"><label>Player<input id="bWho" maxlength="36" placeholder="Minecraft name"></label></div><div class="chips" id="bKinds" style="margin-top:10px"></div>'
+    + '<div class="row" style="margin-top:12px"><button class="btn" id="bGive">Give icon</button></div>'
+    + '<div class="list">' + (data.badges.map(b => '<div class="item"><span style="width:12px;height:12px;background:' + (BADGE_COLOR[b.badge] || '#fff') + '"></span><div class="grow"><b>' + esc(b.name) + '</b> <span class="sub">' + esc(BADGE_LABEL[b.badge] || b.badge) + '</span></div><button class="btn ghost small" data-brm="' + esc(b.uuid) + '">Remove</button></div>').join('') || '<p class="muted">Nobody has a special icon yet.</p>') + '</div></div>'
+    + '<div class="card"><h2>Picture cape</h2><p class="muted">Upload any picture and it becomes that player\\'s own cape. A 64 by 32 or 512 by 256 cape texture is used as it is, any other picture is fitted on the back. Only you can give these out.</p>'
+    + '<div class="row"><label>Player<input id="cWho" maxlength="36" placeholder="Minecraft name"></label><label>Picture<input id="cFile" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="btn" id="cUp">Upload and gift</button></div>'
+    + '<div class="list">' + (data.capes.map(c => '<div class="item"><img alt="" width="40" height="64" style="object-fit:cover;background:#000" src="/v1/cape/' + esc(c.uuid) + '?v=' + c.v + '"><div class="grow"><b>' + esc(c.name) + '</b></div><button class="btn ghost small" data-crm="' + esc(c.uuid) + '">Remove</button></div>').join('') || '<p class="muted">No picture capes yet.</p>') + '</div></div>';
+  const drawKinds = () => { $('#bKinds').innerHTML = data.badgeKinds.map(k => '<button class="pill ' + (k === badge ? 'on' : '') + '" data-k="' + k + '"><span style="display:inline-block;width:10px;height:10px;margin-right:6px;background:' + BADGE_COLOR[k] + '"></span>' + BADGE_LABEL[k] + '</button>').join(''); document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { badge = b.dataset.k; drawKinds(); }); };
+  drawKinds();
+  $('#bGive').onclick = async () => { try { const r = await api('badges', { player: $('#bWho').value.trim(), badge }); toast(r.name + ' got the ' + BADGE_LABEL[badge] + ' icon'); load(); } catch (e) { toast(e.message, true); } };
+  document.querySelectorAll('[data-brm]').forEach(b => b.onclick = async () => { try { await api('badges', { player: b.dataset.brm, badge: '' }); load(); } catch (e) { toast(e.message, true); } });
+  document.querySelectorAll('[data-crm]').forEach(b => b.onclick = async () => { try { await api('capes/delete', { uuid: b.dataset.crm }); load(); } catch (e) { toast(e.message, true); } });
+  $('#cUp').onclick = async () => {
+    const f = $('#cFile').files[0];
+    if (!f) { toast('Pick a picture first', true); return; }
+    try {
+      const png = await toPng(f);
+      const r = await api('capes', { player: $('#cWho').value.trim(), png });
+      toast('Picture cape sent to ' + r.name); load();
+    } catch (e) { toast(e.message, true); }
+  };
+}
+function toPng(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const max = w === h * 2 ? 1024 : 512;
+      const k = Math.min(1, max / Math.max(w, h));
+      w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = k < 1; x.drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/png').split(',')[1]);
+    };
+    img.onerror = () => rej(new Error('That file is not a picture'));
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 function locks() {

@@ -228,8 +228,9 @@ jobs:
             if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/Minecraft.class\|com/mojang/blaze3d/systems/RenderSystem.class\|net/minecraft/world/entity/Entity.class"; then cp "$j" "gj/$(echo "$j" | md5sum | cut -c1-8)-$(basename "$j")"; fi
           done
           ls -la gj
-      - uses: actions/upload-artifact@v5
-        with:
-          name: gamejar
-          path: gj/*
-          retention-days: 3
+      - name: Keep for reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view gamejar -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create gamejar -R "$GITHUB_REPOSITORY" --draft --title "gamejar" --notes "reference"
+          gh release upload gamejar gj/* --clobber -R "$GITHUB_REPOSITORY"

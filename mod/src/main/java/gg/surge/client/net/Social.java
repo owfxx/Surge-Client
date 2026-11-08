@@ -64,7 +64,7 @@ public final class Social {
 		return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir().resolve("surge").resolve("session.json");
 	}
 
-	private static String myId() {
+	public static String myId() {
 		try { return Minecraft.getInstance().getUser().getProfileId().toString().replace("-", "").toLowerCase(); } catch (Exception e) { return ""; }
 	}
 

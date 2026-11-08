@@ -57,7 +57,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			if (lk == null || Minecraft.getInstance().level != null && !Preview.clean) return;
 			if (lk.cape() != null) cape(ps, q, light, lk.cape(), state.ageInTicks, state);
 			if (lk.wings() != null) wings(ps, q, light, lk.wings(), state.ageInTicks, 0f, state.id * 2 + 1);
-			if (lk.halo() != null) halo(ps, q, lk.halo(), state.ageInTicks);
+			if (lk.halo() != null) halo(ps, q, lk.halo(), state.ageInTicks, false);
 			return;
 		}
 		float age = state.ageInTicks;
@@ -71,7 +71,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		String wings = look != null ? look.wings() : Cosmetics.forPlayer(p, "wings");
 		if (wings != null && !(elytra && Mods.COS_WINGS_ELYTRA.on())) wings(ps, q, light, wings, age, flying ? 1f : speed, p.getId() * 2 + (Preview.clean || Preview.card != null ? 1 : 0));
 		String halo = look != null ? look.halo() : Cosmetics.forPlayer(p, "halo");
-		if (halo != null) halo(ps, q, halo, age);
+		if (halo != null) halo(ps, q, halo, age, !p.getItemBySlot(EquipmentSlot.HEAD).isEmpty());
 	}
 
 	private void cape(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, AvatarRenderState state) {
@@ -143,19 +143,30 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
 			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
-				wingQuad(pose, vc, 0.02f, -0.36f, 1.12f, 0.26f, -0.012f, lit, 0xFFB8B8B8);
-				wingQuad(pose, vc, 0.02f, -0.34f, 1.08f, 0.22f, 0.0f, lit, 0xFFFFFFFF);
+				wingQuad(pose, vc, 0.02f, -0.37f, 1.14f, 0.27f, -0.014f, lit, 0xFF9A9AA6);
+				wingQuad(pose, vc, 0.02f, -0.35f, 1.10f, 0.23f, 0.0f, lit, 0xFFFFFFFF);
 			});
 			ps.popPose();
 		}
 	}
 
 	private static void wingQuad(PoseStack.Pose pose, VertexConsumer vc, float x0, float y0, float x1, float y1, float z, int light, int color) {
-		float[][] front = {{x0, y0, 0, 0}, {x0, y1, 0, 1}, {x1, y1, 1, 1}, {x1, y0, 1, 0}};
-		for (float[] p : front) vc.addVertex(pose, p[0], p[1], z).setColor(color).setUv(p[2], p[3]).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0f, 0f, 1f);
-		for (int i = 3; i >= 0; i--) {
-			float[] p = front[i];
-			vc.addVertex(pose, p[0], p[1], z).setColor(color).setUv(p[2], p[3]).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0f, 0f, -1f);
+		int seg = 8;
+		float bend = 0.16f;
+		for (int i = 0; i < seg; i++) {
+			float ua = i / (float) seg, ub = (i + 1) / (float) seg;
+			float xa = x0 + (x1 - x0) * ua, xb = x0 + (x1 - x0) * ub;
+			float za = z + bend * ua * ua, zb = z + bend * ub * ub;
+			float dx = xb - xa, dz = zb - za, len = (float) Math.sqrt(dx * dx + dz * dz);
+			float nx = -dz / len, nz = dx / len;
+			vc.addVertex(pose, xa, y0, za).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, xa, y1, za).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, xb, y1, zb).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, xb, y0, zb).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, xb, y0, zb).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, xb, y1, zb).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, xa, y1, za).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, xa, y0, za).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
 		}
 	}
 
@@ -170,17 +181,18 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		};
 	}
 
-	private void halo(PoseStack ps, SubmitNodeCollector q, String style, float age) {
+	private void halo(PoseStack ps, SubmitNodeCollector q, String style, float age, boolean helmet) {
 		int rgb = haloColor(style);
 		ps.pushPose();
 		getParentModel().head.translateAndRotate(ps);
-		ps.translate(0f, -0.66f + 0.03f * (float) Math.sin(age * 0.07), 0f);
+		ps.translate(0f, (helmet ? -0.74f : -0.66f) + 0.03f * (float) Math.sin(age * 0.07), 0f);
 		ps.mulPose(Axis.XP.rotationDegrees(-10f));
 		ps.mulPose(Axis.YP.rotationDegrees(age * 1.6f));
 		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> torus(pose, vc, 0.26f, 0.032f, 40, 10, 0xFF000000 | rgb));
-		q.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, vc) -> {
-			ring(pose, vc, 0.16f, 0.38f, 0f, rgb, 46, 40);
-			ring(pose, vc, 0.21f, 0.31f, 0f, rgb, 90, 40);
+		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
+			ring(pose, vc, 0.29f, 0.36f, 0.001f, rgb, 34, 40);
+			ring(pose, vc, 0.22f, 0.29f, 0.001f, rgb, 70, 40);
+			ring(pose, vc, 0.16f, 0.23f, 0.001f, rgb, 34, 40);
 		});
 		ps.popPose();
 	}
@@ -219,8 +231,8 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
 			float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
 			float[][] v = {{c0 * rIn, s0 * rIn}, {c0 * rOut, s0 * rOut}, {c1 * rOut, s1 * rOut}, {c1 * rIn, s1 * rIn}};
-			for (float[] p : v) vc.addVertex(pose, p[0], y, p[1]).setColor(argb);
-			for (int k = 3; k >= 0; k--) vc.addVertex(pose, v[k][0], y, v[k][1]).setColor(argb);
+			for (float[] p : v) vc.addVertex(pose, p[0], y, p[1]).setColor(argb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0f, 1f, 0f);
+			for (int k = 3; k >= 0; k--) vc.addVertex(pose, v[k][0], y, v[k][1]).setColor(argb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, 0f, -1f, 0f);
 		}
 	}
 }

@@ -19,7 +19,7 @@ public abstract class WingsLayerMixin {
 	private static void surge$capeElytra(HumanoidRenderState state, CallbackInfoReturnable<Identifier> cir) {
 		if (!(state instanceof AvatarRenderState) || !Mods.COSMETICS.enabled() || !Mods.COS_CAPE_ELYTRA.on()) return;
 		CapturedLook look = ((SurgeState) state).surge$look();
-		if (look == null || look.cape() == null) return;
+		if (look == null || look.cape() == null || CapeTextures.plainElytra(look.cape())) return;
 		Identifier tex = CapeTextures.get(look.cape());
 		if (tex != null) cir.setReturnValue(tex);
 	}

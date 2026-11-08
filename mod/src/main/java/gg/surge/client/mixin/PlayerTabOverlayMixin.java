@@ -19,7 +19,7 @@ public abstract class PlayerTabOverlayMixin {
 		if (name == null) return;
 		net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
 		if (mc.player != null && info.getProfile().id().equals(mc.player.getUUID())) name = gg.surge.client.features.NickHider.apply(name);
-		cir.setReturnValue(Badges.show(info.getProfile().id()) ? Badges.prefix(name) : name);
+		cir.setReturnValue(Badges.show(info.getProfile().id()) ? Badges.prefix(info.getProfile().id(), name) : name);
 	}
 
 	@Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)

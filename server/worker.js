@@ -1,4 +1,4 @@
-import { adminSetup, adminApi, publicData, redeemCode } from './admin.js';
+import { adminSetup, adminApi, publicData, redeemCode, inbox, claimGifts, playerExtras, capeImage } from './admin.js';
 import { ADMIN_PAGE } from './admin-page.js';
 const FRESH_MS = 15 * 60 * 1000;
 const ONLINE_MS = 3 * 60 * 1000;
@@ -303,7 +303,19 @@ export default {
       const { results } = await db.prepare(q).bind(Date.now() - FRESH_MS, ...ids).all();
       const players = {};
       for (const r of results) players[r.uuid] = { ...JSON.parse(r.data), seen: r.seen };
+      const found = Object.keys(players);
+      if (found.length) {
+        const extra = await playerExtras(db, found).catch(() => ({}));
+        for (const k of found) if (extra[k]) Object.assign(players[k], extra[k]);
+      }
       return json({ players, now: Date.now() });
+    }
+
+    const capeMatch = p.match(/^\/v1\/cape\/([0-9a-f]{32})$/);
+    if (capeMatch && req.method === 'GET') {
+      const png = await capeImage(db, capeMatch[1]);
+      if (!png) return new Response('not found', { status: 404 });
+      return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=300', 'access-control-allow-origin': '*' } });
     }
 
     if (!p.startsWith('/v1/')) return json({ name: 'Surge Client service', ok: true });
@@ -311,6 +323,9 @@ export default {
     if (!u) return json({ error: 'Sign in through the Surge launcher' }, 401);
     const id = u.uuid;
     const target = norm(body.uuid);
+
+    if (p === '/v1/inbox' && req.method === 'GET') return json(await inbox(db, id));
+    if (p === '/v1/inbox/claim' && req.method === 'POST') return json(await claimGifts(db, id, body.ids));
 
     if (p === '/v1/social' && req.method === 'GET') {
       const now = Date.now();

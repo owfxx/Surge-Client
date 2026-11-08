@@ -26,6 +26,7 @@ public final class Sales {
 
 	private static List<Sale> local = new ArrayList<>();
 	private static List<Sale> remote = new ArrayList<>();
+	private static volatile List<Sale> personal = new ArrayList<>();
 	private static boolean loaded;
 
 	private Sales() {}
@@ -54,6 +55,18 @@ public final class Sales {
 			List<Sale> r = parse(Wallet.fetchRemote());
 			remote = r;
 		});
+	}
+
+	public static void applyPersonal(JsonArray arr) {
+		List<Sale> out = new ArrayList<>();
+		for (JsonElement e : arr) {
+			try { out.add(GSON.fromJson(e, Sale.class)); } catch (Exception ignored) { }
+		}
+		personal = out;
+	}
+
+	public static List<Sale> personal() {
+		return personal;
 	}
 
 	public static void applyRemote(JsonElement root) {
@@ -85,8 +98,8 @@ public final class Sales {
 	public static int discount(Shop.Item item) {
 		if (!loaded) load();
 		int best = 0;
-		for (List<Sale> list : List.of(local, remote)) {
-			for (Sale s : list) if (s.active() && matches(s, item)) best = Math.max(best, Math.min(90, s.percent));
+		for (List<Sale> list : List.of(local, remote, personal)) {
+			for (Sale s : list) if (s.active() && matches(s, item)) best = Math.max(best, Math.min(100, s.percent));
 		}
 		return best;
 	}

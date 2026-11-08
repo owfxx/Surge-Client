@@ -29,14 +29,14 @@ public final class Shop {
 			{"cape:galaxy", "Galaxy Cape", "1100"},
 			{"cape:custom", "Color Cape", "300"},
 			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
-			{"cape:beta", "Beta Tester Cape", "0"}};
+			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
 		String[][] emotes = {
 			{"WAVE", "600"}, {"CLAP", "600"}, {"FACEPALM", "650"}, {"DAB", "750"},
 			{"SHRUG", "600"}, {"SALUTE", "600"}, {"CHEER", "800"}, {"LAUGH", "700"},
 			{"BOW", "650"}, {"HEART", "850"}, {"FLOSS", "1000"}, {"TPOSE", "600"}, {"CRY", "750"},
-			{"SIT", "600"}, {"GRIDDY", "1200"},
+			{"SIT", "600"}, {"GRIDDY", "1200"}, {"SHUFFLE", "1100"},
 			{"DISCO", "1000"}};
 		for (String[] e : emotes) {
 			gg.surge.client.emotes.Emotes.Emote em = gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]);
@@ -44,9 +44,27 @@ public final class Shop {
 		}
 	}
 
+	public static final java.util.Map<String, Integer> OVERRIDES = new java.util.concurrent.ConcurrentHashMap<>();
+
+	public static int basePrice(Item item) {
+		Integer o = OVERRIDES.get(item.id());
+		return o != null ? o : item.price();
+	}
+
 	public static int price(Item item) {
+		int base = basePrice(item);
 		int pct = Sales.discount(item);
-		return pct <= 0 ? item.price() : Math.max(0, Math.round(item.price() * (100 - pct) / 100f));
+		return pct <= 0 ? base : Math.max(0, Math.round(base * (100 - pct) / 100f));
+	}
+
+	public static void applyRemote(com.google.gson.JsonElement root) {
+		if (root == null || !root.isJsonObject() || !root.getAsJsonObject().has("prices")) return;
+		java.util.Map<String, Integer> m = new java.util.HashMap<>();
+		try {
+			for (var en : root.getAsJsonObject().getAsJsonObject("prices").entrySet()) m.put(en.getKey(), Math.max(0, en.getValue().getAsInt()));
+		} catch (Exception ignored) { return; }
+		OVERRIDES.clear();
+		OVERRIDES.putAll(m);
 	}
 
 	public static Item byId(String id) {

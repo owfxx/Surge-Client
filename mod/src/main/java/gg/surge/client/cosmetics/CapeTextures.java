@@ -39,14 +39,29 @@ public final class CapeTextures {
 			return "beta2_" + (p.length > 2 ? p[2] : "141418") + "_ffffff_beta_tester";
 		}
 		if (style.startsWith("classic_")) return "custom_8f50f2";
+		if (style.equals("image")) return "image_" + gg.surge.client.net.Social.myId();
 		return style;
 	}
 
-	private static final Map<String, int[]> ANIM = Map.of(
-		"flame", new int[]{16, 70},
-		"enchanted", new int[]{16, 90},
-		"runes", new int[]{24, 90},
-		"blinkcat", new int[]{4, 0});
+	private static final Map<String, int[]> ANIM = Map.ofEntries(
+		Map.entry("flame", new int[]{16, 70}),
+		Map.entry("enchanted", new int[]{16, 90}),
+		Map.entry("runes", new int[]{24, 90}),
+		Map.entry("blinkcat", new int[]{2, 0}),
+		Map.entry("aurora", new int[]{16, 140}),
+		Map.entry("emerald", new int[]{16, 110}),
+		Map.entry("galaxy", new int[]{24, 120}),
+		Map.entry("midnight", new int[]{20, 160}),
+		Map.entry("ocean", new int[]{16, 120}),
+		Map.entry("royal", new int[]{16, 110}),
+		Map.entry("sakura", new int[]{20, 130}),
+		Map.entry("surge", new int[]{16, 110}),
+		Map.entry("void", new int[]{16, 120}));
+
+	public static boolean plainElytra(String style) {
+		String k = resolve(style);
+		return k != null && (k.equals("blinkcat") || k.startsWith("image_"));
+	}
 
 	private static int blink(long now) {
 		long cycle = now / 11000, in = now % 11000;
@@ -63,7 +78,7 @@ public final class CapeTextures {
 
 	private static int frame(int[] spec) {
 		long now = System.currentTimeMillis();
-		if (spec[1] == 0) return blink(now);
+		if (spec[1] == 0) return Math.min(spec[0] - 1, blink(now));
 		if (spec.length == 2) return (int) ((now / spec[1]) % spec[0]);
 		int total = 0;
 		for (int i = 1; i < spec.length; i++) total += spec[i];
@@ -72,11 +87,27 @@ public final class CapeTextures {
 		return 0;
 	}
 
+	private static final Map<String, Anim> ANIMS = new HashMap<>();
+
+	private static final class Anim {
+		final Identifier id;
+		final DynamicTexture tex;
+		final NativeImage[] frames;
+		int shown = -1;
+
+		Anim(Identifier id, DynamicTexture tex, int n) {
+			this.id = id;
+			this.tex = tex;
+			this.frames = new NativeImage[n];
+		}
+	}
+
 	public static Identifier get(String style) {
 		String key = resolve(style);
 		if (key == null) return null;
+		if (key.startsWith("image_")) return ImageCapes.get(key.substring(6));
 		int[] spec = ANIM.get(key);
-		if (spec != null) key = key + "#" + frame(spec);
+		if (spec != null) return animated(key, spec);
 		Identifier id = CACHE.get(key);
 		if (id != null) return id;
 		NativeImage img;
@@ -94,6 +125,36 @@ public final class CapeTextures {
 		}
 		CACHE.put(key, id);
 		return id;
+	}
+
+	private static Identifier animated(String key, int[] spec) {
+		int f = frame(spec);
+		Anim a = ANIMS.get(key);
+		try {
+			if (a == null) {
+				NativeImage first = build(key + "#" + f);
+				if (first == null) return Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_surge.png");
+				Identifier id = Identifier.fromNamespaceAndPath("surge", "capes/anim_" + key);
+				NativeImage pixels = new NativeImage(first.getWidth(), first.getHeight(), true);
+				pixels.copyFrom(first);
+				DynamicTexture tex = new DynamicTexture(() -> "surge cape " + key, pixels);
+				Minecraft.getInstance().getTextureManager().register(id, tex);
+				a = new Anim(id, tex, spec[0]);
+				a.frames[f] = first;
+				a.shown = f;
+				ANIMS.put(key, a);
+				return id;
+			}
+			if (a.shown != f) {
+				if (a.frames[f] == null) a.frames[f] = build(key + "#" + f);
+				if (a.frames[f] != null && a.tex.getPixels() != null) {
+					a.tex.getPixels().copyFrom(a.frames[f]);
+					a.tex.upload();
+				}
+				a.shown = f;
+			}
+		} catch (Throwable ignored) { }
+		return a == null ? Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_surge.png") : a.id;
 	}
 
 	private static int hex(String s, int def) {
@@ -209,6 +270,21 @@ public final class CapeTextures {
 		return img;
 	}
 
+	private static int sample(NativeImage src, float x, float y) {
+		int w = src.getWidth(), h = src.getHeight();
+		x = Math.max(0, Math.min(w - 1.001f, x - 0.5f));
+		y = Math.max(0, Math.min(h - 1.001f, y - 0.5f));
+		int x0 = (int) x, y0 = (int) y;
+		float fx = x - x0, fy = y - y0;
+		int a = src.getPixel(x0, y0), b = src.getPixel(x0 + 1, y0), c = src.getPixel(x0, y0 + 1), d = src.getPixel(x0 + 1, y0 + 1);
+		return lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
+	}
+
+	private static int shade(int c, float k) {
+		int r = Math.round(((c >> 16) & 255) * k), g = Math.round(((c >> 8) & 255) * k), b = Math.round((c & 255) * k);
+		return 0xFF000000 | (r << 16) | (g << 8) | b;
+	}
+
 	private static NativeImage build(String key) {
 		int w = 512, h = 256;
 		if (key.startsWith("custom_")) {
@@ -240,13 +316,17 @@ public final class CapeTextures {
 		for (int y = 0; y < 22 * s; y++) for (int x = 22 * s; x < 46 * s; x++) {
 			int c = img.getPixel(x, y);
 			if (((c >>> 24) & 255) > 8) continue;
-			int u = x / s, v = y / s;
-			int fx;
-			if (u >= 24 && u < 34) fx = s + (x - 24 * s);
-			else if (u >= 36) fx = s + (x - 36 * s);
-			else fx = u < 24 ? s : 11 * s - 1;
-			int fy = v < 2 ? s : s + Math.min(16 * s - 1, (y - 2 * s) * 16 / 20);
-			img.setPixel(x, y, src.getPixel(Math.min(sw - 1, fx), Math.min(sh - 1, fy) + oy));
+			float u = x / (float) s, v = y / (float) s;
+			float fu;
+			if (u >= 24 && u < 34) fu = 1 + (u - 24);
+			else if (u >= 36) fu = 1 + (u - 36);
+			else fu = u < 24 ? 1 : 10.9f;
+			float fv = v < 2 ? 1 : 1 + Math.min(15.99f, (v - 2) * 16f / 20f);
+			int col = sample(src, fu * s, fv * s + oy);
+			float edge = Math.min(Math.min(u - 22, 46 - u), Math.min(v, 22 - v));
+			if (u >= 24 && u < 34) edge = Math.min(edge, Math.min(u - 24, 34 - u) + 0.5f);
+			float dark = edge < 0.6f ? 0.7f : 1f;
+			img.setPixel(x, y, shade(col, dark));
 		}
 		return img;
 	}

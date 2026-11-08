@@ -11,6 +11,24 @@
 		},
 		{
 			"type": "bitmap",
+			"file": "surge:font/badges.png",
+			"ascent": 8,
+			"height": 9,
+			"chars": [
+				"\ue001\ue002\ue003\ue004\ue005\ue006\ue007"
+			]
+		},
+		{
+			"type": "bitmap",
+			"file": "surge:font/badge_owner.png",
+			"ascent": 8,
+			"height": 9,
+			"chars": [
+				"\ue010\ue011\ue012\ue013\ue014\ue015\ue016\ue017"
+			]
+		},
+		{
+			"type": "bitmap",
 			"file": "surge:font/flags.png",
 			"ascent": 7,
 			"height": 8,

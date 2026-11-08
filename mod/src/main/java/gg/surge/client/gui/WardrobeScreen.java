@@ -62,7 +62,7 @@ public class WardrobeScreen extends Screen {
 	private String message = "";
 	private int messageColor = Ui.ACCENT_2;
 	private long messageAt;
-	private boolean wasL = true, wasR = true, redeeming;
+	private boolean wasL = true, wasR = true, redeeming, wasEnter = true;
 	private int m, top, stageX, stageW, gx, gw, gridTop, gridH, mx0, mw, wy, wh;
 	private float scroll, scrollTarget;
 	private int contentH;
@@ -221,6 +221,7 @@ public class WardrobeScreen extends Screen {
 				for (String id : r.items()) { Shop.Item i = Shop.byId(id); parts.add(i != null ? i.name() : id); }
 				toast("Redeemed: " + String.join(", ", parts), 0xFF8CFFA0);
 				codeBox.setValue("");
+				GiftScreen.show("Code redeemed!", "Here's what you got.", r.coins(), r.items());
 			} else {
 				toast(switch (r.error()) {
 					case 2 -> "You already redeemed this code";
@@ -899,7 +900,9 @@ public class WardrobeScreen extends Screen {
 			codeBox.setY(cy + 18);
 			codeBox.setWidth(bw - 14);
 			codeBox.render(g, mx, my, delta);
-			if (GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_ENTER) == GLFW.GLFW_PRESS && codeBox.isFocused() && !redeeming) action = this::redeem;
+			boolean enter = GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_ENTER) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(minecraft.getWindow().handle(), GLFW.GLFW_KEY_KP_ENTER) == GLFW.GLFW_PRESS;
+			if (enter && !wasEnter && codeBox.isFocused() && !redeeming) action = this::redeem;
+			wasEnter = enter;
 		}
 		if (bigButton(g, mx, my, x + bw + 6, cy + 12, 70, 20, redeeming ? "…" : "Redeem", true, true, false) && click) action = this::redeem;
 		if (!message.isEmpty() && System.currentTimeMillis() - messageAt < 8000) {

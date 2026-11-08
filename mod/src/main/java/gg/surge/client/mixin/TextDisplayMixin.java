@@ -17,6 +17,6 @@ public abstract class TextDisplayMixin {
 		Entity self = (Entity) (Object) this;
 		if (!self.level().isClientSide()) return;
 		Entity v = self.getVehicle();
-		if (v instanceof Player p && cir.getReturnValue() != null && !cir.getReturnValue().getString().isBlank() && Badges.show(p.getUUID())) cir.setReturnValue(Badges.prefix(cir.getReturnValue()));
+		if (v instanceof Player p && cir.getReturnValue() != null && !cir.getReturnValue().getString().isBlank() && Badges.show(p.getUUID())) cir.setReturnValue(Badges.prefix(p.getUUID(), cir.getReturnValue()));
 	}
 }

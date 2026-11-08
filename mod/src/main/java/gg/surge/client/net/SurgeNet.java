@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class SurgeNet {
 	public static final class Remote {
-		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none";
+		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none", badge = "";
 		public volatile long emoteAt, emoteStart;
 	}
 
@@ -198,6 +198,8 @@ public final class SurgeNet {
 					rem.halo = str(d, "halo");
 					rem.cape = str(d, "cape");
 					rem.flag = str(d, "flag");
+					rem.badge = d.has("badge") && !d.get("badge").isJsonNull() ? d.get("badge").getAsString() : "";
+					if (d.has("capev") && !d.get("capev").isJsonNull()) gg.surge.client.cosmetics.ImageCapes.version(en.getKey().replace("-", ""), d.get("capev").getAsLong());
 					String em = str(d, "emote");
 					long at = d.has("emoteAt") ? d.get("emoteAt").getAsLong() : 0;
 					if (at != rem.emoteAt) {
