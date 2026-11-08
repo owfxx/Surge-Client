@@ -76,6 +76,12 @@ jobs:
         working-directory: mod
         shell: bash
         run: |
+          V=$(sed -n 's/.*gradle-\([0-9.]*\)-bin.zip/\1/p' gradle/wrapper/gradle-wrapper.properties)
+          if ! curl -sfIL --max-time 20 "https://services.gradle.org/distributions/gradle-$V-bin.zip" >/dev/null; then
+            for M in "https://github.com/gradle/gradle-distributions/releases/download/v$V/gradle-$V-bin.zip" "https://mirrors.cloud.tencent.com/gradle/gradle-$V-bin.zip"; do
+              if curl -sfIL --max-time 20 "$M" >/dev/null; then sed -i "s#^distributionUrl=.*#distributionUrl=${M//:/\\:}#" gradle/wrapper/gradle-wrapper.properties; echo "using $M"; break; fi
+            done
+          fi
           for i in 1 2 3 4; do ./gradlew.bat build && exit 0; echo "retry $i"; sleep 20; done
           exit 1
 
@@ -149,6 +155,12 @@ jobs:
           ALSOFT_DRIVERS: 'null'
         run: |
           chmod +x gradlew
+          V=$(sed -n 's/.*gradle-\([0-9.]*\)-bin.zip/\1/p' gradle/wrapper/gradle-wrapper.properties)
+          if ! curl -sfIL --max-time 20 "https://services.gradle.org/distributions/gradle-$V-bin.zip" >/dev/null; then
+            for M in "https://github.com/gradle/gradle-distributions/releases/download/v$V/gradle-$V-bin.zip" "https://mirrors.cloud.tencent.com/gradle/gradle-$V-bin.zip"; do
+              if curl -sfIL --max-time 20 "$M" >/dev/null; then sed -i "s#^distributionUrl=.*#distributionUrl=${M//:/\\:}#" gradle/wrapper/gradle-wrapper.properties; echo "using $M"; break; fi
+            done
+          fi
           for i in 1 2 3 4; do ./gradlew --version >/dev/null && break; sleep 20; done
           timeout 1200 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest --no-configuration-cache || true
           ls -la run/screenshots || true
