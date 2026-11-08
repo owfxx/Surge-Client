@@ -64,7 +64,7 @@ public final class CapeTextures {
 		Map.entry("koi", new int[]{24, 120}),
 		Map.entry("bloodmoon", new int[]{20, 120}),
 		Map.entry("obsidian", new int[]{16, 110}),
-		Map.entry("frost", new int[]{16, 130}),);
+		Map.entry("frost", new int[]{16, 130}));
 
 	public static boolean plainElytra(String style) {
 		String k = resolve(style);
@@ -298,6 +298,7 @@ public final class CapeTextures {
 		if (key.startsWith("custom_")) {
 			NativeImage img = new NativeImage(w, h, true);
 			fill(img, key.substring(7));
+			wings(img, 8);
 			return img;
 		}
 		if (key.startsWith("beta2_")) {
@@ -310,6 +311,7 @@ public final class CapeTextures {
 			boolean hasText = TEXTS.contains(text) && !text.equals("none");
 			overlay(img, source(hasText ? "textures/cosmetic/cape_overlay_logo.png" : "textures/cosmetic/cape_overlay_logo_center.png"), tint);
 			if (hasText) overlay(img, source("textures/cosmetic/cape_text_" + text + ".png"), tint);
+			wings(img, 8);
 			return img;
 		}
 		if (key.startsWith("runes#")) return runes(Integer.parseInt(key.substring(6)));
@@ -321,21 +323,50 @@ public final class CapeTextures {
 		if (oy + sh > src.getHeight()) oy = 0;
 		NativeImage img = new NativeImage(sw, sh, true);
 		for (int y = 0; y < sh; y++) for (int x = 0; x < sw; x++) img.setPixel(x, y, src.getPixel(x, y + oy));
-		for (int y = 0; y < 22 * s; y++) for (int x = 22 * s; x < 46 * s; x++) {
-			int c = img.getPixel(x, y);
-			if (((c >>> 24) & 255) > 8) continue;
-			float u = x / (float) s, v = y / (float) s;
-			float fu;
-			if (u >= 24 && u < 34) fu = 1 + (u - 24);
-			else if (u >= 36) fu = 1 + (u - 36);
-			else fu = u < 24 ? 1 : 10.9f;
-			float fv = v < 2 ? 1 : 1 + Math.min(15.99f, (v - 2) * 16f / 20f);
-			int col = sample(src, fu * s, fv * s + oy);
-			float edge = Math.min(Math.min(u - 22, 46 - u), Math.min(v, 22 - v));
-			if (u >= 24 && u < 34) edge = Math.min(edge, Math.min(u - 24, 34 - u) + 0.5f);
-			float dark = edge < 0.6f ? 0.7f : 1f;
-			img.setPixel(x, y, shade(col, dark));
-		}
+		wings(img, s);
 		return img;
+	}
+
+	private static boolean inWing(float fx, float fy) {
+		if (fy < 0 || fy > 20 || fx < 0 || fx > 10) return false;
+		float tip = 15.5f + 2.6f * (float) Math.abs(Math.sin((fx + 0.6f) * Math.PI / 2.6f)) - fx * 0.25f;
+		if (fy > tip) return false;
+		if (fy > 12f && fx > 10f - (fy - 12f) * 0.55f) return false;
+		return true;
+	}
+
+	private static void wings(NativeImage img, int s) {
+		int src = img.getWidth();
+		NativeImage copy = new NativeImage(src, img.getHeight(), true);
+		copy.copyFrom(img);
+		for (int y = 0; y < 22 * s; y++) for (int x = 22 * s; x < 46 * s; x++) {
+			float u = x / (float) s, v = y / (float) s;
+			boolean face = (u >= 24 && u < 34) || (u >= 36 && u < 46);
+			if (v < 2 || !face) {
+				float fu = u < 24 ? 1.5f : u < 34 ? 1 + (u - 24) : u < 36 ? 10.5f : 1 + (u - 36);
+				int col = sample(copy, Math.min(10.9f, fu) * s, 1.5f * s);
+				img.setPixel(x, y, shade(col, v < 2 ? 1.1f : 0.6f));
+				continue;
+			}
+			boolean back = u >= 36;
+			float fx = back ? 46 - u : u - 24, fy = v - 2;
+			if (!inWing(fx, fy)) { img.setPixel(x, y, 0); continue; }
+			float su = 1 + fx, sv = 1 + Math.min(15.99f, fy * 0.8f);
+			int col = sample(copy, su * s, sv * s);
+			float k = 1.08f - fy / 20f * 0.28f;
+			float rib = 0f;
+			for (int r = 0; r < 4; r++) {
+				float ang = 0.35f + r * 0.32f;
+				float dist = Math.abs((fx - 0.5f) * (float) Math.cos(ang) - fy * (float) Math.sin(ang) * 0.42f + r * 0.1f);
+				rib = Math.max(rib, Math.max(0f, 1f - dist * 3.2f) * (fy / 20f));
+			}
+			k -= rib * 0.18f;
+			boolean edge = !inWing(fx - 0.5f, fy) || !inWing(fx + 0.5f, fy) || !inWing(fx, fy + 0.6f) || fy < 0.5f;
+			int c = shade(col, back ? k * 0.8f : k);
+			if (edge) c = lerp(c, 0xFFFFFFFF, 0.38f);
+			if (fy < 1.2f || fx < 0.8f) c = lerp(c, 0xFFFFFFFF, 0.22f);
+			img.setPixel(x, y, c | 0xFF000000);
+		}
+		copy.close();
 	}
 }
