@@ -1,3 +1,10 @@
+## 1.8.1
+- New Custom Sounds mod (off by default): replace any game sound with one of 14 built in sounds or your own mp3, wav or ogg files. Search every sound in the game, jump to popular ones like hit and level up sounds, and preview everything before you pick it
+- Distant Terrain is much sharper and uses real block colors, so grass, water, sand, snow and trees look like they do up close
+- New Ultra detail level for Distant Terrain, and High is now the default
+- Distant Terrain frees memory for places far away from you
+- Fixed clips not recording when your FPS was low
+
 ## 1.8.0
 - New Distant Terrain (Beta): see land up to 1024 chunks away. It remembers every place you visit, with distance, detail and fog settings
 - New Background FPS mod lowers your FPS when you tab out
