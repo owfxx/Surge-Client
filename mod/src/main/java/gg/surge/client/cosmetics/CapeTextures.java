@@ -42,9 +42,26 @@ public final class CapeTextures {
 		return style;
 	}
 
+	private static final Map<String, int[]> ANIM = Map.of(
+		"flame", new int[]{16, 70},
+		"enchanted", new int[]{16, 90},
+		"blinkcat", new int[]{4, 3600, 70, 130, 70});
+
+	private static int frame(int[] spec) {
+		long now = System.currentTimeMillis();
+		if (spec.length == 2) return (int) ((now / spec[1]) % spec[0]);
+		int total = 0;
+		for (int i = 1; i < spec.length; i++) total += spec[i];
+		long t = now % total;
+		for (int i = 1; i < spec.length; i++) { t -= spec[i]; if (t < 0) return i - 1; }
+		return 0;
+	}
+
 	public static Identifier get(String style) {
 		String key = resolve(style);
 		if (key == null) return null;
+		int[] spec = ANIM.get(key);
+		if (spec != null) key = key + "#" + frame(spec);
 		Identifier id = CACHE.get(key);
 		if (id != null) return id;
 		NativeImage img;
@@ -56,7 +73,7 @@ public final class CapeTextures {
 		if (img == null) return Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/cape_surge.png");
 		id = Identifier.fromNamespaceAndPath("surge", "capes/" + Integer.toHexString(key.hashCode()));
 		Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "surge cape", img));
-		if (CACHE.size() > 64) {
+		if (CACHE.size() > 160) {
 			for (Identifier old : CACHE.values()) Minecraft.getInstance().getTextureManager().release(old);
 			CACHE.clear();
 		}
@@ -138,11 +155,14 @@ public final class CapeTextures {
 			if (hasText) overlay(img, source("textures/cosmetic/cape_text_" + text + ".png"), tint);
 			return img;
 		}
+		int fr = 0;
+		if (key.contains("#")) { fr = Integer.parseInt(key.substring(key.indexOf('#') + 1)); key = key.substring(0, key.indexOf('#')); }
 		NativeImage src = source("textures/cosmetic/cape_" + key + ".png");
 		if (src == null) return null;
-		int sw = src.getWidth(), sh = src.getHeight(), s = sw / 64;
+		int sw = src.getWidth(), sh = sw / 2, s = sw / 64, oy = fr * sh;
+		if (oy + sh > src.getHeight()) oy = 0;
 		NativeImage img = new NativeImage(sw, sh, true);
-		for (int y = 0; y < sh; y++) for (int x = 0; x < sw; x++) img.setPixel(x, y, src.getPixel(x, y));
+		for (int y = 0; y < sh; y++) for (int x = 0; x < sw; x++) img.setPixel(x, y, src.getPixel(x, y + oy));
 		for (int y = 0; y < 22 * s; y++) for (int x = 22 * s; x < 46 * s; x++) {
 			int c = img.getPixel(x, y);
 			if (((c >>> 24) & 255) > 8) continue;
@@ -152,7 +172,7 @@ public final class CapeTextures {
 			else if (u >= 36) fx = s + (x - 36 * s);
 			else fx = u < 24 ? s : 11 * s - 1;
 			int fy = v < 2 ? s : s + Math.min(16 * s - 1, (y - 2 * s) * 16 / 20);
-			img.setPixel(x, y, src.getPixel(Math.min(sw - 1, fx), Math.min(sh - 1, fy)));
+			img.setPixel(x, y, src.getPixel(Math.min(sw - 1, fx), Math.min(sh - 1, fy) + oy));
 		}
 		return img;
 	}

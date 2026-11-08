@@ -1,3 +1,9 @@
+## 1.6.1
+- Flame Cape is animated now
+- New animated Enchanted Cape with a moving glint
+- New Blink Cat Cape, the cat blinks every few seconds
+- Smooth glowing stars and sparks on capes instead of blocky pixels
+
 ## 1.6.0
 - New cleaner icons in the same style as the Surge coin, on the title screen, pause menu and in the mod menu
 - All Surge capes redrawn in high detail

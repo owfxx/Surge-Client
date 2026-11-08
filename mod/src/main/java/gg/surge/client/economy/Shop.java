@@ -23,11 +23,12 @@ public final class Shop {
 			{"wings:gold", "Golden Wings", "1600"},
 			{"halo:angel", "Angel Halo", "900"}, {"halo:surge", "Surge Halo", "1000"}, {"halo:fire", "Fire Halo", "750"},
 			{"halo:enchanted", "Enchanted Halo", "800"}, {"halo:void", "Void Halo", "850"}, {"halo:rose", "Rose Halo", "700"},
-			{"cape:surge", "Surge Cape", "1000"}, {"cape:void", "Void Cape", "800"}, {"cape:flame", "Flame Cape", "750"},
+			{"cape:surge", "Surge Cape", "1000"}, {"cape:void", "Void Cape", "800"}, {"cape:flame", "Flame Cape", "1200"},
 			{"cape:ocean", "Ocean Cape", "700"}, {"cape:aurora", "Aurora Cape", "900"}, {"cape:sakura", "Sakura Cape", "700"},
 			{"cape:midnight", "Midnight Cape", "750"}, {"cape:royal", "Royal Cape", "950"}, {"cape:emerald", "Emerald Cape", "700"},
 			{"cape:galaxy", "Galaxy Cape", "1100"},
 			{"cape:custom", "Color Cape", "300"},
+			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"},
 			{"cape:beta", "Beta Tester Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
