@@ -11,6 +11,9 @@
 - Personal sales and new prices can show up just for you
 - Shuffle is back, with its music
 - New Locator Bar Heads mod shows each player's head on the locator bar
+- Share your profile with a code, and pick when the code runs out
+- Emotes show up for other players much faster
+- Cleaner FPS check icon
 - Discover and Friends look like the Minecraft server list, with server icons, ping and player counts, and your online friends' heads show next to the Friends tab
 
 ## 1.6.4
