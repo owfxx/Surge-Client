@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "surge",
+	"version": "${version}",
+	"name": "Surge Client",
+	"description": "Surge Client for 1.8.9: HUD mods, PvP tweaks, performance and cosmetics. Press Right Shift.",
+	"authors": ["owfx"],
+	"license": "MIT",
+	"icon": "assets/surge/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["gg.surge.legacy.SurgeLegacy"]
+	},
+	"mixins": ["surge-legacy.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "1.8.9"
+	}
+}

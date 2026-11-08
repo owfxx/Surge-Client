@@ -67,7 +67,7 @@ public class SurgeMenuScreen extends Screen {
 	private final List<EditBox> boxes = new ArrayList<>();
 	private boolean needsRebuild;
 
-	private int px, py, pw, ph, cx, cy, cw, ch;
+	private int px, py, pw, ph, cx, cy, cw, ch, wx, wy, ww, wh;
 	private boolean wasL = true, wasR = true, escWas = true;
 	private boolean clickL, clickR, downL;
 	private Runnable action;
@@ -130,8 +130,7 @@ public class SurgeMenuScreen extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		float k = openProgress();
-		g.fill(0, 0, this.width, this.height, Colors.alpha(0xE8141416, k));
-		g.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, Colors.alpha(0x60000000, k));
+		g.fill(0, 0, this.width, this.height, Colors.alpha(0x88000000, k));
 	}
 
 	private float openProgress() {
@@ -142,12 +141,16 @@ public class SurgeMenuScreen extends Screen {
 	@Override
 	protected void init() {
 		if (openedAt == 0) { openedAt = System.currentTimeMillis(); gg.surge.client.features.CustomSounds.preview("preset:pop"); }
-		int m = this.width < 480 ? 6 : 12;
-		SIDEBAR_W = this.width < 480 ? 92 : 112;
-		px = m;
-		py = m;
-		pw = this.width - m * 2;
-		ph = this.height - m * 2;
+		ww = Math.min(this.width - 12, Math.max(420, Math.min(640, Math.round(this.width * 0.75f))));
+		wh = Math.min(this.height - 12, Math.max(240, Math.min(400, Math.round(this.height * 0.8f))));
+		wx = (this.width - ww) / 2;
+		wy = (this.height - wh) / 2;
+		int m = ww < 480 ? 6 : 9;
+		SIDEBAR_W = ww < 480 ? 92 : 108;
+		px = wx + m;
+		py = wy + m;
+		pw = ww - m * 2;
+		ph = wh - m * 2;
 		cx = px + SIDEBAR_W + 10;
 		cy = py + HEADER_H + 6;
 		cw = px + pw - 6 - cx;
@@ -576,6 +579,8 @@ public class SurgeMenuScreen extends Screen {
 			g.pose().translate(0, (1f - k) * 8f);
 		}
 
+		Ui.cutBox(g, wx, wy, ww, wh, 5, 0xF0161618, 0xFF2C2C31);
+		g.fill(px + SIDEBAR_W + 4, py + HEADER_H + 2, px + SIDEBAR_W + 5, py + ph - 2, 0xFF232327);
 		header(g, mx, my, delta);
 		sidebar(g, mx, my);
 

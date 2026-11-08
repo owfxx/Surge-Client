@@ -223,7 +223,15 @@ public final class HudModules {
 		ALL.add(new TextModule("server", "Server Address", Items.BEACON, "The server you're playing on", false, 0.005f, 0.37f, "", "After", "play.example.net",
 			mc -> mc.getCurrentServer() != null ? mc.getCurrentServer().ip : "Singleplayer"));
 		ALL.add(new TextModule("biome", "Biome", Items.GRASS_BLOCK, "The biome you're standing in", false, 0.005f, 0.415f, "", "After", "Plains",
-			mc -> mc.level.getBiome(mc.player.blockPosition()).unwrapKey().map(k -> pretty(k.identifier().getPath())).orElse("Unknown")));
+			mc -> mc.level.getBiome(mc.player.blockPosition()).unwrapKey().map(k -> pretty(k.identifier().getPath())).orElse("Unknown")) {
+			final Setting.Toggle colored = toggle("colored", "Color by biome", true);
+
+			@Override public int fg() {
+				Minecraft mc = Minecraft.getInstance();
+				if (!colored.on() || mc.player == null || mc.level == null) return super.fg();
+				try { return Coordinates.biomeColor(mc.level.getBiome(mc.player.blockPosition()).unwrapKey().map(k -> k.identifier().getPath()).orElse("")); } catch (Exception e) { return super.fg(); }
+			}
+		});
 		ALL.add(new TextModule("day", "Day Counter", Items.SUNFLOWER, "In-game days passed", false, 0.005f, 0.46f, "Day", "Before", "12",
 			mc -> String.valueOf(mc.level.getDayTime() / 24000L)));
 		ALL.add(new TextModule("saturation", "Saturation", Items.COOKED_BEEF, "Your hidden hunger saturation", false, 0.005f, 0.505f, "Saturation", "Before", "5.0",
@@ -268,47 +276,135 @@ public final class HudModules {
 	}
 
 	static final class Coordinates extends HudModule {
+		private record Seg(String text, int color) {}
+
 		final Setting.Choice layout = choice("layout", "Layout", "Vertical", "Vertical", "Horizontal");
-		final Setting.Toggle direction = toggle("direction", "Show direction", true);
-		final Setting.Toggle biome = toggle("biome", "Show biome", false);
+		final Setting.Toggle labels = toggle("labels", "Show X Y Z labels", true);
+		final Setting.Toggle showY = toggle("showY", "Show Y", true);
 		final Setting.Slider decimals = slider("decimals", "Decimals", 0, 0, 2, 1, "");
+		final Setting.Toggle customLabels = toggle("customLabels", "Color labels", false);
+		final Setting.Color labelColor = color("labelColor", "Label color", "6BB8FF").showIf(() -> customLabels.on());
+		final Setting.Toggle direction = toggle("direction", "Show direction", true);
+		final Setting.Choice dirFormat = choice("dirFormat", "Direction style", "Letter", "Letter", "Letter and axis", "Full name").showIf(() -> direction.on());
+		final Setting.Toggle biome = toggle("biome", "Show biome", false);
+		final Setting.Toggle biomeColor = toggle("biomeColor", "Color biome by type", true).showIf(() -> biome.on());
+		final Setting.Toggle chunk = toggle("chunk", "Show chunk", false);
+		final Setting.Toggle otherDim = toggle("otherDim", "Show Nether or Overworld position", false);
 
-		Coordinates() { super("coords", "Coordinates", Items.FILLED_MAP, "Your X Y Z position", true, 0.005f, 0.10f); }
+		Coordinates() { super("coords", "Coordinates", Items.FILLED_MAP, "Your position, direction, biome and chunk", true, 0.005f, 0.10f); }
 
-		private List<String> lines(Minecraft mc) {
-			List<String> out = new ArrayList<>();
+		private static final Map<String, String> FULL = Map.of("N", "North", "S", "South", "E", "East", "W", "West", "NE", "North East", "NW", "North West", "SE", "South East", "SW", "South West");
+		private static final Map<String, String> AXIS = Map.of("N", "-Z", "S", "+Z", "E", "+X", "W", "-X", "NE", "+X -Z", "NW", "-X -Z", "SE", "+X +Z", "SW", "-X +Z");
+
+		private String dir(LocalPlayer p) {
+			String d = p == null ? "N" : facing(p);
+			return switch (dirFormat.get()) {
+				case "Letter and axis" -> d + " " + AXIS.get(d);
+				case "Full name" -> FULL.get(d);
+				default -> d;
+			};
+		}
+
+		static int biomeColor(String id) {
+			String b = id.toLowerCase(java.util.Locale.ROOT);
+			if (b.contains("nether") || b.contains("crimson") || b.contains("basalt")) return 0xFFFF6B5A;
+			if (b.contains("warped")) return 0xFF3DD6C4;
+			if (b.contains("soul")) return 0xFF9C8AE0;
+			if (b.contains("end")) return 0xFFD6A8FF;
+			if (b.contains("frozen") || b.contains("snow") || b.contains("ice") || b.contains("grove") || b.contains("jagged") || b.contains("peaks")) return 0xFFDFF4FF;
+			if (b.contains("deep_dark")) return 0xFF4F7C8A;
+			if (b.contains("ocean") || b.contains("river")) return 0xFF4FA3FF;
+			if (b.contains("beach")) return 0xFFF2E3A4;
+			if (b.contains("desert")) return 0xFFF1D27A;
+			if (b.contains("badlands")) return 0xFFE8874A;
+			if (b.contains("savanna")) return 0xFFC9C25A;
+			if (b.contains("jungle") || b.contains("bamboo")) return 0xFF3FD35A;
+			if (b.contains("swamp")) return 0xFF8BA65A;
+			if (b.contains("mushroom")) return 0xFFE07AC6;
+			if (b.contains("cherry")) return 0xFFFFB3D9;
+			if (b.contains("pale")) return 0xFFC8CCC4;
+			if (b.contains("dark_forest")) return 0xFF4FA84F;
+			if (b.contains("taiga")) return 0xFF6FB89A;
+			if (b.contains("lush") || b.contains("meadow") || b.contains("flower")) return 0xFFA6F07A;
+			if (b.contains("dripstone") || b.contains("stony") || b.contains("windswept")) return 0xFFB0B4BA;
+			if (b.contains("forest") || b.contains("birch")) return 0xFF6BD86B;
+			if (b.contains("plains") || b.contains("sunflower")) return 0xFF9FE26F;
+			return 0xFFFFFFFF;
+		}
+
+		private List<List<Seg>> lines(Minecraft mc) {
+			List<List<Seg>> out = new ArrayList<>();
 			LocalPlayer p = mc.player;
+			int fg = fg(), lc = customLabels.on() ? labelColor.rgb(0) : fg;
 			String f = "%." + decimals.asInt() + "f";
 			double x = p == null ? 128 : p.getX(), y = p == null ? 64 : p.getY(), z = p == null ? -256 : p.getZ();
 			if (layout.is("Horizontal")) {
-				out.add(String.format(f + "  " + f + "  " + f, x, y, z) + (direction.on() ? "  " + (p == null ? "N" : facing(p)) : ""));
+				List<Seg> l = new ArrayList<>();
+				if (labels.on()) l.add(new Seg("XYZ: ", lc));
+				l.add(new Seg(String.format(f, x) + "  " + (showY.on() ? String.format(f, y) + "  " : "") + String.format(f, z), fg));
+				if (direction.on()) l.add(new Seg("  " + dir(p), fg));
+				out.add(l);
 			} else {
-				out.add("X: " + String.format(f, x));
-				out.add("Y: " + String.format(f, y));
-				out.add("Z: " + String.format(f, z));
-				if (direction.on()) out.add("Facing: " + (p == null ? "N" : facing(p)));
+				out.add(row(lc, fg, "X: ", String.format(f, x)));
+				if (showY.on()) out.add(row(lc, fg, "Y: ", String.format(f, y)));
+				out.add(row(lc, fg, "Z: ", String.format(f, z)));
+				if (direction.on()) out.add(row(lc, fg, "Facing: ", dir(p)));
+			}
+			if (chunk.on()) {
+				int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+				out.add(row(lc, fg, "Chunk: ", (bx >> 4) + " " + (bz >> 4) + "  (" + (bx & 15) + " " + (bz & 15) + ")"));
+			}
+			if (otherDim.on()) {
+				boolean nether = mc.level != null && mc.level.dimension() == net.minecraft.world.level.Level.NETHER;
+				boolean end = mc.level != null && mc.level.dimension() == net.minecraft.world.level.Level.END;
+				if (!end) {
+					double k = nether ? 8 : 0.125;
+					out.add(row(lc, fg, nether ? "Overworld: " : "Nether: ", String.format("%d %d", (int) Math.floor(x * k), (int) Math.floor(z * k))));
+				}
 			}
 			if (biome.on()) {
-				String b = "Plains";
-				try { if (p != null) b = mc.level.getBiome(p.blockPosition()).unwrapKey().map(k -> pretty(k.identifier().getPath())).orElse("Unknown"); } catch (Exception ignored) { }
-				out.add(b);
+				String id = "plains";
+				try { if (p != null) id = mc.level.getBiome(p.blockPosition()).unwrapKey().map(k -> k.identifier().getPath()).orElse("unknown"); } catch (Exception ignored) { }
+				out.add(row(lc, biomeColor.on() ? biomeColor(id) : fg, "Biome: ", pretty(id)));
 			}
 			return out;
 		}
 
+		private List<Seg> row(int lc, int vc, String label, String value) {
+			List<Seg> l = new ArrayList<>();
+			if (labels.on()) l.add(new Seg(label, lc));
+			l.add(new Seg(value, vc));
+			return l;
+		}
+
+		private int lineWidth(Minecraft mc, List<Seg> l) {
+			int w = 0;
+			for (Seg s : l) w += mc.font.width(s.text());
+			return w + mc.font.width(bracket(""));
+		}
+
 		@Override public int width(Minecraft mc) {
 			int w = 40;
-			for (String l : lines(mc)) w = Math.max(w, mc.font.width(bracket(l)) + 8);
+			for (List<Seg> l : lines(mc)) w = Math.max(w, lineWidth(mc, l) + 8);
 			return w;
 		}
 
 		@Override public int height(Minecraft mc) { return lines(mc).size() * 10 + 4; }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			List<String> ls = lines(mc);
-			int w = width(mc);
-			if (bgOn()) g.fill(x, y, x + w, y + height(mc), bg());
-			for (int i = 0; i < ls.size(); i++) text(g, mc, bracket(ls.get(i)), x + 4, y + 3 + i * 10, fg());
+			List<List<Seg>> ls = lines(mc);
+			int w = 40;
+			for (List<Seg> l : ls) w = Math.max(w, lineWidth(mc, l) + 8);
+			if (bgOn()) g.fill(x, y, x + w, y + ls.size() * 10 + 4, bg());
+			String open = bracket("");
+			String left = open.isEmpty() ? "" : open.substring(0, 1), right = open.isEmpty() ? "" : open.substring(1);
+			int fg = fg();
+			for (int i = 0; i < ls.size(); i++) {
+				int cx = x + 4, cy = y + 3 + i * 10;
+				if (!left.isEmpty()) { text(g, mc, left, cx, cy, fg); cx += mc.font.width(left); }
+				for (Seg s : ls.get(i)) { text(g, mc, s.text(), cx, cy, s.color()); cx += mc.font.width(s.text()); }
+				if (!right.isEmpty()) text(g, mc, right, cx, cy, fg);
+			}
 		}
 	}
 

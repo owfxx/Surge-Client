@@ -36,6 +36,8 @@ public final class PerfMods {
 		new Mod("badoptimizations", "badoptimizations", "BadOptimizations", "Many small speedups for lighting, sky and more."),
 		new Mod("vmp-fabric", "vmp", "Very Many Players", "Smoother play on busy servers and with lots of entities."),
 		new Mod("clumps", "clumps", "Clumps", "Merges XP orbs so farms don't lag."),
+		new Mod("moreculling", "moreculling", "More Culling", "Skips drawing block faces you can't see, like inside leaves."),
+		new Mod("scalablelux", "scalablelux", "ScalableLux", "Faster lighting updates when blocks change."),
 		new Mod("entityculling", "entityculling", "Entity Culling", "Skips mobs and chests hidden behind walls."),
 		new Mod("immediatelyfast", "immediatelyfast", "ImmediatelyFast", "Faster HUD, text and item rendering."),
 		new Mod("modernfix", "modernfix", "ModernFix", "Faster start-up and less RAM."),

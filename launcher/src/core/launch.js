@@ -137,15 +137,15 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
   onProgress({ stage: 'Syncing Surge mod…' });
   applyPendingModToggles(inst);
   if (inst.loader === 'fabric' && inst.perfChecked === 4) {
-    const extra = new Set(['Entity Culling', 'ImmediatelyFast', 'ModernFix', 'More Culling', 'Krypton', 'ScalableLux']);
+    const extra = new Set(['Entity Culling', 'ImmediatelyFast', 'ModernFix', 'Krypton']);
     for (const c of (instances.get(inst.id).content || []).slice()) {
       if (c.locked && c.type === 'mod' && extra.has(c.title)) { try { instances.removeContent(inst.id, 'mod', c.file); } catch { } }
     }
-    instances.update(inst.id, { perfChecked: 5 });
-  } else if (inst.loader === 'fabric' && inst.perfChecked !== 3 && inst.perfChecked !== 5 && inst.autoPerf !== false) {
+  }
+  if (inst.loader === 'fabric' && inst.perfChecked !== 6 && inst.autoPerf !== false) {
     onProgress({ stage: 'Adding performance mods…' });
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
-    instances.update(inst.id, { perfChecked: 5 });
+    instances.update(inst.id, { perfChecked: 6 });
   }
   if (inst.loader === 'fabric' && !inst.voiceChecked) {
     onProgress({ stage: 'Adding Simple Voice Chat…' });

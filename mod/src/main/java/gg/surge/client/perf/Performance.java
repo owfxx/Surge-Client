@@ -131,6 +131,12 @@ public final class Performance {
 		Map<String, Object> saved = c.saved;
 		boolean reload = false;
 		if (c.boostVersion < 2) { c.boost.clear(); c.boostVersion = 2; }
+		java.nio.file.Path mark = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve(".surge-fps");
+		if (!java.nio.file.Files.exists(mark)) {
+			o.enableVsync().set(false);
+			o.framerateLimit().set(260);
+			try { java.nio.file.Files.writeString(mark, "1"); } catch (Exception ignored) { }
+		}
 
 		for (int i = FEATURES.size() - 1; i >= 0; i--) {
 			Feature f = FEATURES.get(i);
