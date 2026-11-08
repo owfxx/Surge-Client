@@ -100,7 +100,7 @@ async function download(env, mod) {
 }
 
 const DISCORD = 'https://discord.gg/7wGxqGN86R';
-const SHOWCASE = [['storm', 'Storm', 24, 110], ['chroma', 'Chroma', 24, 90], ['galaxy', 'Galaxy', 24, 120], ['lava', 'Lava', 20, 110], ['neon', 'Neon', 16, 100], ['aurora', 'Aurora', 16, 140], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
+const SHOWCASE = [['koi', 'Koi', 24, 120], ['phoenix', 'Phoenix', 20, 90], ['storm', 'Storm', 24, 110], ['bloodmoon', 'Blood Moon', 20, 120], ['obsidian', 'Obsidian', 16, 110], ['lava', 'Lava', 20, 110], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
 
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 

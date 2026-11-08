@@ -57,12 +57,14 @@ public final class CapeTextures {
 		Map.entry("sakura", new int[]{20, 130}),
 		Map.entry("surge", new int[]{16, 110}),
 		Map.entry("void", new int[]{16, 120}),
-		Map.entry("chroma", new int[]{24, 90}),
 		Map.entry("lava", new int[]{20, 110}),
 		Map.entry("matrix", new int[]{20, 80}),
 		Map.entry("storm", new int[]{24, 110}),
-		Map.entry("frost", new int[]{16, 130}),
-		Map.entry("neon", new int[]{16, 100}));
+		Map.entry("phoenix", new int[]{20, 90}),
+		Map.entry("koi", new int[]{24, 120}),
+		Map.entry("bloodmoon", new int[]{20, 120}),
+		Map.entry("obsidian", new int[]{16, 110}),
+		Map.entry("frost", new int[]{16, 130}),);
 
 	public static boolean plainElytra(String style) {
 		String k = resolve(style);

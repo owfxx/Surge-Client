@@ -73,7 +73,7 @@ public final class AutoTest {
 		STEPS.add(new Step("05e-rune-cape", 25, mc -> { SurgeConfig.get().cape = "runes"; SurgeConfig.get().wings = "none"; }));
 		STEPS.add(new Step("05f-flame-cape", 25, mc -> { SurgeConfig.get().cape = "flame"; }));
 		STEPS.add(new Step("05g-cat-cape", 25, mc -> { SurgeConfig.get().cape = "blinkcat"; }));
-		STEPS.add(new Step("05h-galaxy-cape", 25, mc -> { SurgeConfig.get().cape = "galaxy"; }));
+		STEPS.add(new Step("05h-koi-cape", 25, mc -> { SurgeConfig.get().cape = "koi"; }));
 		STEPS.add(new Step("05i-angel-wings", 25, mc -> { SurgeConfig.get().cape = "none"; SurgeConfig.get().wings = "angel"; }));
 		STEPS.add(new Step("05j-halo-helmet", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "angel"; mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET)); mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("05c-halo-front", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
@@ -100,11 +100,14 @@ public final class AutoTest {
 		STEPS.add(new Step("07w4-lod-ultra", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Ultra")));
 		STEPS.add(new Step("07w5-lod-full", 140, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Full")));
 		STEPS.add(new Step("07x-lod-stats", 20, mc -> org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats())));
-		STEPS.add(new Step("07xa-wings-angel", 50, mc -> { mc.player.connection.sendCommand("gamemode creative"); mc.player.getAbilities().flying = true; mc.player.onUpdateAbilities(); gg.surge.client.mods.Mods.LOD.setEnabled(false); SurgeConfig.get().cape = "none"; SurgeConfig.get().halo = "none"; SurgeConfig.get().wings = "angel"; mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); mc.player.setXRot(15f); }));
+		STEPS.add(new Step("07xa-wings-angel", 50, mc -> { mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.item.ItemStack.EMPTY); mc.player.connection.sendCommand("gamemode creative"); mc.player.getAbilities().flying = true; mc.player.onUpdateAbilities(); gg.surge.client.mods.Mods.LOD.setEnabled(false); SurgeConfig.get().cape = "none"; SurgeConfig.get().halo = "none"; SurgeConfig.get().wings = "angel"; mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); mc.player.setXRot(15f); }));
 		STEPS.add(new Step("07xb-wings-surge", 40, mc -> { SurgeConfig.get().wings = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("07xc-wings-flame", 40, mc -> { SurgeConfig.get().wings = "flame"; mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); mc.player.setYRot(mc.player.getYRot() + 60f); }));
 		STEPS.add(new Step("07xd-wings-gold", 40, mc -> { SurgeConfig.get().wings = "gold"; }));
-		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); mc.player.connection.sendCommand("tp @s ~ ~-100 ~"); SurgeConfig.get().wings = "none"; }));
+		STEPS.add(new Step("07xe-cape-phoenix", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().cape = "phoenix"; mc.player.setYRot(mc.player.getYRot() - 60f); }));
+		STEPS.add(new Step("07xf-cape-bloodmoon", 30, mc -> SurgeConfig.get().cape = "bloodmoon"));
+		STEPS.add(new Step("07xg-cape-obsidian", 30, mc -> SurgeConfig.get().cape = "obsidian"));
+		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); mc.player.connection.sendCommand("tp @s ~ ~-100 ~"); SurgeConfig.get().wings = "none"; SurgeConfig.get().cape = "none"; }));
 		STEPS.add(new Step("07y-custom-sounds", 40, mc -> { Mods.CUSTOM_SOUNDS.setEnabled(true); gg.surge.client.features.CustomSounds.set("minecraft:entity.player.levelup", "preset:chime"); mc.setScreen(new gg.surge.client.gui.CustomSoundsScreen(null)); gg.surge.client.features.CustomSounds.preview("preset:ding"); }));
 		STEPS.add(new Step("07z-custom-sounds-done", 20, mc -> { mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 1f, 1f)); org.slf4j.LoggerFactory.getLogger("surge").info("Custom sounds mapped: " + gg.surge.client.features.CustomSounds.all()); gg.surge.client.features.CustomSounds.resetAll(); Mods.CUSTOM_SOUNDS.setEnabled(false); open(mc, null); }));
 		STEPS.add(new Step("07u-cleanup", 5, mc -> { Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY); }));
@@ -144,7 +147,7 @@ public final class AutoTest {
 		STEPS.add(new Step("19b-minimap-settings", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("minimap"), null))));
 		STEPS.add(new Step("19c-profiles", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.PROFILES, null))));
 		STEPS.add(new Step("19d-inventory", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
-		STEPS.add(new Step("19e-gift", 40, mc -> gg.surge.client.gui.GiftScreen.show("You've been gifted 2 items!", "Thanks for testing Surge.", 500, java.util.List.of("cape:galaxy", "emote:SHUFFLE"))));
+		STEPS.add(new Step("19e-gift", 40, mc -> gg.surge.client.gui.GiftScreen.show("You've been gifted 2 items!", "Thanks for testing Surge.", 500, java.util.List.of("cape:koi", "emote:SHUFFLE"))));
 		STEPS.add(new Step("19f-admin", 40, mc -> open(mc, new gg.surge.client.gui.AdminScreen(null))));
 		STEPS.add(new Step("19g-profiles-tab", 30, mc -> open(mc, SurgeMenuScreen.profiles(null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
