@@ -50,7 +50,7 @@ public final class Hud {
 			@Override protected String value() { return right.on() ? Stats.leftCps() + " | " + Stats.rightCps() : String.valueOf(Stats.leftCps()); }
 		});
 		ALL.add(new Coordinates());
-		ALL.add(new TextHud("ping", "Ping", st(Items.REPEATER), "Your latency to the server", false, 0.005f, 0.24f, "ms", "After", "32") {
+		ALL.add(new TextHud("ping", "Ping", st(Items.REPEATER), "Your latency to the server", false, 1f, 0.10f, "ms", "After", "32") {
 			final Setting.Toggle colored = toggle("colored", "Color by ping", true);
 
 			@Override protected String value() {
@@ -67,7 +67,7 @@ public final class Hud {
 				return ms < 80 ? 0xFF6BFF8A : ms < 160 ? 0xFFFFE07A : 0xFFFF6B6B;
 			}
 		});
-		ALL.add(new TextHud("speed", "Speed", st(Items.SUGAR), "How fast you're moving", false, 0.005f, 0.285f, "", "After", "5.61 b/s") {
+		ALL.add(new TextHud("speed", "Speed", st(Items.SUGAR), "How fast you're moving", false, 1f, 0.145f, "", "After", "5.61 b/s") {
 			final Setting.Choice unit = choice("unit", "Unit", "b/s", "b/s", "km/h");
 
 			@Override protected String value() {
@@ -77,7 +77,7 @@ public final class Hud {
 				return unit.is("km/h") ? String.format("%.1f km/h", bps * 3.6) : String.format("%.2f b/s", bps);
 			}
 		});
-		ALL.add(new TextHud("clock", "Clock", st(Items.CLOCK), "Real-world time", false, 0.94f, 0.01f, "", "After", "12:00") {
+		ALL.add(new TextHud("clock", "Clock", st(Items.CLOCK), "Real-world time", false, 1f, 0.01f, "", "After", "12:00") {
 			final Setting.Toggle h24 = toggle("24h", "24-hour time", true);
 			final Setting.Toggle seconds = toggle("seconds", "Show seconds", false);
 
@@ -88,13 +88,13 @@ public final class Hud {
 
 			@Override protected String text() { return value(); }
 		});
-		ALL.add(new TextHud("reach", "Reach Display", st(Items.DIAMOND_SWORD), "Distance of your last hit", false, 0.005f, 0.33f, "blocks", "After", "3.04") {
+		ALL.add(new TextHud("reach", "Reach Display", st(Items.DIAMOND_SWORD), "Distance of your last hit", false, 1f, 0.19f, "blocks", "After", "3.04") {
 			@Override protected String value() { return Stats.reach(); }
 		});
-		ALL.add(new TextHud("combo", "Combo Counter", st(Items.BLAZE_POWDER), "Hits in a row without getting hit", false, 0.005f, 0.375f, "combo", "After", "4") {
+		ALL.add(new TextHud("combo", "Combo Counter", st(Items.BLAZE_POWDER), "Hits in a row without getting hit", false, 1f, 0.235f, "combo", "After", "4") {
 			@Override protected String value() { return String.valueOf(Stats.combo()); }
 		});
-		ALL.add(new TextHud("memory", "Memory", st(Items.COMPARATOR), "How much RAM the game is using", false, 0.94f, 0.055f, "", "After", "42%") {
+		ALL.add(new TextHud("memory", "Memory", st(Items.COMPARATOR), "How much RAM the game is using", false, 1f, 0.055f, "", "After", "42%") {
 			@Override protected String value() {
 				Runtime r = Runtime.getRuntime();
 				long used = r.totalMemory() - r.freeMemory();
@@ -103,10 +103,10 @@ public final class Hud {
 
 			@Override protected String text() { return value(); }
 		});
-		ALL.add(new TextHud("server", "Server Address", new ItemStack(Blocks.BEACON), "The server you're playing on", false, 0.005f, 0.42f, "", "After", "play.example.net") {
+		ALL.add(new TextHud("server", "Server Address", new ItemStack(Blocks.BEACON), "The server you're playing on", false, 1f, 0.28f, "", "After", "play.example.net") {
 			@Override protected String value() { return mc().getCurrentServerEntry() != null ? mc().getCurrentServerEntry().address : "Singleplayer"; }
 		});
-		ALL.add(new TextHud("saturation", "Saturation", st(Items.COOKED_BEEF), "Your hidden hunger saturation", false, 0.005f, 0.465f, "Saturation", "Before", "5.0") {
+		ALL.add(new TextHud("saturation", "Saturation", st(Items.COOKED_BEEF), "Your hidden hunger saturation", false, 1f, 0.325f, "Saturation", "Before", "5.0") {
 			@Override protected String value() { return String.format("%.1f", mc().player.getHungerManager().getSaturationLevel()); }
 		});
 		ALL.add(new TextHud("sprint", "Action Status", st(Items.FEATHER), "Shows if you are sprinting, sneaking or flying", true, 0.005f, 0.96f, "", "After", "Sprinting (Toggled)") {
@@ -116,7 +116,7 @@ public final class Hud {
 
 			@Override public void render(int x, int y) { if (!value().isEmpty() || mc().player == null) super.render(x, y); }
 		});
-		ALL.add(new TextHud("biome", "Biome", new ItemStack(Blocks.GRASS), "The biome you're standing in", false, 0.005f, 0.51f, "", "After", "Plains") {
+		ALL.add(new TextHud("biome", "Biome", new ItemStack(Blocks.GRASS), "The biome you're standing in", false, 1f, 0.37f, "", "After", "Plains") {
 			final Setting.Toggle colored = toggle("colored", "Color by biome", true);
 
 			@Override protected String value() { return biomeName(mc()); }
@@ -340,7 +340,7 @@ public final class Hud {
 		final Setting.Choice show = choice("show", "Durability", "Number", "Number", "Percent", "Hidden");
 		final Setting.Toggle hand = toggle("hand", "Show held item", true);
 
-		ArmorStatus() { super("armor", "Armor Status", new ItemStack(Items.DIAMOND_CHESTPLATE), "Your armor and its durability", false, 0.90f, 0.70f); }
+		ArmorStatus() { super("armor", "Armor Status", new ItemStack(Items.DIAMOND_CHESTPLATE), "Your armor and its durability", false, 1f, 0.75f); }
 
 		private List<ItemStack> items() {
 			List<ItemStack> out = new ArrayList<ItemStack>();
@@ -393,7 +393,7 @@ public final class Hud {
 		private static final Identifier INV = new Identifier("textures/gui/container/inventory.png");
 		final Setting.Toggle icons = toggle("icons", "Show icons", true);
 
-		Potions() { super("potions", "Potion Effects", new ItemStack(Items.POTION), "Your active effects and how long they last", true, 0.86f, 0.30f); }
+		Potions() { super("potions", "Potion Effects", new ItemStack(Items.POTION), "Your active effects and how long they last", true, 1f, 0.45f); }
 
 		private List<String[]> rows() {
 			List<String[]> out = new ArrayList<String[]>();

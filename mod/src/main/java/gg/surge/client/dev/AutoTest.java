@@ -175,6 +175,12 @@ public final class AutoTest {
 		STEPS.add(new Step("19f-admin", 40, mc -> open(mc, new gg.surge.client.gui.AdminScreen(null))));
 		STEPS.add(new Step("19g-profiles-tab", 30, mc -> open(mc, SurgeMenuScreen.profiles(null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
+		STEPS.add(new Step("21-glass-menu", 40, mc -> { Mods.THEME.set("Custom"); Mods.THEME_COLOR.set("EDEADE"); open(mc, new SurgeMenuScreen(null)); }));
+		STEPS.add(new Step("21b-glass-settings", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("coords"), null))));
+		STEPS.add(new Step("21c-glass-hud", 30, mc -> { Mods.hud("keystrokes").setEnabled(true); Mods.hud("cps").setEnabled(true); open(mc, null); }));
+		STEPS.add(new Step("21d-glass-wardrobe", 40, mc -> open(mc, new gg.surge.client.gui.WardrobeScreen(null))));
+		STEPS.add(new Step("21e-glass-general", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
+		STEPS.add(new Step("21f-glass-off", 20, mc -> { Mods.THEME.set("Ash"); Mods.THEME_COLOR.set("6B6B73"); open(mc, null); }));
 	}
 
 	private static void hover(Minecraft mc, double fx, double fy) {

@@ -779,6 +779,10 @@ async function newPackModal() {
   (card, close) => {
     $('#npName', card).focus();
     $('#npCancel', card).onclick = close;
+    const optRow = $('#npOpt', card).closest('label');
+    const syncOpt = () => { const legacy = /^1\.([0-9]|1[0-3])(\.|$)/.test($('#npVer', card).value); optRow.style.display = legacy ? 'none' : ''; };
+    $('#npVer', card).onchange = syncOpt;
+    syncOpt();
     const create = async () => {
       const name = $('#npName', card).value.trim() || 'My modpack';
       $('#npCreate', card).disabled = true;

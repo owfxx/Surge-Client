@@ -52,6 +52,7 @@ public final class AutoTest {
 	private static void run(MinecraftClient mc) {
 		switch (step) {
 			case 0:
+				mc.options.pauseOnLostFocus = false;
 				if (ticks == 80) { shot(mc, "l01-title"); next(); }
 				break;
 			case 1:
@@ -70,7 +71,7 @@ public final class AutoTest {
 					set("coords", "otherDim", "true");
 					set("coords", "customLabels", "true");
 					set("coords", "dirFormat", "Letter and axis");
-					for (String id : new String[]{"armor", "ping", "biome", "reach", "clock", "memory"}) Config.mod(id).enabled = true;
+					for (String id : new String[]{"armor", "ping", "reach", "clock", "memory"}) Config.mod(id).enabled = true;
 					next();
 				}
 				break;
