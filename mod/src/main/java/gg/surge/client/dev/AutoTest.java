@@ -92,10 +92,10 @@ public final class AutoTest {
 		STEPS.add(new Step("07l-emote-shuffle", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SHUFFLE); }));
 		STEPS.add(new Step("07s-idle-stretch", 120, mc -> { SurgeConfig.get().idle = "IDLE_STRETCH"; }));
 		STEPS.add(new Step("07t-elytra-emote", 40, mc -> { SurgeConfig.get().idle = "none"; Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); Emotes.play(mc, Emotes.Emote.DAB); mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
-		STEPS.add(new Step("07v-lod-collect", 300, mc -> { gg.surge.client.mods.Mods.LOD.setEnabled(true); mc.options.setCameraType(CameraType.FIRST_PERSON); mc.player.setXRot(8f); }));
+		STEPS.add(new Step("07v-lod-collect", 300, mc -> { gg.surge.client.mods.Mods.LOD.setEnabled(true); mc.player.connection.sendCommand("gamemode spectator"); mc.player.connection.sendCommand("tp @s ~ ~100 ~"); mc.options.setCameraType(CameraType.FIRST_PERSON); mc.player.setXRot(20f); }));
 		STEPS.add(new Step("07w-lod-far", 120, mc -> { org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats() + " rd=" + mc.options.getEffectiveRenderDistance()); mc.options.renderDistance().set(3); mc.player.setYRot(mc.player.getYRot() + 180f); }));
 		STEPS.add(new Step("07x-lod-stats", 20, mc -> org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats())));
-		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); }));
+		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); mc.player.connection.sendCommand("tp @s ~ ~-100 ~"); mc.player.connection.sendCommand("gamemode creative"); }));
 		STEPS.add(new Step("07u-cleanup", 5, mc -> { Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY); }));
 		STEPS.add(new Step("07b-featured", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.FEATURED)); }));
 		STEPS.add(new Step("08-wardrobe", 50, mc -> { Emotes.stop(mc); mc.options.setCameraType(CameraType.FIRST_PERSON); open(mc, WardrobeScreen.open(null, WardrobeScreen.Section.COSMETICS)); }));

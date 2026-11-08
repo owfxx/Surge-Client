@@ -220,16 +220,64 @@ public final class Lod {
 		}
 	}
 
+	private record Tex(int color, int tint) {}
+
+	private static final Map<BlockState, Tex> TEX = new ConcurrentHashMap<>();
+	private static final Tex NONE = new Tex(-1, -1);
+
+	private static Tex tex(BlockState st) {
+		Tex t = TEX.get(st);
+		if (t != null) return t;
+		t = NONE;
+		try {
+			var model = Minecraft.getInstance().getModelManager().getBlockModelShaper().getBlockModel(st);
+			net.minecraft.client.renderer.block.model.BakedQuad pick = null;
+			for (var part : model.collectParts(net.minecraft.util.RandomSource.create(42L))) {
+				for (var q : part.getQuads(net.minecraft.core.Direction.UP)) { pick = q; break; }
+				if (pick == null) for (var q : part.getQuads(null)) if (q.direction() == net.minecraft.core.Direction.UP) { pick = q; break; }
+				if (pick != null) break;
+			}
+			var sprite = pick != null ? pick.sprite() : model.particleIcon();
+			int avg = average(sprite);
+			if (avg != -1) t = new Tex(avg, pick != null && pick.isTinted() ? pick.tintIndex() : -1);
+		} catch (Throwable ignored) { }
+		TEX.put(st, t);
+		return t;
+	}
+
+	private static int average(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+		var img = ((gg.surge.client.mixin.SpriteContentsAccessor) sprite.contents()).surge$image();
+		if (img == null) return -1;
+		int w = sprite.contents().width(), h = sprite.contents().height();
+		long r = 0, g = 0, b = 0, n = 0;
+		for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+			int c = img.getPixel(x, y);
+			if (((c >>> 24) & 255) < 128) continue;
+			r += (c >> 16) & 255; g += (c >> 8) & 255; b += c & 255; n++;
+		}
+		if (n == 0) return -1;
+		return (int) (((r / n) << 16) | ((g / n) << 8) | (b / n));
+	}
+
+	private static int multiply(int a, int b) {
+		int r = ((a >> 16) & 255) * ((b >> 16) & 255) / 255;
+		int g = ((a >> 8) & 255) * ((b >> 8) & 255) / 255;
+		int bl = (a & 255) * (b & 255) / 255;
+		return (r << 16) | (g << 8) | bl;
+	}
+
 	private static int colorOf(ClientLevel level, BlockState st, BlockPos pos) {
 		try {
 			if (st.getFluidState().is(FluidTags.WATER)) {
-				Biome b = level.getBiome(pos).value();
-				return mix(b.getWaterColor(), 0x203060, 0.25f);
+				return mix(level.getBiome(pos).value().getWaterColor(), 0x10204A, 0.35f);
 			}
-			if (st.is(Blocks.GRASS_BLOCK) || st.is(Blocks.SHORT_GRASS) || st.is(Blocks.TALL_GRASS) || st.is(Blocks.FERN)) {
-				return mix(level.getBiome(pos).value().getGrassColor(pos.getX(), pos.getZ()), 0x000000, 0.12f);
+			if (st.getFluidState().is(FluidTags.LAVA)) return 0xD9661A;
+			Tex t = tex(st);
+			if (t != NONE) {
+				int c = t.color();
+				if (t.tint() >= 0) c = multiply(c, Minecraft.getInstance().getBlockColors().getColor(st, level, pos, t.tint()));
+				return c;
 			}
-			if (st.is(BlockTags.LEAVES)) return mix(level.getBiome(pos).value().getFoliageColor(), 0x000000, 0.22f);
 			int c = st.getMapColor(level, pos).col;
 			return c == 0 ? 0x7F7F7F : c;
 		} catch (Throwable t) {
@@ -310,6 +358,7 @@ public final class Lod {
 	}
 
 	public static void clear() {
+		TEX.clear();
 		for (Mesh m : MESHES.values()) if (m.buffer != null) m.buffer.close();
 		MESHES.clear();
 		REGIONS.clear();
