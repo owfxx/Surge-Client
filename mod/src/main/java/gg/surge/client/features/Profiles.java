@@ -171,6 +171,56 @@ public final class Profiles {
 		}
 	}
 
+	private static final java.net.http.HttpClient HTTP = java.net.http.HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(8)).build();
+
+	public static void shareCode(int hours, java.util.function.Consumer<String> done) {
+		if (Social.token().isEmpty()) { Social.notice("Sign in first", "Open Surge through the launcher to share codes"); return; }
+		com.google.gson.JsonObject b = new com.google.gson.JsonObject();
+		b.addProperty("name", active().isEmpty() ? "Shared setup" : active());
+		b.addProperty("data", snapshot());
+		b.addProperty("hours", hours);
+		java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder(java.net.URI.create(gg.surge.client.net.SurgeNet.url() + "/v1/profiles/share")).timeout(java.time.Duration.ofSeconds(10))
+			.header("Authorization", "Bearer " + Social.token()).header("content-type", "application/json")
+			.POST(java.net.http.HttpRequest.BodyPublishers.ofString(b.toString())).build();
+		HTTP.sendAsync(req, java.net.http.HttpResponse.BodyHandlers.ofString()).whenComplete((r, e) -> Minecraft.getInstance().execute(() -> {
+			try {
+				com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject();
+				if (r.statusCode() != 200) throw new IllegalStateException(o.has("error") ? o.get("error").getAsString() : "Try again later");
+				String code = o.get("code").getAsString();
+				Minecraft.getInstance().keyboardHandler.setClipboard(code);
+				Social.notice("Code " + code + " copied", hours == 0 ? "It works until you delete it" : "It works for " + (hours == 1 ? "1 hour" : hours == 24 ? "1 day" : hours / 24 + " days"));
+				done.accept(code);
+			} catch (Exception ex) {
+				Social.notice("Couldn't make a code", e != null ? "Check your connection" : ex.getMessage());
+			}
+		}));
+	}
+
+	public static void importCode(String raw, Runnable done) {
+		String code = raw == null ? "" : raw.trim().toUpperCase(java.util.Locale.ROOT).replaceAll("[^A-Z0-9]", "");
+		if (code.length() < 4) { Social.notice("Type a code first", "Share codes look like AB12CD"); return; }
+		java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder(java.net.URI.create(gg.surge.client.net.SurgeNet.publicUrl() + "/v1/profiles/" + code)).timeout(java.time.Duration.ofSeconds(10)).GET().build();
+		HTTP.sendAsync(req, java.net.http.HttpResponse.BodyHandlers.ofString()).whenComplete((r, e) -> Minecraft.getInstance().execute(() -> {
+			try {
+				if (e != null) throw new IllegalStateException("Check your connection");
+				com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(r.body()).getAsJsonObject();
+				if (r.statusCode() == 410) throw new IllegalStateException("This code has run out");
+				if (r.statusCode() != 200) throw new IllegalStateException("No setup with that code");
+				String name = clean(o.has("name") ? o.get("name").getAsString() : "Shared setup");
+				if (name.isEmpty()) name = "Shared setup";
+				save("_before-import", snapshot());
+				String json = o.get("data").getAsString();
+				restore(json);
+				save(name, json);
+				setActive(name);
+				Social.notice("Switched to " + name, "Your old setup was saved as a backup");
+				done.run();
+			} catch (Exception ex) {
+				Social.notice("Couldn't use that code", ex.getMessage() == null ? "Try again" : ex.getMessage());
+			}
+		}));
+	}
+
 	public static void allMods(boolean on) {
 		for (SurgeMod m : Mods.all()) if (m.toggleable) m.setEnabled(on);
 		refresh();

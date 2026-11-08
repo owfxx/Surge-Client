@@ -91,8 +91,9 @@ public final class SurgeNet {
 
 	public static void playedEmote(String name) {
 		emote = name;
-		emoteAt = System.currentTimeMillis();
+		emoteAt = Math.max(emoteAt + 1, System.currentTimeMillis());
 		lastPush = 0;
+		lastPull = 0;
 	}
 
 	public static void tick(Minecraft mc) {
@@ -107,7 +108,7 @@ public final class SurgeNet {
 			lastSent = wear;
 			push(mc);
 		}
-		if (!busyPull && mc.level != null && now - lastPull > (PLAYERS.isEmpty() ? 5_000 : 1_500)) {
+		if (!busyPull && mc.level != null && now - lastPull > (PLAYERS.isEmpty() ? 4_000 : 1_000)) {
 			lastPull = now;
 			pull(mc);
 		}
@@ -128,7 +129,7 @@ public final class SurgeNet {
 		o.addProperty("server", Social.server(mc));
 		HttpRequest req;
 		try {
-			HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(8))
+			HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url() + "/v1/me")).timeout(Duration.ofSeconds(6))
 				.header("content-type", "application/json").PUT(HttpRequest.BodyPublishers.ofString(o.toString()));
 			if (!Social.token().isEmpty()) b.header("Authorization", "Bearer " + Social.token());
 			req = b.build();
@@ -175,7 +176,7 @@ public final class SurgeNet {
 		if (ids.length() == 0) { PLAYERS = new ConcurrentHashMap<>(); return; }
 		HttpRequest req;
 		try {
-			req = HttpRequest.newBuilder(URI.create(url() + "/v1/players?ids=" + ids)).timeout(Duration.ofSeconds(8)).GET().build();
+			req = HttpRequest.newBuilder(URI.create(url() + "/v1/players?ids=" + ids + "&t=" + System.currentTimeMillis())).timeout(Duration.ofSeconds(6)).header("cache-control", "no-cache").GET().build();
 		} catch (Exception e) {
 			return;
 		}
@@ -184,7 +185,9 @@ public final class SurgeNet {
 			busyPull = false;
 			if (e != null || r == null || r.statusCode() != 200) return;
 			try {
-				JsonObject players = JsonParser.parseString(r.body()).getAsJsonObject().getAsJsonObject("players");
+				JsonObject root = JsonParser.parseString(r.body()).getAsJsonObject();
+				JsonObject players = root.getAsJsonObject("players");
+				long serverNow = root.has("now") ? root.get("now").getAsLong() : System.currentTimeMillis();
 				Map<UUID, Remote> fresh = new ConcurrentHashMap<>();
 				java.util.Set<UUID> online = new java.util.HashSet<>();
 				if (Minecraft.getInstance().getConnection() != null) for (var info : Minecraft.getInstance().getConnection().getOnlinePlayers()) online.add(info.getProfile().id());
@@ -206,7 +209,10 @@ public final class SurgeNet {
 						boolean firstSight = rem.emoteAt == 0 && !PLAYERS.containsKey(id);
 						rem.emoteAt = at;
 						rem.emote = em;
-						rem.emoteStart = firstSight && System.currentTimeMillis() - at > 15_000 ? 0 : System.currentTimeMillis();
+						long age = d.has("emoteSrv") ? Math.max(0, serverNow - d.get("emoteSrv").getAsLong()) : 0;
+						Emotes.Emote played = Emotes.Emote.byName(em);
+						float len = played == null ? 0 : (played.loops ? played.seconds * 3 : played.seconds) * 1000;
+						rem.emoteStart = firstSight && age > len ? 0 : System.currentTimeMillis() - (firstSight ? age : Math.min(age, 1500));
 					}
 					fresh.put(id, rem);
 				}

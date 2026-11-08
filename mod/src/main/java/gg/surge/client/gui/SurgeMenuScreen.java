@@ -99,6 +99,12 @@ public class SurgeMenuScreen extends Screen {
 		return new SurgeMenuScreen(parent);
 	}
 
+	public static SurgeMenuScreen profiles(Screen parent) {
+		tab = Tab.PROFILES;
+		query = "";
+		return new SurgeMenuScreen(parent);
+	}
+
 	public static SurgeMenuScreen perf(Screen parent) {
 		tab = Tab.PERF;
 		query = "";
@@ -340,12 +346,58 @@ public class SurgeMenuScreen extends Screen {
 		rows.add(new HeaderRow(() -> "Servers"));
 		rows.add(new ToggleRow("Remember a setup for each server", null, Mods.PROFILE_PER_SERVER::on, Mods.PROFILE_PER_SERVER::flip, "pf:server"));
 		rows.add(new HeaderRow(() -> "Share"));
-		rows.add(new ButtonRow("Copy your setup to send to a friend", "Export", gg.surge.client.features.Profiles::export));
-		rows.add(new ButtonRow("Paste a setup someone sent you", "Import", gg.surge.client.features.Profiles::importClipboard));
+		rows.add(new ShareCodeRow());
+		rows.add(new ImportCodeRow());
+		rows.add(new ButtonRow("Copy your setup as text instead", "Export", gg.surge.client.features.Profiles::export));
+		rows.add(new ButtonRow("Paste a setup someone sent you as text", "Import", gg.surge.client.features.Profiles::importClipboard));
 		rows.add(new HeaderRow(() -> "Everything"));
 		rows.add(new ButtonRow("Turn every mod off", "All off", () -> gg.surge.client.features.Profiles.allMods(false)));
 		rows.add(new ButtonRow("Turn every mod on", "All on", () -> gg.surge.client.features.Profiles.allMods(true)));
 		rows.add(new ButtonRow("Reset all settings", "Reset", gg.surge.client.features.Profiles::reset));
+	}
+
+	private static final int[] SHARE_HOURS = {1, 24, 168, 0};
+	private static final String[] SHARE_NAMES = {"1 hour", "1 day", "1 week", "Never"};
+	private static int shareIdx = 1;
+	private static String lastShareCode = "";
+
+	private final class ShareCodeRow extends Row {
+		@Override int height() { return lastShareCode.isEmpty() ? 24 : 34; }
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			g.drawString(font, "Share code, ends after", x + 6, y + 8, Ui.TEXT, false);
+			int lx = x + 10 + font.width("Share code, ends after"), pw2 = 46;
+			for (int i = 0; i < SHARE_HOURS.length; i++) {
+				int idx = i;
+				if (Ui.pill(g, font, mx, my, lx + i * (pw2 + 2), y + 4, pw2, 16, SHARE_NAMES[i], shareIdx == i) && hov && clickL) action = () -> shareIdx = idx;
+			}
+			if (Ui.pill(g, font, mx, my, x + w - 70, y + 4, 66, 16, "Make code", false) && hov && clickL) action = () -> gg.surge.client.features.Profiles.shareCode(SHARE_HOURS[shareIdx], code -> { lastShareCode = code; needsRebuild = true; });
+			if (!lastShareCode.isEmpty()) g.drawString(font, "Your code: " + lastShareCode + " (copied)", x + 6, y + 24, 0xFF8CFFA0, false);
+		}
+	}
+
+	private final class ImportCodeRow extends Row {
+		final EditBox box;
+
+		ImportCodeRow() {
+			box = new EditBox(font, 0, 0, 100, 10, Component.literal("Code"));
+			box.setBordered(false);
+			box.setMaxLength(16);
+			box.setHint(Component.literal("Type a share code").withStyle(ChatFormatting.DARK_GRAY));
+			addWidget(box);
+			boxes.add(box);
+		}
+
+		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
+			int bw = w - 4 - 70 - 4;
+			Ui.box(g, x + 4, y + 4, bw, 16, 0xFF161619, box.isFocused() ? Ui.ACCENT : Ui.EDGE);
+			box.setX(x + 9);
+			box.setY(y + 8);
+			box.setWidth(bw - 10);
+			box.visible = true;
+			box.render(g, mx, my, delta);
+			if (Ui.pill(g, font, mx, my, x + w - 70, y + 4, 66, 16, "Use code", false) && hov && clickL) action = () -> gg.surge.client.features.Profiles.importCode(box.getValue(), () -> { box.setValue(""); needsRebuild = true; });
+		}
 	}
 
 	private void dropRows() {

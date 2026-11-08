@@ -285,6 +285,10 @@ export default {
         emote: clean(body.emote), emoteAt: Number(body.emoteAt) || 0, flag: body.flag === 'none' ? 'none' : (() => { const c = String((req.cf && req.cf.country) || '').toUpperCase(); return /^[A-Z]{2}$/.test(c) && c !== 'XX' && c !== 'T1' ? c : 'none'; })(),
       };
       const now = Date.now();
+      const prev = await db.prepare('SELECT data FROM players WHERE uuid = ?1').bind(uuid).first().catch(() => null);
+      let prevData = {};
+      try { prevData = prev ? JSON.parse(prev.data) : {}; } catch { }
+      data.emoteSrv = prevData.emoteAt === data.emoteAt && prevData.emote === data.emote && prevData.emoteSrv ? prevData.emoteSrv : now;
       await db.prepare('INSERT INTO players (uuid, name, data, seen) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(uuid) DO UPDATE SET name = ?2, data = ?3, seen = ?4')
         .bind(uuid, String(body.name || (u && u.name) || '').slice(0, 16), JSON.stringify(data), now).run();
       if (u) {
@@ -308,7 +312,16 @@ export default {
         const extra = await playerExtras(db, found).catch(() => ({}));
         for (const k of found) if (extra[k]) Object.assign(players[k], extra[k]);
       }
-      return json({ players, now: Date.now() });
+      return new Response(JSON.stringify({ players, now: Date.now() }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' } });
+    }
+
+    const profMatch = p.match(/^\/v1\/profiles\/([A-Z0-9]{4,12})$/);
+    if (profMatch && req.method === 'GET') {
+      await db.prepare('CREATE TABLE IF NOT EXISTS profile_shares (code TEXT PRIMARY KEY, owner TEXT, name TEXT, data TEXT, created INTEGER, expires INTEGER)').run();
+      const row = await db.prepare('SELECT name, data, expires FROM profile_shares WHERE code = ?1').bind(profMatch[1]).first();
+      if (!row) return json({ error: 'not found' }, 404);
+      if (row.expires && row.expires < Date.now()) return json({ error: 'expired' }, 410);
+      return json({ name: row.name, data: row.data, expires: row.expires });
     }
 
     const capeMatch = p.match(/^\/v1\/cape\/([0-9a-f]{32})$/);
@@ -323,6 +336,23 @@ export default {
     if (!u) return json({ error: 'Sign in through the Surge launcher' }, 401);
     const id = u.uuid;
     const target = norm(body.uuid);
+
+    if (p === '/v1/profiles/share' && req.method === 'POST') {
+      await db.prepare('CREATE TABLE IF NOT EXISTS profile_shares (code TEXT PRIMARY KEY, owner TEXT, name TEXT, data TEXT, created INTEGER, expires INTEGER)').run();
+      const data = String(body.data || '');
+      if (data.length < 2 || data.length > 200000) return json({ error: 'That setup is too big to share' }, 400);
+      try { JSON.parse(data); } catch { return json({ error: 'That setup is damaged' }, 400); }
+      const hours = Math.max(0, Math.min(24 * 365, Number(body.hours) || 0));
+      await db.prepare('DELETE FROM profile_shares WHERE expires > 0 AND expires < ?1').bind(Date.now()).run();
+      const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let tries = 0; tries < 5; tries++) {
+        code = [...crypto.getRandomValues(new Uint8Array(6))].map(b => A[b % A.length]).join('');
+        const r = await db.prepare('INSERT OR IGNORE INTO profile_shares (code, owner, name, data, created, expires) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(code, id, String(body.name || 'Shared setup').slice(0, 32), data, Date.now(), hours ? Date.now() + hours * 3600000 : 0).run();
+        if (r.meta.changes) return json({ code, expires: hours ? Date.now() + hours * 3600000 : 0 });
+      }
+      return json({ error: 'Try again' }, 500);
+    }
 
     if (p === '/v1/inbox' && req.method === 'GET') return json(await inbox(db, id));
     if (p === '/v1/inbox/claim' && req.method === 'POST') return json(await claimGifts(db, id, body.ids));

@@ -127,6 +127,8 @@ public final class AutoTest {
 		STEPS.add(new Step("19c-profiles", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.PROFILES, null))));
 		STEPS.add(new Step("19d-inventory", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
 		STEPS.add(new Step("19e-gift", 40, mc -> gg.surge.client.gui.GiftScreen.show("You've been gifted 2 items!", "Thanks for testing Surge.", 500, java.util.List.of("cape:galaxy", "emote:SHUFFLE"))));
+		STEPS.add(new Step("19f-admin", 40, mc -> open(mc, new gg.surge.client.gui.AdminScreen(null))));
+		STEPS.add(new Step("19g-profiles-tab", 30, mc -> open(mc, SurgeMenuScreen.profiles(null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
 	}
 

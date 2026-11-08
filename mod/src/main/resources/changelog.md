@@ -1,3 +1,18 @@
+## 1.7.0
+- New Wardrobe page in the launcher: buy, wear and preview capes, wings and halos, set up your emote wheel and redeem codes without opening the game
+- Almost every cape is animated now: Aurora, Emerald, Galaxy, Midnight, Ocean, Royal, Sakura, Surge and Void move and shimmer
+- The Blink Cat Cape uses the real blinking cat, and it keeps a normal elytra
+- Smoother elytras with capes and brand new HD wings, Angel Wings look a lot better
+- The halo no longer shows through helmets
+- Gifts: you can get coins, cosmetics and emotes as a gift, with a popup that shows what you got
+- After redeeming a code a popup shows what you got, and holding Enter no longer spams sounds
+- Special name icons next to your name and in the tab list: Owner, Staff, Server Booster, Beta Tester, Creator, VIP, Early Supporter and Developer
+- Picture Capes: your own picture as a cape, only given out by the Surge team
+- Personal sales and new prices can show up just for you
+- Shuffle is back, with its music
+- New Locator Bar Heads mod shows each player's head on the locator bar
+- Discover and Friends look like the Minecraft server list, with server icons, ping and player counts, and your online friends' heads show next to the Friends tab
+
 ## 1.6.4
 - Surge Client now comes as a small installer that is easy to download and share
 - Installed launchers update themselves in the background
