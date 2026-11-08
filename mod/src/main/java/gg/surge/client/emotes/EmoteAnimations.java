@@ -21,7 +21,7 @@ final class EmoteAnimations {
 			}
 			case CLAP -> {
 				float c = Math.abs(sin(t * 7f));
-				p.rArm(-75, -(8 + 22 * c), 0).lArm(-75, 8 + 22 * c, 0).head(4 - 6 * c, 0, 0);
+				p.rArm(-72, -(4 + 17 * c), 0).lArm(-72, 4 + 17 * c, 0).head(4 - 6 * c, 0, 0).bob(-c * 0.3f);
 			}
 			case FACEPALM -> {
 				float up = Emotes.ease(clamp(t / 0.45f)), down = Emotes.ease(clamp((t - e.seconds + 0.6f) / 0.5f));
@@ -31,7 +31,7 @@ final class EmoteAnimations {
 			}
 			case DAB -> {
 				float d = Emotes.ease(clamp(t * 4f));
-				p.lArm(0, 0, -125 * d).rArm(-105 * d, -55 * d, 0).head(35 * d, -25 * d, 0).lean(8 * d);
+				p.lArm(0, 0, -125 * d).rArm(-105 * d, -55 * d, 0).head(30 * d, 28 * d, 0).lean(8 * d);
 			}
 			case SHRUG -> {
 				float s = Emotes.ease(0.5f - 0.5f * cos(t * (float) (Math.PI * 2 / 1.2)));

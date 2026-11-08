@@ -1,3 +1,17 @@
+## 1.6.0
+- New cleaner icons in the same style as the Surge coin, on the title screen, pause menu and in the mod menu
+- All Surge capes redrawn in high detail
+- Equipping a Surge cape hides your normal Minecraft cape
+- Elytras use your Surge cape's design, mapped properly onto both wings
+- Remove all fog and the other fog switches work now
+- The Surge icon shows for every Surge player in tab and nametags, not just the ones close to you
+- Emotes look a lot better: arms now move with the body instead of floating
+- Fewer emotes, only the ones people actually use
+- Hovering a cape in the wardrobe no longer puts it on you in game
+- Launcher: no more "Object has been destroyed" error, and updates install properly
+- Launcher: chat with your friends right from the home screen
+- Launcher: What's new always shows the latest update
+
 ## 1.5.9
 - Wardrobe and pause previews each show their own item again, instead of all copying the one you hover
 
