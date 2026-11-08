@@ -151,6 +151,64 @@ public final class CapeTextures {
 		}
 	}
 
+	private static NativeImage sga;
+
+	private static NativeImage sga() {
+		if (sga != null) return sga;
+		try (InputStream in = Minecraft.getInstance().getResourceManager().getResource(Identifier.withDefaultNamespace("textures/font/ascii_sga.png")).orElseThrow().open()) {
+			sga = NativeImage.read(in);
+		} catch (Exception e) {
+			sga = null;
+		}
+		return sga;
+	}
+
+	private static void glyph(NativeImage dst, NativeImage font, char c, int x, int y, int px, int color, float alpha) {
+		int cell = font.getWidth() / 16;
+		int gx = (c % 16) * cell, gy = (c / 16) * cell;
+		for (int j = 0; j < cell; j++) for (int i = 0; i < cell; i++) {
+			int a = (font.getPixel(gx + i, gy + j) >>> 24) & 255;
+			if (a < 128) continue;
+			for (int yy = 0; yy < px; yy++) for (int xx = 0; xx < px; xx++) {
+				int dx = x + i * px + xx, dy = y + j * px + yy;
+				if (dx < 0 || dy < 0 || dx >= dst.getWidth() || dy >= dst.getHeight()) continue;
+				int d = dst.getPixel(dx, dy);
+				int r = Math.round(((d >> 16) & 255) * (1 - alpha) + ((color >> 16) & 255) * alpha);
+				int g = Math.round(((d >> 8) & 255) * (1 - alpha) + ((color >> 8) & 255) * alpha);
+				int b = Math.round((d & 255) * (1 - alpha) + (color & 255) * alpha);
+				dst.setPixel(dx, dy, 0xFF000000 | (r << 16) | (g << 8) | b);
+			}
+		}
+	}
+
+	private static void runeFace(NativeImage img, NativeImage font, int fx, int fy, int fw, int fh, int cols, int rows, int px, int frame, int seed, float dim) {
+		int cw = fw / cols, ch = fh / rows, cell = font.getWidth() / 16;
+		for (int r = 0; r < rows; r++) for (int c = 0; c < cols; c++) {
+			int id = seed + r * 31 + c * 7;
+			int change = (frame + (id * 5) % 24) / 6;
+			long h = (id * 0x9E3779B97F4A7C15L) ^ (change * 0xBF58476D1CE4E5B9L);
+			h ^= h >>> 31;
+			char ch2 = (char) ('a' + Math.floorMod(h, 26));
+			float wave = 0.5f + 0.5f * (float) Math.cos(2 * Math.PI * (frame / 24.0 - r / (double) rows));
+			int x = fx + c * cw + (cw - cell * px) / 2 + px, y = fy + r * ch + (ch - cell * px) / 2 + px / 2;
+			glyph(img, font, ch2, x + 1, y + 1, px, 0xFF000000, 0.5f * dim);
+			glyph(img, font, ch2, x, y, px, 0xFFFFFFFF, (0.45f + 0.55f * wave) * dim);
+		}
+	}
+
+	private static NativeImage runes(int frame) {
+		NativeImage font = sga();
+		if (font == null) return null;
+		int w = 512, h = 256, s = 8;
+		NativeImage img = new NativeImage(w, h, true);
+		fill(img, "111114");
+		runeFace(img, font, s, s, 10 * s, 16 * s, 5, 8, 2, frame, 0, 1f);
+		runeFace(img, font, 12 * s, s, 10 * s, 16 * s, 5, 8, 2, frame, 97, 0.35f);
+		runeFace(img, font, 24 * s, 2 * s, 10 * s, 20 * s, 5, 10, 2, frame, 13, 1f);
+		runeFace(img, font, 36 * s, 2 * s, 10 * s, 20 * s, 5, 10, 2, frame, 13, 0.5f);
+		return img;
+	}
+
 	private static NativeImage build(String key) {
 		int w = 512, h = 256;
 		if (key.startsWith("custom_")) {
@@ -170,6 +228,7 @@ public final class CapeTextures {
 			if (hasText) overlay(img, source("textures/cosmetic/cape_text_" + text + ".png"), tint);
 			return img;
 		}
+		if (key.startsWith("runes#")) return runes(Integer.parseInt(key.substring(6)));
 		int fr = 0;
 		if (key.contains("#")) { fr = Integer.parseInt(key.substring(key.indexOf('#') + 1)); key = key.substring(0, key.indexOf('#')); }
 		NativeImage src = source("textures/cosmetic/cape_" + key + ".png");

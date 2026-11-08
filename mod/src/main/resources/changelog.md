@@ -1,3 +1,6 @@
+## 1.6.3
+- Rune Cape now uses the real enchanting table glyphs, in white, and they shift and glow
+
 ## 1.6.2
 - Flame Cape is animated now
 - New animated Enchanted Cape with a moving glint
