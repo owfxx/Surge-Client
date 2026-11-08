@@ -28,7 +28,7 @@ public final class Shop {
 			{"cape:midnight", "Midnight Cape", "750"}, {"cape:royal", "Royal Cape", "950"}, {"cape:emerald", "Emerald Cape", "700"},
 			{"cape:galaxy", "Galaxy Cape", "1100"},
 			{"cape:custom", "Color Cape", "300"},
-			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"},
+			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
 			{"cape:beta", "Beta Tester Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 

@@ -1,7 +1,8 @@
-## 1.6.1
+## 1.6.2
 - Flame Cape is animated now
 - New animated Enchanted Cape with a moving glint
-- New Blink Cat Cape, the cat blinks every few seconds
+- New Blink Cat Cape, the cat blinks every once in a while
+- New animated Rune Cape: white runes on black that glow in waves
 - Smooth glowing stars and sparks on capes instead of blocky pixels
 
 ## 1.6.0

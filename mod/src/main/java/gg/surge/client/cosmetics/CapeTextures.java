@@ -45,10 +45,25 @@ public final class CapeTextures {
 	private static final Map<String, int[]> ANIM = Map.of(
 		"flame", new int[]{16, 70},
 		"enchanted", new int[]{16, 90},
-		"blinkcat", new int[]{4, 3600, 70, 130, 70});
+		"runes", new int[]{24, 90},
+		"blinkcat", new int[]{4, 0});
+
+	private static int blink(long now) {
+		long cycle = now / 11000, in = now % 11000;
+		long h = cycle * 0x9E3779B97F4A7C15L;
+		h ^= (h >>> 29);
+		long at = 1500 + Math.floorMod(h, 7500);
+		long d = in - at;
+		if (d >= 0 && d < 70) return 1;
+		if (d >= 70 && d < 200) return 2;
+		if (d >= 200 && d < 270) return 1;
+		if ((h & 3) == 0 && d >= 420 && d < 640) return d < 470 || d >= 590 ? 1 : 2;
+		return 0;
+	}
 
 	private static int frame(int[] spec) {
 		long now = System.currentTimeMillis();
+		if (spec[1] == 0) return blink(now);
 		if (spec.length == 2) return (int) ((now / spec[1]) % spec[0]);
 		int total = 0;
 		for (int i = 1; i < spec.length; i++) total += spec[i];
