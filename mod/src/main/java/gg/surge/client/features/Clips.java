@@ -72,8 +72,20 @@ public final class Clips {
 		if (now - lastGrab < gap || PENDING.get() > THREADS * 2 + 1) return;
 		if (mc.isPaused() || (Mods.CLIP_SMART.on() && mc.getFps() < 30 && fps() > 20)) return;
 		try {
-			com.mojang.blaze3d.textures.GpuTexture tex = mc.getMainRenderTarget().getColorTexture();
+			com.mojang.blaze3d.pipeline.RenderTarget main = mc.getMainRenderTarget();
+			com.mojang.blaze3d.textures.GpuTexture tex = main.getColorTexture();
 			if (tex == null) return;
+			int th = Math.min(main.height, targetHeight()) & ~1;
+			if (th < main.height) {
+				int tw = Math.max(2, Math.round(main.width * (th / (float) main.height))) & ~1;
+				boolean idle = true;
+				for (boolean b : BUSY) idle &= !b;
+				if (small == null) small = new com.mojang.blaze3d.pipeline.TextureTarget("surge clips", tw, th, false);
+				else if ((small.width != tw || small.height != th)) { if (!idle) return; small.resize(tw, th); }
+				com.mojang.blaze3d.systems.RenderSystem.getDevice().createCommandEncoder().clearColorTexture(small.getColorTexture(), 0xFF000000);
+				main.blitAndBlendToTexture(small.getColorTextureView());
+				tex = small.getColorTexture();
+			}
 			int w = tex.getWidth(0), h = tex.getHeight(0), px = tex.getFormat().pixelSize();
 			long size = (long) w * h * px;
 			if (size != gpuSize) {
