@@ -32,10 +32,10 @@ public final class Shop {
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
 		String[][] emotes = {
-			{"WAVE", "600"}, {"CLAP", "600"}, {"FLUSTERED", "900"}, {"FACEPALM", "650"}, {"DAB", "750"},
-			{"SHRUG", "600"}, {"SALUTE", "600"}, {"CHEER", "800"}, {"THINKING", "650"}, {"LAUGH", "700"},
+			{"WAVE", "600"}, {"CLAP", "600"}, {"FACEPALM", "650"}, {"DAB", "750"},
+			{"SHRUG", "600"}, {"SALUTE", "600"}, {"CHEER", "800"}, {"LAUGH", "700"},
 			{"BOW", "650"}, {"HEART", "850"}, {"FLOSS", "1000"}, {"TPOSE", "600"}, {"CRY", "750"},
-			{"SIT", "600"}, {"YAWN", "600"}, {"GRIDDY", "1200"}, {"MOONWALK", "1100"}, {"SHUFFLE", "1100"},
+			{"SIT", "600"}, {"GRIDDY", "1200"},
 			{"DISCO", "1000"}};
 		for (String[] e : emotes) {
 			gg.surge.client.emotes.Emotes.Emote em = gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]);

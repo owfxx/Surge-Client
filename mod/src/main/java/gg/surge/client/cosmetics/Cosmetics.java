@@ -31,7 +31,7 @@ public final class Cosmetics {
 	public static String forPlayer(Player p, String type) {
 		Minecraft mc = Minecraft.getInstance();
 		if (p == mc.player) {
-			if (previewSub != null && previewSub.equals(type)) return previewKey;
+			if (previewSub != null && previewSub.equals(type) && Preview.clean) return previewKey;
 			if (!Mods.COSMETICS.enabled()) return null;
 			var c = gg.surge.client.config.SurgeConfig.get();
 			String key = switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; default -> c.cape; };

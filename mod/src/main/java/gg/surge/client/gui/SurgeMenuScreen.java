@@ -44,6 +44,11 @@ public class SurgeMenuScreen extends Screen {
 			this.icon = icon;
 		}
 
+		net.minecraft.resources.Identifier tex() {
+			String n = switch (this) { case ALL -> "cat_all"; case HUD -> "cat_hud"; case PVP -> "cat_pvp"; case VISUAL -> "cat_visual"; case UTILITY -> "cat_utility"; case PROFILES -> "cat_profiles"; case FPS -> "cat_settings"; case PERF -> "cat_fps"; };
+			return net.minecraft.resources.Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_" + n + "_32.png");
+		}
+
 		ItemStack stack() {
 			if (stack == null) stack = new ItemStack(icon);
 			return stack;
@@ -596,7 +601,7 @@ public class SurgeMenuScreen extends Screen {
 			if (Ui.flat(g, mx, my, px, y, SIDEBAR_W, rowH - 2, sel || selSoft, "tab:" + t) && clickL) {
 				action = () -> { tab = t; openMod = null; query = ""; search.setValue(""); buildPage(); };
 			}
-			Ui.item(g, t.stack(), px + 7, y + (rowH - 2 - 14) / 2, 14);
+			Ui.iconTex(g, t.tex(), px + 7, y + (rowH - 2 - 14) / 2, 14, 1f);
 			boolean hov = Ui.hover(mx, my, px, y, SIDEBAR_W, rowH - 2);
 			g.drawString(font, Ui.fit(font, t.label, SIDEBAR_W - 30), px + 26, y + (rowH - 10) / 2, sel || selSoft ? Ui.TEXT : hov ? 0xFFD4D4D8 : Ui.FAINT, false);
 			y += rowH;

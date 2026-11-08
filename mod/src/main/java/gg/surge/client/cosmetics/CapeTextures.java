@@ -146,7 +146,12 @@ public final class CapeTextures {
 		for (int y = 0; y < 22 * s; y++) for (int x = 22 * s; x < 46 * s; x++) {
 			int c = img.getPixel(x, y);
 			if (((c >>> 24) & 255) > 8) continue;
-			int fx = s + ((x - 22 * s) % (10 * s)), fy = s + Math.min(16 * s - 1, y * 16 / 22);
+			int u = x / s, v = y / s;
+			int fx;
+			if (u >= 24 && u < 34) fx = s + (x - 24 * s);
+			else if (u >= 36) fx = s + (x - 36 * s);
+			else fx = u < 24 ? s : 11 * s - 1;
+			int fy = v < 2 ? s : s + Math.min(16 * s - 1, (y - 2 * s) * 16 / 20);
 			img.setPixel(x, y, src.getPixel(Math.min(sw - 1, fx), Math.min(sh - 1, fy)));
 		}
 		return img;

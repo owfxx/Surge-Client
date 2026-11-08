@@ -14,21 +14,5 @@
     "stream": true
    }
   ]
- },
- "emote.moonwalk": {
-  "sounds": [
-   {
-    "name": "surge:emote/moonwalk",
-    "stream": true
-   }
-  ]
- },
- "emote.shuffle": {
-  "sounds": [
-   {
-    "name": "surge:emote/shuffle",
-    "stream": true
-   }
-  ]
  }
 }

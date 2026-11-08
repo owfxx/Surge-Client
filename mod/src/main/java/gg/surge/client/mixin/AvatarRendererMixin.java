@@ -35,6 +35,8 @@ public abstract class AvatarRendererMixin {
 				gg.surge.client.cosmetics.Cosmetics.forPlayer(p, "cape"), gg.surge.client.cosmetics.Cosmetics.forPlayer(p, "wings"),
 				gg.surge.client.cosmetics.Cosmetics.forPlayer(p, "halo"), em, t, prev));
 		} else st.surge$setLook(null);
+		gg.surge.client.cosmetics.CapturedLook lk = st.surge$look();
+		if (lk != null && lk.cape() != null && !"none".equals(lk.cape())) s.showCape = false;
 		if (!Preview.clean) return;
 		s.headEquipment = ItemStack.EMPTY;
 		s.chestEquipment = ItemStack.EMPTY;

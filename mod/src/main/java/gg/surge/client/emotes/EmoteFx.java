@@ -81,10 +81,6 @@ public final class EmoteFx {
 		if (fade <= 0.01f) return;
 		final float tt = t, k = fade;
 		switch (e) {
-			case FLUSTERED -> {
-				head(model, ps, q, (pose, vc) -> blush(pose, vc, tt, k));
-				if (e == Emote.FLUSTERED) body(model, ps, q, (pose, vc) -> floaters(pose, vc, HEART, 0xFF6FA0, tt, k, 3, 1.4f, 0.55f));
-			}
 			case HEART -> {
 				head(model, ps, q, (pose, vc) -> blush(pose, vc, tt, k * 0.6f));
 				body(model, ps, q, (pose, vc) -> {
@@ -97,18 +93,6 @@ public final class EmoteFx {
 			case FACEPALM -> head(model, ps, q, (pose, vc) -> {
 				float d = frac(tt * 0.6f);
 				sprite(pose, vc, DROP, 0.29f, -0.42f + d * 0.18f, -0.1f, PX * 0.55f, alpha(0x7FC8FF, k * (1f - d * 0.6f)));
-			});
-			case YAWN -> body(model, ps, q, (pose, vc) -> {
-				for (int i = 0; i < 3; i++) {
-					float p = frac(tt * 0.45f + i / 3f);
-					sprite(pose, vc, ZED, 0.22f + p * 0.25f + (float) Math.sin(p * 6f) * 0.04f, -0.75f - p * 0.6f, 0f, PX * (0.35f + p * 0.35f), alpha(0xDDE6FF, k * (1f - p)));
-				}
-			});
-			case THINKING -> body(model, ps, q, (pose, vc) -> {
-				float cycle = tt % 2.4f;
-				int n = Math.min(3, (int) (cycle / 0.45f));
-				for (int i = 0; i < n; i++) sprite(pose, vc, DOT, 0.22f + i * 0.09f, -0.82f - i * 0.08f, 0f, PX * (0.45f + i * 0.15f), alpha(0xFFFFFF, k));
-				if (cycle > 1.6f) sprite(pose, vc, BANG, 0.52f, -1.1f, 0f, PX * 0.55f, alpha(0xFFE066, k));
 			});
 			case CHEER -> body(model, ps, q, (pose, vc) -> confetti(pose, vc, tt, k));
 			case DAB -> body(model, ps, q, (pose, vc) -> {

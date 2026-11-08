@@ -75,7 +75,10 @@ public final class AutoTest {
 		STEPS.add(new Step("06-emote-griddy", 30, mc -> Emotes.play(mc, Emotes.Emote.GRIDDY)));
 		STEPS.add(new Step("07-emote-disco", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.DISCO); }));
 		STEPS.add(new Step("07c-emote-cry", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CRY); }));
-		STEPS.add(new Step("07d-emote-flustered", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLUSTERED); }));
+		STEPS.add(new Step("07d-emote-dab", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.DAB); }));
+		STEPS.add(new Step("07i-emote-wave", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.WAVE); }));
+		STEPS.add(new Step("07j-emote-salute", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SALUTE); }));
+		STEPS.add(new Step("07k-emote-clap", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CLAP); }));
 		STEPS.add(new Step("07f-emote-heart", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.HEART); }));
 		STEPS.add(new Step("07g-emote-floss", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FLOSS); }));
 		STEPS.add(new Step("07h-emote-tpose", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.TPOSE); }));

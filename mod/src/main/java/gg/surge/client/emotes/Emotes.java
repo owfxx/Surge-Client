@@ -9,13 +9,12 @@ import net.minecraft.client.player.LocalPlayer;
 
 public final class Emotes {
 	public enum Emote {
-		WAVE("Wave", 3.0f, false), CLAP("Clap", 3.0f, false), FLUSTERED("Flustered", 4.0f, false),
-		FACEPALM("Facepalm", 3.0f, false), DAB("Dab", 2.2f, false), SHRUG("Shrug", 2.4f, false),
-		SALUTE("Salute", 3.0f, false), CHEER("Cheer", 3.5f, false), THINKING("Thinking", 4.0f, false),
-		LAUGH("Laugh", 3.5f, false), BOW("Bow", 3.0f, false), HEART("Heart", 3.5f, false),
-		FLOSS("Floss", 4.0f, true), TPOSE("T-Pose", 4.0f, true), CRY("Cry", 4.0f, false),
-		SIT("Sit", 6.0f, true), YAWN("Yawn", 3.2f, false), GRIDDY("Griddy", 13.2f, "griddy", 146),
-		MOONWALK("Moonwalk", 16.6f, "moonwalk", 116), SHUFFLE("Shuffle", 15.2f, "shuffle", 126), DISCO("Disco Fever", 16.0f, "disco", 120);
+		WAVE("Wave", 3.0f, false), CLAP("Clap", 3.0f, false), FACEPALM("Facepalm", 3.0f, false),
+		DAB("Dab", 2.2f, false), SHRUG("Shrug", 2.4f, false), SALUTE("Salute", 3.0f, false),
+		CHEER("Cheer", 3.5f, false), LAUGH("Laugh", 3.5f, false), BOW("Bow", 3.0f, false),
+		HEART("Heart", 3.5f, false), FLOSS("Floss", 4.0f, true), TPOSE("T-Pose", 4.0f, true),
+		CRY("Cry", 4.0f, false), SIT("Sit", 6.0f, true), GRIDDY("Griddy", 13.2f, "griddy", 146),
+		DISCO("Disco Fever", 16.0f, "disco", 120);
 
 		public final String label;
 		public final float seconds;
@@ -46,7 +45,7 @@ public final class Emotes {
 	}
 
 	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.SHRUG, Emote.SALUTE,
-		Emote.THINKING, Emote.LAUGH, Emote.HEART, Emote.YAWN, Emote.TPOSE, Emote.DAB, Emote.CRY, Emote.FLUSTERED);
+		Emote.LAUGH, Emote.HEART, Emote.TPOSE, Emote.DAB, Emote.CRY);
 	public static volatile boolean walking;
 
 	private static Emote current;
@@ -198,9 +197,23 @@ public final class Emotes {
 
 		void apply() {
 			set(m.head, head);
+			float oy = m.body.yRot, oz = m.body.zRot;
 			set(m.body, body);
+			float dy = m.body.yRot - oy, dz = m.body.zRot - oz;
 			set(m.rightArm, rArm);
 			set(m.leftArm, lArm);
+			if (dy != 0 || dz != 0) {
+				float cy = (float) Math.cos(dy), sy = (float) Math.sin(dy), cz = (float) Math.cos(dz), sz = (float) Math.sin(dz);
+				for (ModelPart arm : new ModelPart[]{m.rightArm, m.leftArm}) {
+					float x = arm.x, y = arm.y;
+					float rx = x * cz - y * sz, ry = x * sz + y * cz;
+					arm.x = rx * cy + arm.z * sy;
+					arm.z = -rx * sy + arm.z * cy;
+					arm.y = ry;
+					arm.yRot += dy;
+					arm.zRot += dz;
+				}
+			}
 			if (upperOnly) return;
 			set(m.rightLeg, rLeg);
 			set(m.leftLeg, lLeg);

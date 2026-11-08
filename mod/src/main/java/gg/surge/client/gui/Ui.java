@@ -176,13 +176,13 @@ public final class Ui {
 		}, label, labelLeft, alpha);
 	}
 
-	public static final Identifier IC_SOCIAL = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_social.png");
-	public static final Identifier IC_SETTINGS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_settings.png");
-	public static final Identifier IC_WARDROBE = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_wardrobe.png");
-	public static final Identifier IC_MODS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_mods.png");
+	public static final Identifier IC_SOCIAL = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_social_32.png");
+	public static final Identifier IC_SETTINGS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_settings_32.png");
+	public static final Identifier IC_WARDROBE = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_wardrobe_32.png");
+	public static final Identifier IC_MODS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_mods_32.png");
 
 	public static void iconTex(GuiGraphics g, Identifier tex, int x, int y, int size, float alpha) {
-		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 16, 16, 16, 16, Colors.alpha(0xFFFFFFFF, alpha));
+		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 32, 32, 32, 32, Colors.alpha(0xFFFFFFFF, alpha));
 	}
 
 	public static boolean tile(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, Identifier icon, String label, boolean labelLeft, float alpha) {

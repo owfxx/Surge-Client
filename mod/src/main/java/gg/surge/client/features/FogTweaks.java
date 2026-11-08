@@ -1,41 +1,23 @@
 package gg.surge.client.features;
 
 import gg.surge.client.mods.Mods;
-import net.minecraft.client.renderer.fog.FogData;
 
 public final class FogTweaks {
-	private static final float FAR = 1_000_000f;
 
 	private FogTweaks() {}
 
-	public static void none(FogData d) {
-		d.environmentalStart = FAR;
-		d.environmentalEnd = FAR;
-		d.renderDistanceStart = FAR;
-		d.renderDistanceEnd = FAR;
-	}
-
-	public static void scale(FogData d, float f) {
-		d.environmentalStart *= f;
-		d.environmentalEnd *= f;
-		d.renderDistanceStart *= f;
-		d.renderDistanceEnd *= f;
-	}
-
-	public static void world(FogData d) {
-		if (!Mods.FOG.enabled()) return;
-		if (Mods.FOG_NONE.on() || !Mods.FOG_WORLD.on()) none(d);
-		else scale(d, Mods.FOG_WORLD_DIST.get() / 100f);
-	}
-
-	public static void water(FogData d) {
-		if (!Mods.FOG.enabled()) return;
-		if (Mods.FOG_NONE.on() || !Mods.FOG_WATER.on()) none(d);
-		else scale(d, Mods.FOG_WATER_DIST.get() / 100f);
-	}
-
-	public static void simple(FogData d, boolean keep) {
-		if (Mods.FOG.enabled() && (!keep || Mods.FOG_NONE.on())) none(d);
+	public static float finalScale() {
+		if (!Mods.FOG.enabled()) return 1f;
+		net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+		if (mc.player != null && (mc.player.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS) || mc.player.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS))) return 1f;
+		net.minecraft.world.level.material.FogType type = mc.gameRenderer.getMainCamera().getFluidInCamera();
+		boolean none = Mods.FOG_NONE.on();
+		return switch (type) {
+			case WATER -> none || !Mods.FOG_WATER.on() ? -1f : Mods.FOG_WATER_DIST.get() / 100f;
+			case LAVA -> none || !Mods.FOG_LAVA.on() ? -1f : 1f;
+			case POWDER_SNOW -> none || !Mods.FOG_SNOW.on() ? -1f : 1f;
+			default -> none || !Mods.FOG_WORLD.on() ? -1f : Mods.FOG_WORLD_DIST.get() / 100f;
+		};
 	}
 
 	public static void color(org.joml.Vector4f c) {

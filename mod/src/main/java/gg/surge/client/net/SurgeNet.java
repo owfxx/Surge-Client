@@ -149,13 +149,28 @@ public final class SurgeNet {
 		});
 	}
 
+	private static int tabOffset;
+
 	private static void pull(Minecraft mc) {
+		java.util.LinkedHashSet<UUID> want = new java.util.LinkedHashSet<>();
+		for (Player p : mc.level.players()) if (p != mc.player && want.size() < 120) want.add(p.getUUID());
+		if (mc.getConnection() != null) {
+			java.util.List<UUID> tab = new java.util.ArrayList<>();
+			for (var info : mc.getConnection().getOnlinePlayers()) {
+				UUID u = info.getProfile().id();
+				if (u != null && u.version() == 4 && (mc.player == null || !u.equals(mc.player.getUUID()))) tab.add(u);
+			}
+			if (!tab.isEmpty()) {
+				int start = tabOffset % tab.size();
+				for (int i = 0; i < tab.size() && want.size() < 190; i++) want.add(tab.get((start + i) % tab.size()));
+				tabOffset = start + 70;
+			}
+		}
+		final java.util.Set<UUID> asked = new java.util.HashSet<>(want);
 		StringBuilder ids = new StringBuilder();
-		int n = 0;
-		for (Player p : mc.level.players()) {
-			if (p == mc.player || n++ > 150) continue;
+		for (UUID u : want) {
 			if (ids.length() > 0) ids.append(',');
-			ids.append(p.getUUID().toString().replace("-", ""));
+			ids.append(u.toString().replace("-", ""));
 		}
 		if (ids.length() == 0) { PLAYERS = new ConcurrentHashMap<>(); return; }
 		HttpRequest req;
@@ -171,6 +186,9 @@ public final class SurgeNet {
 			try {
 				JsonObject players = JsonParser.parseString(r.body()).getAsJsonObject().getAsJsonObject("players");
 				Map<UUID, Remote> fresh = new ConcurrentHashMap<>();
+				java.util.Set<UUID> online = new java.util.HashSet<>();
+				if (Minecraft.getInstance().getConnection() != null) for (var info : Minecraft.getInstance().getConnection().getOnlinePlayers()) online.add(info.getProfile().id());
+				for (Map.Entry<UUID, Remote> old : PLAYERS.entrySet()) if (!asked.contains(old.getKey()) && online.contains(old.getKey())) fresh.put(old.getKey(), old.getValue());
 				for (Map.Entry<String, JsonElement> en : players.entrySet()) {
 					UUID id = parse(en.getKey());
 					if (id == null) continue;
