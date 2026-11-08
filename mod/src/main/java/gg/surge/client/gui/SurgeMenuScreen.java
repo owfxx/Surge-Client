@@ -141,7 +141,7 @@ public class SurgeMenuScreen extends Screen {
 
 	@Override
 	protected void init() {
-		if (openedAt == 0) openedAt = System.currentTimeMillis();
+		if (openedAt == 0) { openedAt = System.currentTimeMillis(); gg.surge.client.features.CustomSounds.preview("preset:pop"); }
 		int m = this.width < 480 ? 6 : 12;
 		SIDEBAR_W = this.width < 480 ? 92 : 112;
 		px = m;

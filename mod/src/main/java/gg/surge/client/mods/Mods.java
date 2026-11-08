@@ -243,7 +243,7 @@ public final class Mods {
 	public static final SurgeMod CHAT = mod("chat", "Chat", Category.UTILITY, Items.WRITABLE_BOOK,
 		"Timestamps, stacked repeat messages, mentions and a longer chat history", false);
 	public static final Setting.Toggle CHAT_STACK = CHAT.toggle("stack", "Stack repeated messages, like [x14]", true);
-	public static final Setting.Toggle CHAT_MENTION = CHAT.toggle("mention", "Ping when someone says your name", true);
+	public static final Setting.Toggle CHAT_MENTION = CHAT.toggle("mention", "Play a ding when someone says your name", true);
 	public static final Setting.Toggle CHAT_HIDE_JOINS = CHAT.toggle("hideJoins", "Hide join and leave messages", false);
 	public static final Setting.Toggle CHAT_LONG = CHAT.toggle("longHistory", "Keep 1000 messages instead of 100", true);
 	public static final Setting.Toggle CHAT_TIME = CHAT.toggle("timestamps", "Timestamps", true);

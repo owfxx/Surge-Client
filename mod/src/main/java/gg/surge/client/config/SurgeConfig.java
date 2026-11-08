@@ -55,6 +55,7 @@ public class SurgeConfig {
 
 	public Map<String, Boolean> boost = new LinkedHashMap<>();
 	public int boostVersion = 0;
+	public long seenAnnouncement = 0;
 	public int cullItems = 40, cullBlockEntities = 64, cullParticles = 32, nametagDistance = 48;
 	public Map<String, Object> saved = new LinkedHashMap<>();
 

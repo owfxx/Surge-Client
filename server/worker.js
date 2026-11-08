@@ -138,7 +138,7 @@ nav .links .pill{color:var(--text);border:1px solid var(--line);padding:6px 14px
 nav .links .pill:hover{border-color:#5865f2;background:#5865f222}
 @media (max-width:640px){nav .links a:not(.pill){display:none}}
 .hero{position:relative;padding:84px 0 70px;text-align:center;isolation:isolate;overflow:hidden}
-#rain{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.5;pointer-events:none}
+#rain{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.35;pointer-events:none;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
 .hero::before{content:"";position:absolute;inset:-20% -10% auto;height:620px;z-index:-2;background:radial-gradient(560px 360px at 50% 30%,#3a3a44 0%,#1d1d23 45%,transparent 75%)}
 .flash{position:absolute;inset:0;z-index:-1;background:radial-gradient(500px 300px at 50% 28%,#fff3,transparent 70%);opacity:0;pointer-events:none}
 .storm{width:132px;height:154px;margin:0 auto;position:relative}
@@ -197,9 +197,11 @@ footer{color:var(--faint);font-size:13px;padding:40px 0 50px;text-align:center}
 footer a{color:var(--muted);text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .in{opacity:0;transform:translateY(14px);animation:in .7s cubic-bezier(.2,.7,.2,1) forwards}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}.rv.on{opacity:1;transform:none}
+.snd{position:fixed;right:16px;bottom:16px;z-index:30;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#16161ae6;color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:color .15s,border-color .15s}.snd:hover{color:var(--text);border-color:#3a3a44}.snd svg{width:18px;height:18px}
 .d1{animation-delay:.1s}.d2{animation-delay:.22s}.d3{animation-delay:.34s}.d4{animation-delay:.46s}
 @keyframes in{to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in{opacity:1;transform:none}#rain{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in,.rv{opacity:1;transform:none}#rain{display:none}}
 </style></head><body>
 <nav><div class="wrap"><a class="brand" href="#top">${MARK}Surge</a><div class="links"><a href="#features">Features</a><a href="#start">Get started</a><a href="#faq">FAQ</a><a class="pill" href="${DISCORD}" rel="noopener">Discord</a></div></div></nav>
 <header class="hero" id="top"><canvas id="rain" aria-hidden="true"></canvas><div class="flash" id="flash"></div>
@@ -214,23 +216,23 @@ footer a{color:var(--muted);text-underline-offset:3px}
 <main class="wrap">
 <section id="features"><h2>Everything in one place</h2><p class="sub">No mod folders, no setup. Install once and everything is there, and it keeps itself up to date.</p>
 <div class="grid">
-<div class="f wide"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div><h3>More FPS out of the box</h3><p>Sodium, Lithium and friends are set up for you, with tuned Java settings, background FPS limits and smart culling.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, hitboxes, motion blur and more.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6z"/><path d="M10 7h4a3 3 0 0 1 3 3v4"/></svg></div><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 18 8 9l4 5 3-4 7 8z"/><circle cx="17" cy="6" r="2"/></svg></div><h3>Distant Terrain<span class="tag">Beta</span></h3><p>See land up to 1024 chunks away, with detail all the way up to real block textures.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg></div><h3>Friends</h3><p>Chat, set your status and join the server your friends are playing on in one click.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3 4 6v15h16V6l-4-3"/><path d="M8 3c0 2 1.8 4 4 4s4-2 4-4"/></svg></div><h3>Wardrobe</h3><p>Animated capes, wings, halos and emotes that every Surge player can see.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div><h3>Clips</h3><p>Press F8 to save the last few seconds of gameplay as a video, up to 120 FPS.</p></div>
-<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Custom Sounds</h3><p>Swap any game sound for a built in one or your own mp3, wav or ogg.</p></div>
+<div class="f wide rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div><h3>More FPS out of the box</h3><p>Sodium, Lithium and friends are set up for you, with tuned Java settings, background FPS limits and smart culling.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, hitboxes, motion blur and more.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6z"/><path d="M10 7h4a3 3 0 0 1 3 3v4"/></svg></div><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 18 8 9l4 5 3-4 7 8z"/><circle cx="17" cy="6" r="2"/></svg></div><h3>Distant Terrain<span class="tag">Beta</span></h3><p>See land up to 1024 chunks away, with detail all the way up to real block textures.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg></div><h3>Friends</h3><p>Chat, set your status and join the server your friends are playing on in one click.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3 4 6v15h16V6l-4-3"/><path d="M8 3c0 2 1.8 4 4 4s4-2 4-4"/></svg></div><h3>Wardrobe</h3><p>Animated capes, wings, halos and emotes that every Surge player can see.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div><h3>Clips</h3><p>Press F8 to save the last few seconds of gameplay as a video, up to 120 FPS.</p></div>
+<div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Custom Sounds</h3><p>Swap any game sound for a built in one or your own mp3, wav or ogg.</p></div>
 </div></section>
 <section id="start"><div class="split">
 <div><h2>Get started</h2><p class="sub">From download to playing in about a minute.</p>
-<ol class="steps">
+<ol class="steps rv">
 <li><b>Download and run the installer</b><p>Open Surge Client Setup.exe. If Windows warns you, choose More info, then Run anyway.</p></li>
 <li><b>Sign in with Microsoft</b><p>Use the account you play Minecraft with. Surge never sees your password.</p></li>
 <li><b>Press Play</b><p>In game, Right Shift opens the mods and B opens your emote wheel.</p></li>
 </ol></div>
-${notes ? `<div class="new"><h3>What's new <span>${esc(l.version)}</span></h3><ul>${notes}</ul></div>` : ''}
+${notes ? `<div class="new rv"><h3>What's new <span>${esc(l.version)}</span></h3><ul>${notes}</ul></div>` : ''}
 </div></section>
 <section id="faq" class="faq"><h2>Questions</h2><p class="sub">The things people ask most.</p>
 <details><summary>Is Surge Client free?</summary><p>Yes. The client, the launcher and updates are free. Cosmetics use Surge Coins, which you get from daily rewards, codes and events.</p></details>
@@ -239,8 +241,9 @@ ${notes ? `<div class="new"><h3>What's new <span>${esc(l.version)}</span></h3><u
 <details><summary>Can other players see my cosmetics?</summary><p>Everyone else using Surge Client sees your capes, wings, halos and emotes.</p></details>
 <details><summary>Does it work on Mac or Linux?</summary><p>The launcher is Windows only for now. On other systems you can use the mod on its own with any Fabric 1.21.11 launcher.</p></details>
 </section>
-<div class="band"><div><h2>Join the community</h2><p>Updates, giveaways, codes and help from other players.</p></div><a class="dl" href="${DISCORD}" rel="noopener">Join our Discord</a></div>
+<div class="band rv"><div><h2>Join the community</h2><p>Updates, giveaways, codes and help from other players.</p></div><a class="dl" href="${DISCORD}" rel="noopener">Join our Discord</a></div>
 </main>
+<button class="snd" id="snd" aria-label="Turn sounds on" title="Sounds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="sndw" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" opacity=".25"/></svg></button>
 <footer class="wrap">Surge Client by owfx. Not affiliated with Mojang or Microsoft. <a href="${DISCORD}" rel="noopener">Discord</a></footer>
 <script>
 (function(){
@@ -249,7 +252,20 @@ var c=document.getElementById('rain'),x=c.getContext('2d'),drops=[],w,h,dpr=Math
 function size(){w=c.clientWidth;h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);drops=[];var n=Math.round(w*h/9000);for(var i=0;i<n;i++)drops.push({x:Math.random()*w,y:Math.random()*h,l:8+Math.random()*14,v:5+Math.random()*6});}
 function frame(){x.clearRect(0,0,w,h);x.strokeStyle='rgba(200,205,220,.35)';x.lineWidth=1;x.beginPath();for(var i=0;i<drops.length;i++){var d=drops[i];x.moveTo(d.x,d.y);x.lineTo(d.x-d.l*.25,d.y+d.l);d.y+=d.v;d.x-=d.v*.25;if(d.y>h){d.y=-20;d.x=Math.random()*(w+80);}}x.stroke();if(!document.hidden)requestAnimationFrame(frame);else setTimeout(function(){requestAnimationFrame(frame)},500);}
 var f=document.getElementById('flash'),b=document.getElementById('bolt');
-function strike(){f.animate([{opacity:0},{opacity:1,offset:.08},{opacity:.2,offset:.2},{opacity:.8,offset:.28},{opacity:0}],{duration:900,easing:'ease-out'});b.animate([{fill:'#fff'},{fill:'#ffe07a',offset:.1},{fill:'#fff',offset:.3},{fill:'#ffe07a',offset:.4},{fill:'#fff'}],{duration:900});setTimeout(strike,5000+Math.random()*6000);}
+function strike(){if(on)setTimeout(thunder,250+Math.random()*500);f.animate([{opacity:0},{opacity:1,offset:.08},{opacity:.2,offset:.2},{opacity:.8,offset:.28},{opacity:0}],{duration:900,easing:'ease-out'});b.animate([{fill:'#fff'},{fill:'#ffe07a',offset:.1},{fill:'#fff',offset:.3},{fill:'#ffe07a',offset:.4},{fill:'#fff'}],{duration:900});setTimeout(strike,5000+Math.random()*6000);}
+var ac=null,on=false;try{on=localStorage.getItem('surgeSnd')==='1'}catch(e){}
+var sb=document.getElementById('snd'),sw=document.getElementById('sndw');
+function paint(){sw.setAttribute('opacity',on?'1':'.25');sb.setAttribute('aria-label',on?'Turn sounds off':'Turn sounds on')}paint();
+function ctx(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();return ac}
+function tone(f,at,len,type,vol,to){var a=ctx();if(!a)return;var t=a.currentTime+at,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+len);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+len);o.connect(g).connect(a.destination);o.start(t);o.stop(t+len+.02)}
+function thunder(){var a=ctx();if(!a)return;var len=2.4,b=a.createBuffer(1,a.sampleRate*len,a.sampleRate),d=b.getChannelData(0),l=0;for(var i=0;i<d.length;i++){l=(l+.02*(Math.random()*2-1))/1.02;d[i]=l*3.5*Math.pow(1-i/d.length,2)*(i<a.sampleRate*.05?i/(a.sampleRate*.05):1)}var s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='lowpass';f.frequency.value=300;g.gain.value=.5;s.connect(f).connect(g).connect(a.destination);s.start()}
+function blip(){if(on)tone(1500,0,.035,'sine',.03)}
+function click(){if(on){tone(660,0,.08,'triangle',.06);tone(990,.05,.12,'triangle',.05)}}
+sb.onclick=function(){on=!on;try{localStorage.setItem('surgeSnd',on?'1':'0')}catch(e){}paint();if(on){ctx();tone(523,0,.15,'triangle',.06);tone(784,.08,.2,'triangle',.06)}};
+var lastEl=null;document.addEventListener('mouseover',function(e){var el=e.target.closest('a,button,summary');if(el&&el!==lastEl){lastEl=el;blip()}});
+document.addEventListener('click',function(e){if(e.target.closest('a,summary')&&!e.target.closest('#snd'))click()});
+var io='IntersectionObserver' in window?new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var el=en.target,sib=[].indexOf.call(el.parentNode.children,el);el.style.transitionDelay=(el.classList.contains('f')?Math.min(sib,8)*60:0)+'ms';el.classList.add('on');io.unobserve(el)}})},{threshold:.15}):null;
+document.querySelectorAll('.rv').forEach(function(el){if(io&&!reduce)io.observe(el);else el.classList.add('on')});
 if(!reduce){size();addEventListener('resize',size);requestAnimationFrame(frame);setTimeout(strike,1400);}
 })();
 </script>

@@ -51,6 +51,18 @@ public final class Preview {
 			st.outlineColor = 0;
 			st.displayFireAnimation = false;
 			st.isInvisible = false;
+			st.isInvisibleToPlayer = false;
+			if (st.isSpectator) {
+				st.isSpectator = false;
+				var o = mc.options;
+				st.showHat = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.HAT);
+				st.showJacket = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.JACKET);
+				st.showLeftPants = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.LEFT_PANTS_LEG);
+				st.showRightPants = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.RIGHT_PANTS_LEG);
+				st.showLeftSleeve = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.LEFT_SLEEVE);
+				st.showRightSleeve = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.RIGHT_SLEEVE);
+				st.showCape = o.isModelPartEnabled(net.minecraft.world.entity.player.PlayerModelPart.CAPE);
+			}
 			org.joml.Quaternionf rot = new org.joml.Quaternionf().rotateZ((float) Math.PI);
 			g.submitEntityRenderState(st, size / Math.max(0.1f, st.scale), new org.joml.Vector3f(0f, st.boundingBoxHeight / 2f + 0.0625f, 0f), rot, new org.joml.Quaternionf(), x1, y1, x2, y2);
 		} catch (Throwable ignored) {

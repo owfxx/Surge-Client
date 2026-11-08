@@ -2,27 +2,28 @@ export const ADMIN_PAGE = `<!doctype html><html lang="en"><head><meta charset="u
 <meta name="robots" content="noindex"><title>Surge Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#121214;--panel:#1c1c1f;--line:#34343a;--violet:#f4f4f5;--lilac:#e4e4e7;--text:#fafafa;--muted:#a1a1aa;--bad:#ff8c8c;--good:#8cffa0}
+:root{--bg:#0e0e11;--panel:#16161a;--line:#27272e;--violet:#f2c430;--lilac:#ffe07a;--text:#f4f4f5;--muted:#a1a1aa;--bad:#ff8c8c;--good:#4ade80}
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,sans-serif;min-height:100vh}
 button,input,select{font:inherit;color:inherit}
-.wrap{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+.wrap{max-width:960px;margin:0 auto;padding:28px 16px 60px}
 h1{font:600 30px "Pixelify Sans",sans-serif;margin:0}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-.tab{background:transparent;border:2px solid var(--line);padding:7px 14px;cursor:pointer;color:var(--muted)}
-.tab.on{background:var(--violet);border-color:var(--violet);color:#18181b}
-.card{background:var(--panel);border:2px solid var(--line);padding:16px;margin-bottom:14px}
+.tab{background:transparent;border:1px solid var(--line);padding:7px 14px;cursor:pointer;color:var(--muted);border-radius:999px;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text);border-color:#3a3a44}
+.tab.on{background:var(--violet);border-color:var(--violet);color:#1a1405;font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:14px}
 .card h2{font-size:16px;margin:0 0 12px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);flex:1;min-width:120px}
-input,select{background:#121214;border:2px solid var(--line);padding:8px 10px;width:100%}
+input,select,textarea{background:#0e0e11;border:1px solid var(--line);border-radius:6px;padding:9px 11px;width:100%}
 input:focus,select:focus{outline:none;border-color:var(--violet)}
-.btn{background:var(--violet);border:0;padding:9px 16px;cursor:pointer;color:#18181b;font-weight:600;white-space:nowrap}
-.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--text)}
+.btn{background:var(--violet);border:0;border-radius:6px;padding:9px 16px;cursor:pointer;color:#1a1405;font-weight:600;white-space:nowrap;transition:filter .15s}.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}.btn.ghost:hover{border-color:#3a3a44;filter:none}
 .btn.small{padding:5px 10px;font-size:13px}
 .btn:focus-visible,.tab:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
 .list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.item{display:flex;align-items:center;gap:10px;padding:9px 10px;background:#18181b;border:1px solid var(--line)}
+.item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#121216;border:1px solid var(--line);border-radius:8px}
 .item .grow{flex:1;min-width:0}.item .sub{color:var(--muted);font-size:13px}
 .code{font-family:ui-monospace,Consolas,monospace;font-weight:600;letter-spacing:.5px;word-break:break-all}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -34,10 +35,10 @@ input:focus,select:focus{outline:none;border-color:var(--violet)}
 .picker{margin-top:10px}
 .pick-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .pick-bar input{max-width:220px}
-.pill{background:transparent;border:2px solid var(--line);padding:4px 10px;cursor:pointer;color:var(--muted);font-size:13px}
+.pill{background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;color:var(--muted);font-size:13px}
 .pill.on{border-color:var(--violet);color:var(--text)}
 .pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:300px;overflow:auto;padding-right:4px}
-.pick{border:2px solid var(--line);background:#18181b;padding:8px 10px;cursor:pointer;text-align:left;display:flex;gap:8px;align-items:center}
+.pick{border:1px solid var(--line);border-radius:6px;background:#121216;padding:8px 10px;cursor:pointer;text-align:left;display:flex;gap:8px;align-items:center}
 .pick:hover{border-color:#55555c}
 .pick.on{border-color:var(--violet);background:#27272a}
 .pick .dot{width:10px;height:10px;flex:none;border:2px solid var(--line)}
@@ -45,13 +46,20 @@ input:focus,select:focus{outline:none;border-color:var(--violet)}
 .pick b{font-weight:600;font-size:14px;display:block}.pick small{color:var(--muted);font-size:12px}
 .pick.group{border-style:dashed}
 .uses{font-size:12px;color:var(--muted);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stat b{display:block;font:600 30px "Pixelify Sans",sans-serif;color:var(--text)}.stat span{color:var(--muted);font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--good)}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:14px}.kv span{color:var(--muted)}
+.check{flex-direction:row;align-items:center;gap:8px;flex:0 0 auto;min-width:0;color:var(--text);font-size:14px}.check input{width:auto}
+.banner{border:1px solid #f2c43055;background:#f2c43012;border-radius:8px;padding:12px 14px}
 @media (max-width:560px){.item{flex-wrap:wrap}}
 </style></head><body><div class="wrap" id="app"></div><div class="toast" id="toast"></div>
 <script>
 const $ = s => document.querySelector(s);
 let token = '';
 try { token = sessionStorage.getItem('surgeAdmin') || ''; } catch {}
-let data = null, tab = 'codes', picked = [];
+let data = null, tab = 'overview', picked = [];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function toast(t, bad) { const el = $('#toast'); el.textContent = t; el.style.borderColor = bad ? 'var(--bad)' : 'var(--violet)'; el.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = 'none', 3200); }
 async function api(path, body) {
@@ -108,12 +116,56 @@ function login(msg) {
 async function load() { try { data = await api('state'); render(); } catch (e) { if (token) toast(e.message, true); } }
 
 function render() {
-  const tabs = [['codes', 'Codes'], ['gifts', 'Gifts'], ['sales', 'Sales'], ['prices', 'Prices'], ['players', 'Icons and capes'], ['locks', 'Locked items'], ['servers', 'Discover']];
+  const tabs = [['overview', 'Overview'], ['lookup', 'Players'], ['announce', 'Announcement'], ['codes', 'Codes'], ['gifts', 'Gifts'], ['sales', 'Sales'], ['prices', 'Prices'], ['players', 'Icons and capes'], ['locks', 'Locked items'], ['servers', 'Discover']];
   $('#app').innerHTML = '<header><h1>Surge Admin</h1><button class="btn ghost small" id="out">Sign out</button></header>'
     + '<nav class="tabs">' + tabs.map(([k, l]) => '<button class="tab ' + (tab === k ? 'on' : '') + '" data-tab="' + k + '">' + l + '</button>').join('') + '</nav><div id="page"></div>';
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
   $('#out').onclick = async () => { try { await api('logout', {}); } catch {} token = ''; try { sessionStorage.removeItem('surgeAdmin'); } catch {} login(); };
-  ({ codes, gifts, sales, prices, players, locks, servers })[tab]();
+  ({ overview, lookup, announce, codes, gifts, sales, prices, players, locks, servers })[tab]();
+}
+
+function ago(t) { if (!t) return 'never'; const s = Math.round((Date.now() - t) / 1000); if (s < 90) return 'just now'; if (s < 5400) return Math.round(s / 60) + ' minutes ago'; if (s < 129600) return Math.round(s / 3600) + ' hours ago'; return Math.round(s / 86400) + ' days ago'; }
+function overview() {
+  const o = data.overview || {};
+  const stat = (n, l) => '<div class="stat"><b>' + (n ?? 0) + '</b><span>' + l + '</span></div>';
+  $('#page').innerHTML = '<div class="stats">' + stat(o.online, 'Online now') + stat(o.day, 'Played today') + stat(o.week, 'Played this week') + stat(o.players, 'Players in total') + stat(o.redeemed, 'Codes redeemed today') + stat(o.waiting, 'Gifts not opened yet') + '</div>'
+    + (data.announce ? '<div class="card"><h2>Live announcement</h2><div class="banner">' + esc(data.announce.text) + '</div></div>' : '')
+    + '<div class="card"><h2>Online now</h2><div class="list">' + ((o.list || []).map(u => '<div class="item"><span class="dot" style="background:' + (u.status === 'busy' ? '#f87171' : u.status === 'idle' ? '#facc15' : 'var(--good)') + '"></span><div class="grow"><b>' + esc(u.name) + '</b></div><span class="uses">' + esc(u.server || 'In the menus') + '</span><button class="btn ghost small" data-look="' + esc(u.name) + '">Open</button></div>').join('') || '<p class="muted">Nobody is online right now.</p>') + '</div>'
+    + '<div class="row" style="margin-top:12px"><button class="btn ghost small" id="oRefresh">Refresh</button></div></div>';
+  $('#oRefresh').onclick = load;
+  document.querySelectorAll('[data-look]').forEach(b => b.onclick = () => { lookName = b.dataset.look; tab = 'lookup'; render(); });
+}
+let lookName = '', lookData = null;
+function lookup() {
+  const p = lookData;
+  $('#page').innerHTML = '<div class="card"><h2>Find a player</h2><form class="row" id="lForm"><label>Minecraft name or UUID<input id="lWho" maxlength="36" value="' + esc(lookName) + '"></label><button class="btn">Look up</button></form></div><div id="lOut"></div>';
+  $('#lForm').onsubmit = async e => { e.preventDefault(); lookName = $('#lWho').value.trim(); await fetchPlayer(); };
+  if (lookName && (!p || p.query !== lookName)) fetchPlayer(); else if (p) drawPlayer();
+}
+async function fetchPlayer() {
+  try { lookData = await api('player', { player: lookName }); lookData.query = lookName; drawPlayer(); }
+  catch (e) { $('#lOut').innerHTML = '<div class="card"><p class="muted">' + esc(e.message) + '</p></div>'; }
+}
+function drawPlayer() {
+  const p = lookData;
+  const online = p.seen && Date.now() - p.seen < 180000;
+  $('#lOut').innerHTML = '<div class="card"><div class="row" style="align-items:center;margin-bottom:14px"><img alt="" width="48" height="48" style="border-radius:6px;image-rendering:pixelated" src="https://mc-heads.net/avatar/' + esc(p.uuid) + '/48"><div class="grow" style="flex:1"><h2 style="margin:0">' + esc(p.name) + '</h2><div class="muted">' + (p.known ? (online ? '<span class="dot"></span>Online' + (p.server ? ' on ' + esc(p.server) : '') : 'Last seen ' + ago(p.seen)) : 'Has never opened Surge') + '</div></div></div>'
+    + '<div class="kv"><span>UUID</span><div class="code" style="font-size:13px">' + esc(p.uuid) + '</div><span>Icon</span><div>' + esc(BADGE_LABEL[p.badge] || 'None') + '</div><span>Picture cape</span><div>' + (p.cape ? 'Yes' : 'No') + '</div><span>Friends</span><div>' + p.friends + '</div>' + (p.country ? '<span>Country</span><div>' + esc(p.country) + '</div>' : '') + '<span>Personal sales</span><div>' + (p.sales.map(s => s.percent + '% off ' + esc(name(s.target) || s.target)).join(', ') || 'None') + '</div></div></div>'
+    + '<div class="card"><h2>Quick gift</h2><div class="row"><label style="max-width:140px">Coins<input id="qCoins" type="number" min="1" value="500"></label><label>Message<input id="qNote" maxlength="140" placeholder="Optional"></label><button class="btn" id="qGift">Send</button></div></div>'
+    + '<div class="card"><h2>Icon</h2><div class="row"><label style="max-width:240px">Icon<select id="qBadge"><option value="">None</option>' + data.badgeKinds.map(k => '<option value="' + k + '"' + (p.badge === k ? ' selected' : '') + '>' + esc(BADGE_LABEL[k]) + '</option>').join('') + '</select></label><button class="btn" id="qBadgeSet">Save</button></div></div>'
+    + '<div class="card"><h2>Gifts</h2><div class="list">' + (p.gifts.map(g => '<div class="item"><div class="grow">' + [g.coins ? g.coins + ' coins' : '', ...g.items.map(name)].filter(Boolean).map(esc).join(', ') + (g.note ? '<div class="sub">' + esc(g.note) + '</div>' : '') + '</div><span class="uses">' + (g.claimed ? 'Received' : 'Waiting') + '</span></div>').join('') || '<p class="muted">No gifts yet.</p>') + '</div></div>'
+    + '<div class="card"><h2>Codes used</h2><div class="list">' + (p.codes.map(c => '<div class="item"><div class="grow code">' + esc(c.code || 'Deleted code') + '</div><span class="uses">' + ago(c.at) + '</span></div>').join('') || '<p class="muted">No codes used.</p>') + '</div></div>';
+  $('#qGift').onclick = async () => { try { await api('gifts', { player: p.uuid, coins: +$('#qCoins').value, note: $('#qNote').value.trim(), items: [] }); toast('Gift sent to ' + p.name); fetchPlayer(); } catch (e) { toast(e.message, true); } };
+  $('#qBadgeSet').onclick = async () => { const v = $('#qBadge').value; try { await api('badges', v ? { player: p.uuid, badge: v } : { player: p.uuid, remove: true }); toast('Saved'); fetchPlayer(); } catch (e) { toast(e.message, true); } };
+}
+function announce() {
+  const a = data.announce;
+  $('#page').innerHTML = '<div class="card"><h2>Announcement</h2><p class="muted">Shows at the top of the launcher and as a popup in game, once per announcement.</p>'
+    + (a ? '<div class="banner" style="margin:10px 0">' + esc(a.text) + '<div class="muted" style="margin-top:6px">' + (a.until ? 'Ends ' + new Date(a.until).toLocaleString() : 'No end date') + '</div></div>' : '')
+    + '<div class="row"><label>Message<input id="aText" maxlength="200" placeholder="Double coins weekend is live!"></label><label style="max-width:150px">Show for (hours)<input id="aHours" type="number" min="0" value="48" title="0 means until you remove it"></label></div>'
+    + '<div class="row" style="margin-top:12px"><button class="btn" id="aSave">Publish</button>' + (a ? '<button class="btn ghost" id="aClear">Remove</button>' : '') + '</div></div>';
+  $('#aSave').onclick = async () => { const t = $('#aText').value.trim(); if (!t) return toast('Write a message first', true); try { await api('announce', { text: t, hours: +$('#aHours').value }); toast('Published'); load(); } catch (e) { toast(e.message, true); } };
+  if (a) $('#aClear').onclick = async () => { try { await api('announce', { text: '' }); toast('Removed'); load(); } catch (e) { toast(e.message, true); } };
 }
 
 function codes() {
@@ -160,16 +212,21 @@ const BADGE_COLOR = { owner: '#f2c430', staff: '#ff6060', booster: '#fa8cff', be
 let giftPicked = [];
 function gifts() {
   $('#page').innerHTML = '<div class="card"><h2>Send a gift</h2><div class="row">'
-    + '<label>Player<input id="gWho" maxlength="36" placeholder="Minecraft name"></label>'
-    + '<label style="max-width:120px">Coins<input id="gCoins" type="number" min="0" value="0"></label></div>'
+    + '<label id="gWhoL">Player<input id="gWho" maxlength="36" placeholder="Minecraft name"></label>'
+    + '<label style="max-width:120px">Coins<input id="gCoins" type="number" min="0" value="0"></label>'
+    + '<label class="check"><input type="checkbox" id="gAll"> Everyone</label>'
+    + '<label style="max-width:150px;display:none" id="gHoursL">Can claim for (hours)<input id="gHours" type="number" min="0" value="72" title="0 means forever"></label></div>'
     + '<div class="row" style="margin-top:10px"><label>Message (optional)<input id="gNote" maxlength="140" placeholder="Thanks for boosting the server!"></label></div>'
     + '<p class="muted" style="margin:8px 0 0">The player gets it the next time they open Surge, with a popup that shows what they got.</p>'
     + '<h2 style="margin-top:16px">Items</h2><div class="picker" id="gPick"></div>'
     + '<div class="row" style="margin-top:12px"><button class="btn" id="gSend">Send gift</button></div></div>'
-    + '<div class="card"><h2>Recent gifts</h2><div class="list">' + (data.gifts.map(g => '<div class="item"><div class="grow"><div><b>' + esc(g.name) + '</b></div><div class="sub">' + [g.coins ? g.coins + ' coins' : '', ...g.items.map(name)].filter(Boolean).map(esc).join(', ') + (g.note ? ' · ' + esc(g.note) : '') + '</div></div><span class="uses">' + (g.claimed ? 'Received' : 'Waiting') + '</span>' + (g.claimed ? '' : '<button class="btn ghost small" data-gdel="' + g.id + '">Cancel</button>') + '</div>').join('') || '<p class="muted">No gifts yet.</p>') + '</div></div>';
+    + '<div class="card"><h2>Recent gifts</h2><div class="list">' + (data.gifts.map(g => '<div class="item"><div class="grow"><div><b>' + esc(g.name) + '</b></div><div class="sub">' + [g.coins ? g.coins + ' coins' : '', ...g.items.map(name)].filter(Boolean).map(esc).join(', ') + (g.note ? ' · ' + esc(g.note) : '') + '</div></div><span class="uses">' + (g.uuid === '*' ? (g.got || 0) + ' received' + (g.claimed ? (g.claimed > Date.now() ? ', ends ' + new Date(g.claimed).toLocaleDateString() : ', ended') : '') : (g.claimed ? 'Received' : 'Waiting')) + '</span>' + (g.claimed && g.uuid !== '*' ? '' : '<button class="btn ghost small" data-gdel="' + g.id + '">' + (g.uuid === '*' ? 'Stop' : 'Cancel') + '</button>') + '</div>').join('') || '<p class="muted">No gifts yet.</p>') + '</div></div>';
   picker($('#gPick'), { multi: true, value: () => giftPicked, pick: v => { giftPicked = giftPicked.includes(v) ? giftPicked.filter(x => x !== v) : [...giftPicked, v]; } });
+  $('#gAll').onchange = () => { const all = $('#gAll').checked; $('#gWhoL').style.display = all ? 'none' : ''; $('#gHoursL').style.display = all ? '' : 'none'; };
   $('#gSend').onclick = async () => {
-    try { const r = await api('gifts', { player: $('#gWho').value.trim(), coins: +$('#gCoins').value, note: $('#gNote').value.trim(), items: giftPicked }); toast('Gift sent to ' + r.name); giftPicked = []; load(); }
+    const all = $('#gAll').checked;
+    if (all && !confirm('Send this gift to every Surge player?')) return;
+    try { const r = await api('gifts', { everyone: all, hours: +$('#gHours').value, player: $('#gWho').value.trim(), coins: +$('#gCoins').value, note: $('#gNote').value.trim(), items: giftPicked }); toast(all ? 'Gift sent to everyone' : 'Gift sent to ' + r.name); giftPicked = []; load(); }
     catch (e) { toast(e.message, true); }
   };
   document.querySelectorAll('[data-gdel]').forEach(b => b.onclick = async () => { try { await api('gifts/delete', { id: +b.dataset.gdel }); load(); } catch (e) { toast(e.message, true); } });

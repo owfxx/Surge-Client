@@ -201,6 +201,7 @@ public class WardrobeScreen extends Screen {
 		if (confirmNow || (item.id().equals(pendingBuy) && System.currentTimeMillis() < pendingUntil)) {
 			w.buy(item);
 			pendingBuy = null;
+			gg.surge.client.features.CustomSounds.preview("preset:coin");
 			toast("Unlocked " + item.name(), 0xFF8CFFA0);
 			if (item.category().equals("cosmetic")) setEquipped(typeOf(item), item.key());
 		} else {

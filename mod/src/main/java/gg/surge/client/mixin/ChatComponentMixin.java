@@ -66,8 +66,7 @@ public abstract class ChatComponentMixin {
 			int at = lower.indexOf(me);
 			boolean own = lower.startsWith("<" + me + ">") || lower.startsWith(me + ":") || lower.startsWith(me + " »");
 			if (at >= 0 && !own && surge$count <= 1) {
-				mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_PLING.value(), 1.6f, 0.6f));
-				message = Component.literal("» ").withStyle(ChatFormatting.GOLD).append(message);
+				gg.surge.client.features.CustomSounds.preview("preset:ding");
 			}
 		}
 		if (!Mods.CHAT_TIME.on()) return message;

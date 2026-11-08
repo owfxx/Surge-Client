@@ -11,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ public class GiftScreen extends Screen {
 		Minecraft mc = Minecraft.getInstance();
 		mc.execute(() -> {
 			mc.setScreen(new GiftScreen(mc.screen, heading, note, coins, itemIds));
-			try { mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.PLAYER_LEVELUP, 1.2f, 0.6f)); } catch (Exception ignored) { }
+			try { gg.surge.client.features.CustomSounds.preview("preset:chime"); } catch (Exception ignored) { }
 		});
 	}
 

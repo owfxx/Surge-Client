@@ -128,6 +128,7 @@ public final class Wallet {
 		JsonObject out = new JsonObject();
 		for (String k : new String[]{"codes", "sales", "servers"}) { addAll(out, gh, k); addAll(out, svc, k); }
 		if (svc != null && svc.has("prices")) out.add("prices", svc.get("prices"));
+		if (svc != null && svc.has("announce")) out.add("announce", svc.get("announce"));
 		if (svc != null && svc.has("locked")) out.add("locked", svc.get("locked"));
 		else if (gh != null && gh.has("locked")) out.add("locked", gh.get("locked"));
 		remoteCache = out;
@@ -146,7 +147,25 @@ public final class Wallet {
 			Sales.applyRemote(r);
 			Locks.applyRemote(r);
 			Shop.applyRemote(r);
+			announce(r);
 		});
+	}
+
+	private static void announce(JsonElement r) {
+		try {
+			if (r == null || !r.isJsonObject() || !r.getAsJsonObject().has("announce")) return;
+			JsonObject a = r.getAsJsonObject().getAsJsonObject("announce");
+			long id = a.get("id").getAsLong();
+			String text = a.get("text").getAsString();
+			gg.surge.client.config.SurgeConfig c = gg.surge.client.config.SurgeConfig.get();
+			if (c.seenAnnouncement == id || text.isBlank()) return;
+			c.seenAnnouncement = id;
+			gg.surge.client.config.SurgeConfig.save();
+			net.minecraft.client.Minecraft.getInstance().execute(() -> {
+				gg.surge.client.net.Social.notice("Surge", text);
+				gg.surge.client.features.CustomSounds.preview("preset:chime");
+			});
+		} catch (Exception ignored) { }
 	}
 
 	public record Reward(int coins, java.util.List<String> items, int error) {

@@ -24,6 +24,7 @@ const state = {
 };
 
 function toast(msg, err = false) {
+  sfx(err ? 'err' : 'ok');
   const t = document.createElement('div');
   t.className = `toast${err ? ' err' : ''}`;
   t.innerHTML = '<div class="tm"></div>';
@@ -64,6 +65,46 @@ document.addEventListener('pointerdown', e => {
   if (b && !b.disabled && e.button === 0) clickSound();
 });
 
+function sfx(kind) {
+  if (state.cfg && state.cfg.uiSounds === false) return;
+  try {
+    audio = audio || new AudioContext();
+    if (audio.state === 'suspended') audio.resume();
+    const t = audio.currentTime, out = audio.createGain();
+    out.gain.value = 0.6;
+    out.connect(audio.destination);
+    const tone = (f, at, len, type = 'sine', vol = 0.12, to) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t + at);
+      if (to) o.frequency.exponentialRampToValueAtTime(to, t + at + len);
+      g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(vol, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + len);
+      o.connect(g).connect(out); o.start(t + at); o.stop(t + at + len + 0.02);
+    };
+    const noise = (at, len, freq, vol) => {
+      const b = audio.createBuffer(1, Math.floor(audio.sampleRate * len), audio.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / d.length);
+      const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+      src.buffer = b; f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t + at); f.frequency.exponentialRampToValueAtTime(freq * 2.5, t + at + len); f.Q.value = 0.8; g.gain.value = vol;
+      src.connect(f).connect(g).connect(out); src.start(t + at);
+    };
+    if (kind === 'hover') tone(1800, 0, 0.03, 'sine', 0.025);
+    else if (kind === 'swish') noise(0, 0.18, 700, 0.18);
+    else if (kind === 'ok') { tone(880, 0, 0.18, 'triangle', 0.08); tone(1318, 0.07, 0.25, 'triangle', 0.07); }
+    else if (kind === 'err') { tone(220, 0, 0.12, 'square', 0.04); tone(165, 0.1, 0.18, 'square', 0.04); }
+    else if (kind === 'coin') { tone(988, 0, 0.08, 'square', 0.05); tone(1319, 0.07, 0.3, 'square', 0.05); }
+    else if (kind === 'play') { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.06, 0.5, 'triangle', 0.06)); noise(0, 0.4, 400, 0.08); }
+    else if (kind === 'open') tone(600, 0, 0.12, 'sine', 0.06, 900);
+  } catch { }
+}
+let lastHover = null, lastHoverAt = 0;
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest('.nav, .btn, .ward-card, .pack-card, .seg button');
+  if (!b || b === lastHover) return;
+  lastHover = b;
+  const now = performance.now();
+  if (now - lastHoverAt > 60) { lastHoverAt = now; sfx('hover'); }
+});
+
 const tip = $('#tip');
 document.addEventListener('mouseover', e => {
   const el = e.target.closest('[data-tip]');
@@ -79,6 +120,7 @@ document.addEventListener('mousemove', e => {
 document.addEventListener('mousedown', () => tip.classList.add('hidden'));
 
 function modal(html, bind) {
+  sfx('open');
   $('#modalCard').innerHTML = html;
   $('#modal').classList.remove('hidden');
   const close = () => $('#modal').classList.add('hidden');
@@ -193,6 +235,7 @@ document.querySelectorAll('[data-win]').forEach(b => b.addEventListener('click',
 $('#accountBtn').addEventListener('click', openAccounts);
 
 function go(v, opts = {}) {
+  if (state.view !== v) sfx('swish');
   state.view = v;
   if (v === 'packs' && !opts.keepDetail) state.detail = null;
   document.querySelectorAll('.nav[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
@@ -202,6 +245,9 @@ function go(v, opts = {}) {
 
 function render() {
   view.scrollTop = 0;
+  view.classList.remove('view-anim');
+  void view.offsetWidth;
+  if (state.view !== 'home') view.classList.add('view-anim');
   view.classList.toggle('home', state.view === 'home');
   if (state.view !== 'home') disposeScene();
   if (state.view !== 'skins') disposeSkinPreview();
@@ -223,6 +269,64 @@ function unknownSkin() {
   g.fillStyle = '#d4d4d8';
   Q_MARK.forEach((row, r) => [...row].forEach((ch, col) => { if (ch === 'X') g.fillRect(8 + col, 8 + r, 1, 1); }));
   return c;
+}
+
+const EASE = x => x * x * (3 - 2 * x);
+const CL = v => Math.max(0, Math.min(1, v));
+function emotePose(name, t) {
+  const P = { rArm: [0, 0, 0], lArm: [0, 0, 0], rLeg: [0, 0, 0], lLeg: [0, 0, 0], head: [0, 0, 0], body: [0, 0, 0], lean: 0, bob: 0, sway: 0 };
+  const sin = Math.sin, cos = Math.cos, abs = Math.abs;
+  switch (name) {
+    case 'IDLE_LOOK': { const lk = sin(t * 0.8) * 42 * Math.min(1, t); P.head = [-4 + sin(t * 0.4) * 6, lk, 0]; P.sway = sin(t * 0.8) * 0.25; P.rArm = [-4, 0, 4]; P.lArm = [-4, 0, -4]; break; }
+    case 'IDLE_STRETCH': { const c = (t % 6) / 6; const up = c < 0.08 ? 0 : c < 0.22 ? EASE((c - 0.08) / 0.14) : c < 0.55 ? 1 : c < 0.7 ? EASE(1 - (c - 0.55) / 0.15) : 0; P.rArm = [0, 0, 170 * up]; P.lArm = [0, 0, -170 * up]; P.head = [-25 * up, 0, 0]; P.lean = -8 * up; P.bob = -0.6 * up; break; }
+    case 'IDLE_YAWN': { const c = (t % 7) / 7; const y = EASE(CL(Math.min(c * 5, (0.6 - c) * 5))); P.rArm = [-130 * y, -30 * y, 10 * y]; P.head = [-20 * y + 6 * (1 - y), 0, 6 * (1 - y)]; P.lArm = [-6, 0, -4]; P.bob = 0.3 * (1 - y); break; }
+    case 'IDLE_TAP': { const tap = Math.max(0, sin(t * 9)); P.rLeg = [-14 * tap, 0, 3]; P.lArm = [-50, 35, -6]; P.rArm = [-50, -35, 6]; P.head = [4, 0, sin(t * 4.5) * 3]; break; }
+    case 'IDLE_CROSS': { const br = sin(t * 1.6); P.rArm = [-62 + br * 2, -42, 12]; P.lArm = [-58 + br * 2, 42, -12]; P.head = [-3 + br, sin(t * 0.5) * 10, 0]; P.lean = -2; break; }
+    case 'IDLE_VIBE': { const b = sin(t * 2 * Math.PI); P.head = [10 * abs(b), sin(t * Math.PI) * 10, 0]; P.bob = -abs(b) * 0.6; P.rArm = [-10, 0, 8 + 6 * abs(b)]; P.lArm = [-10, 0, -8 - 6 * abs(b)]; P.sway = b * 0.4; break; }
+    case 'WAVE': { const w = sin(t * 9), hi = EASE(CL(t / 0.3)); P.rArm = [-15 + w * 5, 0, (150 + w * 24) * hi]; P.lArm = [4, 0, -6]; P.head = [-8, -14, 6 + w * 3]; P.body = [0, -6, 0]; P.bob = -abs(sin(t * 4.5)) * 0.5; break; }
+    case 'CLAP': { const c = abs(sin(t * 7)); P.rArm = [-72, -(4 + 17 * c), 0]; P.lArm = [-72, 4 + 17 * c, 0]; P.head = [4 - 6 * c, 0, 0]; P.bob = -c * 0.3; break; }
+    case 'DAB': { const d = EASE(CL(t * 4)); P.lArm = [0, 0, -125 * d]; P.rArm = [-105 * d, -55 * d, 0]; P.head = [30 * d, 28 * d, 0]; P.lean = 8 * d; break; }
+    case 'SHRUG': { const k = EASE(0.5 - 0.5 * cos(t * Math.PI * 2 / 1.2)); P.rArm = [-25 * k, 0, 32 * k]; P.lArm = [-25 * k, 0, -32 * k]; P.head = [-6 * k, 0, 14 * k]; break; }
+    case 'SALUTE': P.rArm = [-118, -50, 14]; P.lArm = [0, 0, -4]; P.head = [-6, 0, 0]; break;
+    case 'CHEER': { const j = abs(sin(t * 5)), pump = sin(t * 10) * 14; P.rArm = [0, 0, 160 + pump]; P.lArm = [0, 0, -160 - pump]; P.head = [-15, 0, 0]; P.bob = -j * 2.5; P.rLeg = [0, 0, 4 * j]; P.lLeg = [0, 0, -4 * j]; break; }
+    case 'BOW': { const ph = (t % 3) / 3, dn = EASE(CL(ph / 0.35)) * (1 - EASE(CL((ph - 0.65) / 0.35))); P.lean = 40 * dn; P.rArm = [-70 * dn, -45 * dn, 0]; P.lArm = [25 * dn, 0, -5]; P.head = [10 * dn, 0, 0]; break; }
+    case 'HEART': { const beat = Math.max(0, sin(t * 7)), k = sin(t * 2); P.rArm = [-82 - beat * 4, -36, 0]; P.lArm = [-82 - beat * 4, 36, 0]; P.head = [-6, 0, k * 6]; P.sway = k * 0.6; P.body = [0, k * 5, 0]; P.bob = -beat * 0.4; break; }
+    case 'FLOSS': { const f = sin(t * 7), sw = sin(t * 14); P.rArm = [26 * sw, 0, 42 * f]; P.lArm = [-26 * sw, 0, 42 * f]; P.body = [0, 0, -7 * f]; P.sway = -2 * f; P.head = [0, 0, 7 * f]; P.rLeg = [0, 0, -4 * f]; P.lLeg = [0, 0, -4 * f]; break; }
+    case 'TPOSE': P.rArm = [0, 0, 90]; P.lArm = [0, 0, -90]; break;
+    case 'LAUGH': { const sh = sin(t * 20); P.lean = -14 + sh * 2; P.rArm = [-30, -30, 0]; P.lArm = [-35, 32, 0]; P.head = [-24 + sh * 5, 0, 0]; P.bob = abs(sh) * 0.5; break; }
+    case 'FACEPALM': { const a = EASE(CL(t / 0.45)), sh = t > 0.6 ? sin(t * 6.5) * 9 * a : 0; P.rArm = [-128 * a, -38 * a, 0]; P.lArm = [-20 * a, 25 * a, -6]; P.head = [30 * a, sh, 0]; P.lean = 7 * a; P.bob = 0.4 * a; break; }
+    case 'SIT': { const br = sin(t * 2); P.bob = 10; P.rLeg = [-88, 8, 0]; P.lLeg = [-88, -8, 0]; P.rArm = [-20, 0, 12]; P.lArm = [-20, 0, -12]; P.head = [4 + br * 2, sin(t * 0.7) * 12, 0]; break; }
+    default: { const b = abs(sin(t * 4)), side = sin(t * 4); P.rArm = [-40 - 30 * side, 0, 20]; P.lArm = [-40 + 30 * side, 0, -20]; P.head = [6 * b, side * 8, 0]; P.bob = -b * 1.2; P.sway = side * 0.5; }
+  }
+  return P;
+}
+const D2R = Math.PI / 180;
+function applyPose(player, P, k) {
+  const s = player.skin;
+  const set = (part, r) => part.rotation.set(r[0] * D2R * k, -r[1] * D2R * k, -r[2] * D2R * k);
+  set(s.rightArm, P.rArm); set(s.leftArm, P.lArm); set(s.rightLeg, P.rLeg); set(s.leftLeg, P.lLeg); set(s.head, P.head);
+  s.body.rotation.set((P.body[0] + P.lean) * D2R * k, -P.body[1] * D2R * k, -P.body[2] * D2R * k);
+  player.position.y = -P.bob * k;
+  player.position.x = P.sway * k;
+}
+function emoteAnimation(getName) {
+  let cur = null, since = 0;
+  return new skinview3d.FunctionAnimation((player, t) => {
+    const name = getName();
+    if (name !== cur) { cur = name; since = t; }
+    if (!name) {
+      const s = player.skin;
+      s.rightArm.rotation.set(Math.sin(t * 0.67) * 0.04, 0, 0.06 + Math.cos(t * 0.9) * 0.035);
+      s.leftArm.rotation.set(-Math.sin(t * 0.67) * 0.04, 0, -0.06 - Math.cos(t * 0.9) * 0.035);
+      s.rightLeg.rotation.set(0, 0, 0); s.leftLeg.rotation.set(0, 0, 0); s.head.rotation.set(0, 0, 0); s.body.rotation.set(0, 0, 0);
+      player.position.set(0, 0, 0);
+      player.cape.rotation.x = 0.06 * Math.PI + Math.sin(t * 2) * 0.01;
+      return;
+    }
+    const lt = t - since;
+    applyPose(player, emotePose(name, lt), Math.min(1, lt / 0.25));
+    player.cape.rotation.x = 0.06 * Math.PI + Math.max(0, player.skin.body.rotation.x) * 0.6;
+  });
 }
 
 function surgeIdle() {
@@ -401,6 +505,7 @@ function renderHome() {
   updateHeroText();
   homeSide();
   loadNews();
+  loadAnnouncement();
   mountScene();
   if (state.launch.showLog) { const lg = $('#log'); lg.textContent = state.launch.log.join('\n'); lg.scrollTop = lg.scrollHeight; }
   $('#packTitle').onclick = pickPack;
@@ -581,6 +686,7 @@ async function play(target) {
   if (!state.selected) { go('packs'); newPackModal(); return; }
   if (!state.accounts.active) { openAccounts(); return; }
   if (state.launch.busy) { toast('Minecraft is already running', true); return; }
+  sfx('play');
   if (state.view !== 'home') go('home');
   Object.assign(state.launch, { busy: true, stage: target.server ? `Joining ${target.server}` : target.world ? `Opening ${target.world}` : 'Starting', log: [] });
   updateLaunchUI();
@@ -930,19 +1036,19 @@ function wardThumb(item, data) {
       if (img.complete && img.naturalWidth) draw(); else img.addEventListener('load', draw, { once: true });
     }
   } else if (item.type === 'wings') {
-    c.width = 128; c.height = 64;
+    c.width = 256; c.height = 128;
     const img = wardImg(`assets/cosmetics/wings_${item.key}.png`);
-    const draw = () => { g.save(); g.translate(64, 0); g.drawImage(img, 0, 0, 64, 64 * img.naturalHeight / img.naturalWidth * 2); g.scale(-1, 1); g.drawImage(img, 0, 0, 64, 64 * img.naturalHeight / img.naturalWidth * 2); g.restore(); };
+    const draw = () => { g.save(); g.translate(128, 0); g.drawImage(img, 0, 0, 128, 128 * img.naturalHeight / img.naturalWidth * 2); g.scale(-1, 1); g.drawImage(img, 0, 0, 128, 128 * img.naturalHeight / img.naturalWidth * 2); g.restore(); };
     if (img.complete && img.naturalWidth) draw(); else img.addEventListener('load', draw, { once: true });
   } else if (item.type === 'halo') {
-    c.width = 96; c.height = 64;
+    c.width = 192; c.height = 128;
     const col = '#' + (HALO_COLORS[item.key] || 0xffffff).toString(16).padStart(6, '0');
-    g.shadowColor = col; g.shadowBlur = 14; g.strokeStyle = col; g.lineWidth = 6;
-    g.beginPath(); g.ellipse(48, 32, 34, 12, 0, 0, Math.PI * 2); g.stroke();
+    g.shadowColor = col; g.shadowBlur = 28; g.strokeStyle = col; g.lineWidth = 12;
+    g.beginPath(); g.ellipse(96, 64, 68, 24, 0, 0, Math.PI * 2); g.stroke();
   } else {
-    c.width = 64; c.height = 64;
-    g.fillStyle = '#e4e4e7'; g.font = '30px Monocraft, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText(item.name.slice(0, 1), 32, 34);
+    c.width = 128; c.height = 128;
+    g.fillStyle = '#e4e4e7'; g.font = '60px Monocraft, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(item.name.slice(0, 1), 64, 68);
   }
   return c;
 }
@@ -986,13 +1092,24 @@ function wardExtras(data) {
   }
 }
 
+function crisp(v) {
+  const T = window.THREE, tx = v.capeTexture;
+  if (!T || !tx) return;
+  tx.magFilter = T.NearestFilter;
+  tx.minFilter = T.LinearMipmapLinearFilter;
+  tx.generateMipmaps = true;
+  try { tx.anisotropy = v.renderer.capabilities.getMaxAnisotropy(); } catch { }
+  tx.needsUpdate = true;
+}
+
 async function mountWardrobeViewer(data) {
   disposeWardrobe();
   const canvas = $('#wdCanvas');
   if (!canvas || !window.skinview3d) return;
   const box = canvas.parentElement.getBoundingClientRect();
   const v = ward.viewer = new skinview3d.SkinViewer({ canvas, width: box.width, height: box.height, zoom: 0.8, fov: 40 });
-  v.animation = new skinview3d.IdleAnimation();
+  v.pixelRatio = Math.max(2, window.devicePixelRatio || 1);
+  v.animation = emoteAnimation(() => ward.emote || (ward.data && ward.data.equipped.idle && ward.data.equipped.idle !== 'none' ? ward.data.equipped.idle : null));
   v.autoRotate = true;
   v.autoRotateSpeed = 0.55;
   v.controls.enableZoom = false;
@@ -1012,6 +1129,7 @@ async function mountWardrobeViewer(data) {
       const { canvas: cc, changed } = capeFrameCanvas(cape, data);
       if (cc && (changed || ward.capeKey !== cape)) {
         v.loadCape(cc, { backEquipment: ward.elytra ? 'elytra' : 'cape' });
+        crisp(v);
         ward.capeKey = cape;
       }
     } else if (ward.capeKey) { v.loadCape(null); ward.capeKey = ''; }
@@ -1091,12 +1209,14 @@ function drawWardGrid() {
     card.innerHTML = `<div class="ward-thumb"></div><div class="ward-name">${esc(it.name)}</div><div class="ward-status${it.discount && !it.owned ? ' sale' : ''}">${status}</div>${action ? `<button class="btn sm ${action === 'Buy' ? 'primary' : ''}">${action}</button>` : ''}`;
     card.querySelector('.ward-thumb').appendChild(thumb);
     if (['cape', 'wings', 'halo'].includes(it.type)) card.onmouseenter = () => { ward.preview = { [it.type]: it.key }; ward.capeKey = '-'; wardExtras(data); };
-    card.onmouseleave = () => { ward.preview = null; ward.capeKey = '-'; wardExtras(ward.data); };
+    else card.onmouseenter = () => { ward.emote = it.key; };
+    card.onmouseleave = () => { ward.preview = null; ward.emote = null; ward.capeKey = '-'; wardExtras(ward.data); };
     const btn = card.querySelector('button');
     if (btn) btn.onclick = async () => {
       let r;
       if (action === 'Buy') {
         r = await safe(() => S.wardrobe.buy(it.id), `Unlocked ${it.name}`);
+        if (r) sfx('coin');
         if (r && it.type !== 'emote') r = (await safe(() => S.wardrobe.equip(it.type, it.key))) || r;
       } else if (it.type === 'emote') r = await safe(() => S.wardrobe.wheel(it.key));
       else r = await safe(() => S.wardrobe.equip(it.type, equipped ? 'none' : it.key));
@@ -1657,6 +1777,28 @@ async function adminPanel(tab = 'codes') {
       if (r) toast(`Published ${r.tag}`);
     };
   });
+}
+
+let announceCache = null;
+async function loadAnnouncement() {
+  try {
+    if (!announceCache || Date.now() - announceCache.at > 120000) {
+      const api = (state.cfg && state.cfg.apiUrl) || 'https://surge-client.remvuxd.workers.dev';
+      const r = await fetch(`${api}/v1/public`, { signal: AbortSignal.timeout(6000) });
+      const d = await r.json();
+      announceCache = { at: Date.now(), a: d && d.announce };
+    }
+    const a = announceCache.a, hero = $('.hero');
+    if (!a || !hero || $('.announce', hero)) return;
+    let gone = '';
+    try { gone = localStorage.getItem('surgeAnnounce') || ''; } catch { }
+    if (String(a.id) === gone) return;
+    const el = document.createElement('div');
+    el.className = 'announce';
+    el.innerHTML = `<b>News</b><div class="grow">${esc(a.text)}</div><button class="btn sm x-btn" aria-label="Dismiss">&times;</button>`;
+    el.querySelector('button').onclick = () => { try { localStorage.setItem('surgeAnnounce', String(a.id)); } catch { } el.remove(); };
+    hero.appendChild(el);
+  } catch { }
 }
 
 let newsCache = null;
