@@ -1,3 +1,10 @@
+## 1.8.0
+- New Distant Terrain (Beta): see land up to 1024 chunks away. It remembers every place you visit, with distance, detail and fog settings
+- New Background FPS mod lowers your FPS when you tab out
+- Clips are much lighter on your FPS: frames are read in the background instead of stalling your game, and they record at a lower rate when your game is struggling
+- The launcher uses less memory and pauses its animations while you play, and it minimizes itself when the game starts
+- Shoulder pets have been removed
+
 ## 1.7.1
 - Shoulder pets: Skin Plush (pick any player and it gets their skin), Bee Buddy, Tiny Warden, Allay Friend, Axolotl, Sleepy Fox and Frog. They breathe, flap and look around, and dance along when you emote
 - Idle animations: buy one in the Wardrobe, and it plays when you stand still for 2 seconds

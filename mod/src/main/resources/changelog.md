@@ -1,7 +1,7 @@
 ## 1.8.0
 - New Distant Terrain (Beta): see land up to 1024 chunks away. It remembers every place you visit, with distance, detail and fog settings
 - New Background FPS mod lowers your FPS when you tab out
-- Clips are much lighter on your FPS, and record less when your game is struggling
+- Clips are much lighter on your FPS: frames are read in the background instead of stalling your game, and they record at a lower rate when your game is struggling
 - The launcher uses less memory and pauses its animations while you play, and it minimizes itself when the game starts
 - Shoulder pets have been removed
 
