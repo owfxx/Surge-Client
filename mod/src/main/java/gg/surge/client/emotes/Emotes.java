@@ -16,7 +16,12 @@ public final class Emotes {
 		CRY("Cry", 4.0f, false), SIT("Sit", 6.0f, true), GRIDDY("Griddy", 13.2f, "griddy", 146),
 		SHUFFLE("Shuffle", 15.2f, "shuffle", 126), DISCO("Disco Fever", 16.0f, "disco", 120),
 		IDLE_LOOK("Look Around", 8f, true), IDLE_STRETCH("Big Stretch", 6f, true), IDLE_YAWN("Sleepy", 7f, true),
-		IDLE_TAP("Foot Tap", 4f, true), IDLE_CROSS("Arms Crossed", 6f, true), IDLE_VIBE("Vibing", 4f, true);
+		IDLE_TAP("Foot Tap", 4f, true), IDLE_CROSS("Arms Crossed", 6f, true), IDLE_VIBE("Vibing", 4f, true),
+		ZOMBIE("Zombie", 6.0f, true), ROBOT("Robot", 6.0f, true), AIRGUITAR("Air Guitar", 5.0f, false),
+		JUMPJACKS("Jumping Jacks", 4.0f, true), FLEX("Flex", 3.6f, false), KISS("Blow a Kiss", 2.8f, false),
+		SPIN("Spin", 2.4f, false), FACEPLANT("Faint", 4.0f, false),
+		IDLE_WATCH("Check Watch", 6f, true), IDLE_SCRATCH("Head Scratch", 5f, true), IDLE_BOX("Shadow Box", 3f, true),
+		IDLE_PHONE("Scrolling", 6f, true), IDLE_WHISTLE("Whistling", 4f, true);
 
 		public final String label;
 		public final float seconds;
@@ -51,7 +56,7 @@ public final class Emotes {
 	}
 
 	public static final java.util.Set<Emote> WALKABLE = java.util.EnumSet.of(Emote.WAVE, Emote.CLAP, Emote.FACEPALM, Emote.SHRUG, Emote.SALUTE,
-		Emote.LAUGH, Emote.HEART, Emote.TPOSE, Emote.DAB, Emote.CRY);
+		Emote.LAUGH, Emote.HEART, Emote.TPOSE, Emote.DAB, Emote.CRY, Emote.ZOMBIE, Emote.KISS, Emote.FLEX);
 	public static volatile boolean walking;
 
 	private static Emote current;
@@ -93,7 +98,7 @@ public final class Emotes {
 		var o = mc.options;
 		boolean busy = o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown() || o.keyShift.isDown()
 			|| o.keyAttack.isDown() || o.keyUse.isDown() || !p.onGround() || p.isPassenger() || p.isSleeping() || p.isSwimming() || p.isFallFlying()
-			|| p.getDeltaMovement().horizontalDistanceSqr() > 1.0E-4 || Math.abs(p.getYRot() - lastYaw) > 0.5f || Math.abs(p.getXRot() - lastPitch) > 0.5f;
+			|| !canEmote(p) || p.getDeltaMovement().horizontalDistanceSqr() > 1.0E-4 || Math.abs(p.getYRot() - lastYaw) > 0.5f || Math.abs(p.getXRot() - lastPitch) > 0.5f;
 		lastYaw = p.getYRot();
 		lastPitch = p.getXRot();
 		long now = System.currentTimeMillis();
@@ -109,9 +114,20 @@ public final class Emotes {
 		return idling && current != null;
 	}
 
+	public static boolean canEmote(LocalPlayer p) {
+		return p != null && p.onGround() && !p.isFallFlying() && !p.isPassenger() && !p.isSwimming() && !p.isSleeping()
+			&& !p.getAbilities().flying && !p.isInWater() && !p.isSpectator() && !p.isDeadOrDying() && !p.onClimbable();
+	}
+
+	private static int airTicks;
+
 	public static void play(Minecraft mc, Emote emote) {
 		LocalPlayer p = mc.player;
 		if (p == null || !owned(emote)) return;
+		if (!canEmote(p)) {
+			mc.gui.setOverlayMessage(net.minecraft.network.chat.Component.literal("You can't emote right now"), false);
+			return;
+		}
 		idling = false;
 		if (current != null) stop(mc);
 		current = emote;
@@ -141,6 +157,11 @@ public final class Emotes {
 		if (p == null) { current = null; return; }
 		var o = mc.options;
 		float t = (System.nanoTime() - startNanos) / 1e9f;
+		airTicks = p.onGround() ? 0 : airTicks + 1;
+		if (p.isFallFlying() || p.isSwimming() || p.isPassenger() || p.isSleeping() || p.getAbilities().flying || p.isDeadOrDying() || p.isSpectator() || airTicks > 6) {
+			stop(mc);
+			return;
+		}
 		boolean walkable = WALKABLE.contains(current);
 		boolean moved = o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown();
 		if (t > 0.25f && (o.keyAttack.isDown() || o.keyUse.isDown() || (walkable ? o.keyShift.isDown() : moved))) {

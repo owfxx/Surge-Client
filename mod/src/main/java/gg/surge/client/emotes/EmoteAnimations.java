@@ -130,6 +130,78 @@ final class EmoteAnimations {
 				else p.rArm(-40, 30, -40).head(10, 15, 0);
 				p.lArm(-20, 0, -15 - 10 * Math.abs(hip)).body(0, 10 * hip, 0).sway(hip * 1.2f).rLeg(0, 0, 6 + 4 * hip).lLeg(-10 * Math.max(0, hip), 0, -6);
 			}
+			case ZOMBIE -> {
+				float lurch = sin(t * 2.4f);
+				p.rArm(-88 + lurch * 4, -6, 0).lArm(-86 - lurch * 4, 6, 0).head(10 + lurch * 4, lurch * 8, 8 * lurch)
+					.sway(lurch * 0.5f).body(0, lurch * 6, 0).rLeg(-10 * Math.max(0, lurch), 0, 2).lLeg(-10 * Math.max(0, -lurch), 0, -2);
+			}
+			case ROBOT -> {
+				int beat = (int) (t * 2.5f) % 8;
+				float[][] r = {{-90, 0, 0}, {-90, 0, 0}, {0, 0, 90}, {0, 0, 0}, {-90, -40, 0}, {-170, 0, 0}, {0, 0, 0}, {-45, 0, 45}};
+				float[][] l = {{0, 0, 0}, {-90, 0, 0}, {0, 0, -90}, {-90, 0, 0}, {-90, 40, 0}, {0, 0, 0}, {-170, 0, 0}, {-45, 0, -45}};
+				float[] hd = {0, 30, -30, 0, 0, 20, -20, 0};
+				p.rArm(r[beat][0], r[beat][1], r[beat][2]).lArm(l[beat][0], l[beat][1], l[beat][2]).head(0, hd[beat], 0).bob(beat % 2 == 0 ? 0.3f : 0f);
+			}
+			case AIRGUITAR -> {
+				float strum = sin(t * 22f);
+				float bang = Math.abs(sin(t * 6f));
+				p.lArm(-70, 40, -10).rArm(-35 + strum * 18, -25, 10).head(20 * bang, 0, 0).lean(-6 + bang * 4)
+					.rLeg(0, 0, 6).lLeg(-12, 0, -8).bob(-bang * 0.4f);
+			}
+			case JUMPJACKS -> {
+				float j = 0.5f - 0.5f * cos(t * (float) Math.PI * 2.4f);
+				p.rArm(0, 0, 20 + 150 * j).lArm(0, 0, -20 - 150 * j).rLeg(0, 0, 4 + 14 * j).lLeg(0, 0, -4 - 14 * j)
+					.bob(-(float) Math.abs(sin(t * (float) Math.PI * 2.4f)) * 1.6f).head(-4 * j, 0, 0);
+			}
+			case FLEX -> {
+				float up = Emotes.ease(clamp(t / 0.3f));
+				float pump = sin(t * 5f);
+				float sq = Math.max(0, pump);
+				p.rArm(-30 * up, -20 * up, (125 + 10 * sq) * up).lArm(-30 * up, 20 * up, (-125 - 10 * sq) * up).head((-10 + 8 * sq) * up, pump * 8, 0).lean((-6 + 4 * sq) * up).bob(-0.3f * up);
+			}
+			case KISS -> {
+				float a = Emotes.ease(clamp(t / 0.4f));
+				float out = Emotes.ease(clamp((t - 0.9f) / 0.35f));
+				p.rArm((-120 + 80 * out) * a, (-35 + 10 * out) * a, (10 + 30 * out) * a).head(-6 * a, -10 * a, 6 * a).lean(-4 * out).lArm(4, 0, -6);
+			}
+			case SPIN -> {
+				float s = Emotes.ease(clamp(t / 1.6f));
+				p.spin(s * 720f).rArm(0, 0, 80 + 10 * sin(t * 8f)).lArm(0, 0, -80 - 10 * sin(t * 8f)).head(-10, 0, 0).bob(-Math.abs(sin(t * 4f)) * 0.8f);
+			}
+			case FACEPLANT -> {
+				float fall = Emotes.ease(clamp((t - 0.6f) / 0.5f));
+				float wob = t < 0.6f ? sin(t * 14f) * 6 : 0;
+				p.head(wob + 10 * fall, wob, wob).rArm(-20 - 60 * fall, 0, 20 + 40 * fall).lArm(-20 - 60 * fall, 0, -20 - 40 * fall)
+					.lean(wob * 0.5f + 70 * fall).bob(6f * fall).rLeg(10 * fall, 0, 4).lLeg(10 * fall, 0, -4);
+			}
+			case IDLE_WATCH -> {
+				float c = (t % 6f) / 6f;
+				float a = c < 0.1f ? 0 : c < 0.22f ? Emotes.ease((c - 0.1f) / 0.12f) : c < 0.62f ? 1 : c < 0.75f ? Emotes.ease(1 - (c - 0.62f) / 0.13f) : 0;
+				p.lArm(-75 * a, 50 * a, 0).head(30 * a, 15 * a, 0).rArm(-4, 0, 4);
+				if (a > 0.9f) p.head(30 + sin(t * 9f) * 2, 15, 0);
+			}
+			case IDLE_SCRATCH -> {
+				float c = (t % 5f) / 5f;
+				float a = c < 0.15f ? Emotes.ease(c / 0.15f) : c < 0.6f ? 1 : c < 0.75f ? Emotes.ease(1 - (c - 0.6f) / 0.15f) : 0;
+				float sc = sin(t * 16f) * 6 * a;
+				p.rArm((-150 + sc) * a, -30 * a, 10 * a).head(6 * a, -10 * a, 10 * a).lArm(-4, 0, -4);
+			}
+			case IDLE_BOX -> {
+				float b = t * 2.6f;
+				int hit = (int) b % 2;
+				float pun = Math.max(0, sin((b % 1f) * (float) Math.PI));
+				float rr = hit == 0 ? pun : 0, ll = hit == 1 ? pun : 0;
+				p.rArm(-70 - 25 * rr, -20 + 25 * rr, 0).lArm(-70 - 25 * ll, 20 - 25 * ll, 0).head(8, 0, 0).lean(6)
+					.bob(-Math.abs(sin(b * (float) Math.PI)) * 0.5f).sway(sin(b * (float) Math.PI) * 0.4f).rLeg(-8, 0, 3).lLeg(10, 0, -3);
+			}
+			case IDLE_PHONE -> {
+				float scroll = sin(t * 3f);
+				p.rArm(-55, -18, 0).lArm(-55 + Math.max(0, scroll) * 6, 18, 0).head(32 + scroll, sin(t * 0.7f) * 4, 0);
+			}
+			case IDLE_WHISTLE -> {
+				float bob = sin(t * 2f * (float) Math.PI * 0.75f);
+				p.rArm(20, 0, 10).lArm(20, 0, -10).head(-10, sin(t * 0.8f) * 18, bob * 6).sway(bob * 0.3f).rLeg(0, 0, 0).lLeg(-6 * Math.max(0, bob), 0, -2);
+			}
 			case CRY -> {
 				float sob = sin(t * 10f);
 				float rub = sin(t * 3.2f);

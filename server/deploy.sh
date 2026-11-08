@@ -34,6 +34,14 @@ workers_dev = true
 binding = "DB"
 database_name = "surge-client"
 database_id = "$DB"
+
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "EmoteHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["EmoteHub"]
 TOML
 
 KEYS=$(curl -sS --max-time 15 https://api.minecraftservices.com/publickeys | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const o=JSON.parse(d);process.stdout.write(JSON.stringify((o.playerCertificateKeys||[]).map(k=>k.publicKey)))}catch{process.stdout.write('[]')}})" || echo '[]')

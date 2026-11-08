@@ -89,6 +89,21 @@ public final class EmoteFx {
 					floaters(pose, vc, HEART, 0xFF8FB4, tt, k, 4, 1.1f, 0.7f);
 				});
 			}
+			case KISS -> body(model, ps, q, (pose, vc) -> {
+				if (tt > 0.85f) floaters(pose, vc, HEART, 0xFF6F9F, tt, k, 3, 0.9f, 0.8f);
+			});
+			case FLEX -> body(model, ps, q, (pose, vc) -> {
+				for (int i = 0; i < 4; i++) {
+					float ph = frac(tt * 0.9f + i * 0.25f);
+					sprite(pose, vc, SPARK, (i % 2 == 0 ? -1 : 1) * (0.55f + ph * 0.2f), -0.7f - ph * 0.3f, -0.1f, PX * 0.5f, alpha(0xFFE07A, k * (1 - ph)));
+				}
+			});
+			case FACEPLANT -> head(model, ps, q, (pose, vc) -> {
+				if (tt > 1.1f) for (int i = 0; i < 3; i++) {
+					double a = tt * 3 + i * Math.PI * 2 / 3;
+					sprite(pose, vc, SPARK, (float) Math.cos(a) * 0.35f, -0.65f, (float) Math.sin(a) * 0.35f, PX * 0.45f, alpha(0xFFF3B0, k));
+				}
+			});
 			case CRY -> head(model, ps, q, (pose, vc) -> tears(pose, vc, tt, k));
 			case FACEPALM -> head(model, ps, q, (pose, vc) -> {
 				float d = frac(tt * 0.6f);
@@ -110,7 +125,7 @@ public final class EmoteFx {
 				}
 			});
 			default -> {
-				if (e.music != null || e == Emote.FLOSS)
+				if (e.music != null || e == Emote.FLOSS || e == Emote.AIRGUITAR || e == Emote.IDLE_WHISTLE)
 					body(model, ps, q, (pose, vc) -> floaters(pose, vc, NOTE, 0xFFFFFF, tt, k, 3, 0.9f, 0.6f));
 			}
 		}

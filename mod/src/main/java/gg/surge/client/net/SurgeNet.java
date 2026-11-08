@@ -105,11 +105,94 @@ public final class SurgeNet {
 		emoteAt = Math.max(emoteAt + 1, System.currentTimeMillis());
 		lastPush = 0;
 		lastPull = 0;
+		java.net.http.WebSocket ws = live;
+		if (ws != null) {
+			JsonObject o = new JsonObject();
+			o.addProperty("e", name);
+			o.addProperty("at", emoteAt);
+			try { ws.sendText(o.toString(), true); } catch (Exception ignored) { }
+		}
+	}
+
+	private static volatile java.net.http.WebSocket live;
+	private static volatile boolean liveConnecting;
+	private static long liveRetryAt, liveBackoff = 2000;
+
+	private static void liveTick() {
+		if (live != null || liveConnecting || Social.token().isEmpty()) return;
+		long now = System.currentTimeMillis();
+		if (now < liveRetryAt) return;
+		liveConnecting = true;
+		String wsUrl = url().replaceFirst("^http", "ws") + "/v1/live";
+		try {
+			HTTP.newWebSocketBuilder().header("Authorization", "Bearer " + Social.token()).connectTimeout(Duration.ofSeconds(8))
+				.buildAsync(URI.create(wsUrl), new java.net.http.WebSocket.Listener() {
+					private final StringBuilder buf = new StringBuilder();
+
+					@Override
+					public void onOpen(java.net.http.WebSocket ws) {
+						live = ws;
+						liveConnecting = false;
+						liveBackoff = 2000;
+						ws.request(1);
+					}
+
+					@Override
+					public java.util.concurrent.CompletionStage<?> onText(java.net.http.WebSocket ws, CharSequence data, boolean last) {
+						buf.append(data);
+						if (last) { liveMessage(buf.toString()); buf.setLength(0); }
+						ws.request(1);
+						return null;
+					}
+
+					@Override
+					public java.util.concurrent.CompletionStage<?> onClose(java.net.http.WebSocket ws, int code, String reason) {
+						liveDown();
+						return null;
+					}
+
+					@Override
+					public void onError(java.net.http.WebSocket ws, Throwable error) {
+						liveDown();
+					}
+				}).whenComplete((ws, e) -> { if (e != null) liveDown(); });
+		} catch (Exception e) {
+			liveDown();
+		}
+	}
+
+	private static void liveDown() {
+		live = null;
+		liveConnecting = false;
+		liveRetryAt = System.currentTimeMillis() + liveBackoff;
+		liveBackoff = Math.min(60_000, liveBackoff * 2);
+	}
+
+	private static void liveMessage(String text) {
+		try {
+			JsonObject d = JsonParser.parseString(text).getAsJsonObject();
+			UUID id = parse(d.get("u").getAsString());
+			if (id == null) return;
+			String em = d.get("e").getAsString();
+			long at = d.has("at") ? d.get("at").getAsLong() : System.currentTimeMillis();
+			Remote rem = PLAYERS.get(id);
+			if (rem == null) {
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.level == null || mc.level.getPlayerByUUID(id) == null) return;
+				rem = new Remote();
+				PLAYERS.put(id, rem);
+			}
+			if (at == rem.emoteAt) return;
+			rem.emoteAt = at;
+			rem.emote = em;
+			rem.emoteStart = System.currentTimeMillis() - 60;
+		} catch (Exception ignored) { }
 	}
 
 	public static void tick(Minecraft mc) {
 		if (!online()) return;
 		if (mc.player == null && Social.token().isEmpty()) return;
+		liveTick();
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
 		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + emote + emoteAt
@@ -119,7 +202,7 @@ public final class SurgeNet {
 			lastSent = wear;
 			push(mc);
 		}
-		if (!busyPull && mc.level != null && now - lastPull > (PLAYERS.isEmpty() ? 4_000 : 1_000)) {
+		if (!busyPull && mc.level != null && now - lastPull > (PLAYERS.isEmpty() ? 4_000 : live != null ? 2_500 : 1_000)) {
 			lastPull = now;
 			pull(mc);
 		}

@@ -28,19 +28,21 @@ public class AdminScreen extends Screen {
 	private static final String[][] GROUPS = {{"all", "Everything"}, {"cosmetic", "All cosmetics"}, {"emote", "All emotes"},
 		{"sub:wings", "All wings"}, {"sub:halo", "All halos"}, {"sub:cape", "All capes"}};
 
-	private enum Tab { CODES("Codes"), GIFTS("Gifts"), SALES("Sales"), PRICES("Prices"), PLAYERS("Icons"), LOCKS("Locks"), SERVERS("Servers");
+	private enum Tab { HOME("Home"), CODES("Codes"), GIFTS("Gifts"), SALES("Sales"), PRICES("Prices"), PLAYERS("Icons"), LOCKS("Locks"), SERVERS("Servers");
 		final String label;
 		Tab(String l) { label = l; }
 	}
 
 	private final Screen parent;
-	private Tab tab = Tab.CODES;
+	private Tab tab = Tab.HOME;
+	private JsonObject overview = new JsonObject(), announce = null;
+	private boolean giftAll;
 	private boolean wasDown = true, loading;
 	private String message = "";
 	private int messageColor = Ui.MUTED;
 	private long messageUntil;
 	private int px, py, pw, ph;
-	private EditBox password, coinsBox, codeBox, countBox, usesBox, srvName, srvIp, srvDesc, giftWho, giftCoins, giftNote, saleWho, priceBox, pricePct, badgeWho, capeWho;
+	private EditBox annText, annHours, password, coinsBox, codeBox, countBox, usesBox, srvName, srvIp, srvDesc, giftWho, giftCoins, giftNote, saleWho, priceBox, pricePct, badgeWho, capeWho;
 	private final Set<String> giftPicked = new LinkedHashSet<>();
 	private JsonArray gifts = new JsonArray(), badges = new JsonArray(), capes = new JsonArray();
 	private JsonObject prices = new JsonObject();
@@ -77,12 +79,14 @@ public class AdminScreen extends Screen {
 
 	@Override
 	protected void init() {
-		pw = Math.min(520, this.width - 12);
+		pw = Math.min(580, this.width - 12);
 		ph = Math.min(330, this.height - 12);
 		px = (this.width - pw) / 2;
 		py = (this.height - ph) / 2;
 		clearWidgets();
 		password = box("Admin password", 128, password == null ? "" : password.getValue());
+		annText = box("Message for every player", 200, annText == null ? "" : annText.getValue());
+		annHours = box("48", 4, annHours == null ? "48" : annHours.getValue());
 		coinsBox = box("0", 7, coinsBox == null ? "1000" : coinsBox.getValue());
 		codeBox = box("Random", 24, codeBox == null ? "" : codeBox.getValue());
 		countBox = box("1", 3, countBox == null ? "1" : countBox.getValue());
@@ -122,6 +126,8 @@ public class AdminScreen extends Screen {
 			badges = o.has("badges") ? o.getAsJsonArray("badges") : new JsonArray();
 			capes = o.has("capes") ? o.getAsJsonArray("capes") : new JsonArray();
 			prices = o.has("prices") && o.get("prices").isJsonObject() ? o.getAsJsonObject("prices") : new JsonObject();
+			overview = o.has("overview") && o.get("overview").isJsonObject() ? o.getAsJsonObject("overview") : new JsonObject();
+			announce = o.has("announce") && o.get("announce").isJsonObject() ? o.getAsJsonObject("announce") : null;
 		}, e -> { loading = false; toast(e, 0xFFFF7A7A); });
 	}
 
@@ -229,7 +235,7 @@ public class AdminScreen extends Screen {
 		boolean click = down && !wasDown;
 		wasDown = down;
 		Runnable action = null;
-		for (EditBox b : new EditBox[]{password, coinsBox, codeBox, countBox, usesBox, srvName, srvIp, srvDesc, giftWho, giftCoins, giftNote, saleWho, priceBox, pricePct, badgeWho, capeWho}) b.visible = false;
+		for (EditBox b : new EditBox[]{annText, annHours, password, coinsBox, codeBox, countBox, usesBox, srvName, srvIp, srvDesc, giftWho, giftCoins, giftNote, saleWho, priceBox, pricePct, badgeWho, capeWho}) b.visible = false;
 
 		Ui.shadow(g, px, py, pw, ph);
 		Ui.box(g, px, py, pw, ph, Ui.BG, Ui.EDGE);
@@ -253,6 +259,7 @@ public class AdminScreen extends Screen {
 			if (tx + 60 < px + pw - 30 && Ui.pill(g, font, mx, my, px + pw - 88, py + 7, 58, 16, loading ? "…" : "Refresh", false) && click) action = this::refresh;
 			g.fill(px + 1, py + 29, px + pw - 1, py + 30, Ui.EDGE);
 			Runnable a = switch (tab) {
+				case HOME -> homeTab(g, mx, my, click, delta);
 				case CODES -> codesTab(g, mx, my, click, delta);
 				case SALES -> salesTab(g, mx, my, click, delta);
 				case GIFTS -> giftsTab(g, mx, my, click, delta);
@@ -273,6 +280,64 @@ public class AdminScreen extends Screen {
 	private void signIn() {
 		loading = true;
 		AdminApi.login(password.getValue(), () -> { loading = false; password.setValue(""); toast("Signed in", Ui.ON); refresh(); }, e -> { loading = false; toast(e, 0xFFFF7A7A); });
+	}
+
+	private Runnable homeTab(GuiGraphics g, int mx, int my, boolean click, float delta) {
+		Runnable action = null;
+		int lx = px + 10, top = py + 38, w = pw - 20;
+		String[][] stats = {{"online", "Online now"}, {"day", "Played today"}, {"week", "This week"}, {"players", "All players"}, {"redeemed", "Codes today"}, {"waiting", "Unopened gifts"}};
+		int cw = (w - 5 * 4) / 6;
+		for (int i = 0; i < stats.length; i++) {
+			int x = lx + i * (cw + 4);
+			Ui.cutBox(g, x, top, cw, 34, 3, 0xFF1C1C20, 0xFF2E2E33);
+			String v = overview.has(stats[i][0]) ? overview.get(stats[i][0]).getAsString() : loaded ? "0" : "…";
+			g.pose().pushMatrix();
+			g.pose().translate(x + 5, top + 4);
+			g.pose().scale(1.5f, 1.5f);
+			g.drawString(font, v, 0, 0, Ui.TEXT, true);
+			g.pose().popMatrix();
+			g.drawString(font, Ui.fit(font, stats[i][1], cw - 8), x + 5, top + 22, Ui.MUTED, false);
+		}
+		int ay = top + 44;
+		g.drawString(font, "Announcement", lx, ay, Ui.ACCENT_2, false);
+		if (announce != null) g.drawString(font, Ui.fit(font, "Live: " + str(announce, "text"), w - 70), lx + 80, ay, Ui.YELLOW, false);
+		field(g, annText, lx, ay + 12, w - 150, mx, my, delta);
+		g.drawString(font, "hours", lx + w - 144 + 34, ay + 16, Ui.MUTED, false);
+		field(g, annHours, lx + w - 144, ay + 12, 30, mx, my, delta);
+		if (Ui.pill(g, font, mx, my, lx + w - 72, ay + 12, 72, 18, "Publish", false) && click && !loading) action = () -> {
+			if (annText.getValue().isBlank()) { toast("Write a message first", 0xFFFF7A7A); return; }
+			JsonObject b = new JsonObject();
+			b.addProperty("text", annText.getValue().trim());
+			b.addProperty("hours", Math.max(0, parse(annHours, 48)));
+			post("announce", b, "Announcement published");
+			annText.setValue("");
+		};
+		if (announce != null && Ui.pill(g, font, mx, my, lx + w - 72, ay - 4, 72, 14, "Remove", false) && click && !loading) action = () -> {
+			JsonObject b = new JsonObject();
+			b.addProperty("text", "");
+			post("announce", b, "Announcement removed");
+		};
+		int oy = ay + 40;
+		g.drawString(font, "Online now", lx, oy, Ui.ACCENT_2, false);
+		JsonArray list = overview.has("list") ? overview.getAsJsonArray("list") : new JsonArray();
+		int ly = oy + 12, lh = py + ph - 28 - ly;
+		listScroll = Math.min(listScroll, Math.max(0, ((list.size() + 1) / 2) * 20 - lh));
+		g.enableScissor(lx, ly, lx + w, ly + lh);
+		int colW = (w - 4) / 2;
+		for (int i = 0; i < list.size(); i++) {
+			JsonObject u = list.get(i).getAsJsonObject();
+			int x = lx + (i % 2) * (colW + 4), y = ly + (i / 2) * 20 - Math.round(listScroll);
+			if (y + 20 < ly || y > ly + lh) continue;
+			g.fill(x, y, x + colW, y + 18, 0xFF1C1C20);
+			String st = str(u, "status");
+			g.fill(x + 4, y + 7, x + 8, y + 11, "busy".equals(st) ? 0xFFF87171 : "idle".equals(st) ? 0xFFFACC15 : 0xFF4ADE80);
+			g.drawString(font, Ui.fit(font, str(u, "name"), colW / 2), x + 12, y + 5, Ui.TEXT, false);
+			String sv = str(u, "server");
+			g.drawString(font, Ui.fit(font, sv.isEmpty() ? "In the menus" : sv, colW / 2 - 16), x + colW / 2 + 8, y + 5, Ui.MUTED, false);
+		}
+		if (list.isEmpty()) g.drawString(font, loaded ? "Nobody is online right now" : "Loading…", lx + 4, ly + 4, Ui.FAINT, false);
+		g.disableScissor();
+		return action;
 	}
 
 	private Runnable codesTab(GuiGraphics g, int mx, int my, boolean click, float delta) {
@@ -475,7 +540,9 @@ public class AdminScreen extends Screen {
 		Runnable action = null;
 		int lx = px + 10, top = py + 38, lw = (int) (pw * 0.45f) - 16;
 		g.drawString(font, "Player", lx, top + 4, Ui.MUTED, false);
-		field(g, giftWho, lx + 50, top, lw - 50, mx, my, delta);
+		if (!giftAll) field(g, giftWho, lx + 50, top, lw - 110, mx, my, delta);
+		else g.drawString(font, "Every Surge player", lx + 50, top + 4, Ui.YELLOW, false);
+		if (Ui.pill(g, font, mx, my, lx + lw - 56, top, 56, 16, "Everyone", giftAll) && click) action = () -> giftAll = !giftAll;
 		g.drawString(font, "Coins", lx, top + 24, Ui.MUTED, false);
 		field(g, giftCoins, lx + 50, top + 20, 56, mx, my, delta);
 		int bx = lx + 110, bw = (lw - 110) / 3;
@@ -490,12 +557,13 @@ public class AdminScreen extends Screen {
 		if (Ui.pill(g, font, mx, my, lx, top + 80, lw, 18, loading ? "Working…" : "Send gift", false) && click && !loading) action = () -> {
 			JsonObject b = new JsonObject();
 			b.addProperty("player", giftWho.getValue().trim());
+			if (giftAll) { b.addProperty("everyone", true); b.addProperty("hours", 72); }
 			b.addProperty("coins", Math.max(0, parse(giftCoins, 0)));
 			b.addProperty("note", giftNote.getValue().trim());
 			JsonArray it = new JsonArray();
 			for (String p : giftPicked) it.add(p);
 			b.add("items", it);
-			post("gifts", b, "Gift sent to " + giftWho.getValue().trim());
+			post("gifts", b, giftAll ? "Gift sent to everyone" : "Gift sent to " + giftWho.getValue().trim());
 			giftPicked.clear();
 		};
 		g.drawString(font, "Recent gifts", lx, top + 106, Ui.ACCENT_2, false);
@@ -508,8 +576,11 @@ public class AdminScreen extends Screen {
 			if (y + 22 < ly || y > ly + lh) continue;
 			g.fill(lx, y, lx + lw, y + 20, 0xFF1C1C20);
 			boolean got = c.has("claimed") && c.get("claimed").getAsLong() > 0;
+			boolean all = "*".equals(str(c, "uuid"));
 			g.drawString(font, Ui.fit(font, str(c, "name"), lw - 80), lx + 4, y + 2, Ui.TEXT, false);
-			g.drawString(font, got ? "Received" : "Waiting", lx + lw - 62 - (got ? 0 : 0), y + 2, got ? 0xFF8CFFA0 : Ui.YELLOW, false);
+			String stt = all ? (c.has("got") ? c.get("got").getAsInt() : 0) + " got it" : got ? "Received" : "Waiting";
+			g.drawString(font, stt, lx + lw - 62, y + 2, got && !all ? 0xFF8CFFA0 : Ui.YELLOW, false);
+			if (all) got = false;
 			List<String> parts = new ArrayList<>();
 			int coins = c.has("coins") ? c.get("coins").getAsInt() : 0;
 			if (coins > 0) parts.add(coins + " coins");

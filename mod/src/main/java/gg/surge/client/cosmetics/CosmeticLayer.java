@@ -119,7 +119,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 
 	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving, int key) {
 		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/wings_" + style + ".png");
-		boolean glows = !("angel".equals(style) || "gold".equals(style));
+		boolean glows = !("angel".equals(style) || "gold".equals(style) || "bat".equals(style));
 		int lit = glows ? FULL_BRIGHT : (light | (11 << 4));
 		float open = Math.min(1f, moving * 1.2f);
 		float flapSpeed = 0.07f + open * 0.18f;
@@ -176,6 +176,9 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			case "enchanted" -> 0x78C8FF;
 			case "void" -> 0x6A2BD9;
 			case "rose" -> 0xFF6FAE;
+			case "crown" -> 0xFFD54A;
+			case "orbit" -> 0x7AF0FF;
+			case "rainbow" -> java.awt.Color.HSBtoRGB((System.currentTimeMillis() % 4000) / 4000f, 0.65f, 1f) & 0xFFFFFF;
 			default -> 0xFFEC9A;
 		};
 	}
@@ -187,7 +190,37 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		ps.translate(0f, (helmet ? -0.74f : -0.66f) + 0.03f * (float) Math.sin(age * 0.07), 0f);
 		ps.mulPose(Axis.XP.rotationDegrees(-10f));
 		ps.mulPose(Axis.YP.rotationDegrees(age * 1.6f));
-		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> torus(pose, vc, 0.26f, 0.032f, 40, 10, 0xFF000000 | rgb));
+		boolean crown = "crown".equals(style);
+		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> torus(pose, vc, crown ? 0.22f : 0.26f, crown ? 0.025f : 0.032f, 40, 10, 0xFF000000 | rgb));
+		if (crown) {
+			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
+				for (int i = 0; i < 8; i++) {
+					double a0 = i * Math.PI / 4 - 0.22, a1 = i * Math.PI / 4 + 0.22, am = i * Math.PI / 4;
+					float h = i % 2 == 0 ? 0.17f : 0.11f;
+					float x0 = (float) Math.cos(a0) * 0.22f, z0 = (float) Math.sin(a0) * 0.22f, x1 = (float) Math.cos(a1) * 0.22f, z1 = (float) Math.sin(a1) * 0.22f;
+					float xm = (float) Math.cos(am) * 0.22f, zm = (float) Math.sin(am) * 0.22f;
+					int c = 0xFF000000 | rgb;
+					for (int side = 0; side < 2; side++) {
+						float ny = 0.3f, nx = (float) Math.cos(am) * (side == 0 ? 1 : -1), nz = (float) Math.sin(am) * (side == 0 ? 1 : -1);
+						vc.addVertex(pose, x0, 0f, z0).setColor(c).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, nx, ny, nz);
+						vc.addVertex(pose, side == 0 ? x1 : xm, side == 0 ? 0f : -h, side == 0 ? z1 : zm).setColor(c).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, nx, ny, nz);
+						vc.addVertex(pose, side == 0 ? xm : x1, side == 0 ? -h : 0f, side == 0 ? zm : z1).setColor(c).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, nx, ny, nz);
+						vc.addVertex(pose, xm, -h, zm).setColor(c).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, nx, ny, nz);
+					}
+					int gem = i % 2 == 0 ? 0xFFFF4D6A : 0xFF4DB8FF;
+					cube(pose, vc, xm * 1.02f, -h - 0.015f, zm * 1.02f, 0.018f, gem);
+				}
+			});
+		}
+		if ("orbit".equals(style)) {
+			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
+				for (int i = 0; i < 3; i++) {
+					double a = age * 0.09 + i * Math.PI * 2 / 3;
+					float x = (float) Math.cos(a) * 0.36f, z = (float) Math.sin(a) * 0.36f, y = (float) Math.sin(age * 0.12 + i) * 0.05f;
+					cube(pose, vc, x, y, z, 0.03f, i == 1 ? 0xFFFFFFFF : 0xFF000000 | rgb);
+				}
+			});
+		}
 		q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(WHITE), (pose, vc) -> {
 			ring(pose, vc, 0.29f, 0.36f, 0.001f, rgb, 34, 40);
 			ring(pose, vc, 0.22f, 0.29f, 0.001f, rgb, 70, 40);
@@ -207,6 +240,19 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 				tv(pose, vc, p01, n01, argb);
 				tv(pose, vc, p11, n11, argb);
 				tv(pose, vc, p10, n10, argb);
+			}
+		}
+	}
+
+	private static void cube(PoseStack.Pose pose, VertexConsumer vc, float cx, float cy, float cz, float h, int argb) {
+		float[][] n = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+		for (float[] f : n) {
+			float[] u = f[0] != 0 ? new float[]{0, 1, 0} : new float[]{1, 0, 0};
+			float[] v = {f[1] * u[2] - f[2] * u[1], f[2] * u[0] - f[0] * u[2], f[0] * u[1] - f[1] * u[0]};
+			for (int k = 0; k < 4; k++) {
+				float su = (k == 0 || k == 3) ? -1 : 1, sv = (k < 2) ? -1 : 1;
+				vc.addVertex(pose, cx + (f[0] + u[0] * su + v[0] * sv) * h, cy + (f[1] + u[1] * su + v[1] * sv) * h, cz + (f[2] + u[2] * su + v[2] * sv) * h)
+					.setColor(argb).setUv(0.5f, 0.5f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(FULL_BRIGHT).setNormal(pose, f[0], f[1], f[2]);
 			}
 		}
 	}

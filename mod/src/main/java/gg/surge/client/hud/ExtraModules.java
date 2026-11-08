@@ -36,7 +36,7 @@ final class ExtraModules {
 
 	static List<HudModule> create() {
 		List<HudModule> out = new ArrayList<>();
-		out.add(new HitDelay());
+		out.add(new Cooldowns());
 		out.add(new CpsGraph());
 		out.add(new KillCounter());
 		out.add(new HudModules.TextModule("blocks", "Block Counter", Items.BRICKS, "How many blocks you're carrying, for bridging", false, 0.005f, 0.685f, "blocks", "After", "128", mc -> {
@@ -75,23 +75,80 @@ final class ExtraModules {
 		}
 	}
 
-	static final class HitDelay extends HudModule {
-		final Setting.Choice style = choice("style", "Style", "Bar", "Bar", "Percent");
+	static final class Cooldowns extends HudModule {
+		final Setting.Toggle using = toggle("using", "Bows, food and shields", true);
+		final Setting.Toggle mining = toggle("mining", "Breaking blocks", true);
+		final Setting.Toggle items = toggle("items", "Item cooldowns like ender pearls", true);
+		final Setting.Toggle attack = toggle("attack", "Attack cooldown", false);
+		final Setting.Color bar = color("bar", "Bar color", "F2C430");
 
-		HitDelay() { super("hitdelay", "Hit Delay", Items.WOODEN_SWORD, "Shows when your next hit will do full damage", false, 0.46f, 0.56f); }
+		Cooldowns() { super("cooldowns", "Cooldown Indicator", Items.CLOCK, "Shows progress for drawing a bow, eating, breaking blocks and item cooldowns", false, 0.5f - 0.035f, 0.56f); }
 
-		private float value(Minecraft mc) { return mc.player == null ? 0.7f : mc.player.getAttackStrengthScale(0f); }
+		private record Row(ItemStack icon, float value, String label) {}
 
-		@Override public int width(Minecraft mc) { return style.is("Bar") ? 60 : boxWidth(mc, "100%"); }
+		private List<Row> rows(Minecraft mc) {
+			List<Row> out = new ArrayList<>();
+			if (mc.player == null) {
+				out.add(new Row(new ItemStack(Items.BOW), 0.65f, "65%"));
+				out.add(new Row(new ItemStack(Items.ENDER_PEARL), 0.3f, "0.3s"));
+				return out;
+			}
+			var p = mc.player;
+			if (using.on() && p.isUsingItem()) {
+				ItemStack use = p.getUseItem();
+				float used = p.getTicksUsingItem(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false));
+				float full;
+				if (use.is(Items.BOW)) full = 20f;
+				else if (use.is(Items.CROSSBOW)) full = net.minecraft.world.item.CrossbowItem.getChargeDuration(use, p);
+				else if (use.is(Items.TRIDENT)) full = 10f;
+				else full = use.getUseDuration(p);
+				if (use.is(Items.SHIELD) || full <= 0 || full > 2000) out.add(new Row(use, 1f, "Blocking"));
+				else {
+					float v = Math.min(1f, used / full);
+					out.add(new Row(use, v, v >= 1f && (use.is(Items.BOW) || use.is(Items.CROSSBOW) || use.is(Items.TRIDENT)) ? "Ready" : Math.round(v * 100) + "%"));
+				}
+			}
+			if (mining.on() && mc.gameMode != null && mc.gameMode.isDestroying()) {
+				var acc = (gg.surge.client.mixin.GameModeAccessor) mc.gameMode;
+				float v = Math.min(1f, acc.surge$destroyProgress());
+				net.minecraft.core.BlockPos pos = acc.surge$destroyPos();
+				ItemStack icon = pos != null && mc.level != null ? new ItemStack(mc.level.getBlockState(pos).getBlock().asItem()) : ItemStack.EMPTY;
+				if (icon.isEmpty()) icon = p.getMainHandItem();
+				out.add(new Row(icon, v, Math.round(v * 100) + "%"));
+			}
+			if (items.on()) {
+				java.util.Set<net.minecraft.world.item.Item> seen = new java.util.HashSet<>();
+				var inv = p.getInventory();
+				for (int i = 0; i < inv.getContainerSize() && out.size() < 5; i++) {
+					ItemStack s = inv.getItem(i);
+					if (s.isEmpty() || !seen.add(s.getItem())) continue;
+					float cd = p.getCooldowns().getCooldownPercent(s, mc.getDeltaTracker().getGameTimeDeltaPartialTick(false));
+					if (cd > 0f) out.add(new Row(s, 1f - cd, Math.round(cd * 100) + "%"));
+				}
+			}
+			if (attack.on()) {
+				float v = p.getAttackStrengthScale(0f);
+				if (v < 1f) out.add(new Row(p.getMainHandItem().isEmpty() ? new ItemStack(Items.IRON_SWORD) : p.getMainHandItem(), v, Math.round(v * 100) + "%"));
+			}
+			return out;
+		}
 
-		@Override public int height(Minecraft mc) { return style.is("Bar") ? 6 : 13; }
+		@Override public int width(Minecraft mc) { return 70; }
+
+		@Override public int height(Minecraft mc) { return Math.max(18, rows(mc).size() * 18); }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			float v = value(mc);
-			if (style.is("Percent")) { box(g, mc, x, y, width(mc), Math.round(v * 100) + "%"); return; }
-			g.fill(x, y, x + 60, y + 6, bgOn() ? bg() : 0x60000000);
-			int col = v >= 1f ? 0xFF6BFF8A : Colors.lerp(0xFFFF6B6B, 0xFFFFE07A, v);
-			g.fill(x + 1, y + 1, x + 1 + Math.round(58 * v), y + 5, col);
+			int yy = y;
+			for (Row r : rows(mc)) {
+				if (bgOn()) g.fill(x, yy, x + 70, yy + 16, bg());
+				g.renderItem(r.icon(), x + 1, yy);
+				int bx = x + 20, bw = 48;
+				g.fill(bx, yy + 11, bx + bw, yy + 14, 0x80000000);
+				int col = r.value() >= 1f ? 0xFF6BFF8A : 0xFF000000 | bar.rgb(0);
+				g.fill(bx, yy + 11, bx + Math.round(bw * r.value()), yy + 14, col);
+				text(g, mc, r.label(), bx, yy + 1, fg());
+				yy += 18;
+			}
 		}
 	}
 

@@ -1,3 +1,4 @@
+import { DurableObject } from 'cloudflare:workers';
 import { adminSetup, adminApi, publicData, redeemCode, inbox, claimGifts, playerExtras, capeImage } from './admin.js';
 import { ADMIN_PAGE } from './admin-page.js';
 const FRESH_MS = 15 * 60 * 1000;
@@ -334,6 +335,33 @@ async function issueToken(db, uuid, name) {
   return row ? row.token : fresh;
 }
 
+export class EmoteHub extends DurableObject {
+  async fetch(req) {
+    const uuid = req.headers.get('x-uuid') || '';
+    const pair = new WebSocketPair();
+    this.ctx.acceptWebSocket(pair[1], [uuid]);
+    return new Response(null, { status: 101, webSocket: pair[0] });
+  }
+
+  async webSocketMessage(ws, msg) {
+    let d;
+    try { d = JSON.parse(typeof msg === 'string' ? msg : new TextDecoder().decode(msg)); } catch { return; }
+    if (!d || typeof d.e !== 'string' || d.e.length > 40) return;
+    const tags = this.ctx.getTags(ws);
+    const u = tags && tags[0];
+    if (!u) return;
+    const out = JSON.stringify({ u, e: d.e, at: Number(d.at) || Date.now(), srv: Date.now() });
+    for (const other of this.ctx.getWebSockets()) {
+      if (other === ws) continue;
+      try { other.send(out); } catch { }
+    }
+  }
+
+  async webSocketClose(ws, code) {
+    try { ws.close(code, 'bye'); } catch { }
+  }
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -351,6 +379,16 @@ export default {
     if (req.method === 'GET' && p === '/download/mod') return download(env, true);
     if (req.method === 'GET' && p === '/download/package') return packageFile(env);
     if (req.method === 'GET' && p === '/discord') return Response.redirect(DISCORD, 302);
+    if (p === '/v1/live') {
+      if ((req.headers.get('upgrade') || '').toLowerCase() !== 'websocket' || !env.HUB) return new Response('expected websocket', { status: 426 });
+      await setup(env.DB);
+      const who = await me(req, env.DB);
+      if (!who) return new Response('unauthorized', { status: 401 });
+      const h = new Headers(req.headers);
+      h.set('x-uuid', String(who.uuid).replace(/-/g, '').toLowerCase());
+      const stub = env.HUB.get(env.HUB.idFromName('global'));
+      return stub.fetch(new Request(req.url, { headers: h }));
+    }
     if (req.method === 'GET' && p.startsWith('/img/cape/')) {
       const key = p.slice('/img/cape/'.length).replace(/\.png$/, '');
       if (!SHOWCASE.some(c => c[0] === key)) return new Response('not found', { status: 404 });
