@@ -3,6 +3,28 @@
 	"minVersion": "0.8",
 	"package": "gg.surge.legacy.mixin",
 	"compatibilityLevel": "JAVA_8",
-	"client": [],
-	"injectors": { "defaultRequire": 0 }
+	"client": [
+		"BlockEntityRenderDispatcherMixin",
+		"ChatHudMixin",
+		"EntityMixin",
+		"EntityRenderDispatcherMixin",
+		"GameOptionsMixin",
+		"GameRendererMixin",
+		"InGameHudMixin",
+		"InteractionManagerMixin",
+		"ItemEntityRendererMixin",
+		"LivingRendererAccessor",
+		"MinecraftClientMixin",
+		"ParticleManagerMixin",
+		"PlayerCapeMixin",
+		"PlayerInventoryMixin",
+		"PlayerRendererMixin",
+		"TextRendererMixin",
+		"TitleScreenMixin",
+		"WorldMixin",
+		"WorldRendererMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
 }

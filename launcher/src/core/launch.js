@@ -85,14 +85,16 @@ async function syncSurgeMod(inst, onProgress) {
   fs.mkdirSync(hidden, { recursive: true });
   const dest = path.join(hidden, 'surge-core.jar');
   fs.copyFileSync(jar, dest);
-  try { await modrinth.installProject(inst.id, 'fabric-api', 'mod', onProgress, new Set(), { optional: true, locked: true }); } catch { }
+  try { await modrinth.installProject(inst.id, fabric.isLegacy(inst.mcVersion) ? 'legacy-fabric-api' : 'fabric-api', 'mod', onProgress, new Set(), { optional: true, locked: true }); } catch { }
   return dest;
 }
 
 const SHARED_FILES = ['options.txt', 'servers.dat', 'optionsof.txt'];
 
+const sharedDir = inst => path.join(paths.root, fabric.isLegacy(inst.mcVersion) ? 'shared-legacy' : 'shared');
+
 function pullShared(inst) {
-  const shared = path.join(paths.root, 'shared');
+  const shared = sharedDir(inst);
   fs.mkdirSync(shared, { recursive: true });
   const dir = instances.dirOf(inst.id);
   for (const f of SHARED_FILES) {
@@ -105,7 +107,8 @@ function pullShared(inst) {
 }
 
 function pushShared(inst) {
-  const shared = path.join(paths.root, 'shared');
+  const shared = sharedDir(inst);
+  fs.mkdirSync(shared, { recursive: true });
   const dir = instances.dirOf(inst.id);
   for (const f of SHARED_FILES) {
     const src = path.join(dir, f);
@@ -136,18 +139,19 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
 
   onProgress({ stage: 'Syncing Surge mod…' });
   applyPendingModToggles(inst);
-  if (inst.loader === 'fabric' && inst.perfChecked === 4) {
+  const legacy = fabric.isLegacy(inst.mcVersion);
+  if (inst.loader === 'fabric' && !legacy && inst.perfChecked === 4) {
     const extra = new Set(['Entity Culling', 'ImmediatelyFast', 'ModernFix', 'Krypton']);
     for (const c of (instances.get(inst.id).content || []).slice()) {
       if (c.locked && c.type === 'mod' && extra.has(c.title)) { try { instances.removeContent(inst.id, 'mod', c.file); } catch { } }
     }
   }
-  if (inst.loader === 'fabric' && inst.perfChecked !== 6 && inst.autoPerf !== false) {
+  if (inst.loader === 'fabric' && !legacy && inst.perfChecked !== 6 && inst.autoPerf !== false) {
     onProgress({ stage: 'Adding performance mods…' });
     try { await modrinth.installPerformanceStack(inst.id, onProgress); } catch { }
     instances.update(inst.id, { perfChecked: 6 });
   }
-  if (inst.loader === 'fabric' && !inst.voiceChecked) {
+  if (inst.loader === 'fabric' && !legacy && !inst.voiceChecked) {
     onProgress({ stage: 'Adding Simple Voice Chat…' });
     try {
       await modrinth.installProject(inst.id, 'simple-voice-chat', 'mod', onProgress, new Set(), { optional: true });
@@ -191,7 +195,9 @@ async function launch(instanceId, { onProgress, onLog: rawLog, onExit, server, w
     customArgs: jvm,
     window: { width: cfg.width, height: cfg.height },
     overrides: { gameDirectory: instances.dirOf(inst.id), maxSockets: 16, detached: false },
-    ...(server ? { quickPlay: { type: 'multiplayer', identifier: server } } : world ? { quickPlay: { type: 'singleplayer', identifier: world } } : {}),
+    ...(legacy
+      ? (server ? { customLaunchArgs: ['--server', String(server).split(':')[0], '--port', String(server).split(':')[1] || '25565'] } : {})
+      : server ? { quickPlay: { type: 'multiplayer', identifier: server } } : world ? { quickPlay: { type: 'singleplayer', identifier: world } } : {}),
   });
   if (!proc) { running = null; throw new Error('Minecraft failed to start — check the log.'); }
   return true;

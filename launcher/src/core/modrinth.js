@@ -4,6 +4,7 @@ const os = require('os');
 const AdmZip = require('adm-zip');
 const { getJson, download, pool } = require('./http');
 const instances = require('./instances');
+const { isLegacy } = require('./fabric');
 
 const API = 'https://api.modrinth.com/v2';
 
@@ -29,20 +30,20 @@ const BLOCKED = new Set(['essential']);
 async function search({ query = '', type = 'mod', mcVersion = '', offset = 0, sort = 'relevance' }) {
   const facets = [[`project_type:${type}`]];
   if (mcVersion) facets.push([`versions:${mcVersion}`]);
-  if (type === 'mod' || type === 'modpack') facets.push(['categories:fabric']);
+  if (type === 'mod' || type === 'modpack') facets.push(type === 'mod' && isLegacy(mcVersion) ? ['categories:legacy-fabric', 'categories:fabric'] : ['categories:fabric']);
   const params = new URLSearchParams({ query, facets: JSON.stringify(facets), index: sort, offset: String(offset), limit: '24' });
   const res = await getJson(`${API}/search?${params}`);
   return { hits: res.hits.filter(h => !BLOCKED.has(h.slug)).map(normalize), total: res.total_hits };
 }
 
-function loadersFor(type) {
+function loadersFor(type, mcVersion) {
   if (type === 'resourcepack') return ['minecraft'];
   if (type === 'shader') return ['iris', 'optifine'];
-  return ['fabric'];
+  return isLegacy(mcVersion) ? ['legacy-fabric', 'fabric'] : ['fabric'];
 }
 
 async function bestVersion(projectId, mcVersion, type) {
-  const params = new URLSearchParams({ loaders: JSON.stringify(loadersFor(type)), game_versions: JSON.stringify([mcVersion]) });
+  const params = new URLSearchParams({ loaders: JSON.stringify(loadersFor(type, mcVersion)), game_versions: JSON.stringify([mcVersion]) });
   const versions = (await getJson(`${API}/project/${encodeURIComponent(projectId)}/version?${params}`))
     .filter(v => (v.game_versions || []).includes(mcVersion))
     .sort((a, b) => new Date(b.date_published) - new Date(a.date_published));
@@ -146,6 +147,7 @@ const PERFORMANCE_MODS = [
 const EXTRA_MODS = ['modmenu', 'complete-shield-fixes', 'walksylib', 'shulkerboxtooltip', 'simple-voice-chat'];
 
 async function installPerformanceStack(instanceId, onProgress = () => {}) {
+  if (isLegacy(instances.get(instanceId)?.mcVersion)) return [];
   const seen = new Set();
   const installed = [];
   for (const alternatives of PERFORMANCE_MODS) {

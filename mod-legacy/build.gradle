@@ -13,13 +13,17 @@ dependencies {
 	mappings(legacy.yarn(project.minecraft_version, project.yarn_build))
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.legacyfabric.legacy-fabric-api:legacy-fabric-api:${project.fabric_version}"
-	implementation "com.google.code.gson:gson:2.8.9"
 }
 
 processResources {
 	def version = project.version
 	inputs.property "version", version
 	filesMatching("fabric.mod.json") { expand "version": version }
+	from("../mod/src/main/resources/assets/surge/textures/cosmetic") { into "assets/surge/textures/cosmetic" }
+}
+
+tasks.matching { it.name == "runClient" }.configureEach {
+	javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(8) }
 }
 
 loom {

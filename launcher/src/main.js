@@ -97,7 +97,7 @@ handle('surge:versions', () => launcher.surgeVersions());
 handle('instances:create', async ({ name, mcVersion, optimized }) => {
   const loaderVersion = await fabric.latestLoader(mcVersion);
   const inst = instances.create({ name, mcVersion, loaderVersion, surgeOptimized: !!optimized });
-  if (optimized) {
+  if (optimized && !fabric.isLegacy(mcVersion)) {
     const progress = task(name);
     modrinth.installPerformanceStack(inst.id, progress)
       .then(list => progress({ done: true, message: `${name} ready` }))
