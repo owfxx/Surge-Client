@@ -1,7 +1,7 @@
 {
   "name": "surge-client",
   "productName": "Surge Client",
-  "version": "1.6.4",
+  "version": "1.7.0",
   "description": "Surge Client - optimized Minecraft launcher",
   "main": "src/main.js",
   "author": "owfx",
@@ -27,7 +27,7 @@
   "build": {
     "appId": "gg.surge.client",
     "productName": "Surge Client",
-    "copyright": "Copyright \u00a9 2026 owfx",
+    "copyright": "Copyright © 2026 owfx",
     "directories": {
       "output": "dist",
       "buildResources": "build"

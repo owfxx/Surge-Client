@@ -200,7 +200,11 @@ public class AdminScreen extends Screen {
 				look = new CapturedLook(sub.equals("cape") ? it.key() : null, sub.equals("wings") ? it.key() : null, sub.equals("halo") ? it.key() : null, null, 0f, false);
 				if (sub.equals("cape") || sub.equals("wings")) turn = 200f;
 			}
-			Preview.drawCard(g, cx + 2, cy + 2, cx + cw - 2, cy + chh - 12, it.sub().equals("halo") ? 22 : 17, turn, look);
+			if (it.sub().equals("halo")) {
+				g.enableScissor(cx + 2, Math.max(y, cy + 2), cx + cw - 2, Math.min(y + h, cy + chh - 12));
+				Preview.drawCard(g, cx + 2, cy + 14, cx + cw - 2, cy + chh + 14, 24, 25f, look);
+				g.disableScissor();
+			} else Preview.drawCard(g, cx + 2, cy + 2, cx + cw - 2, cy + chh - 12, 17, turn, look);
 			if (dim.test(it)) {
 				g.fill(cx + 2, cy + 2, cx + cw - 2, cy + chh - 2, 0x90200000);
 				Ui.icon(g, new String[]{"..XXX...", ".X...X..", ".X...X..", "XXXXXXX.", "XXX.XXX.", "XXX.XXX.", "XXXXXXX.", "........"}, cx + cw - 12, cy + 4, 1, 0xFFFF6B6B);
