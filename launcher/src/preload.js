@@ -13,12 +13,15 @@ const on = (ch, fn) => {
 
 contextBridge.exposeInMainWorld('surge', {
   social: () => call('social:get'),
+  messages: since => call('social:messages', since),
+  sendMessage: (uuid, text) => call('social:send', uuid, text),
   win: { min: () => ipcRenderer.send('win:min'), max: () => ipcRenderer.send('win:max'), close: () => ipcRenderer.send('win:close') },
   config: { get: () => call('config:get'), set: p => call('config:set', p), pickJava: () => call('dialog:java'), openDataDir: () => call('shell:dataDir') },
   open: url => call('shell:open', url),
   auth: { list: () => call('auth:list'), login: () => call('auth:login'), logout: u => call('auth:logout', u), setActive: u => call('auth:active', u) },
   fabricVersions: () => call('fabric:versions'),
   surgeVersions: () => call('surge:versions'),
+  changelog: () => call('app:changelog'),
   instances: {
     list: () => call('instances:list'),
     ensureDefault: () => call('instances:ensureDefault'),

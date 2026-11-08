@@ -285,3 +285,23 @@ input[type=checkbox]:checked::after { content: ""; position: absolute; left: 6px
 .changelog summary::before { content: ''; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .12s; }
 .changelog[open] summary::before { transform: rotate(90deg); }
 .changelog ul { margin: 0; padding: 2px 14px 12px 30px; max-height: 200px; overflow: auto; font-size: 13px; line-height: 1.55; color: var(--muted, #b4b4b9); }
+
+.chat-card { width: min(520px, calc(100% - 40px)); display: flex; flex-direction: column; height: min(560px, calc(100% - 80px)); }
+.chat-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.chat-head img { width: 32px; height: 32px; image-rendering: pixelated; border: 2px solid #000; }
+.chat-head h2 { margin: 0 !important; }
+.chat-log { flex: 1; overflow-y: auto; padding: 8px; background: rgba(0, 0, 0, .35); border: 2px solid #000; box-shadow: inset 0 2px 0 rgba(0, 0, 0, .4); display: flex; flex-direction: column; gap: 6px; min-height: 200px; }
+.cmsg { max-width: 78%; align-self: flex-start; }
+.cmsg.mine { align-self: flex-end; text-align: right; }
+.cmsg .cbody { display: inline-block; padding: 6px 10px; background: #3a3a40; border: 2px solid #000; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .1); white-space: pre-wrap; word-break: break-word; font-size: 13px; text-align: left; }
+.cmsg.mine .cbody { background: #5b3aa3; }
+.cmsg.pending { opacity: .6; }
+.cmsg .ctime { font-size: 10px; color: var(--muted, #a1a1aa); margin-top: 2px; }
+.chat-send { display: flex; gap: 8px; margin-top: 10px; }
+.chat-send .input { flex: 1; }
+.badge { display: inline-block; min-width: 14px; padding: 0 4px; background: #e2363f; color: #fff; font-size: 10px; line-height: 14px; text-align: center; border: 1px solid #000; }
+
+.news-full { margin: 0; padding-left: 18px; line-height: 1.6; font-size: 13px; }
+.side-card { backdrop-filter: blur(6px); background: rgba(24, 24, 28, .78) !important; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .06), inset 0 -2px 0 rgba(0, 0, 0, .35), 0 12px 30px -12px #000; }
+.friend .btn.sm { padding: 3px 8px; }
+.friend:hover { background: rgba(255, 255, 255, .04); }

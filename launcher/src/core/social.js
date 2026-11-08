@@ -85,4 +85,20 @@ async function social(retry = true) {
 
 function token() { return cached ? cached.token : ''; }
 
-module.exports = { refreshService, apiUrl, signIn, social, token, forget };
+async function call(method, pth, body) {
+  if (!cached) { const r = await social(); if (!cached) throw new Error((r && r.error) || 'Sign in with a Microsoft account first'); }
+  const api = apiUrl();
+  const res = await fetch(`${api}${pth}`, {
+    method, headers: { Authorization: `Bearer ${cached.token}`, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(10000),
+  });
+  let data = {};
+  try { data = await res.json(); } catch { }
+  if (!res.ok) throw new Error(data.error || `The Surge service answered ${res.status}`);
+  return data;
+}
+
+const messages = since => call('GET', `/v1/messages?since=${Math.max(0, Number(since) || 0)}`);
+const sendMessage = (uuid, text) => call('POST', '/v1/messages', { uuid, text });
+
+module.exports = { refreshService, apiUrl, signIn, social, token, forget, messages, sendMessage };

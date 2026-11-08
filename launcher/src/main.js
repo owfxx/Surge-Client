@@ -23,7 +23,14 @@ let win;
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 if (!app.requestSingleInstanceLock()) app.quit();
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+const alive = () => win && !win.isDestroyed();
+app.on('second-instance', () => {
+  if (!alive()) { if (app.isReady()) createWindow(); return; }
+  if (win.isMinimized()) win.restore();
+  if (!win.isVisible()) win.show();
+  win.focus();
+});
+process.on('uncaughtException', e => { try { console.error(e); } catch { } });
 
 function createWindow() {
   win = new BrowserWindow({
@@ -50,9 +57,9 @@ function handle(channel, fn) {
   });
 }
 
-ipcMain.on('win:min', () => win.minimize());
-ipcMain.on('win:max', () => (win.isMaximized() ? win.unmaximize() : win.maximize()));
-ipcMain.on('win:close', () => win.close());
+ipcMain.on('win:min', () => { if (alive()) win.minimize(); });
+ipcMain.on('win:max', () => { if (alive()) (win.isMaximized() ? win.unmaximize() : win.maximize()); });
+ipcMain.on('win:close', () => { if (alive()) win.close(); });
 
 handle('config:get', () => ({ ...config.load(), totalGb: config.totalGb, dataDir: paths.root }));
 handle('config:set', patch => {
@@ -81,6 +88,7 @@ handle('instances:update', (id, patch) => instances.update(id, patch));
 handle('instances:remove', id => instances.remove(id));
 handle('instances:folder', id => shell.openPath(instances.dirOf(id)));
 
+handle('app:changelog', () => { try { return require('fs').readFileSync(path.join(__dirname, 'renderer', 'assets', 'changelog.md'), 'utf8'); } catch { return ''; } });
 handle('surge:versions', () => launcher.surgeVersions());
 
 handle('instances:create', async ({ name, mcVersion, optimized }) => {
@@ -154,6 +162,8 @@ handle('browse:installPack', async ({ source, id, title }) => {
 });
 
 handle('social:get', () => require('./core/social').social().catch(() => null));
+handle('social:messages', since => require('./core/social').messages(since));
+handle('social:send', (uuid, text) => require('./core/social').sendMessage(uuid, text));
 handle('admin:status', () => admin.status());
 handle('admin:setup', pw => admin.setup(pw));
 handle('admin:unlock', pw => admin.unlock(pw));
@@ -220,9 +230,10 @@ handle('launch:start', (id, target = {}) => {
       const crash = code && code !== 130 ? crash_.analyze(instances.dirOf(id), logTail, startedAt) : null;
       send('launch:exit', { code, crash });
       applyDiscordSettings();
-      if (win && !win.isDestroyed() && !win.isVisible()) win.show();
+      if (!alive()) { app.quit(); return; }
+      if (!win.isVisible()) win.show();
     },
-  }).then(r => { if (config.load().closeOnLaunch) win.hide(); return r; });
+  }).then(r => { if (config.load().closeOnLaunch && alive()) win.hide(); return r; });
 });
 handle('shell:openFile', file => shell.openPath(file));
 
@@ -259,11 +270,12 @@ handle('launch:running', () => launcher.isRunning());
 handle('selfupdate:check', () => release.checkLauncher(app.getVersion()));
 handle('selfupdate:apply', async url => {
   const r = await release.applyLauncher(url, p => send('launch:progress', p));
-  if (r.restart) setTimeout(() => app.quit(), 300);
+  if (r.restart) setTimeout(() => { try { discord.stop(); } catch { } app.exit(0); }, 400);
   else shell.showItemInFolder(r.file);
   return r;
 });
 
 app.whenReady().then(() => { createWindow(); applyDiscordSettings(); require('./core/social').refreshService(); });
-app.on('before-quit', () => discord.stop());
+app.on('before-quit', () => { try { discord.stop(); } catch { } });
+app.on('activate', () => { if (!alive()) createWindow(); });
 app.on('window-all-closed', () => { if (!launcher.isRunning()) app.quit(); });

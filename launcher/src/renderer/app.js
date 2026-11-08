@@ -391,13 +391,13 @@ function renderHome() {
       <aside class="home-side" id="homeSide">
         <div class="greet" id="greet"></div>
         <div class="side-card" id="friendsCard"><div class="side-head">Friends</div><div class="muted small">Loading…</div></div>
-        <div class="side-card news"><div class="side-head">What's new</div>
-          <ul><li>New wardrobe and social menus with their own look</li><li>FPS check: finds what makes your game lag</li><li>10 dances with their own music</li><li>Daily coin rewards, bigger for streaks</li></ul></div>
+        <div class="side-card news" id="newsCard"><div class="side-head">What's new</div><ul></ul></div>
       </aside>
       <div class="panel log ${state.launch.showLog ? '' : 'hidden'}" id="log"></div>
     </section>`;
   updateHeroText();
   homeSide();
+  loadNews();
   mountScene();
   if (state.launch.showLog) { const lg = $('#log'); lg.textContent = state.launch.log.join('\n'); lg.scrollTop = lg.scrollHeight; }
   $('#packTitle').onclick = pickPack;
@@ -430,9 +430,99 @@ async function homeSide() {
   card.innerHTML = `<div class="side-head">Friends <span class="muted small">${on} online${req ? ` · ${req} request${req > 1 ? 's' : ''}` : ''}</span></div>
     ${fr.slice(0, 7).map(f => `<div class="friend"><img src="https://mc-heads.net/avatar/${esc(f.uuid)}/24" alt=""><span class="dot" style="background:${STATUS_COL[f.status] || STATUS_COL.offline}"></span>
       <div class="grow"><div>${esc(f.name)}</div><div class="muted small">${f.status === 'offline' ? 'Offline' : esc(f.server || (f.status[0].toUpperCase() + f.status.slice(1)))}</div></div>
+      <button class="btn sm" data-chat="${esc(f.uuid)}" data-name="${esc(f.name)}" data-tip="Message">Chat${unread(f.uuid) ? ` <span class="badge">${unread(f.uuid)}</span>` : ''}</button>
       ${f.server && f.server !== 'Singleplayer' && f.status !== 'offline' ? `<button class="btn sm" data-join="${esc(f.server)}">Join</button>` : ''}</div>`).join('')
       || '<div class="muted small">No friends yet. Add them in game: pause menu, Social.</div>'}`;
   card.querySelectorAll('[data-join]').forEach(b => b.onclick = () => play({ server: b.dataset.join }));
+  card.querySelectorAll('[data-chat]').forEach(b => b.onclick = () => openChat(b.dataset.chat, b.dataset.name));
+  pollChats();
+}
+
+const chat = { msgs: [], since: 0, me: '', timer: null, open: null };
+const normId = u => String(u || '').replace(/-/g, '').toLowerCase();
+function seenKey(u) { return `surge.seen.${normId(u)}`; }
+function unread(u) {
+  let seen = 0;
+  try { seen = Number(localStorage.getItem(seenKey(u))) || 0; } catch { }
+  return chat.msgs.filter(m => normId(m.sender) === normId(u) && m.id > seen).length;
+}
+async function fetchChats() {
+  const r = await S.messages(chat.since).catch(() => null);
+  if (!r) return false;
+  chat.me = normId(r.me);
+  let added = false;
+  for (const m of r.messages || []) {
+    if (chat.msgs.some(x => x.id === m.id)) continue;
+    chat.msgs.push(m);
+    chat.since = Math.max(chat.since, m.id);
+    added = true;
+  }
+  return added;
+}
+function pollChats() {
+  if (chat.timer) return;
+  const tick = async () => {
+    const added = await fetchChats();
+    if (added) {
+      if (chat.open) renderChat();
+      else if (state.view === 'home') homeSide();
+    }
+    chat.timer = setTimeout(tick, chat.open ? 2500 : 15000);
+  };
+  tick();
+}
+function renderChat() {
+  const box = $('#chatLog');
+  if (!box || !chat.open) return;
+  const other = normId(chat.open.uuid);
+  const list = chat.msgs.filter(m => normId(m.sender) === other || normId(m.receiver) === other);
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = list.map(m => {
+    const mine = normId(m.sender) === chat.me;
+    const t = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div class="cmsg ${mine ? 'mine' : ''}${m.pending ? ' pending' : ''}"><div class="cbody">${esc(m.text)}</div><div class="ctime">${m.pending ? 'sending…' : t}${m.edited ? ' · edited' : ''}</div></div>`;
+  }).join('') || '<div class="muted small" style="text-align:center;margin-top:30px">No messages yet. Say hi!</div>';
+  if (atBottom || !box.dataset.ready) { box.scrollTop = box.scrollHeight; box.dataset.ready = '1'; }
+  const last = list.filter(m => normId(m.sender) === other).pop();
+  if (last) try { localStorage.setItem(seenKey(other), String(last.id)); } catch { }
+}
+function openChat(uuid, name) {
+  chat.open = { uuid, name };
+  const close = modal(`<div class="chat-head"><img src="https://mc-heads.net/avatar/${esc(uuid)}/32" alt=""><h2>${esc(name)}</h2></div>
+    <div class="chat-log" id="chatLog"></div>
+    <form class="chat-send" id="chatForm"><input class="input" id="chatInput" maxlength="500" placeholder="Message ${esc(name)}" autocomplete="off"><button class="btn primary" type="submit">Send</button></form>
+    <div class="muted small" id="chatErr"></div>`, (card) => {
+    card.classList.add('chat-card');
+    const input = $('#chatInput', card);
+    setTimeout(() => input.focus(), 30);
+    $('#chatForm', card).onsubmit = async e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      const temp = { id: -Date.now(), sender: chat.me, receiver: normId(uuid), text, ts: Date.now(), pending: true };
+      chat.msgs.push(temp);
+      renderChat();
+      try {
+        const r = await S.sendMessage(uuid, text);
+        temp.id = r.id; temp.ts = r.ts; temp.pending = false;
+        chat.since = Math.max(chat.since, r.id);
+        $('#chatErr').textContent = '';
+      } catch (err) {
+        chat.msgs.splice(chat.msgs.indexOf(temp), 1);
+        $('#chatErr').textContent = err.message;
+        input.value = text;
+      }
+      renderChat();
+    };
+  });
+  const obs = new MutationObserver(() => {
+    if ($('#modal').classList.contains('hidden')) { chat.open = null; obs.disconnect(); $('#modalCard').classList.remove('chat-card'); if (state.view === 'home') homeSide(); }
+  });
+  obs.observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
+  renderChat();
+  fetchChats().then(renderChat);
+  return close;
 }
 
 async function addContinueButton() {
@@ -1252,6 +1342,24 @@ async function adminPanel(tab = 'codes') {
       if (r) toast(`Published ${r.tag}`);
     };
   });
+}
+
+let newsCache = null;
+async function loadNews() {
+  if (!newsCache) {
+    try {
+      const t = (await S.changelog()) || '';
+      const m = t.match(/^## ([\d.]+)\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/m);
+      newsCache = m ? { version: m[1], items: m[2].split('\n').filter(l => l.startsWith('- ')).map(l => l.slice(2)) } : { items: [] };
+    } catch { newsCache = { items: [] }; }
+  }
+  const card = $('#newsCard');
+  if (!card) return;
+  const items = newsCache.items;
+  card.innerHTML = `<div class="side-head">What's new${newsCache.version ? ` <span class="muted small">${esc(newsCache.version)}</span>` : ''}</div>
+    <ul>${items.slice(0, 5).map(i => `<li>${esc(i)}</li>`).join('')}</ul>${items.length > 5 ? `<button class="btn sm" id="newsMore">See all ${items.length}</button>` : ''}`;
+  const more = $('#newsMore', card);
+  if (more) more.onclick = () => modal(`<h2>What's new in ${esc(newsCache.version)}</h2><ul class="news-full">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul><div class="modal-actions"><button class="btn primary" id="nmOk">Nice</button></div>`, (c, close) => { $('#nmOk', c).onclick = close; });
 }
 
 function changeLines(text) {
