@@ -74,7 +74,7 @@ async function latest(env) {
   if (!exe) return latestCache;
   const jar = assets.find(a => /^surge-client-.+\.jar$/.test(a.name));
   const pkg = assets.find(a => /\.nsis\.7z$/.test(a.name));
-  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url, setup: !!setup, pkg: pkg ? pkg.browser_download_url : null, jar: jar ? { name: jar.name, url: jar.browser_download_url } : null };
+  latestCache = { at: Date.now(), notes: String(rel.body || ''), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url, setup: !!setup, pkg: pkg ? pkg.browser_download_url : null, jar: jar ? { name: jar.name, url: jar.browser_download_url } : null };
   return latestCache;
 }
 
@@ -103,62 +103,156 @@ const DISCORD = 'https://discord.gg/7wGxqGN86R';
 
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 
-function page(l) {
-  const ver = l ? `Version ${l.version} for Windows 10 and 11` : 'For Windows 10 and 11';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function notesHtml(body) {
+  const lines = String(body || '').split(/\r?\n/).map(x => x.trim()).filter(x => /^[-*] /.test(x)).slice(0, 6);
+  return lines.map(x => `<li>${esc(x.slice(2).replace(/\*\*/g, ''))}</li>`).join('');
+}
+
+function page(l, stats) {
+  const ver = l ? `Version ${esc(l.version)}` : 'Latest version';
+  const notes = l ? notesHtml(l.notes) : '';
+  const live = stats && stats.online > 0 ? `<span class="live"><i></i>${stats.online} playing right now</span>` : '';
+  const icon = encodeURIComponent(MARK.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Surge Client</title><meta name="description" content="A fast Minecraft launcher and client for 1.21.11.">
-<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(MARK.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Surge Client</title><meta name="description" content="A fast Minecraft launcher and client for 1.21.11 with 40+ mods, friends, cosmetics and emotes.">
+<meta property="og:title" content="Surge Client"><meta property="og:description" content="A fast Minecraft launcher and client for 1.21.11."><meta name="theme-color" content="#0e0e11">
+<link rel="icon" href="data:image/svg+xml,${icon}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#121214;--deep:#27272a;--violet:#a1a1aa;--lilac:#e4e4e7;--text:#fafafa;--muted:#a1a1aa}
-*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
-.sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 50% -10%,#52525b 0%,#2a2a2e 35%,var(--bg) 75%)}
-.sky::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8,transparent),radial-gradient(1px 1px at 70% 20%,#fff6,transparent),radial-gradient(1.5px 1.5px at 85% 60%,#fff5,transparent),radial-gradient(1px 1px at 35% 75%,#fff4,transparent),radial-gradient(1px 1px at 55% 45%,#fff5,transparent);}
-main{max-width:980px;margin:0 auto;padding:72px 20px 40px;text-align:center}
-.mark{width:96px;height:112px;margin:0 auto;filter:drop-shadow(0 8px 24px #0008);animation:float 5s ease-in-out infinite}
-@keyframes float{50%{transform:translateY(-8px)}}
-h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px;letter-spacing:.5px;text-shadow:0 4px 0 #0005}
-.lead{color:var(--lilac);font-size:clamp(17px,2.2vw,20px);max-width:560px;margin:0 auto 34px}
-.dl{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#18181b;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif;padding:16px 30px;box-shadow:0 6px 0 #a1a1aa,0 18px 40px #0007;transition:transform .12s,box-shadow .12s}
-.dl:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a1a1aa,0 22px 46px #0008}.dl:active{transform:translateY(4px);box-shadow:0 2px 0 #a1a1aa}
-.dl:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
+:root{--bg:#0e0e11;--panel:#16161a;--panel2:#1c1c21;--line:#26262d;--text:#f4f4f5;--muted:#a1a1aa;--faint:#6b6b74;--gold:#f2c430;--gold2:#ffe07a}
+*{box-sizing:border-box}html{scroll-behavior:smooth}html,body{margin:0;overflow-x:clip}
+body{background:var(--bg);color:var(--text);font:16px/1.65 Rubik,system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.px{font-family:"Pixelify Sans",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:#0e0e11cc;border-bottom:1px solid #ffffff0a}
+nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif}
+.brand svg{width:24px;height:28px}
+nav .links{margin-left:auto;display:flex;gap:22px;align-items:center}
+nav .links a{color:var(--muted);text-decoration:none;font-size:15px;transition:color .15s}
+nav .links a:hover{color:var(--text)}
+nav .links .pill{color:var(--text);border:1px solid var(--line);padding:6px 14px;border-radius:999px;background:var(--panel)}
+nav .links .pill:hover{border-color:#5865f2;background:#5865f222}
+@media (max-width:640px){nav .links a:not(.pill){display:none}}
+.hero{position:relative;padding:84px 0 70px;text-align:center;isolation:isolate;overflow:hidden}
+#rain{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.5;pointer-events:none}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto;height:620px;z-index:-2;background:radial-gradient(560px 360px at 50% 30%,#3a3a44 0%,#1d1d23 45%,transparent 75%)}
+.flash{position:absolute;inset:0;z-index:-1;background:radial-gradient(500px 300px at 50% 28%,#fff3,transparent 70%);opacity:0;pointer-events:none}
+.storm{width:132px;height:154px;margin:0 auto;position:relative}
+.storm svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 14px 30px #000a)}
+.storm .cloud{animation:drift 6s ease-in-out infinite}
+.storm .bolt{transform-origin:60px 100px}
+@keyframes drift{50%{transform:translateY(-6px)}}
+h1{font:700 clamp(48px,9vw,96px)/1 "Pixelify Sans",sans-serif;margin:22px 0 14px;letter-spacing:.5px}
+.lead{color:#d4d4d8;font-size:clamp(17px,2.2vw,20px);max-width:560px;margin:0 auto 34px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.dl{display:inline-flex;align-items:center;gap:12px;background:var(--gold);color:#1a1405;text-decoration:none;font:700 20px "Pixelify Sans",sans-serif;padding:15px 28px;border-radius:4px;box-shadow:0 5px 0 #b38a12,0 14px 40px #f2c43033;transition:transform .12s,box-shadow .12s,background .15s}
+.dl:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 7px 0 #b38a12,0 20px 50px #f2c43055}
+.dl:active{transform:translateY(4px);box-shadow:0 1px 0 #b38a12}
 .dl svg{width:22px;height:22px}
-.meta{color:var(--muted);font-size:14px;margin-top:14px}
-.alt{color:var(--muted);font-size:14px;margin:18px auto 0;max-width:520px}.alt a{color:#fff;text-underline-offset:3px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:80px 0 0;text-align:left}
-.f{background:#ffffff0d;border:2px solid #ffffff14;padding:18px 18px 16px}
-.f h3{font:700 19px "Pixelify Sans",sans-serif;margin:0 0 6px;color:#fff}.f p{margin:0;color:var(--muted);font-size:14.5px}
-.steps{margin:64px auto 0;max-width:620px;text-align:left;color:var(--muted)}.steps h2{font:700 24px "Pixelify Sans",sans-serif;color:#fff;margin:0 0 10px;text-align:center}
-.dc{display:inline-block;margin-top:16px;color:#fff;font:700 16px "Pixelify Sans",sans-serif;text-decoration:none;border:2px solid #ffffff33;padding:8px 18px;background:#5865f233}.dc:hover{background:#5865f266}.dc:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
-.steps a,footer a{color:#fff;text-underline-offset:3px}
-.steps ol{margin:0;padding-left:22px}.steps li{margin:6px 0}.steps b{color:#fff}
-footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
-@media (prefers-reduced-motion:reduce){.mark{animation:none}.dl{transition:none}}
-</style></head><body><div class="sky"></div>
-<main>
-<div class="mark">${MARK}</div>
-<h1>Surge Client</h1>
-<p class="lead">A fast Minecraft launcher and client for 1.21.11. Mods, friends and cosmetics, ready the moment you press Play.</p>
-<a class="dl" href="/download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v13m-6-6 6 6 6-6M4 21h16"/></svg>Download for Windows</a>
-<div class="meta">${ver}. The installer is small and easy to share.</div>
-<a class="dc" href="${DISCORD}" rel="noopener">Join our Discord</a>
-<p class="alt">Using your own launcher? <a href="/download/mod">Get the mod on its own</a> for Fabric 1.21.11. It needs <a href="https://modrinth.com/mod/fabric-api" rel="noopener">Fabric API</a> and updates itself.</p>
-<section class="grid">
-<div class="f"><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, motion blur and more, each with its own settings.</p></div>
-<div class="f"><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
-<div class="f"><h3>More FPS</h3><p>Sodium, Lithium and friends are added for you, with smooth Java settings.</p></div>
-<div class="f"><h3>Friends</h3><p>Chat, set your status and join the server your friends are playing on.</p></div>
-<div class="f"><h3>Wardrobe</h3><p>Wings, halos, capes and animated emotes that other Surge players see.</p></div>
-<div class="f"><h3>Always up to date</h3><p>The launcher and the mod update themselves. Nothing to download twice.</p></div>
+.ghost{display:inline-flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font:700 18px "Pixelify Sans",sans-serif;padding:15px 24px;border-radius:4px;border:1px solid var(--line);background:var(--panel);transition:border-color .15s,background .15s}
+.ghost:hover{border-color:#5865f2;background:#5865f21f}
+.ghost svg{width:22px;height:22px}
+.meta{color:var(--muted);font-size:14px;margin-top:18px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
+.live{display:inline-flex;align-items:center;gap:8px;color:#d4d4d8}
+.live i{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 #4ade80aa;animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px #4ade8000}100%{box-shadow:0 0 0 0 #4ade8000}}
+.alt{color:var(--faint);font-size:14px;margin:10px auto 0}.alt a{color:var(--muted);text-underline-offset:3px}.alt a:hover{color:var(--text)}
+section{padding:70px 0}
+h2{font:700 clamp(28px,4vw,40px)/1.15 "Pixelify Sans",sans-serif;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 34px;max-width:560px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.f{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px;transition:border-color .2s,transform .2s,background .2s}
+.f:hover{border-color:#3a3a44;background:var(--panel2);transform:translateY(-3px)}
+.f .ic{width:34px;height:34px;border-radius:6px;display:grid;place-items:center;background:#f2c43014;color:var(--gold);margin-bottom:14px}
+.f .ic svg{width:20px;height:20px}
+.f h3{font:700 20px "Pixelify Sans",sans-serif;margin:0 0 6px}.f p{margin:0;color:var(--muted);font-size:15px}
+.f.wide{grid-column:span 2}@media (max-width:560px){.f.wide{grid-column:auto}}
+.f .tag{display:inline-block;font-size:12px;color:var(--gold);border:1px solid #f2c43044;border-radius:999px;padding:1px 9px;margin-left:8px;vertical-align:3px;font-family:Rubik,sans-serif;font-weight:500}
+.split{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:start}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding:0 0 26px 56px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-2px;width:38px;height:38px;border-radius:6px;display:grid;place-items:center;font:700 18px "Pixelify Sans",sans-serif;background:var(--panel);border:1px solid var(--line);color:var(--gold)}
+.steps li::after{content:"";position:absolute;left:19px;top:40px;bottom:6px;width:1px;background:var(--line)}
+.steps li:last-child::after{display:none}
+.steps b{color:var(--text);font-weight:600}.steps p{margin:2px 0 0;color:var(--muted)}
+.new{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:24px}
+.new h3{font:700 22px "Pixelify Sans",sans-serif;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.new h3 span{font:500 13px Rubik,sans-serif;color:#1a1405;background:var(--gold);border-radius:999px;padding:2px 10px}
+.new ul{margin:0;padding-left:18px;color:var(--muted);font-size:15px}.new li{margin:7px 0}.new li::marker{color:var(--gold)}
+.faq{max-width:760px}
+details{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;list-style:none;padding:18px 36px 18px 0;font-weight:500;font-size:17px;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
+details p{margin:0 0 18px;color:var(--muted)}
+.band{margin:40px 0 0;border:1px solid var(--line);border-radius:8px;padding:38px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:linear-gradient(120deg,#1a1a2e,#16161a 60%)}
+.band h2{margin:0 0 4px}.band p{margin:0;color:var(--muted)}
+footer{color:var(--faint);font-size:13px;padding:40px 0 50px;text-align:center}
+footer a{color:var(--muted);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.in{opacity:0;transform:translateY(14px);animation:in .7s cubic-bezier(.2,.7,.2,1) forwards}
+.d1{animation-delay:.1s}.d2{animation-delay:.22s}.d3{animation-delay:.34s}.d4{animation-delay:.46s}
+@keyframes in{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.in{opacity:1;transform:none}#rain{display:none}}
+</style></head><body>
+<nav><div class="wrap"><a class="brand" href="#top">${MARK}Surge</a><div class="links"><a href="#features">Features</a><a href="#start">Get started</a><a href="#faq">FAQ</a><a class="pill" href="${DISCORD}" rel="noopener">Discord</a></div></div></nav>
+<header class="hero" id="top"><canvas id="rain" aria-hidden="true"></canvas><div class="flash" id="flash"></div>
+<div class="wrap">
+<div class="storm in"><svg viewBox="0 0 120 140" aria-hidden="true"><path class="cloud" fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path class="bolt" id="bolt" fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg></div>
+<h1 class="in d1">Surge Client</h1>
+<p class="lead in d2">A fast Minecraft launcher and client for 1.21.11. Mods, friends and cosmetics, ready the moment you press Play.</p>
+<div class="cta in d3"><a class="dl" href="/download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v13m-6-6 6 6 6-6M4 21h16"/></svg>Download for Windows</a><a class="ghost" href="${DISCORD}" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 5.3A16.6 16.6 0 0 0 15.9 4l-.5 1a15.4 15.4 0 0 0-4.8 0L10.1 4A16.6 16.6 0 0 0 6 5.3 17.3 17.3 0 0 0 3 17.1 16.8 16.8 0 0 0 8.1 19.7l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.2 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7A16.8 16.8 0 0 0 21 17.1 17.2 17.2 0 0 0 20 5.3ZM9.3 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm5.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>Join Discord</a></div>
+<div class="meta in d4"><span>${ver} for Windows 10 and 11</span>${live}</div>
+<p class="alt in d4">Using your own launcher? <a href="/download/mod">Get the mod on its own</a> for Fabric 1.21.11 with <a href="https://modrinth.com/mod/fabric-api" rel="noopener">Fabric API</a>.</p>
+</div></header>
+<main class="wrap">
+<section id="features"><h2>Everything in one place</h2><p class="sub">No mod folders, no setup. Install once and everything is there, and it keeps itself up to date.</p>
+<div class="grid">
+<div class="f wide"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div><h3>More FPS out of the box</h3><p>Sodium, Lithium and friends are set up for you, with tuned Java settings, background FPS limits and smart culling.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, hitboxes, motion blur and more.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6z"/><path d="M10 7h4a3 3 0 0 1 3 3v4"/></svg></div><h3>Your HUD, your way</h3><p>Drag anything on screen. Alt snaps to the grid, Ctrl lines it up with the rest.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 18 8 9l4 5 3-4 7 8z"/><circle cx="17" cy="6" r="2"/></svg></div><h3>Distant Terrain<span class="tag">Beta</span></h3><p>See land up to 1024 chunks away, with detail all the way up to real block textures.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.8 6 5.5"/></svg></div><h3>Friends</h3><p>Chat, set your status and join the server your friends are playing on in one click.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3 4 6v15h16V6l-4-3"/><path d="M8 3c0 2 1.8 4 4 4s4-2 4-4"/></svg></div><h3>Wardrobe</h3><p>Animated capes, wings, halos and emotes that every Surge player can see.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div><h3>Clips</h3><p>Press F8 to save the last few seconds of gameplay as a video, up to 120 FPS.</p></div>
+<div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Custom Sounds</h3><p>Swap any game sound for a built in one or your own mp3, wav or ogg.</p></div>
+</div></section>
+<section id="start"><div class="split">
+<div><h2>Get started</h2><p class="sub">From download to playing in about a minute.</p>
+<ol class="steps">
+<li><b>Download and run the installer</b><p>Open Surge Client Setup.exe. If Windows warns you, choose More info, then Run anyway.</p></li>
+<li><b>Sign in with Microsoft</b><p>Use the account you play Minecraft with. Surge never sees your password.</p></li>
+<li><b>Press Play</b><p>In game, Right Shift opens the mods and B opens your emote wheel.</p></li>
+</ol></div>
+${notes ? `<div class="new"><h3>What's new <span>${esc(l.version)}</span></h3><ul>${notes}</ul></div>` : ''}
+</div></section>
+<section id="faq" class="faq"><h2>Questions</h2><p class="sub">The things people ask most.</p>
+<details><summary>Is Surge Client free?</summary><p>Yes. The client, the launcher and updates are free. Cosmetics use Surge Coins, which you get from daily rewards, codes and events.</p></details>
+<details><summary>Can I get banned for using it?</summary><p>Surge Client has no cheat features, so it is fine on normal servers. Some servers have their own rules about clients, so check them if you are unsure.</p></details>
+<details><summary>Why does Windows warn me about the installer?</summary><p>New programs without a code signing certificate often get this warning. Choose More info, then Run anyway. Only download Surge Client from this website.</p></details>
+<details><summary>Can other players see my cosmetics?</summary><p>Everyone else using Surge Client sees your capes, wings, halos and emotes.</p></details>
+<details><summary>Does it work on Mac or Linux?</summary><p>The launcher is Windows only for now. On other systems you can use the mod on its own with any Fabric 1.21.11 launcher.</p></details>
 </section>
-<section class="steps"><h2>Getting started</h2><ol>
-<li>Press <b>Download for Windows</b> and open <b>Surge Client Setup.exe</b>. If Windows warns you, choose <b>More info</b>, then <b>Run anyway</b>. It installs in a few seconds and opens the launcher.</li>
-<li>Sign in with your Microsoft account.</li>
-<li>Press <b>Play</b>. In game, <b>Right Shift</b> opens the mods and <b>B</b> opens emotes.</li>
-<li>Questions or ideas? Come say hi on <a href="${DISCORD}" rel="noopener">our Discord</a>.</li>
-</ol></section>
+<div class="band"><div><h2>Join the community</h2><p>Updates, giveaways, codes and help from other players.</p></div><a class="dl" href="${DISCORD}" rel="noopener">Join our Discord</a></div>
 </main>
-<footer>Surge Client by owfx · <a href="${DISCORD}" rel="noopener">Discord</a> · Not affiliated with Mojang or Microsoft</footer>
+<footer class="wrap">Surge Client by owfx. Not affiliated with Mojang or Microsoft. <a href="${DISCORD}" rel="noopener">Discord</a></footer>
+<script>
+(function(){
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var c=document.getElementById('rain'),x=c.getContext('2d'),drops=[],w,h,dpr=Math.min(2,devicePixelRatio||1);
+function size(){w=c.clientWidth;h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);drops=[];var n=Math.round(w*h/9000);for(var i=0;i<n;i++)drops.push({x:Math.random()*w,y:Math.random()*h,l:8+Math.random()*14,v:5+Math.random()*6});}
+function frame(){x.clearRect(0,0,w,h);x.strokeStyle='rgba(200,205,220,.35)';x.lineWidth=1;x.beginPath();for(var i=0;i<drops.length;i++){var d=drops[i];x.moveTo(d.x,d.y);x.lineTo(d.x-d.l*.25,d.y+d.l);d.y+=d.v;d.x-=d.v*.25;if(d.y>h){d.y=-20;d.x=Math.random()*(w+80);}}x.stroke();if(!document.hidden)requestAnimationFrame(frame);else setTimeout(function(){requestAnimationFrame(frame)},500);}
+var f=document.getElementById('flash'),b=document.getElementById('bolt');
+function strike(){f.animate([{opacity:0},{opacity:1,offset:.08},{opacity:.2,offset:.2},{opacity:.8,offset:.28},{opacity:0}],{duration:900,easing:'ease-out'});b.animate([{fill:'#fff'},{fill:'#ffe07a',offset:.1},{fill:'#fff',offset:.3},{fill:'#ffe07a',offset:.4},{fill:'#fff'}],{duration:900});setTimeout(strike,5000+Math.random()*6000);}
+if(!reduce){size();addEventListener('resize',size);requestAnimationFrame(frame);setTimeout(strike,1400);}
+})();
+</script>
 </body></html>`;
 }
 
@@ -216,7 +310,13 @@ export default {
     const url = new URL(req.url);
     const p = url.pathname;
     if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
-      return new Response(page(await latest(env).catch(() => null)), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
+      let stats = null;
+      try {
+        await setup(env.DB);
+        const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM users WHERE seen > ?1 AND (status IS NULL OR status != 'invisible')").bind(Date.now() - ONLINE_MS).first();
+        stats = { online: r ? r.n : 0 };
+      } catch { }
+      return new Response(page(await latest(env).catch(() => null), stats), { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=60' } });
     }
     if (req.method === 'GET' && p === '/download') return download(env, false);
     if (req.method === 'GET' && p === '/download/mod') return download(env, true);
