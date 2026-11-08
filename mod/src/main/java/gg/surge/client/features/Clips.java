@@ -68,9 +68,11 @@ public final class Clips {
 			return;
 		}
 		long now = System.nanoTime();
-		long gap = 1_000_000_000L / fps();
+		int want = fps();
+		if (Mods.CLIP_SMART.on() && mc.getFps() < want * 2) want = Math.max(5, Math.min(want, mc.getFps() / 2));
+		long gap = 1_000_000_000L / want;
 		if (now - lastGrab < gap || PENDING.get() > THREADS * 2 + 1) return;
-		if (mc.isPaused() || (Mods.CLIP_SMART.on() && mc.getFps() < 30 && fps() > 20)) return;
+		if (mc.isPaused()) return;
 		try {
 			com.mojang.blaze3d.pipeline.RenderTarget main = mc.getMainRenderTarget();
 			com.mojang.blaze3d.textures.GpuTexture tex = main.getColorTexture();

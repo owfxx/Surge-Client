@@ -402,6 +402,8 @@ public final class Lod {
 			}
 		}
 
+		drawn = 0;
+		renders++;
 		if (MESHES.isEmpty()) return;
 		RenderTarget target = mc.getMainRenderTarget();
 		var idx = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
@@ -421,12 +423,16 @@ public final class Lod {
 				int rx = (int) (e.getKey() >> 32), rz = (int) (long) e.getKey();
 				double bx = rx * REGION_CHUNKS * 16.0, bz = rz * REGION_CHUNKS * 16.0;
 				if (frustum != null && !frustum.isVisible(new AABB(bx, m.minY - 1, bz, bx + REGION_CHUNKS * 16, m.maxY + 1, bz + REGION_CHUNKS * 16))) continue;
-				var transform = RenderSystem.getDynamicUniforms().writeTransform(modelView, white, new Vector3f((float) (bx - cam.x), (float) -cam.y, (float) (bz - cam.z)), identity);
+				Matrix4f mv = new Matrix4f(modelView).translate((float) (bx - cam.x), (float) -cam.y, (float) (bz - cam.z));
+				var transform = RenderSystem.getDynamicUniforms().writeTransform(mv, white, new Vector3f(), identity);
 				pass.setUniform("DynamicTransforms", transform);
 				pass.setVertexBuffer(0, m.buffer);
 				pass.drawIndexed(0, 0, m.indexCount, 1);
+				drawn++;
 			}
-		} catch (Throwable ignored) { }
+		} catch (Throwable t) {
+			fail("render", t);
+		}
 	}
 
 	private static int argb(int c, float k) {
@@ -526,6 +532,20 @@ public final class Lod {
 			READY.add(new Built(key(r.rx, r.rz), data, bytes, lvl, version, useHole, hx, hz, hole, minY, maxY));
 		} catch (Throwable t) {
 			BUILDING.remove(key(r.rx, r.rz));
+			fail("build", t);
 		}
+	}
+
+	private static int drawn, renders;
+	private static boolean warned;
+
+	private static void fail(String where, Throwable t) {
+		if (warned) return;
+		warned = true;
+		org.slf4j.LoggerFactory.getLogger("surge").warn("Distant terrain " + where + " failed", t);
+	}
+
+	public static String stats() {
+		return "regions=" + REGIONS.size() + " meshes=" + MESHES.size() + " drawn=" + drawn + " renders=" + renders + " sampled=" + SAMPLED.size();
 	}
 }
