@@ -329,7 +329,7 @@ public final class Mods {
 	public static final SurgeMod LOD = mod("distant_terrain", "Distant Terrain (Beta)", Category.VISUAL, Items.FILLED_MAP,
 		"See land far past your render distance, up to 1024 chunks. It shows the places you have already been to", true);
 	public static final Setting.Slider LOD_DISTANCE = LOD.slider("distance", "Distance", 256, 64, 1024, 32, " chunks");
-	public static final Setting.Choice LOD_QUALITY = LOD.choice("quality", "Detail", "High", "Low", "Medium", "High", "Ultra");
+	public static final Setting.Choice LOD_QUALITY = LOD.choice("quality", "Detail", "High", "Low", "Medium", "High", "Ultra", "Full");
 	public static final Setting.Toggle LOD_FOG = LOD.toggle("fog", "Keep normal fog", false);
 	public static final Setting.Toggle LOD_SAVE = LOD.toggle("save", "Remember terrain between sessions", true);
 	public static final Setting.Button LOD_FORGET = LOD.button("Saved terrain for this world", "Forget", gg.surge.client.lod.Lod::forget);

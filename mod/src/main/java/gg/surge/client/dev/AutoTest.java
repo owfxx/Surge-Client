@@ -98,6 +98,7 @@ public final class AutoTest {
 		STEPS.add(new Step("07w2-lod-medium", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Medium")));
 		STEPS.add(new Step("07w3-lod-high", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("High")));
 		STEPS.add(new Step("07w4-lod-ultra", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Ultra")));
+		STEPS.add(new Step("07w5-lod-full", 140, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Full")));
 		STEPS.add(new Step("07x-lod-stats", 20, mc -> org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats())));
 		STEPS.add(new Step("07x-lod-reset", 40, mc -> { mc.options.renderDistance().set(8); gg.surge.client.mods.Mods.LOD.setEnabled(false); mc.player.connection.sendCommand("tp @s ~ ~-100 ~"); mc.player.connection.sendCommand("gamemode creative"); }));
 		STEPS.add(new Step("07y-custom-sounds", 40, mc -> { Mods.CUSTOM_SOUNDS.setEnabled(true); gg.surge.client.features.CustomSounds.set("minecraft:entity.player.levelup", "preset:chime"); mc.setScreen(new gg.surge.client.gui.CustomSoundsScreen(null)); gg.surge.client.features.CustomSounds.preview("preset:ding"); }));
