@@ -80,6 +80,15 @@ public final class Features {
 	public static final Setting.Toggle CHAT_24 = CHAT.toggle("24h", "24-hour time", true);
 
 	public static boolean sprintToggled, sneakToggled;
+	private static boolean sneakForced;
+
+	private static void releaseSneak(MinecraftClient mc) {
+		if (!sneakForced) return;
+		sneakForced = false;
+		int code = mc.options.sneakKey.getCode();
+		boolean down = code > 0 && org.lwjgl.input.Keyboard.isKeyDown(code);
+		KeyBinding.setKeyPressed(code, down);
+	}
 	private static boolean freelookOn, freelookLatch;
 	private static int savedPerspective;
 	public static float camYaw, camPitch;
@@ -96,10 +105,14 @@ public final class Features {
 			while (mc.options.sneakKey.wasPressed()) if (SNEAK_ON.on()) sneakToggled = !sneakToggled;
 			boolean moving = mc.options.forwardKey.isPressed();
 			if ((sprintToggled || ALWAYS_SPRINT.on() && SPRINT_ON.on()) && moving && !p.isSneaking() && p.getHungerManager().getFoodLevel() > 6 && !p.isUsingItem() && mc.currentScreen == null) p.setSprinting(true);
-			if (SNEAK_ON.on() && sneakToggled && mc.currentScreen == null) KeyBinding.setKeyPressed(mc.options.sneakKey.getCode(), true);
+			boolean force = SNEAK_ON.on() && sneakToggled && mc.currentScreen == null;
+			if (force) KeyBinding.setKeyPressed(mc.options.sneakKey.getCode(), true);
+			else releaseSneak(mc);
+			sneakForced = force;
 		} else {
 			sprintToggled = false;
 			sneakToggled = false;
+			releaseSneak(mc);
 		}
 		if (FULLBRIGHT.enabled()) {
 			if (savedGamma < 0) savedGamma = mc.options.gamma;
