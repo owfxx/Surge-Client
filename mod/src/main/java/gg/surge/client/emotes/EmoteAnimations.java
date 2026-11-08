@@ -72,7 +72,7 @@ final class EmoteAnimations {
 			}
 			case IDLE_STRETCH -> {
 				float c = (t % 6f) / 6f;
-				float up = Emotes.ease(Math.max(0f, Math.min(1f, Math.min(c * 4f, (1f - c) * 4f - 1.2f))));
+				float up = c < 0.08f ? 0f : c < 0.22f ? Emotes.ease((c - 0.08f) / 0.14f) : c < 0.55f ? 1f : c < 0.7f ? Emotes.ease(1f - (c - 0.55f) / 0.15f) : 0f;
 				p.rArm(0, 0, 170 * up).lArm(0, 0, -170 * up).head(-25 * up, 0, 0).lean(-8 * up).bob(-0.6f * up);
 			}
 			case IDLE_YAWN -> {

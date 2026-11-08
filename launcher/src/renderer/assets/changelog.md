@@ -1,3 +1,13 @@
+## 1.7.1
+- Shoulder pets: Skin Plush (pick any player and it gets their skin), Bee Buddy, Tiny Warden, Allay Friend, Axolotl, Sleepy Fox and Frog. They breathe, flap and look around, and dance along when you emote
+- Idle animations: buy one in the Wardrobe, and it plays when you stand still for 2 seconds
+- The elytra now moves with your body while you emote
+- New Hitboxes mod: pick hitbox colors, with combat colors when someone is hurt or in your crosshair, hide the eye line or show only players
+- Turning on hitboxes no longer hides your HUD
+- Clips can record at 60, 90 or 120 FPS and in 1080p or full resolution
+- A bigger inventory scale no longer makes the hotbar and HUD bigger
+- Daily coins now use server time, so changing your clock or timezone doesn't give extra rewards
+
 ## 1.7.0
 - New Wardrobe page in the launcher: buy, wear and preview capes, wings and halos, set up your emote wheel and redeem codes without opening the game
 - Almost every cape is animated now: Aurora, Emerald, Galaxy, Midnight, Ocean, Royal, Sakura, Surge and Void move and shimmer

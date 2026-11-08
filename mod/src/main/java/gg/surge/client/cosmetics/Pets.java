@@ -66,13 +66,13 @@ public final class Pets {
 
 	private static float scale(String kind) {
 		return switch (kind) {
-			case "bee" -> 0.42f;
-			case "warden" -> 0.13f;
-			case "allay" -> 0.42f;
-			case "axolotl" -> 0.34f;
-			case "fox" -> 0.3f;
-			case "frog" -> 0.4f;
-			default -> 0.17f;
+			case "bee" -> 0.55f;
+			case "warden" -> 0.17f;
+			case "allay" -> 0.55f;
+			case "axolotl" -> 0.45f;
+			case "fox" -> 0.4f;
+			case "frog" -> 0.52f;
+			default -> 0.23f;
 		};
 	}
 
@@ -160,7 +160,7 @@ public final class Pets {
 		parent.body.translateAndRotate(ps);
 		boolean flies = kind.equals("bee") || kind.equals("allay");
 		float hover = flies ? -0.16f + 0.04f * sin(age * 0.12f) : 0f;
-		ps.translate(0.36f, -0.01f + hover - hop * 0.09f, 0.02f);
+		ps.translate(0.4f, -0.01f + hover - hop * 0.09f, 0.03f);
 		ps.mulPose(Axis.YP.rotationDegrees(-18f + (dancing ? sin(beat * 0.5f) * 20f : sin(t * 0.7f) * 6f)));
 		if (dancing) ps.mulPose(Axis.ZP.rotationDegrees(sin(beat) * 8f));
 		float s = scale(kind);
