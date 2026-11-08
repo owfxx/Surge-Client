@@ -9,6 +9,8 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation "javazoom:jlayer:1.0.1"
+	include "javazoom:jlayer:1.0.1"
 }
 
 processResources {

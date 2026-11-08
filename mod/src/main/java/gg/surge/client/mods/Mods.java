@@ -293,6 +293,16 @@ public final class Mods {
 		} catch (Exception ignored) { }
 	});
 
+	public static final SurgeMod CUSTOM_SOUNDS = mod("custom_sounds", "Custom Sounds", Category.UTILITY, Items.NOTE_BLOCK,
+		"Replace any game sound with a built in sound or your own mp3, wav or ogg files", false);
+	public static final Setting.Button CS_OPEN = CUSTOM_SOUNDS.button("Pick sounds", "Open", () -> {
+		net.minecraft.client.Minecraft mc = mc();
+		mc.setScreen(new gg.surge.client.gui.CustomSoundsScreen(mc.screen));
+	});
+	public static final Setting.Button CS_FOLDER = CUSTOM_SOUNDS.button("Your sounds folder", "Open", () -> {
+		try { net.minecraft.util.Util.getPlatform().openPath(gg.surge.client.features.CustomSounds.folder()); } catch (Exception ignored) { }
+	});
+
 	public static final SurgeMod NICK_HIDER = mod("nick_hider", "Nick Hider", Category.VISUAL, Items.LEATHER_HELMET,
 		"Hide your name in chat, the tab list and your nametag, great for recording", false);
 	public static final Setting.Choice NICK_NAME = NICK_HIDER.choice("nick", "Show me as", "You", "You", "Player", "Surge", "Hidden", "Me");

@@ -14,7 +14,7 @@
 		"ScreenEffectRendererMixin",
 		"OptionInstanceAccessor",
 		"EquipmentLayerRendererMixin",
-		"MinecraftMixin", "GuiScaleMixin", "LocatorBarRendererMixin", "GuiGraphicsSizeMixin", "HitboxMixin", "LodMixin", "SpriteContentsAccessor", "DepthFarMixin", "BackgroundFpsMixin",
+		"MinecraftMixin", "GuiScaleMixin", "LocatorBarRendererMixin", "GuiGraphicsSizeMixin", "HitboxMixin", "LodMixin", "CustomSoundEngineMixin", "CustomSoundBufferMixin", "SpriteContentsAccessor", "DepthFarMixin", "BackgroundFpsMixin",
 		"EntityTurnMixin",
 		"CameraMixin",
 		"LevelWeatherMixin",
