@@ -231,7 +231,7 @@ jobs:
           cp mod/run/logs/latest.log shots/latest.log 2>/dev/null || true
           ls shots
           gh release view autotest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create autotest -R "$GITHUB_REPOSITORY" --title "Test screenshots" --notes "Automatic test run screenshots." --prerelease --latest=false
-          for a in $(gh release view autotest -R "$GITHUB_REPOSITORY" --json assets -q '[.assets[].name | select(startswith("l0") or startswith("latest-legacy") | not)][]'); do gh release delete-asset autotest "$a" -R "$GITHUB_REPOSITORY" -y || true; done
+          for a in $(gh release view autotest -R "$GITHUB_REPOSITORY" --json assets -q '[.assets[].name | select(test("^l[0-9]") or startswith("latest-legacy") | not)][]'); do gh release delete-asset autotest "$a" -R "$GITHUB_REPOSITORY" -y || true; done
           gh release upload autotest shots/* --clobber -R "$GITHUB_REPOSITORY"
 
   gamejar:
@@ -327,5 +327,5 @@ jobs:
           cp mod-legacy/run/logs/latest.log shots/latest-legacy.log 2>/dev/null || true
           ls shots
           gh release view autotest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create autotest -R "$GITHUB_REPOSITORY" --title "Test screenshots" --notes "Automatic test run screenshots." --prerelease --latest=false
-          for a in $(gh release view autotest -R "$GITHUB_REPOSITORY" --json assets -q '[.assets[].name | select(startswith("l0") or startswith("latest-legacy"))][]'); do gh release delete-asset autotest "$a" -R "$GITHUB_REPOSITORY" -y || true; done
+          for a in $(gh release view autotest -R "$GITHUB_REPOSITORY" --json assets -q '[.assets[].name | select(test("^l[0-9]") or startswith("latest-legacy"))][]'); do gh release delete-asset autotest "$a" -R "$GITHUB_REPOSITORY" -y || true; done
           gh release upload autotest shots/* --clobber -R "$GITHUB_REPOSITORY"

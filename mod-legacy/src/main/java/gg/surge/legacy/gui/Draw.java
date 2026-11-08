@@ -78,7 +78,8 @@ public final class Draw {
 	public static void glass(int x, int y, int w, int h, int c, float strength) {
 		if (w <= 0 || h <= 0) return;
 		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
-		rawRound(x, y, w, h, c, (Math.min(255, Math.round(0x1E * strength)) << 24) | 0xFFFFFF);
+		rawRound(x, y, w, h, c, (Math.min(255, Math.round(0x22 * strength)) << 24) | 0x08080C);
+		rawRound(x, y, w, h, c, (Math.min(255, Math.round(0x16 * strength)) << 24) | 0xFFFFFF);
 		if (h > 6 && w > 2 * c) {
 			int sy = Math.max(1, c / 2);
 			gradient(x + c, y + sy, w - 2 * c, Math.max(1, h * 2 / 5 - sy), (Math.min(255, Math.round(0x1C * strength)) << 24) | 0xFFFFFF, 0x00FFFFFF);

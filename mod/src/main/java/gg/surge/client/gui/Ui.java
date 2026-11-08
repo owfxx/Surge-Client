@@ -40,6 +40,8 @@ public final class Ui {
 		if (key.equals(themeKey)) return;
 		themeKey = key;
 		glass = t.equals("Custom") && "EDEADE".equalsIgnoreCase(gg.surge.client.mods.Mods.THEME_COLOR.get());
+		MUTED = glass ? 0xFFDCDCE0 : 0xFFA9AAAE;
+		FAINT = glass ? 0xFFB4B4BA : 0xFF6E6F74;
 		if (glass) {
 			ACCENT = 0xFFEDEADE;
 			ACCENT_HOVER = 0xFFFFFFFF;
@@ -66,8 +68,8 @@ public final class Ui {
 		ACCENT_2 = Colors.lerp(ACCENT, 0xFFFFFFFF, t.equals("Ash") || t.equals("Mono") ? 0.6f : 0.35f);
 	}
 	public static final int TEXT = 0xFFFFFFFF;
-	public static final int MUTED = 0xFFA9AAAE;
-	public static final int FAINT = 0xFF6E6F74;
+	public static int MUTED = 0xFFA9AAAE;
+	public static int FAINT = 0xFF6E6F74;
 	public static final int YELLOW = 0xFFFFE07A;
 	public static final int ON = 0xFF3C8527;
 	public static final int ON_LIP = 0xFF1D4D13;
@@ -165,18 +167,21 @@ public final class Ui {
 			blurFrame = f;
 			try { blur.run(); } catch (Throwable ignored) { }
 		}
-		g.fill(0, 0, w, h, 0x30101014);
-		g.fillGradient(0, 0, w, h / 2, 0x14FFFFFF, 0x00FFFFFF);
+		g.fill(0, 0, w, h, 0x4A0E0E12);
+		g.fillGradient(0, 0, w, h / 2, 0x10FFFFFF, 0x00FFFFFF);
 		return true;
 	}
 
 	public static void glassRect(GuiGraphics g, int x, int y, int w, int h, int c, float strength) {
 		if (w <= 0 || h <= 0) return;
 		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
-		int body = Math.round(0x1E * strength);
+		int body = Math.round(0x16 * strength);
 		boolean was = rawCut;
 		rawCut = true;
-		try { cut(g, x, y, w, h, c, (Math.min(255, body) << 24) | 0xFFFFFF); } finally { rawCut = was; }
+		try {
+			cut(g, x, y, w, h, c, (Math.min(255, Math.round(0x22 * strength)) << 24) | 0x08080C);
+			cut(g, x, y, w, h, c, (Math.min(255, body) << 24) | 0xFFFFFF);
+		} finally { rawCut = was; }
 		if (h > 6 && w > 2 * c + 2) {
 			int sheen = Math.round(0x1C * strength);
 			int sy = Math.max(1, c / 2);

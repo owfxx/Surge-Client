@@ -132,7 +132,7 @@ public class MenuScreen extends Screen {
 		float k = Math.min(1f, (now - openedAt) / 160f);
 		k = 1f - (1f - k) * (1f - k) * (1f - k);
 		if (Theme.glass()) {
-			Draw.rect(0, 0, width, height, Draw.alpha(0x30101014, k));
+			Draw.rect(0, 0, width, height, Draw.alpha(0x4A0E0E12, k));
 			Draw.gradient(0, 0, width, height / 2, Draw.alpha(0x14FFFFFF, k), 0x00FFFFFF);
 		} else Draw.rect(0, 0, width, height, Draw.alpha(0x88000000, k));
 		GlStateManager.pushMatrix();
