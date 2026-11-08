@@ -1,3 +1,14 @@
+## 1.8.3
+- New launcher look: cleaner layout, Surge gold accents, smooth page animations and new white icons
+- The launcher has new sounds for hovering, switching pages, buying, errors and pressing Play
+- Wardrobe previews in the launcher show capes and wings at full detail with bigger cards
+- Your idle animation now plays in the launcher wardrobe, and hovering an emote or idle previews it
+- Announcements from the Surge team now show in the launcher and in game
+- Gifts can now be sent to every player at once
+- Chat mentions now play a ding instead of highlighting the message
+- Your player preview in the menus no longer looks like spectator mode when you are in spectator
+- New sounds in game for opening the Surge menu, buying cosmetics and getting gifts
+
 ## 1.8.2
 - Distant Terrain now has a Full detail level that draws every block with its real texture, so far away land looks like normal terrain
 - Ultra uses real block textures close by and gets simpler further away
