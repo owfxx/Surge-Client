@@ -151,6 +151,24 @@ jobs:
           files: out/*
           body_path: notes.md
 
+      - name: Post update to Discord
+        if: steps.ver.outputs.release == 'true' || startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          HOOK: ${{ secrets.DISCORD_UPDATES_WEBHOOK }}
+        run: |
+          [ -z "$HOOK" ] && { echo "No updates webhook set"; exit 0; }
+          V="${{ steps.ver.outputs.version }}"
+          [ -z "$V" ] && V="${GITHUB_REF_NAME#v}"
+          node -e '
+            const fs = require("fs");
+            const v = process.argv[1];
+            const notes = fs.readFileSync("notes.md", "utf8").replace(/[\u2014\u2013]/g, ",").replace(/\p{Extended_Pictographic}/gu, "").trim();
+            const content = `**Surge Client ${v} is out**\n\n${notes}\n\nThe launcher updates itself, or grab it at https://surge-client.remvuxd.workers.dev`;
+            fetch(process.env.HOOK, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "Surge Client", content: content.slice(0, 1990), allowed_mentions: { parse: [] } }) })
+              .then(r => console.log("posted", r.status)).catch(e => console.log("post failed", e.message));
+          ' "$V"
+
   autotest:
     if: contains(github.event.head_commit.message, '[test]') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
