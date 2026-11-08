@@ -1,3 +1,10 @@
+## 1.8.2
+- Distant Terrain now has a Full detail level that draws every block with its real texture, so far away land looks like normal terrain
+- Ultra uses real block textures close by and gets simpler further away
+- Small plants and flowers no longer show up as odd spots in distant terrain
+- Distant Terrain loads detailed data only for nearby areas and keeps lighter data for far away places, which saves memory
+- Saved distant terrain from older versions is rebuilt as you explore
+
 ## 1.8.1
 - New Custom Sounds mod (off by default): replace any game sound with one of 14 built in sounds or your own mp3, wav or ogg files. Search every sound in the game, jump to popular ones like hit and level up sounds, and preview everything before you pick it
 - Distant Terrain is much sharper and uses real block colors, so grass, water, sand, snow and trees look like they do up close
