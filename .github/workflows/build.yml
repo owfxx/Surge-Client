@@ -90,7 +90,7 @@ jobs:
         shell: bash
         run: |
           for i in 1 2 3; do npm ci && break; sleep 15; done
-          for i in 1 2 3 4; do npx electron-builder --win portable --x64 && exit 0; echo "retry $i"; sleep 20; done
+          for i in 1 2 3 4; do npx electron-builder --win portable --x64 --publish never && exit 0; echo "retry $i"; sleep 20; done
           exit 1
 
       - name: Collect files
