@@ -73,6 +73,14 @@ public abstract class HudMod extends Mod {
 		GlStateManager.color(1f, 1f, 1f, 1f);
 	}
 
+	protected void panel(int x, int y, int w, int h) {
+		if (gg.surge.legacy.gui.Theme.glass()) {
+			Draw.glass(x, y, w, h, Math.min(5, Math.min(w, h) / 3), 0.6f + bgOpacity.get() / 100f);
+			return;
+		}
+		Draw.rect(x, y, w, h, bg());
+	}
+
 	public int bg() { return bgColor.argb(Math.round(bgOpacity.get() * 2.55f)); }
 
 	public int fg() { return textColor.rgb(0); }

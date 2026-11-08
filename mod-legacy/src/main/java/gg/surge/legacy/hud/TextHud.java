@@ -20,6 +20,7 @@ public abstract class TextHud extends HudMod {
 	protected String text() {
 		String v;
 		try { v = mc().player == null ? sample : value(); } catch (Exception e) { v = sample; }
+		if (v.isEmpty() && Hud.editing()) v = sample;
 		if (labelPos == null || labelPos.is("Hidden")) return v;
 		return labelPos.is("Before") ? label + ": " + v : v + " " + label;
 	}
@@ -31,7 +32,7 @@ public abstract class TextHud extends HudMod {
 	@Override public void render(int x, int y) {
 		String s = bracket(text());
 		int w = width();
-		if (background.on()) Draw.rect(x, y, w, 14, bg());
+		if (background.on()) panel(x, y, w, 14);
 		text(s, x + (w - Draw.width(s)) / 2, y + 3, fg());
 	}
 }

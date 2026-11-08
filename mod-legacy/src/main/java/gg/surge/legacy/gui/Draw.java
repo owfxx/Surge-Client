@@ -13,7 +13,9 @@ import org.lwjgl.opengl.GL11;
 
 public final class Draw {
 	public static final int BG = 0xF2141418, PANEL = 0xFF1B1B20, CARD = 0xFF202026, CARD_HOVER = 0xFF2A2A31, EDGE = 0xFF2E2E35;
-	public static final int TEXT = 0xFFF4F4F5, MUTED = 0xFFA1A1AA, FAINT = 0xFF6B6B74, ACCENT = 0xFF8F50F2, ACCENT_2 = 0xFFB483FF, GREEN = 0xFF4ADE80, RED = 0xFFF2545B;
+	public static final int TEXT = 0xFFF4F4F5, MUTED = 0xFFA1A1AA, FAINT = 0xFF6B6B74, GREEN = 0xFF4ADE80, RED = 0xFFF2545B;
+	public static int ACCENT = 0xFF8F50F2, ACCENT_2 = 0xFFB483FF;
+	private static boolean raw;
 
 	private Draw() {}
 
@@ -28,6 +30,7 @@ public final class Draw {
 
 	public static void round(int x, int y, int w, int h, int r, int color) {
 		if (w <= 0 || h <= 0) return;
+		if (!raw && Theme.glass()) color = tint(color);
 		r = Math.min(r, Math.min(w, h) / 2);
 		if (r <= 0) { rect(x, y, w, h, color); return; }
 		rect(x + r, y, w - 2 * r, h, color);
@@ -44,8 +47,58 @@ public final class Draw {
 	}
 
 	public static void roundBox(int x, int y, int w, int h, int r, int fill, int edge) {
+		if (Theme.glass()) {
+			glass(x, y, w, h, Math.max(r, 5), ((fill >>> 24) & 255) < 0x40 ? 0.6f : 1f);
+			return;
+		}
 		round(x, y, w, h, r, edge);
 		round(x + 1, y + 1, w - 2, h - 2, Math.max(0, r - 1), fill);
+	}
+
+	static int tint(int color) {
+		int a = (color >>> 24) & 255, r = (color >> 16) & 255, g = (color >> 8) & 255, b = color & 255;
+		int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+		if (mx > 0x30 && (mx - mn) / (float) mx > 0.35f) return (Math.round(a * 0.6f) << 24) | (lerp(color | 0xFF000000, 0xFFFFFFFF, 0.25f) & 0xFFFFFF);
+		float lum = (0.3f * r + 0.59f * g + 0.11f * b) / 255f;
+		if (lum < 0.4f) return (Math.round(a * (0.07f + lum * 0.25f)) << 24) | 0xFFFFFF;
+		return (Math.round(a * 0.7f) << 24) | (color & 0xFFFFFF);
+	}
+
+	private static int inset(int c, int i) {
+		double dy = c - i - 0.5;
+		return (int) Math.round(c - Math.sqrt(Math.max(0, c * c - dy * dy)));
+	}
+
+	public static void rawRound(int x, int y, int w, int h, int r, int color) {
+		boolean was = raw;
+		raw = true;
+		try { round(x, y, w, h, r, color); } finally { raw = was; }
+	}
+
+	public static void glass(int x, int y, int w, int h, int c, float strength) {
+		if (w <= 0 || h <= 0) return;
+		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
+		rawRound(x, y, w, h, c, (Math.min(255, Math.round(0x1E * strength)) << 24) | 0xFFFFFF);
+		if (h > 6 && w > 2 * c) {
+			int sy = Math.max(1, c / 2);
+			gradient(x + c, y + sy, w - 2 * c, Math.max(1, h * 2 / 5 - sy), (Math.min(255, Math.round(0x1C * strength)) << 24) | 0xFFFFFF, 0x00FFFFFF);
+		}
+		int top = Math.min(255, Math.round(0x8C * strength)), mid = Math.min(255, Math.round(0x3A * strength)), bot = Math.min(255, Math.round(0x22 * strength));
+		int it = c > 0 ? inset(c, 0) : 0;
+		rect(x + it, y, w - 2 * it, 1, (top << 24) | 0xFFFFFF);
+		rect(x + it, y + h - 1, w - 2 * it, 1, (bot << 24) | 0xFFFFFF);
+		for (int i = 1; i < c; i++) {
+			int in = inset(c, i), prev = inset(c, i - 1), run = Math.max(1, prev - in);
+			int at = Math.round(top + (mid - top) * (i / (float) c)), ab = Math.round(bot + (mid - bot) * (i / (float) c));
+			rect(x + in, y + i, run, 1, (at << 24) | 0xFFFFFF);
+			rect(x + w - in - run, y + i, run, 1, (at << 24) | 0xFFFFFF);
+			rect(x + in, y + h - i - 1, run, 1, (ab << 24) | 0xFFFFFF);
+			rect(x + w - in - run, y + h - i - 1, run, 1, (ab << 24) | 0xFFFFFF);
+		}
+		if (h - 2 * c > 0) {
+			gradient(x, y + c, 1, h - 2 * c, (mid << 24) | 0xFFFFFF, (bot << 24) | 0xFFFFFF);
+			gradient(x + w - 1, y + c, 1, h - 2 * c, (mid << 24) | 0xFFFFFF, (bot << 24) | 0xFFFFFF);
+		}
 	}
 
 	public static void outline(int x, int y, int w, int h, int color) {
@@ -145,6 +198,13 @@ public final class Draw {
 
 	public static void toggle(int x, int y, boolean on, float anim) {
 		int w = 22, h = 12;
+		if (Theme.glass()) {
+			rawRound(x, y, w, h, 6, lerp(0x40FFFFFF, 0xE634C759, anim));
+			int kx = x + 1 + Math.round(10 * anim);
+			rawRound(kx, y + 1, 10, 10, 5, 0xFFFFFFFF);
+			rect(kx + 2, y + 10, 6, 1, 0x22000000);
+			return;
+		}
 		round(x, y, w, h, 6, lerp(0xFF3A3A42, ACCENT, anim));
 		int kx = x + 2 + Math.round((w - 12) * anim);
 		round(kx, y + 2, 8, 8, 4, 0xFFFFFFFF);

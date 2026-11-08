@@ -101,6 +101,12 @@ public final class AutoTest {
 				if (ticks == 60) { shot(mc, "l09-fullbright-night"); Features.FULLBRIGHT.setEnabled(false); next(); }
 				break;
 			case 10:
+				if (ticks == 1) { Config.mod("menu").values.put("accent", "EDEADE"); mc.setScreen(new MenuScreen(null)); }
+				if (ticks == 40) { shot(mc, "l10-glass-menu"); mc.setScreen(new MenuScreen(null).openMod(Hud.byId("coords"))); }
+				if (ticks == 70) { shot(mc, "l11-glass-settings"); mc.setScreen(null); }
+				if (ticks == 100) { shot(mc, "l12-glass-hud"); Config.mod("menu").values.remove("accent"); next(); }
+				break;
+			case 11:
 				if (ticks == 20) {
 					System.out.println("[Surge autotest] fps " + MinecraftClient.getCurrentFps());
 					System.out.println("[Surge autotest] done");

@@ -1,0 +1,47 @@
+{
+  "glass_tap": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "surge:glass_tap",
+        "stream": false
+      }
+    ]
+  },
+  "glass_hover": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "surge:glass_hover",
+        "stream": false
+      }
+    ]
+  },
+  "glass_on": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "surge:glass_on",
+        "stream": false
+      }
+    ]
+  },
+  "glass_off": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "surge:glass_off",
+        "stream": false
+      }
+    ]
+  },
+  "glass_open": {
+    "category": "master",
+    "sounds": [
+      {
+        "name": "surge:glass_open",
+        "stream": false
+      }
+    ]
+  }
+}

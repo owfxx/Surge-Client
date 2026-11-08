@@ -8,7 +8,6 @@ import gg.surge.legacy.mod.Mods;
 import gg.surge.legacy.mod.Setting;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.util.Identifier;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -32,6 +31,8 @@ public class MenuScreen extends Screen {
 	private int contentH;
 	private long openedAt;
 	private Setting.Slider dragging;
+	private Setting.Color hexFor;
+	private TextFieldWidget hex;
 	private int dragX, dragW;
 	private final Map<Object, Float> anims = new HashMap<Object, Float>();
 	private long lastFrame = System.currentTimeMillis();
@@ -48,7 +49,11 @@ public class MenuScreen extends Screen {
 
 	@Override
 	public void init() {
-		if (openedAt == 0) openedAt = System.currentTimeMillis();
+		if (openedAt == 0) {
+			openedAt = System.currentTimeMillis();
+			if (Theme.glass()) Theme.sound("glass_open", 1f);
+		}
+		blur(true);
 		Keyboard.enableRepeatEvents(true);
 		ww = Math.min(width - 12, Math.max(380, Math.min(560, Math.round(width * 0.72f))));
 		wh = Math.min(height - 12, Math.max(220, Math.min(340, Math.round(height * 0.78f))));
@@ -69,6 +74,7 @@ public class MenuScreen extends Screen {
 	@Override
 	public void removed() {
 		Keyboard.enableRepeatEvents(false);
+		blur(false);
 		lastTab = tab;
 		Config.save();
 	}
@@ -87,7 +93,24 @@ public class MenuScreen extends Screen {
 	}
 
 	static void click() {
-		net.minecraft.client.MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(new Identifier("gui.button.press"), 1.0f));
+		Theme.sound("glass_tap", 1.0f);
+	}
+
+	private static boolean blurOn;
+
+	static void blur(boolean on) {
+		net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+		try {
+			if (on && !blurOn && Theme.glass() && mc.world != null && mc.gameRenderer.getShader() == null) {
+				((gg.surge.legacy.mixin.GameRendererInvoker) mc.gameRenderer).surge$loadShader(new Identifier("shaders/post/blur.json"));
+				blurOn = mc.gameRenderer.getShader() != null;
+			} else if (!on && blurOn) {
+				blurOn = false;
+				mc.gameRenderer.disableShader();
+			}
+		} catch (Throwable t) {
+			blurOn = false;
+		}
 	}
 
 	private List<Mod> visibleMods() {
@@ -108,7 +131,10 @@ public class MenuScreen extends Screen {
 		lastFrame = now;
 		float k = Math.min(1f, (now - openedAt) / 160f);
 		k = 1f - (1f - k) * (1f - k) * (1f - k);
-		Draw.rect(0, 0, width, height, Draw.alpha(0x88000000, k));
+		if (Theme.glass()) {
+			Draw.rect(0, 0, width, height, Draw.alpha(0x30101014, k));
+			Draw.gradient(0, 0, width, height / 2, Draw.alpha(0x14FFFFFF, k), 0x00FFFFFF);
+		} else Draw.rect(0, 0, width, height, Draw.alpha(0x88000000, k));
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(0f, (1f - k) * 8f, 0f);
 		Draw.roundBox(wx, wy, ww, wh, 6, Draw.BG, Draw.EDGE);
@@ -139,7 +165,8 @@ public class MenuScreen extends Screen {
 		String eh = "Edit HUD";
 		int ew = Draw.width(eh) + 14, ex = wx + ww - 8 - ew;
 		boolean eHov = Draw.hover(mx, my, ex, y - 3, ew, 16);
-		Draw.round(ex, y - 3, ew, 16, 4, eHov ? Draw.ACCENT_2 : Draw.ACCENT);
+		if (Theme.glass()) Draw.glass(ex, y - 3, ew, 16, 5, eHov ? 1.7f : 1.2f);
+		else Draw.round(ex, y - 3, ew, 16, 4, eHov ? Draw.ACCENT_2 : Draw.ACCENT);
 		Draw.text(eh, ex + 7, y + 1, 0xFFFFFFFF, false);
 		int sx = cx, sw = Math.max(80, Math.min(170, ex - 8 - sx));
 		boolean f = search.isFocused();
@@ -281,12 +308,22 @@ public class MenuScreen extends Screen {
 				Draw.round(sx, sy, 11, 11, 3, col);
 				sx += 15;
 			}
-			Draw.round(x + w - 22, y + 4, 14, 10, 3, c.rgb(0));
+			if (hexFor == c && hex != null) {
+				Draw.round(x + w - 64, y + 3, 56, 13, 3, 0xFF141418);
+				Draw.text("#", x + w - 60, y + 5, Draw.FAINT, false);
+				hex.x = x + w - 53;
+				hex.y = y + 5;
+				hex.render();
+			} else {
+				Draw.rawRound(x + w - 22, y + 4, 14, 10, 3, c.rgb(0));
+				Draw.text("#", x + w - 30, y + 5, Draw.FAINT, false);
+			}
 		} else if (s instanceof Setting.Button) {
 			Setting.Button b = (Setting.Button) s;
 			int bw = Draw.width(b.label) + 16, bx = x + w - 6 - bw;
 			boolean hov = Draw.hover(mx, my, bx, y + 3, bw, 14);
-			Draw.round(bx, y + 3, bw, 14, 4, hov ? Draw.ACCENT_2 : Draw.ACCENT);
+			if (Theme.glass()) Draw.glass(bx, y + 3, bw, 14, 5, hov ? 1.7f : 1.2f);
+			else Draw.round(bx, y + 3, bw, 14, 4, hov ? Draw.ACCENT_2 : Draw.ACCENT);
 			Draw.center(b.label, bx + bw / 2, y + 6, 0xFFFFFFFF, false);
 		}
 	}
@@ -294,6 +331,10 @@ public class MenuScreen extends Screen {
 	@Override
 	protected void mouseClicked(int mx, int my, int button) {
 		search.mouseClicked(mx, my, button);
+		if (hex != null) {
+			hex.mouseClicked(mx, my, button);
+			if (!hex.isFocused()) closeHex();
+		}
 		int oy = Math.round((1f - Math.min(1f, (System.currentTimeMillis() - openedAt) / 160f)) * 8f);
 		my -= oy;
 		int y = wy + 8;
@@ -327,7 +368,7 @@ public class MenuScreen extends Screen {
 			int x = cx + (i % cols) * (cardW + gap), y = cy + (i / cols) * (cardH + gap) - Math.round(scroll);
 			if (!Draw.hover(mx, my, x, y, cardW, cardH)) continue;
 			click();
-			if (Draw.hover(mx, my, x + 6, y + cardH - 20, cardW - 12, 14) || button == 1 && m.settings.isEmpty()) m.toggle();
+			if (Draw.hover(mx, my, x + 6, y + cardH - 20, cardW - 12, 14) || button == 1 && m.settings.isEmpty()) { m.toggle(); if (Theme.glass()) Theme.sound(m.enabled() ? "glass_on" : "glass_off", 1f); }
 			else { open = m; scroll = scrollTarget = 0; }
 			return;
 		}
@@ -336,7 +377,7 @@ public class MenuScreen extends Screen {
 	private void clickSettings(int mx, int my, int button) {
 		int y = cy - Math.round(scroll);
 		if (Draw.hover(mx, my, cx, y, 16, 16)) { click(); open = null; scroll = scrollTarget = 0; return; }
-		if (open.toggleable && Draw.hover(mx, my, cx + cw - 30, y, 30, 18)) { click(); open.toggle(); return; }
+		if (open.toggleable && Draw.hover(mx, my, cx + cw - 30, y, 30, 18)) { open.toggle(); Theme.sound(open.enabled() ? "glass_on" : "glass_off", 1f); return; }
 		y += 20 + textRenderer.wrapLines(open.description, cw - 4).size() * 10 + 6;
 		for (Setting<?> s : open.settings) {
 			if (!s.visible()) continue;
@@ -355,7 +396,7 @@ public class MenuScreen extends Screen {
 	}
 
 	private void clickRow(Setting<?> s, int x, int y, int w, int mx, int my, int button) {
-		if (s instanceof Setting.Toggle) { click(); ((Setting.Toggle) s).flip(); }
+		if (s instanceof Setting.Toggle) { ((Setting.Toggle) s).flip(); Theme.sound(((Setting.Toggle) s).on() ? "glass_on" : "glass_off", 1f); }
 		else if (s instanceof Setting.Choice) { click(); ((Setting.Choice) s).cycle(button == 1 ? -1 : 1); }
 		else if (s instanceof Setting.Slider) {
 			Setting.Slider sl = (Setting.Slider) s;
@@ -365,10 +406,28 @@ public class MenuScreen extends Screen {
 			Setting.Color c = (Setting.Color) s;
 			int sx = x + 8, sy = y + 19;
 			for (int i = 0; i <= PALETTE.length; i++) {
-				if (Draw.hover(mx, my, sx - 1, sy - 1, 13, 13)) { click(); c.set(i == PALETTE.length ? "chroma" : PALETTE[i]); return; }
+				if (Draw.hover(mx, my, sx - 1, sy - 1, 13, 13)) { click(); c.set(i == PALETTE.length ? "chroma" : PALETTE[i]); closeHex(); return; }
 				sx += 15;
 			}
+			if (Draw.hover(mx, my, x + w - 66, y + 2, 60, 15)) {
+				if (hexFor != c) {
+					click();
+					hexFor = c;
+					hex = new TextFieldWidget(1, textRenderer, x + w - 53, y + 5, 42, 10);
+					hex.setHasBorder(false);
+					hex.setMaxLength(6);
+					hex.setText(c.chroma() ? "" : c.get().toUpperCase(Locale.ROOT));
+					hex.setFocused(true);
+					search.setFocused(false);
+				}
+				return;
+			}
 		} else if (s instanceof Setting.Button) { click(); ((Setting.Button) s).action.run(); }
+	}
+
+	private void closeHex() {
+		hexFor = null;
+		hex = null;
 	}
 
 	@Override
@@ -383,9 +442,16 @@ public class MenuScreen extends Screen {
 
 	@Override
 	protected void keyPressed(char c, int key) {
+		if (hex != null && hex.isFocused()) {
+			if (key == Keyboard.KEY_ESCAPE || key == Keyboard.KEY_RETURN) { closeHex(); return; }
+			hex.keyPressed(c, key);
+			String v = hex.getText().trim();
+			if (v.matches("[0-9a-fA-F]{6}") && hexFor != null) hexFor.set(v.toUpperCase(Locale.ROOT));
+			return;
+		}
 		if (key == Keyboard.KEY_ESCAPE) {
 			if (search.isFocused() && !search.getText().isEmpty()) { search.setText(""); return; }
-			if (open != null) { open = null; scroll = scrollTarget = 0; return; }
+			if (open != null) { open = null; closeHex(); scroll = scrollTarget = 0; return; }
 			client.setScreen(parent);
 			return;
 		}
@@ -401,5 +467,6 @@ public class MenuScreen extends Screen {
 	@Override
 	public void tick() {
 		search.tick();
+		if (hex != null) hex.tick();
 	}
 }

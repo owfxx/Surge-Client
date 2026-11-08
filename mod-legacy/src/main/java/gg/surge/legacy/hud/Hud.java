@@ -114,7 +114,7 @@ public final class Hud {
 
 			@Override protected String value() { return Features.actionStatus(mc(), toggled.on()); }
 
-			@Override public void render(int x, int y) { if (!value().isEmpty() || mc().player == null) super.render(x, y); }
+			@Override public void render(int x, int y) { if (!value().isEmpty() || mc().player == null || editing()) super.render(x, y); }
 		});
 		ALL.add(new TextHud("biome", "Biome", new ItemStack(Blocks.GRASS), "The biome you're standing in", false, 1f, 0.37f, "", "After", "Plains") {
 			final Setting.Toggle colored = toggle("colored", "Color by biome", true);
@@ -134,6 +134,10 @@ public final class Hud {
 	static String biomeName(MinecraftClient mc) {
 		if (mc.player == null || mc.world == null) return "Plains";
 		return mc.world.getBiome(new BlockPos(mc.player.x, mc.player.y, mc.player.z)).name;
+	}
+
+	public static boolean editing() {
+		return MinecraftClient.getInstance().currentScreen instanceof gg.surge.legacy.gui.HudEditorScreen;
 	}
 
 	public static HudMod byId(String id) {
@@ -275,7 +279,7 @@ public final class Hud {
 			List<List<Seg>> ls = lines();
 			int w = 40;
 			for (List<Seg> l : ls) w = Math.max(w, lineWidth(l) + 8);
-			if (background.on()) Draw.rect(x, y, w, ls.size() * 10 + 4, bg());
+			if (background.on()) panel(x, y, w, ls.size() * 10 + 4);
 			String open = bracket("");
 			String left = open.isEmpty() ? "" : open.substring(0, 1), right = open.isEmpty() ? "" : open.substring(1);
 			int fg = fg();
@@ -296,7 +300,7 @@ public final class Hud {
 		private final float[] anim = new float[7];
 		private long last = System.currentTimeMillis();
 
-		Keystrokes() { super("keystrokes", "Keystrokes", new ItemStack(Items.FEATHER), "Shows the keys and mouse buttons you press", true, 0.005f, 0.30f); }
+		Keystrokes() { super("keystrokes", "Keystrokes", new ItemStack(Items.FEATHER), "Shows the keys and mouse buttons you press", true, 0.005f, 0.42f); }
 
 		@Override public int width() { return 3 * 22 + 2 * 2; }
 
@@ -304,9 +308,16 @@ public final class Hud {
 
 		private void key(int i, int x, int y, int w, int h, String label, boolean down, float dt) {
 			anim[i] += ((down ? 1f : 0f) - anim[i]) * Math.min(1f, dt * 18f);
-			int base = background.on() ? bg() : 0;
-			int col = Draw.lerp(base, Draw.alpha(pressed.rgb(0), 0.85f), anim[i]);
-			Draw.rect(x, y, w, h, col);
+			if (gg.surge.legacy.gui.Theme.glass()) {
+				if (background.on()) panel(x, y, w, h);
+				if (anim[i] > 0.01f) {
+					Draw.glass(x, y, w, h, Math.min(5, Math.min(w, h) / 3), 0.4f + anim[i] * 2.2f);
+					Draw.rect(x + 2, y + 2, w - 4, h - 4, Draw.alpha(pressed.rgb(0), anim[i] * 0.5f));
+				}
+			} else {
+				int base = background.on() ? bg() : 0;
+				Draw.rect(x, y, w, h, Draw.lerp(base, Draw.alpha(pressed.rgb(0), 0.85f), anim[i]));
+			}
 			int tc = Draw.lerp(fg(), 0xFF111111, anim[i]);
 			Draw.text(label, x + (w - Draw.width(label)) / 2, y + (h - 8) / 2, tc, shadow.on() && anim[i] < 0.5f);
 		}
@@ -345,7 +356,13 @@ public final class Hud {
 		private List<ItemStack> items() {
 			List<ItemStack> out = new ArrayList<ItemStack>();
 			ClientPlayerEntity p = mc().player;
-			if (p == null) {
+			boolean empty = p == null;
+			if (p != null) {
+				boolean any = false;
+				for (ItemStack a : p.inventory.armor) if (a != null) any = true;
+				empty = !any && editing();
+			}
+			if (empty) {
 				out.add(new ItemStack(Items.DIAMOND_HELMET));
 				out.add(new ItemStack(Items.DIAMOND_CHESTPLATE));
 				out.add(new ItemStack(Items.DIAMOND_LEGGINGS));
@@ -373,7 +390,7 @@ public final class Hud {
 
 		@Override public void render(int x, int y) {
 			List<ItemStack> list = items();
-			if (background.on()) Draw.rect(x, y, width(), height(), bg());
+			if (background.on()) panel(x, y, width(), height());
 			int yy = y + 1;
 			for (ItemStack s : list) {
 				Draw.item(s, x + 2, yy, 16);
@@ -398,7 +415,7 @@ public final class Hud {
 		private List<String[]> rows() {
 			List<String[]> out = new ArrayList<String[]>();
 			ClientPlayerEntity p = mc().player;
-			if (p == null) { out.add(new String[]{"Speed II", "1:30", "1"}); out.add(new String[]{"Strength", "0:45", "5"}); return out; }
+			if (p == null || p.getStatusEffectInstances().isEmpty() && editing()) { out.add(new String[]{"Speed II", "1:30", "0"}); out.add(new String[]{"Strength", "0:45", "4"}); return out; }
 			for (StatusEffectInstance e : p.getStatusEffectInstances()) {
 				StatusEffect eff = StatusEffect.STATUS_EFFECTS[e.getEffectId()];
 				if (eff == null) continue;
@@ -427,7 +444,7 @@ public final class Hud {
 		@Override public void render(int x, int y) {
 			List<String[]> rows = rows();
 			if (rows.isEmpty()) return;
-			if (background.on()) Draw.rect(x, y, width(), height(), bg());
+			if (background.on()) panel(x, y, width(), height());
 			int yy = y;
 			for (String[] r : rows) {
 				int tx = x + 4;

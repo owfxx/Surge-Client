@@ -59,16 +59,19 @@ public class HudEditorScreen extends Screen {
 		if (hov != null) {
 			String t = hov.name + "  " + String.format("%.2fx", hov.scale()) + "  Scroll to resize";
 			int tw = Draw.width(t) + 12;
-			Draw.round(width / 2 - tw / 2, height - 52, tw, 14, 4, 0xDD141418);
+			if (Theme.glass()) { Draw.rawRound(width / 2 - tw / 2, height - 52, tw, 14, 5, 0x90141418); Draw.glass(width / 2 - tw / 2, height - 52, tw, 14, 5, 1f); }
+			else Draw.round(width / 2 - tw / 2, height - 52, tw, 14, 4, 0xDD141418);
 			Draw.center(t, width / 2, height - 49, Draw.TEXT, false);
 		}
 		int bw = 90, bx = width / 2 - bw / 2, by = height - 32;
 		boolean bh = Draw.hover(mx, my, bx, by, bw, 18);
-		Draw.round(bx, by, bw, 18, 5, bh ? Draw.ACCENT_2 : Draw.ACCENT);
+		if (Theme.glass()) Draw.glass(bx, by, bw, 18, 6, bh ? 1.7f : 1.2f);
+		else Draw.round(bx, by, bw, 18, 5, bh ? Draw.ACCENT_2 : Draw.ACCENT);
 		Draw.center("Done", width / 2, by + 5, 0xFFFFFFFF, false);
 		int mw = 90, mxb = width / 2 - mw / 2;
 		boolean mh = Draw.hover(mx, my, mxb, 10, mw, 16);
-		Draw.round(mxb, 10, mw, 16, 5, mh ? 0xEE2A2A31 : 0xEE1C1C21);
+		if (Theme.glass()) Draw.glass(mxb, 10, mw, 16, 6, mh ? 1.7f : 1.2f);
+		else Draw.round(mxb, 10, mw, 16, 5, mh ? 0xEE2A2A31 : 0xEE1C1C21);
 		Draw.center("Mods", width / 2, 14, Draw.TEXT, false);
 	}
 

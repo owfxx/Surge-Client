@@ -20,6 +20,7 @@ public final class Mods {
 			l.addAll(Features.ALL);
 			l.addAll(Perf.ALL);
 			l.add(Cosmetics.MOD);
+			l.add(gg.surge.legacy.gui.Theme.MENU);
 			all = l;
 		}
 		return all;
