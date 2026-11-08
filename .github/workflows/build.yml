@@ -74,13 +74,18 @@ jobs:
 
       - name: Build mod
         working-directory: mod
-        run: ./gradlew.bat build
+        shell: bash
+        run: |
+          for i in 1 2 3 4; do ./gradlew.bat build && exit 0; echo "retry $i"; sleep 20; done
+          exit 1
 
       - name: Build launcher
         working-directory: launcher
+        shell: bash
         run: |
-          npm ci
-          npx electron-builder --win portable --x64
+          for i in 1 2 3; do npm ci && break; sleep 15; done
+          for i in 1 2 3 4; do npx electron-builder --win portable --x64 && exit 0; echo "retry $i"; sleep 20; done
+          exit 1
 
       - name: Collect files
         shell: bash
@@ -144,6 +149,7 @@ jobs:
           ALSOFT_DRIVERS: 'null'
         run: |
           chmod +x gradlew
+          for i in 1 2 3 4; do ./gradlew --version >/dev/null && break; sleep 20; done
           timeout 1200 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest --no-configuration-cache || true
           ls -la run/screenshots || true
       - name: List game API
