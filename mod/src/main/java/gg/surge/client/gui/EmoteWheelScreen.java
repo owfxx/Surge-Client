@@ -36,6 +36,7 @@ public class EmoteWheelScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
+		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		g.fill(0, 0, this.width, this.height, Colors.alpha(0x80000000, openProgress()));
 	}
 

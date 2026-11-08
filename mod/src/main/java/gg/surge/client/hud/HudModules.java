@@ -395,7 +395,7 @@ public final class HudModules {
 			List<List<Seg>> ls = lines(mc);
 			int w = 40;
 			for (List<Seg> l : ls) w = Math.max(w, lineWidth(mc, l) + 8);
-			if (bgOn()) g.fill(x, y, x + w, y + ls.size() * 10 + 4, bg());
+			if (bgOn()) panel(g, x, y, x + w, y + ls.size() * 10 + 4);
 			String open = bracket("");
 			String left = open.isEmpty() ? "" : open.substring(0, 1), right = open.isEmpty() ? "" : open.substring(1);
 			int fg = fg();
@@ -438,7 +438,7 @@ public final class HudModules {
 		@Override public int height(Minecraft mc) { return packs(mc).size() * 10 + (header.on() ? 11 : 0) + 3; }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + height(mc));
 			int yy = y + 2;
 			if (header.on()) { g.drawString(mc.font, "Packs", x + 4, yy, Colors.alpha(fg(), 0.7f), shadowOn()); yy += 11; }
 			for (String s : packs(mc)) { g.drawString(mc.font, s, x + 4, yy, fg(), shadowOn()); yy += 10; }
@@ -460,7 +460,7 @@ public final class HudModules {
 			int w = width(mc), cx = x + w / 2;
 			float yaw = mc.player == null ? 180 : ((mc.player.getYRot() % 360) + 360) % 360;
 			float ppd = w / 140f;
-			if (bgOn()) g.fill(x, y, x + w, y + 14, bg());
+			if (bgOn()) panel(g, x, y, x + w, y + 14);
 			g.enableScissor(x, y, x + w, y + 14);
 			for (int d = 0; d < 360; d += 15) {
 				float rel = wrap(d - yaw);
@@ -492,7 +492,7 @@ public final class HudModules {
 			if (degrees.on()) {
 				String deg = Math.round(yaw) + "°";
 				int dw = mc.font.width(deg) + 6;
-				if (bgOn()) g.fill(cx - dw / 2, y + 15, cx - dw / 2 + dw, y + 24, bg());
+				if (bgOn()) panel(g, cx - dw / 2, y + 15, cx - dw / 2 + dw, y + 24);
 				g.drawString(mc.font, deg, cx - mc.font.width(deg) / 2, y + 16, fg(), shadowOn());
 			}
 		}
@@ -535,9 +535,15 @@ public final class HudModules {
 
 		private void key(GuiGraphics g, Minecraft mc, int x, int y, int w, int h, String label, boolean down, float dt) {
 			float a = level(label.split(" ")[0], down, dt);
-			int base = bgOn() ? bg() : 0x00000000;
 			int on = (0xD0 << 24) | (pressed.rgb(0) & 0xFFFFFF);
-			g.fill(x, y, x + w, y + h, Colors.lerp(base, on, a));
+			if (gg.surge.client.gui.Ui.glass()) {
+				if (bgOn()) panel(g, x, y, x + w, y + h);
+				if (a > 0.01f) gg.surge.client.gui.Ui.glassRect(g, x, y, w, h, Math.min(5, Math.min(w, h) / 3), 0.4f + a * 2.2f);
+				if (a > 0.01f) g.fill(x + 2, y + 2, x + w - 2, y + h - 2, Colors.alpha(on, a * 0.55f));
+			} else {
+				int base = bgOn() ? bg() : 0x00000000;
+				g.fill(x, y, x + w, y + h, Colors.lerp(base, on, a));
+			}
 			int textCol = Colors.lerp(fg(), 0xFF101010, a);
 			g.drawString(mc.font, label, x + (w - mc.font.width(label)) / 2, y + (h - 8) / 2, textCol, shadowOn() && a < 0.5f);
 		}
@@ -661,7 +667,7 @@ public final class HudModules {
 
 		private void renderUku(GuiGraphics g, Minecraft mc, int x, int y) {
 			List<ItemStack> list = stacks(mc);
-			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + height(mc));
 			for (int i = 0; i < list.size(); i++) {
 				ItemStack s = list.get(i);
 				int ix = x + i * 22 + 3;
@@ -696,7 +702,7 @@ public final class HudModules {
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
 			if (mc.player != null && mc.screen == null && stacks(mc).stream().allMatch(ItemStack::isEmpty)) return;
 			if (layout.is("Uku")) { renderUku(g, mc, x, y); return; }
-			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + height(mc));
 			List<ItemStack> list = stacks(mc);
 			int tw = textW(mc);
 			for (int i = 0; i < list.size(); i++) {
@@ -762,7 +768,7 @@ public final class HudModules {
 		@Override public int height(Minecraft mc) { return 18; }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			if (bgOn()) g.fill(x, y, x + width(mc), y + 18, bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + 18);
 			int cx = x + 1;
 			for (Entry e : entries(mc)) {
 				g.renderItem(e.icon(), cx, y + 1);
@@ -898,7 +904,7 @@ public final class HudModules {
 					}
 					case "Compact" -> {
 						int yy = y + i * 13;
-						if (bgOn()) g.fill(x, yy, x + w, yy + 13, bg());
+						if (bgOn()) panel(g, x, yy, x + w, yy + 13);
 						int tx = x + 4;
 						if (icons.on()) { icon(g, l, x + 2, yy + 2, 9, alpha); tx += 10; }
 						String s = bracket(l.name() + (l.time().isEmpty() ? "" : " " + l.time()));
@@ -919,7 +925,7 @@ public final class HudModules {
 					}
 					default -> {
 						int yy = y + i * (rh + 2);
-						if (bgOn()) g.fill(x, yy, x + w, yy + rh, bg());
+						if (bgOn()) panel(g, x, yy, x + w, yy + rh);
 						icon(g, l, x + 3, yy + 3, 16, alpha);
 						int tx = x + (icons.on() ? 23 : 5);
 						g.drawString(mc.font, l.name(), tx, yy + 3, Colors.alpha(l.color(), alpha), shadowOn());

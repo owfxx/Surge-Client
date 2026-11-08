@@ -25,12 +25,28 @@ public final class Ui {
 	public static int ACCENT_DIM = 0xFF404045;
 	public static int ACCENT_2 = 0xFFC4C4C9;
 	private static String themeKey = "";
+	private static boolean glass;
+	private static long themeAt;
+
+	public static boolean glass() {
+		long now = System.currentTimeMillis();
+		if (now - themeAt > 200) { themeAt = now; theme(); }
+		return glass;
+	}
 
 	private static void theme() {
 		String t = gg.surge.client.mods.Mods.THEME.get();
 		String key = t + gg.surge.client.mods.Mods.THEME_COLOR.get();
 		if (key.equals(themeKey)) return;
 		themeKey = key;
+		glass = t.equals("Custom") && "EDEADE".equalsIgnoreCase(gg.surge.client.mods.Mods.THEME_COLOR.get());
+		if (glass) {
+			ACCENT = 0xFFEDEADE;
+			ACCENT_HOVER = 0xFFFFFFFF;
+			ACCENT_DIM = 0xFF8E8C86;
+			ACCENT_2 = 0xFFFFFFFF;
+			return;
+		}
 		int base = switch (t) {
 			case "Blue" -> 0x3B82F6;
 			case "Cyan" -> 0x06B6D4;
@@ -93,6 +109,7 @@ public final class Ui {
 
 	public static void frame() {
 		theme();
+		themeAt = System.currentTimeMillis();
 		long now = System.nanoTime();
 		long diff = now - lastFrame;
 		if (diff < 1_000_000L) return;
@@ -124,12 +141,80 @@ public final class Ui {
 
 	public static void click() {
 		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
+		if (glass()) { gg.surge.client.features.CustomSounds.preview("preset:glass_tap", 1f, 0.6f); return; }
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 0.55F));
 	}
 
 	public static void toggleSound(boolean on) {
 		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
+		if (glass()) { gg.surge.client.features.CustomSounds.preview(on ? "preset:glass_on" : "preset:glass_off", 1f, 0.6f); return; }
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), on ? 1.25F : 0.85F, 0.5F));
+	}
+
+	public static void openSound(String normal) {
+		if (glass()) gg.surge.client.features.CustomSounds.preview("preset:glass_open", 1f, 0.55f);
+		else gg.surge.client.features.CustomSounds.preview(normal);
+	}
+
+	private static long blurFrame = -1;
+
+	public static boolean glassBackdrop(GuiGraphics g, Runnable blur, int w, int h) {
+		if (!glass()) return false;
+		long f = Minecraft.getInstance().getFrameTimeNs();
+		if (f != blurFrame) {
+			blurFrame = f;
+			try { blur.run(); } catch (Throwable ignored) { }
+		}
+		g.fill(0, 0, w, h, 0x30101014);
+		g.fillGradient(0, 0, w, h / 2, 0x14FFFFFF, 0x00FFFFFF);
+		return true;
+	}
+
+	public static void glassRect(GuiGraphics g, int x, int y, int w, int h, int c, float strength) {
+		if (w <= 0 || h <= 0) return;
+		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
+		int body = Math.round(0x1E * strength);
+		boolean was = rawCut;
+		rawCut = true;
+		try { cut(g, x, y, w, h, c, (Math.min(255, body) << 24) | 0xFFFFFF); } finally { rawCut = was; }
+		if (h > 6 && w > 2 * c + 2) {
+			int sheen = Math.round(0x1C * strength);
+			int sy = Math.max(1, c / 2);
+			g.fillGradient(x + c, y + sy, x + w - c, y + Math.max(sy + 1, h * 2 / 5), (Math.min(255, sheen) << 24) | 0xFFFFFF, 0x00FFFFFF);
+		}
+		glassRim(g, x, y, w, h, c, strength);
+	}
+
+	private static void glassRim(GuiGraphics g, int x, int y, int w, int h, int c, float strength) {
+		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
+		int top = Math.min(255, Math.round(0x8C * strength)), mid = Math.min(255, Math.round(0x3A * strength)), bot = Math.min(255, Math.round(0x22 * strength));
+		int it = c > 0 ? inset(c, 0) : 0;
+		g.fill(x + it, y, x + w - it, y + 1, (top << 24) | 0xFFFFFF);
+		g.fill(x + it, y + h - 1, x + w - it, y + h, (bot << 24) | 0xFFFFFF);
+		for (int i = 1; i < c; i++) {
+			int in = inset(c, i), prev = inset(c, i - 1);
+			int run = Math.max(1, prev - in);
+			int at = Math.round(top + (mid - top) * (i / (float) c));
+			int ab = Math.round(bot + (mid - bot) * (i / (float) c));
+			g.fill(x + in, y + i, x + in + run, y + i + 1, (at << 24) | 0xFFFFFF);
+			g.fill(x + w - in - run, y + i, x + w - in, y + i + 1, (at << 24) | 0xFFFFFF);
+			g.fill(x + in, y + h - i - 1, x + in + run, y + h - i, (ab << 24) | 0xFFFFFF);
+			g.fill(x + w - in - run, y + h - i - 1, x + w - in, y + h - i, (ab << 24) | 0xFFFFFF);
+		}
+		if (h - 2 * c > 0) {
+			g.fillGradient(x, y + c, x + 1, y + h - c, (mid << 24) | 0xFFFFFF, (bot << 24) | 0xFFFFFF);
+			g.fillGradient(x + w - 1, y + c, x + w, y + h - c, (mid << 24) | 0xFFFFFF, (bot << 24) | 0xFFFFFF);
+		}
+	}
+
+	private static int glassTint(int color) {
+		int a = (color >>> 24) & 255;
+		int r = (color >> 16) & 255, gr = (color >> 8) & 255, b = color & 255;
+		float lum = (0.3f * r + 0.59f * gr + 0.11f * b) / 255f;
+		int mx = Math.max(r, Math.max(gr, b)), mn = Math.min(r, Math.min(gr, b));
+		if (mx > 0x30 && (mx - mn) / (float) mx > 0.35f) return (Math.round(a * 0.6f) << 24) | (Colors.lerp(color | 0xFF000000, 0xFFFFFFFF, 0.25f) & 0xFFFFFF);
+		if (lum < 0.4f) return (Math.round(a * (0.07f + lum * 0.25f)) << 24) | 0xFFFFFF;
+		return (Math.round(a * 0.7f) << 24) | (color & 0xFFFFFF);
 	}
 
 	private static final java.util.List<Runnable> LABELS = new java.util.ArrayList<>();
@@ -148,8 +233,10 @@ public final class Ui {
 		if (hov) {
 			if (HOVERED.add(key)) {
 				HOVER_SINCE.put(key, System.currentTimeMillis());
-				if (gg.surge.client.mods.Mods.UI_HOVER.on())
-					Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.9F, 0.12F));
+				if (gg.surge.client.mods.Mods.UI_HOVER.on()) {
+					if (glass()) gg.surge.client.features.CustomSounds.preview("preset:glass_hover", 1f, 0.35f);
+					else Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.9F, 0.12F));
+				}
 			}
 			return System.currentTimeMillis() - HOVER_SINCE.getOrDefault(key, System.currentTimeMillis());
 		}
@@ -247,8 +334,23 @@ public final class Ui {
 		cutBox(g, x, y, w, h, 3, fill, edge == EDGE ? 0xFF2E2E33 : edge);
 	}
 
+	private static int inset(int c, int i) {
+		double dy = c - i - 0.5;
+		return (int) Math.round(c - Math.sqrt(Math.max(0, c * c - dy * dy)));
+	}
+
 	public static void cut(GuiGraphics g, int x, int y, int w, int h, int c, int color) {
+		if (glass && !rawCut) color = glassTint(color);
 		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
+		if (glass && c > 0) {
+			for (int i = 0; i < c; i++) {
+				int in = inset(c, i);
+				g.fill(x + in, y + i, x + w - in, y + i + 1, color);
+				g.fill(x + in, y + h - i - 1, x + w - in, y + h - i, color);
+			}
+			g.fill(x, y + c, x + w, y + h - c, color);
+			return;
+		}
 		for (int i = 0; i < c; i++) {
 			g.fill(x + c - i, y + i, x + w - c + i, y + i + 1, color);
 			g.fill(x + c - i, y + h - i - 1, x + w - c + i, y + h - i, color);
@@ -256,7 +358,19 @@ public final class Ui {
 		g.fill(x, y + c, x + w, y + h - c, color);
 	}
 
+	private static boolean rawCut;
+
 	public static void cutBox(GuiGraphics g, int x, int y, int w, int h, int c, int fill, int edge) {
+		if (glass()) {
+			int fa = (fill >>> 24) & 0xFF;
+			rawCut = true;
+			try { glassRect(g, x, y, w, h, Math.max(c, Math.min(6, Math.min(w, h) / 3)), fa < 0x40 ? 0.6f : 1f); } finally { rawCut = false; }
+			int r = (fill >> 16) & 255, gr = (fill >> 8) & 255, b = fill & 255;
+			int mx = Math.max(r, Math.max(gr, b)), mn = Math.min(r, Math.min(gr, b));
+			boolean colored = mx > 0x30 && (mx - mn) / (float) mx > 0.35f;
+			if (fa > 0x40 && ((r + gr + b) / 3 > 0x70 || colored)) { rawCut = true; try { cut(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, Math.max(c, Math.min(6, Math.min(w, h) / 3)) - 1), ((colored ? 0x78 : 0x50) << 24) | (fill & 0xFFFFFF)); } finally { rawCut = false; } }
+			return;
+		}
 		int a = (fill >>> 24) & 0xFF;
 		int ea = Math.max(a, (edge >>> 24) & 0xFF);
 		g.fill(x, y, x + w, y + h, (ea << 24));
@@ -283,6 +397,10 @@ public final class Ui {
 	public static final Identifier HANDLE_HOVER_SPRITE = Identifier.withDefaultNamespace("widget/slider_handle_highlighted");
 
 	public static void mcButton(GuiGraphics g, int x, int y, int w, int h, boolean hov, boolean disabled, float alpha) {
+		if (glass()) {
+			glassRect(g, x, y, w, h, Math.min(6, Math.min(w, h) / 2), (disabled ? 0.5f : hov ? 1.6f : 1.1f) * alpha);
+			return;
+		}
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, disabled ? BUTTON_OFF_SPRITE : hov ? BUTTON_HOVER_SPRITE : BUTTON_SPRITE, x, y, w, h, alpha);
 	}
 
@@ -318,6 +436,10 @@ public final class Ui {
 		boolean hov = hover(mx, my, x, y, w, h);
 		hoverTick(key, hov);
 		float a = anim(key, hov || selected);
+		if (glass()) {
+			if (a > 0.01f) glassRect(g, x, y, w, h, 4, (selected ? 1.2f : 0.7f) * a);
+			return hov;
+		}
 		if (a > 0.01f) cut(g, x, y, w, h, 3, Colors.alpha(selected ? 0xFF2A2A2F : 0xFF222226, a));
 		if (selected) g.fill(x, y + 4, x + 2, y + h - 4, ACCENT_2);
 		return hov;
@@ -325,6 +447,17 @@ public final class Ui {
 
 	public static void toggleSwitch(GuiGraphics g, int x, int y, boolean on, Object key) {
 		float a = anim(key, on);
+		if (glass()) {
+			rawCut = true;
+			try {
+				cut(g, x, y, 22, 12, 6, Colors.lerp(0x40FFFFFF, 0xE634C759, a));
+				glassRim(g, x, y, 22, 12, 6, 0.9f);
+				int kx = x + 1 + Math.round(a * 10);
+				cut(g, kx, y + 1, 10, 10, 5, 0xFFFFFFFF);
+				g.fill(kx + 2, y + 10, kx + 8, y + 11, 0x22000000);
+			} finally { rawCut = false; }
+			return;
+		}
 		g.fill(x, y, x + 22, y + 12, 0xFF000000);
 		g.fill(x + 1, y + 1, x + 21, y + 11, Colors.lerp(0xFF8B2B2B, 0xFF3C8527, a));
 		g.fill(x + 1, y + 1, x + 21, y + 2, 0x40000000);
@@ -333,6 +466,18 @@ public final class Ui {
 	}
 
 	public static void slider(GuiGraphics g, int x, int y, int w, float fraction, boolean active) {
+		if (glass()) {
+			float f = Math.max(0, Math.min(1, fraction));
+			rawCut = true;
+			try {
+				cut(g, x, y + 4, w, 4, 2, 0x38FFFFFF);
+				cut(g, x, y + 4, Math.max(4, Math.round(w * f)), 4, 2, 0xE6FFFFFF);
+				int kx = x + Math.round((w - 10) * f);
+				cut(g, kx, y + 1, 10, 10, 5, active ? 0xFFFFFFFF : 0xFFF4F4F6);
+				g.fill(kx + 2, y + 10, kx + 8, y + 11, 0x26000000);
+			} finally { rawCut = false; }
+			return;
+		}
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, SLIDER_SPRITE, x, y + 2, w, 8);
 		int fx = x + Math.round((w - 6) * Math.max(0, Math.min(1, fraction)));
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, active ? HANDLE_HOVER_SPRITE : HANDLE_SPRITE, fx, y, 6, 12);
@@ -424,6 +569,12 @@ public final class Ui {
 	}
 
 	public static void vanillaTooltip(GuiGraphics g, int x, int y, int w, int h) {
+		if (glass()) {
+			rawCut = true;
+			try { cut(g, x, y, w, h, 4, 0xB4141418); } finally { rawCut = false; }
+			glassRect(g, x, y, w, h, 4, 1f);
+			return;
+		}
 		int bg = 0xF0100010;
 		g.fill(x + 1, y, x + w - 1, y + h, bg);
 		g.fill(x, y + 1, x + 1, y + h - 1, bg);

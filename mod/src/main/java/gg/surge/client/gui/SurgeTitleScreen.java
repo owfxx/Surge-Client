@@ -40,6 +40,7 @@ public class SurgeTitleScreen extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		renderPanorama(g, delta);
+		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		g.fill(0, 0, this.width, this.height, 0x38000000);
 		g.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, 0xB0000000);
 		g.fillGradient(0, 0, this.width, 40, 0x60000000, 0x00000000);

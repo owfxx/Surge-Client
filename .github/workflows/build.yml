@@ -304,7 +304,7 @@ jobs:
         with:
           distribution: temurin
           java-version: |
-            8
+            17
             25
       - name: Install a virtual screen
         run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils libopenal1 libxrandr2 libxxf86vm1 x11-xserver-utils > /dev/null
@@ -315,7 +315,7 @@ jobs:
           ALSOFT_DRIVERS: 'null'
         run: |
           chmod +x gradlew
-          timeout 1300 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest -Porg.gradle.java.installations.fromEnv=JAVA_HOME_8_X64 --no-configuration-cache 2>&1 | tail -250 || true
+          timeout 1300 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64 --no-configuration-cache 2>&1 | tail -250 || true
           ls -la run/screenshots || true
       - name: Publish screenshots
         if: always()

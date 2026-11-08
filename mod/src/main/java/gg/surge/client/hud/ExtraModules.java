@@ -140,7 +140,7 @@ final class ExtraModules {
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
 			int yy = y;
 			for (Row r : rows(mc)) {
-				if (bgOn()) g.fill(x, yy, x + 70, yy + 16, bg());
+				if (bgOn()) panel(g, x, yy, x + 70, yy + 16);
 				g.renderItem(r.icon(), x + 1, yy);
 				int bx = x + 20, bw = 48;
 				g.fill(bx, yy + 11, bx + bw, yy + 14, 0x80000000);
@@ -162,7 +162,7 @@ final class ExtraModules {
 		@Override public int height(Minecraft mc) { return 34; }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			if (bgOn()) g.fill(x, y, x + 92, y + 34, bg());
+			if (bgOn()) panel(g, x, y, x + 92, y + 34);
 			int max = 12;
 			for (int v : CPS) max = Math.max(max, v);
 			for (int i = 0; i < CPS.length; i++) {
@@ -214,7 +214,7 @@ final class ExtraModules {
 		@Override public int height(Minecraft mc) { return rows() * 18 + 4; }
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
-			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + height(mc));
 			if (mc.player == null) return;
 			var inv = mc.player.getInventory();
 			for (int r = 0; r < rows(); r++) {
@@ -269,7 +269,7 @@ final class ExtraModules {
 
 		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
 			List<String> ls = lines(mc);
-			if (bgOn()) g.fill(x, y, x + width(mc), y + height(mc), bg());
+			if (bgOn()) panel(g, x, y, x + width(mc), y + height(mc));
 			for (int i = 0; i < ls.size(); i++) text(g, mc, ls.get(i), x + 5, y + 3 + i * 10, i == 0 ? fg() : Colors.alpha(fg(), 0.75f));
 		}
 	}

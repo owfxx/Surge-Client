@@ -23,7 +23,7 @@ processResources {
 }
 
 tasks.matching { it.name == "runClient" }.configureEach {
-	javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(8) }
+	javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
 }
 
 loom {

@@ -61,6 +61,7 @@ public class BetaCapeScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
+		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		g.fill(0, 0, this.width, this.height, Colors.alpha(0xA0000000, Math.min(1f, (System.currentTimeMillis() - openedAt) / 160f)));
 	}
 

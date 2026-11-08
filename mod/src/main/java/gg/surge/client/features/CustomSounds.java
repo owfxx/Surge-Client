@@ -155,10 +155,14 @@ public final class CustomSounds {
 	}
 
 	public static void preview(String source) {
+		preview(source, 1f, 1f);
+	}
+
+	public static void preview(String source, float pitch, float volume) {
 		Minecraft mc = Minecraft.getInstance();
 		preview = source;
 		try {
-			mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), 1f, 1f));
+			mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK.value(), pitch, volume));
 		} finally {
 			preview = null;
 		}

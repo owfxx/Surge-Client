@@ -111,6 +111,15 @@ public abstract class HudModule extends SurgeMod {
 		return backgroundColor.argb(Math.round(backgroundOpacity.get() * 2.55f));
 	}
 
+	protected void panel(GuiGraphics g, int x0, int y0, int x1, int y1) {
+		if (gg.surge.client.gui.Ui.glass()) {
+			int a = Math.max(0, Math.min(100, Math.round(global() ? gg.surge.client.mods.Mods.HUD_BG_OPACITY.get() : backgroundOpacity.get())));
+			gg.surge.client.gui.Ui.glassRect(g, x0, y0, x1 - x0, y1 - y0, Math.min(5, Math.min(x1 - x0, y1 - y0) / 3), 0.6f + a / 100f);
+			return;
+		}
+		g.fill(x0, y0, x1, y1, bg());
+	}
+
 	public int fg() {
 		return textSetting().rgb(0);
 	}
@@ -145,7 +154,7 @@ public abstract class HudModule extends SurgeMod {
 
 	protected void box(GuiGraphics g, Minecraft mc, int x, int y, int w, String text) {
 		String s = bracket(text);
-		if (bgOn()) g.fill(x, y, x + w, y + 13, bg());
+		if (bgOn()) panel(g, x, y, x + w, y + 13);
 		text(g, mc, s, x + (w - mc.font.width(s)) / 2, y + 3, fg());
 	}
 

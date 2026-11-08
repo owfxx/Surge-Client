@@ -129,6 +129,7 @@ public class SurgeMenuScreen extends Screen {
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
+		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		float k = openProgress();
 		g.fill(0, 0, this.width, this.height, Colors.alpha(0x88000000, k));
 	}
@@ -140,7 +141,7 @@ public class SurgeMenuScreen extends Screen {
 
 	@Override
 	protected void init() {
-		if (openedAt == 0) { openedAt = System.currentTimeMillis(); gg.surge.client.features.CustomSounds.preview("preset:pop"); }
+		if (openedAt == 0) { openedAt = System.currentTimeMillis(); Ui.openSound("preset:pop"); }
 		ww = Math.min(this.width - 12, Math.max(420, Math.min(640, Math.round(this.width * 0.75f))));
 		wh = Math.min(this.height - 12, Math.max(240, Math.min(400, Math.round(this.height * 0.8f))));
 		wx = (this.width - ww) / 2;

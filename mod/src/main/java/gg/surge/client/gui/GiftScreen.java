@@ -52,6 +52,7 @@ public class GiftScreen extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		if (parent != null && minecraft.level == null) parent.renderBackground(g, mouseX, mouseY, delta);
+		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		g.fill(0, 0, this.width, this.height, Colors.alpha(0xB0000000, Math.min(1f, (System.currentTimeMillis() - openedAt) / 200f)));
 	}
 
