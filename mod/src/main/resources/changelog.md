@@ -1,3 +1,16 @@
+## 1.8.4
+- New mod menu look with clean white icons for every mod, and big Enabled and Disabled buttons on each card
+- Wings have been redrawn with real feathers and are bigger
+- Every cape now gives your elytra a wing shape with feather tips and a bright edge
+- Eight new animated capes: Phoenix, Koi, Blood Moon, Obsidian, Storm, Lava, Matrix and Frost. Galaxy and Aurora are no longer sold, but you keep them if you own them
+- New Low Health Warning mod: red screen edges and a heartbeat when your health gets low
+- New Item Pickups mod: see what you just picked up next to your hotbar
+- New Death Coordinates mod: chat tells you where you died, click to copy
+- New Better Tooltips mod: durability numbers, food values and stack size on items
+- More performance mods are added for you: Entity Culling, ImmediatelyFast, ModernFix, More Culling, Krypton and ScalableLux
+- Fixed your cape and wings not showing in the wardrobe while wearing an elytra
+- The website now shows the animated capes and has a download button in the menu bar
+
 ## 1.8.3
 - New launcher look: cleaner layout, Surge gold accents, smooth page animations and new white icons
 - The launcher has new sounds for hovering, switching pages, buying, errors and pressing Play

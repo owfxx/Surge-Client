@@ -61,7 +61,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			return;
 		}
 		float age = state.ageInTicks;
-		boolean elytra = p.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
+		boolean elytra = p.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA) && !(Preview.clean || Preview.card != null);
 		float speed = Math.min(1f, state.walkAnimationSpeed);
 		boolean flying = p.getAbilities().flying || p.isFallFlying();
 
@@ -138,12 +138,12 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		for (int side = -1; side <= 1; side += 2) {
 			ps.pushPose();
 			getParentModel().body.translateAndRotate(ps);
-			ps.translate(side * 0.06f, 0.2f, 0.15f);
+			ps.translate(side * 0.06f, 0.14f, 0.15f);
 			ps.scale(side, 1f, 1f);
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
 			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
-				wingQuad(pose, vc, 0.02f, -0.36f, 1.12f, 0.26f, 0.0f, lit, 0xFFFFFFFF);
+				wingQuad(pose, vc, 0.02f, -0.46f, 1.32f, 0.30f, 0.0f, lit, 0xFFFFFFFF);
 			});
 			ps.popPose();
 		}

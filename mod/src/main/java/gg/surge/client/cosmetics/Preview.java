@@ -52,6 +52,7 @@ public final class Preview {
 			st.displayFireAnimation = false;
 			st.isInvisible = false;
 			st.isInvisibleToPlayer = false;
+			if (st.chestEquipment.is(net.minecraft.world.item.Items.ELYTRA)) st.chestEquipment = net.minecraft.world.item.ItemStack.EMPTY;
 			if (st.isSpectator) {
 				st.isSpectator = false;
 				var o = mc.options;
