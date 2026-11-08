@@ -110,6 +110,15 @@ public final class Mods {
 		"Change how much your screen shakes when you take damage", false);
 	public static final Setting.Slider HURT_STRENGTH = HURT_CAM.slider("strength", "Shake", 0, 0, 100, 5, "%");
 
+	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Scales", Category.VISUAL, Items.SPYGLASS,
+		"Give your hotbar, chat, tab list, titles and inventories their own size", false);
+	public static final Setting.Slider GS_HOTBAR = GUI_SCALES.slider("hotbar", "Hotbar, health and hunger", 100, 50, 150, 5, "%");
+	public static final Setting.Slider GS_CHAT = GUI_SCALES.slider("chat", "Chat", 100, 50, 150, 5, "%");
+	public static final Setting.Slider GS_TAB = GUI_SCALES.slider("tab", "Tab list", 100, 50, 150, 5, "%");
+	public static final Setting.Slider GS_TITLE = GUI_SCALES.slider("title", "Titles", 100, 40, 150, 5, "%");
+	public static final Setting.Slider GS_SIDEBAR = GUI_SCALES.slider("sidebar", "Scoreboard", 100, 50, 150, 5, "%");
+	public static final Setting.Choice GS_INVENTORY = GUI_SCALES.choice("inventory", "Inventories and chests", "Same as game", "Same as game", "1", "2", "3", "4", "5", "6");
+
 	public static final SurgeMod CROSSHAIR = mod("crosshair", "Crosshair", Category.VISUAL, Items.TRIPWIRE_HOOK,
 		"A clean custom crosshair with your own style and color", false);
 	public static final Setting.Choice CROSS_STYLE = CROSSHAIR.choice("style", "Style", "Cross", "Cross", "Gap", "Dot", "Circle", "T");
@@ -345,6 +354,7 @@ public final class Mods {
 		CHAT.onToggle(on -> OptionTweaks.apply(mc()));
 		WAYPOINTS.button("Add waypoint", "Add here", () -> Waypoints.addHere(mc()));
 		GLINT.onToggle(on -> gg.surge.client.features.Extras.applyGlint(mc())).onChange(() -> gg.surge.client.features.Extras.applyGlint(mc()));
+		GUI_SCALES.onToggle(on -> gg.surge.client.features.GuiScales.refresh()).onChange(gg.surge.client.features.GuiScales::refresh);
 		var cfg = gg.surge.client.config.SurgeConfig.get();
 		if (cfg.defaultsVersion < 2) {
 			for (SurgeMod m : new SurgeMod[]{SERVER_REGION, CLIPS, DISCORD, COMMAND_KEYS, COSMETICS}) m.state().enabled = true;

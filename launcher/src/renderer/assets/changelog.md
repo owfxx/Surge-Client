@@ -1,3 +1,8 @@
+## 1.6.3
+- Rune Cape now uses the real enchanting table glyphs, in white, and they shift and glow
+- New GUI Scales mod: give your hotbar, chat, tab list, titles, scoreboard and inventories their own size
+- Launcher skins: always opens on your current skin, remembers Slim or Classic for every skin, and skins with thin arms are always set to Slim
+
 ## 1.6.2
 - Flame Cape is animated now
 - New animated Enchanted Cape with a moving glint
