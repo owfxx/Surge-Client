@@ -90,6 +90,7 @@ public final class AutoTest {
 		STEPS.add(new Step("07h-emote-tpose", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.TPOSE); }));
 		STEPS.add(new Step("07e-emote-cheer", 25, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.CHEER); }));
 		STEPS.add(new Step("07l-emote-shuffle", 30, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SHUFFLE); }));
+		STEPS.add(new Step("07m0-platform", 50, mc -> { Emotes.stop(mc); mc.player.connection.sendCommand("fill ~-4 ~30 ~-4 ~4 ~30 ~4 minecraft:smooth_stone"); mc.player.connection.sendCommand("tp @s ~ ~31 ~ 0 10"); mc.player.getAbilities().flying = false; mc.player.onUpdateAbilities(); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY); }));
 		STEPS.add(new Step("07m-emote-zombie", 24, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.ZOMBIE); }));
 		STEPS.add(new Step("07m-emote-robot", 24, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.ROBOT); }));
 		STEPS.add(new Step("07m-emote-airguitar", 24, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.AIRGUITAR); }));
@@ -118,7 +119,14 @@ public final class AutoTest {
 		STEPS.add(new Step("07xb-wings-surge", 40, mc -> { SurgeConfig.get().wings = "surge"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
 		STEPS.add(new Step("07xc-wings-flame", 40, mc -> { SurgeConfig.get().wings = "flame"; mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); mc.player.setYRot(mc.player.getYRot() + 60f); }));
 		STEPS.add(new Step("07xd-wings-gold", 40, mc -> { SurgeConfig.get().wings = "gold"; }));
-		STEPS.add(new Step("07xe-cape-phoenix", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().cape = "phoenix"; mc.player.setYRot(mc.player.getYRot() - 60f); }));
+		STEPS.add(new Step("07xd-wings-bat", 30, mc -> { SurgeConfig.get().wings = "bat"; }));
+		STEPS.add(new Step("07xd-wings-dragon", 30, mc -> { SurgeConfig.get().wings = "dragon"; }));
+		STEPS.add(new Step("07xd-wings-butterfly", 30, mc -> { SurgeConfig.get().wings = "butterfly"; }));
+		STEPS.add(new Step("07xd-wings-fairy", 30, mc -> { SurgeConfig.get().wings = "fairy"; }));
+		STEPS.add(new Step("07xd-halo-crown", 30, mc -> { SurgeConfig.get().wings = "none"; SurgeConfig.get().halo = "crown"; mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); }));
+		STEPS.add(new Step("07xd-halo-orbit", 30, mc -> { SurgeConfig.get().halo = "orbit"; }));
+		STEPS.add(new Step("07xd-halo-rainbow", 30, mc -> { SurgeConfig.get().halo = "rainbow"; mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
+		STEPS.add(new Step("07xe-cape-phoenix", 30, mc -> { SurgeConfig.get().halo = "none"; SurgeConfig.get().wings = "none"; SurgeConfig.get().cape = "phoenix"; mc.player.setYRot(mc.player.getYRot() - 60f); }));
 		STEPS.add(new Step("07xf-cape-bloodmoon", 30, mc -> SurgeConfig.get().cape = "bloodmoon"));
 		STEPS.add(new Step("07xg-cape-obsidian", 30, mc -> SurgeConfig.get().cape = "obsidian"));
 		STEPS.add(new Step("07xh-elytra-phoenix", 40, mc -> { SurgeConfig.get().cape = "phoenix"; mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); }));

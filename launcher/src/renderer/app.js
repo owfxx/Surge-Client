@@ -1104,6 +1104,25 @@ function wardExtras(data) {
     glow.position.y = 10.5;
     v.playerObject.skin.head.add(ring); v.playerObject.skin.head.add(glow);
     ward.extras.push(ring, glow);
+    if (halo === 'crown') {
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4, h = i % 2 ? 1.6 : 2.6;
+        const spike = new T.Mesh(new T.ConeGeometry(0.55, h, 4), new T.MeshBasicMaterial({ color }));
+        spike.position.set(Math.cos(a) * 4.2, 10.5 + h / 2, Math.sin(a) * 4.2);
+        const gem = new T.Mesh(new T.OctahedronGeometry(0.4), new T.MeshBasicMaterial({ color: i % 2 ? 0x4db8ff : 0xff4d6a }));
+        gem.position.set(Math.cos(a) * 4.2, 10.5 + h + 0.3, Math.sin(a) * 4.2);
+        v.playerObject.skin.head.add(spike); v.playerObject.skin.head.add(gem);
+        ward.extras.push(spike, gem);
+      }
+    }
+    if (halo === 'orbit') {
+      for (let i = 0; i < 3; i++) {
+        const orb = new T.Mesh(new T.SphereGeometry(0.55, 10, 10), new T.MeshBasicMaterial({ color: i === 1 ? 0xffffff : color }));
+        orb.userData.orbit = i;
+        v.playerObject.skin.head.add(orb);
+        ward.extras.push(orb);
+      }
+    }
   }
 }
 
@@ -1149,7 +1168,11 @@ async function mountWardrobeViewer(data) {
       }
     } else if (ward.capeKey) { v.loadCape(null); ward.capeKey = ''; }
     const t = performance.now() / 1000;
-    for (const e of ward.extras) if (e.userData.side) e.rotation.y = e.userData.side * (-0.55 - Math.sin(t * 1.6) * 0.12);
+    for (const e of ward.extras) {
+      if (e.userData.side) e.rotation.y = e.userData.side * (-0.55 - Math.sin(t * 1.6) * 0.12);
+      if (e.userData.orbit !== undefined) { const a = t * 1.8 + e.userData.orbit * Math.PI * 2 / 3; e.position.set(Math.cos(a) * 5.8, 10.5 + Math.sin(t * 2.4 + e.userData.orbit) * 0.8, Math.sin(a) * 5.8); }
+      if (look.halo === 'rainbow' || (look.halo === undefined && data.equipped.halo === 'rainbow')) { if (e.material && e.material.color && !e.userData.side && e.userData.orbit === undefined) e.material.color.setHSL((t * 0.25) % 1, 0.8, 0.65); }
+    }
     ward.raf = requestAnimationFrame(loop);
   };
   ward.raf = requestAnimationFrame(loop);

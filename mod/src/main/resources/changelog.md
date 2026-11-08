@@ -1,3 +1,14 @@
+## 1.8.5
+- 8 new emotes: Zombie, Robot, Air Guitar, Jumping Jacks, Flex, Blow a Kiss, Spin and Faint
+- 5 new idle animations: Check Watch, Head Scratch, Shadow Box, Scrolling and Whistling
+- 4 new wings: Bat, Dragon, Butterfly and Fairy
+- 3 new halos: Royal Crown with gems, Orbit Halo with circling orbs, and a color shifting Rainbow Halo
+- Emotes now show up for other players almost instantly instead of after a few seconds
+- You can no longer emote while falling, flying, gliding with an elytra, swimming or riding, and emotes stop if you start falling
+- Hit Delay is now the Cooldown Indicator: see your bow draw, eating, block breaking and item cooldowns like ender pearls
+- New Home tab in the admin menu with live stats, who is online, announcements and gifts for everyone
+- Surge now checks for cosmetic updates less often when live emotes are connected, which saves data
+
 ## 1.8.4
 - New mod menu look with clean white icons for every mod, and big Enabled and Disabled buttons on each card
 - Wings have been redrawn with real feathers and are bigger
