@@ -882,12 +882,15 @@ async function renderSkins() {
   if ($('#skSave')) $('#skSave').onclick = async () => { const lib = await safe(() => S.skins.saveCurrent(), 'Saved your current skin'); if (lib) { skinState.library = lib; drawSkinGrid(); } };
   view.querySelectorAll('#skVariant [data-v]').forEach(b => b.onclick = () => {
     skinState.variant = b.dataset.v;
+    if (skinState.selected) rememberVariant(skinState.selected, skinState.variant);
     view.querySelectorAll('#skVariant button').forEach(x => x.classList.toggle('on', x === b));
     showSelectedSkin();
   });
   $('#skApply').onclick = async () => {
     if (!skinState.selected) { toast('Pick a skin from your library first', true); return; }
     const b = $('#skApply'); b.disabled = true; b.textContent = 'Applying';
+    const entry = skinState.library.find(x => x.name === skinState.selected);
+    if (entry && skinState.variant !== 'slim' && await detectSlim(entry.data)) { skinState.variant = 'slim'; rememberVariant(entry.name, 'slim'); setVariantButtons(); showSelectedSkin(); toast('This skin has thin arms, so it was set to Slim'); }
     const p = await safe(() => S.skins.upload(skinState.selected, skinState.variant), 'Skin changed. It shows in game after you rejoin.');
     b.disabled = false; b.textContent = 'Apply skin';
     if (p) { skinState.profile = p; refreshAccounts(); }
@@ -900,12 +903,50 @@ async function renderSkins() {
     skinState.profile = await S.skins.profile().catch(() => null);
     if (state.view !== 'skins') return;
     drawCapes();
-    if (!skinState.selected && skinState.profile?.skin) {
+    const cur = await S.skins.current().catch(() => null);
+    if (state.view !== 'skins') return;
+    if (cur && cur.name) {
+      skinState.library = cur.library;
+      skinState.selected = cur.name;
+      skinState.variant = cur.variant;
+      rememberVariant(cur.name, cur.variant);
+      setVariantButtons();
+      drawSkinGrid();
+      showSelectedSkin();
+    } else if (!skinState.selected && skinState.profile?.skin) {
       skinState.variant = skinState.profile.skin.variant === 'SLIM' ? 'slim' : 'classic';
-      view.querySelectorAll('#skVariant button').forEach(x => x.classList.toggle('on', x.dataset.v === skinState.variant));
+      setVariantButtons();
       skinViewer?.loadSkin(skinState.profile.skin.url, { model: skinState.variant === 'slim' ? 'slim' : 'default' }).catch(() => {});
     }
   }
+}
+
+function setVariantButtons() {
+  document.querySelectorAll('#skVariant button').forEach(x => x.classList.toggle('on', x.dataset.v === skinState.variant));
+}
+function rememberVariant(name, v) {
+  try { const m = JSON.parse(localStorage.getItem('surge.skinVariants') || '{}'); m[name] = v; localStorage.setItem('surge.skinVariants', JSON.stringify(m)); } catch { }
+}
+function rememberedVariant(name) {
+  try { return JSON.parse(localStorage.getItem('surge.skinVariants') || '{}')[name] || null; } catch { return null; }
+}
+function detectSlim(dataUrl) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.height < 64) return res(false);
+      const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, 64, 64).data;
+      const empty = (x, y) => { const i = (y * 64 + x) * 4; return d[i + 3] === 0 || (d[i] === 0 && d[i + 1] === 0 && d[i + 2] === 0); };
+      let n = 0, hit = 0;
+      for (let y = 20; y < 32; y++) for (const x of [54, 55]) { n++; if (empty(x, y)) hit++; }
+      for (let y = 52; y < 64; y++) for (const x of [46, 47]) { n++; if (empty(x, y)) hit++; }
+      res(hit >= n * 0.9);
+    };
+    img.onerror = () => res(false);
+    img.src = dataUrl;
+  });
 }
 
 function showSelectedSkin() {
@@ -928,7 +969,10 @@ function drawSkinGrid() {
       if (e.target.closest('[data-del]')) return;
       skinState.selected = card.dataset.skin;
       grid.querySelectorAll('.skin-card').forEach(c => c.classList.toggle('on', c === card));
-      showSelectedSkin();
+      const remembered = rememberedVariant(skinState.selected);
+      const pick = v => { skinState.variant = v; setVariantButtons(); showSelectedSkin(); };
+      if (remembered) pick(remembered);
+      else detectSlim(skinState.library.find(x => x.name === skinState.selected).data).then(slim => { const v = slim ? 'slim' : 'classic'; rememberVariant(skinState.selected, v); pick(v); });
     };
   });
   grid.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {

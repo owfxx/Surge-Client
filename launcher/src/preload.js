@@ -61,7 +61,7 @@ contextBridge.exposeInMainWorld('surge', {
   openFile: file => call('shell:openFile', file),
   skins: {
     profile: () => call('skins:profile'), library: () => call('skins:library'), upload: (n, v) => call('skins:upload', n, v),
-    cape: id => call('skins:cape', id), remove: n => call('skins:remove', n), saveCurrent: () => call('skins:saveCurrent'),
+    cape: id => call('skins:cape', id), remove: n => call('skins:remove', n), saveCurrent: () => call('skins:saveCurrent'), current: () => call('skins:current'),
     folder: () => call('skins:folder'), importFiles: () => call('skins:import'),
   },
   updates: { check: id => call('updates:check', id), apply: (id, list) => call('updates:apply', id, list) },

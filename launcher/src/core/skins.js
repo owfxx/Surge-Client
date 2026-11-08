@@ -47,6 +47,8 @@ async function upload(name, variant) {
   form.append('variant', variant === 'slim' ? 'slim' : 'classic');
   form.append('file', new Blob([buf], { type: 'image/png' }), 'skin.png');
   await call('POST', `${API}/skins`, form);
+  const now = new Date();
+  try { fs.utimesSync(file, now, now); } catch { }
   return profile();
 }
 
@@ -57,7 +59,8 @@ async function setCape(id) {
 }
 
 function library() {
-  return fs.readdirSync(LIB).filter(f => f.toLowerCase().endsWith('.png')).sort()
+  return fs.readdirSync(LIB).filter(f => f.toLowerCase().endsWith('.png'))
+    .map(f => ({ f, t: fs.statSync(path.join(LIB, f)).mtimeMs })).sort((a, b) => b.t - a.t).map(x => x.f)
     .map(f => ({ name: f, data: `data:image/png;base64,${fs.readFileSync(path.join(LIB, f)).toString('base64')}` }));
 }
 
@@ -84,4 +87,24 @@ async function saveCurrent() {
   return library();
 }
 
-module.exports = { profile, upload, setCape, library, importFiles, remove, saveCurrent, LIB };
+async function current() {
+  const p = await profile();
+  if (!p.skin) return { name: null, variant: 'classic', library: library() };
+  const res = await fetch(p.skin.url);
+  const buf = Buffer.from(await res.arrayBuffer());
+  let name = null;
+  for (const f of fs.readdirSync(LIB).filter(x => x.toLowerCase().endsWith('.png'))) {
+    try { if (fs.readFileSync(path.join(LIB, f)).equals(buf)) { name = f; break; } } catch { }
+  }
+  if (!name) {
+    name = `${p.name}.png`;
+    for (let n = 2; fs.existsSync(path.join(LIB, name)); n++) name = `${p.name}-${n}.png`;
+    fs.writeFileSync(path.join(LIB, name), buf);
+  } else {
+    const now = new Date();
+    try { fs.utimesSync(path.join(LIB, name), now, now); } catch { }
+  }
+  return { name, variant: p.skin.variant === 'SLIM' ? 'slim' : 'classic', library: library() };
+}
+
+module.exports = { profile, upload, setCape, library, importFiles, remove, saveCurrent, current, LIB };

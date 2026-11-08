@@ -251,6 +251,7 @@ handle('skins:upload', (name, variant) => skins.upload(name, variant));
 handle('skins:cape', id => skins.setCape(id));
 handle('skins:remove', name => skins.remove(name));
 handle('skins:saveCurrent', () => skins.saveCurrent());
+handle('skins:current', () => skins.current());
 handle('skins:folder', () => shell.openPath(skins.LIB));
 handle('skins:import', async () => {
   const r = await dialog.showOpenDialog(win, { title: 'Import skins', properties: ['openFile', 'multiSelections'], filters: [{ name: 'Skins', extensions: ['png'] }] });
