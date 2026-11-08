@@ -14,6 +14,7 @@ const DEFAULTS = {
   autoApiUrl: '',
   codesUrl: '',
   closeOnLaunch: false,
+  minimizeOnLaunch: true,
   uiSounds: true,
   servers: [],
   discord: true,

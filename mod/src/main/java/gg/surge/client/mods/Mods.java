@@ -283,6 +283,7 @@ public final class Mods {
 	public static final Setting.Slider CLIP_LENGTH = CLIPS.slider("length", "Clip length", 15, 10, 30, 5, "s");
 	public static final Setting.Choice CLIP_FPS = CLIPS.choice("fps", "Frame rate", "30", "20", "30", "60", "90", "120");
 	public static final Setting.Choice CLIP_RES = CLIPS.choice("res", "Resolution", "720p", "480p", "720p", "1080p", "Full");
+	public static final Setting.Toggle CLIP_SMART = CLIPS.toggle("smart", "Record less when your FPS drops", true);
 	public static final Setting.Slider CLIP_QUALITY = CLIPS.slider("quality", "Quality", 70, 30, 95, 5, "%");
 	public static final Setting.Button CLIP_FOLDER = CLIPS.button("Clips folder", "Open", () -> {
 		try {
@@ -314,6 +315,18 @@ public final class Mods {
 	public static final Setting.Toggle DROP_RARE = DROP_PROTECT.toggle("rare", "Netherite, diamond gear, totems and elytras", true);
 	public static final Setting.Toggle DROP_NAMED = DROP_PROTECT.toggle("named", "Renamed items", true);
 	public static final Setting.Toggle DROP_ALL = DROP_PROTECT.toggle("all", "Every item", false);
+
+	public static final SurgeMod LOD = mod("distant_terrain", "Distant Terrain (Beta)", Category.VISUAL, Items.FILLED_MAP,
+		"See land far past your render distance, up to 1024 chunks. It shows the places you have already been to", true);
+	public static final Setting.Slider LOD_DISTANCE = LOD.slider("distance", "Distance", 256, 64, 1024, 32, " chunks");
+	public static final Setting.Choice LOD_QUALITY = LOD.choice("quality", "Detail", "Medium", "Low", "Medium", "High");
+	public static final Setting.Toggle LOD_FOG = LOD.toggle("fog", "Keep normal fog", false);
+	public static final Setting.Toggle LOD_SAVE = LOD.toggle("save", "Remember terrain between sessions", true);
+	public static final Setting.Button LOD_FORGET = LOD.button("Saved terrain for this world", "Forget", gg.surge.client.lod.Lod::forget);
+
+	public static final SurgeMod BG_FPS = mod("background_fps", "Background FPS", Category.UTILITY, Items.REDSTONE_LAMP,
+		"Lowers FPS when you tab out so your PC stays cool and other apps run smoothly", true);
+	public static final Setting.Slider BG_FPS_LIMIT = BG_FPS.slider("limit", "FPS when tabbed out", 15, 5, 60, 5, "");
 
 	public static final SurgeMod HITBOXES = mod("hitboxes", "Hitboxes", Category.PVP, Items.IRON_SWORD,
 		"Custom colors for F3 + B hitboxes, with combat colors when someone gets hit or is in your crosshair", true);

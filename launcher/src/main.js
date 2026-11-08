@@ -1,4 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, clipboard, nativeImage } = require('electron');
+app.commandLine.appendSwitch('disable-features', 'HardwareMediaKeyHandling,MediaSessionService,SpareRendererForSitePerProcess');
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 const path = require('path');
 const fs = require('fs');
 
@@ -39,7 +41,7 @@ function createWindow() {
     frame: false, backgroundColor: '#0d0816', show: false,
     icon: path.join(__dirname, 'renderer', 'assets', 'icon.png'),
     title: 'Surge Client',
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: true, spellcheck: false },
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.show());
@@ -233,8 +235,9 @@ handle('launch:start', (id, target = {}) => {
       applyDiscordSettings();
       if (!alive()) { app.quit(); return; }
       if (!win.isVisible()) win.show();
+      else if (win.isMinimized()) win.restore();
     },
-  }).then(r => { if (config.load().closeOnLaunch && alive()) win.hide(); return r; });
+  }).then(r => { const c = config.load(); if (alive()) { if (c.closeOnLaunch) win.hide(); else if (c.minimizeOnLaunch !== false) win.minimize(); } return r; });
 });
 handle('shell:openFile', file => shell.openPath(file));
 

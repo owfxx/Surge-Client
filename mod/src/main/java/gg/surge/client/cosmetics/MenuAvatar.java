@@ -47,14 +47,7 @@ public final class MenuAvatar {
 		var c = SurgeConfig.get();
 		Object[] l = gg.surge.client.emotes.Emotes.previewLook();
 		return new CapturedLook(pick("cape", c.cape), pick("wings", c.wings), pick("halo", c.halo),
-			l == null ? null : (gg.surge.client.emotes.Emotes.Emote) l[0], l == null ? 0f : (Float) l[1], l != null, petPick());
-	}
-
-	private static String petPick() {
-		if (Cosmetics.previewSub != null && Cosmetics.previewSub.equals("pet")) return Cosmetics.previewKey;
-		if (!Mods.COSMETICS.enabled()) return null;
-		String w = Cosmetics.petWire();
-		return "none".equals(w) ? null : w;
+			l == null ? null : (gg.surge.client.emotes.Emotes.Emote) l[0], l == null ? 0f : (Float) l[1], l != null);
 	}
 
 	public static void render(GuiGraphics g, int x1, int y1, int x2, int y2, float size, float yaw, CapturedLook look) {

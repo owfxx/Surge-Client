@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class SurgeNet {
 	public static final class Remote {
-		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none", badge = "", pet = "none";
+		public volatile String wings = "none", halo = "none", cape = "none", emote = "none", flag = "none", badge = "";
 		public volatile long emoteAt, emoteStart;
 	}
 
@@ -112,7 +112,7 @@ public final class SurgeNet {
 		if (mc.player == null && Social.token().isEmpty()) return;
 		long now = System.currentTimeMillis();
 		SurgeConfig c = SurgeConfig.get();
-		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + Cosmetics.petWire() + "|" + emote + emoteAt
+		String wear = Cosmetics.equipped("wings", c.wings) + "|" + Cosmetics.equipped("halo", c.halo) + "|" + Cosmetics.wire("cape", c.cape) + "|" + emote + emoteAt
 			+ "|" + Social.status() + "|" + Social.server(mc) + "|" + sendFlag();
 		if (!busyPush && (now - lastPush > 60_000 || !wear.equals(lastSent))) {
 			lastPush = now;
@@ -133,7 +133,6 @@ public final class SurgeNet {
 		o.addProperty("wings", Cosmetics.equipped("wings", c.wings));
 		o.addProperty("halo", Cosmetics.equipped("halo", c.halo));
 		o.addProperty("cape", Cosmetics.wire("cape", c.cape));
-		o.addProperty("pet", Cosmetics.petWire());
 		o.addProperty("emote", emote);
 		o.addProperty("emoteAt", emoteAt);
 		o.addProperty("flag", sendFlag());
@@ -212,7 +211,6 @@ public final class SurgeNet {
 					Remote rem = PLAYERS.getOrDefault(id, new Remote());
 					rem.wings = str(d, "wings");
 					rem.halo = str(d, "halo");
-					rem.pet = str(d, "pet");
 					rem.cape = str(d, "cape");
 					rem.flag = str(d, "flag");
 					rem.badge = d.has("badge") && !d.get("badge").isJsonNull() ? d.get("badge").getAsString() : "";

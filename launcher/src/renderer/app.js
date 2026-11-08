@@ -845,7 +845,7 @@ function skinFront(dataUrl, canvas) {
 let skinViewer = null;
 const ANIM_CAPES = { flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
 const HALO_COLORS = { angel: 0xffec9a, surge: 0xc66bff, fire: 0xff8c28, enchanted: 0x78c8ff, void: 0x6a2bd9, rose: 0xff6fae };
-const WARD_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['halo', 'Halos'], ['pet', 'Pets'], ['emote', 'Emotes'], ['idle', 'Idles']];
+const WARD_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['halo', 'Halos'], ['emote', 'Emotes'], ['idle', 'Idles']];
 const ward = { data: null, tab: 'cape', preview: null, elytra: false, viewer: null, raf: 0, imgs: {}, capeCanvas: null, capeKey: '', frame: -1, extras: [] };
 
 function disposeWardrobe() {
@@ -1463,6 +1463,7 @@ function renderSettings() {
       </div></section>
       <section><h2>Launcher</h2><div class="panel">
         ${row('Hide launcher while playing', `<button class="toggle ${c.closeOnLaunch ? 'on' : ''}" id="sHide" aria-label="Hide launcher while playing"></button>`)}
+        ${row('Minimize launcher while playing', `<button class="toggle ${c.minimizeOnLaunch !== false ? 'on' : ''}" id="sMin" aria-label="Minimize launcher while playing"></button>`)}
         ${row('Click sounds', `<button class="toggle ${c.uiSounds !== false ? 'on' : ''}" id="sSound" aria-label="Click sounds"></button>`)}
         ${row('Game folder', `<button class="btn sm" id="sData">Open folder</button>`)}
         ${row('Help and news', `<button class="btn sm" id="sDiscord">Join our Discord</button>`)}
@@ -1478,6 +1479,7 @@ function renderSettings() {
   $('#sW').onchange = e => save({ width: +e.target.value || 1280 });
   $('#sH').onchange = e => save({ height: +e.target.value || 720 });
   $('#sHide').onclick = async () => { await save({ closeOnLaunch: !state.cfg.closeOnLaunch }); renderSettings(); };
+  $('#sMin').onclick = async () => { await save({ minimizeOnLaunch: state.cfg.minimizeOnLaunch === false }); renderSettings(); };
   $('#sSound').onclick = async () => { await save({ uiSounds: state.cfg.uiSounds === false }); renderSettings(); };
   $('#sData').onclick = () => S.config.openDataDir();
   $('#sDiscord').onclick = () => S.open(DISCORD);
@@ -1492,7 +1494,7 @@ async function openAdmin() {
   S.open(base + '/admin');
 }
 
-const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "pet:plush", "name": "Skin Plush"}, {"id": "pet:bee", "name": "Bee Buddy"}, {"id": "pet:warden", "name": "Tiny Warden"}, {"id": "pet:allay", "name": "Allay Friend"}, {"id": "pet:axolotl", "name": "Axolotl"}, {"id": "pet:fox", "name": "Sleepy Fox"}, {"id": "pet:frog", "name": "Frog"}, {"id": "idle:IDLE_LOOK", "name": "Look Around (idle)"}, {"id": "idle:IDLE_STRETCH", "name": "Big Stretch (idle)"}, {"id": "idle:IDLE_YAWN", "name": "Sleepy (idle)"}, {"id": "idle:IDLE_TAP", "name": "Foot Tap (idle)"}, {"id": "idle:IDLE_CROSS", "name": "Arms Crossed (idle)"}, {"id": "idle:IDLE_VIBE", "name": "Vibing (idle)"}];
+const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "idle:IDLE_LOOK", "name": "Look Around (idle)"}, {"id": "idle:IDLE_STRETCH", "name": "Big Stretch (idle)"}, {"id": "idle:IDLE_YAWN", "name": "Sleepy (idle)"}, {"id": "idle:IDLE_TAP", "name": "Foot Tap (idle)"}, {"id": "idle:IDLE_CROSS", "name": "Arms Crossed (idle)"}, {"id": "idle:IDLE_VIBE", "name": "Vibing (idle)"}];
 const shopName = id => (SHOP_ITEMS.find(i => i.id === id) || { name: id }).name;
 
 const SALE_TARGETS = [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...SHOP_ITEMS.map(i => [i.id, i.name])];
@@ -1733,7 +1735,7 @@ function backgroundFx() {
   };
   const loop = t => {
     requestAnimationFrame(loop);
-    if (document.hidden || t - last < 33) return;
+    if (document.hidden || state.launch.stage === 'Playing' || t - last < 33) return;
     last = t;
     draw(t);
   };
@@ -1741,6 +1743,13 @@ function backgroundFx() {
   window.addEventListener('resize', resize);
   if (still) draw(0); else requestAnimationFrame(loop);
 }
+
+function calmDown() {
+  const quiet = document.hidden || state.launch.stage === 'Playing';
+  for (const v of [viewer, skinViewer, ward.viewer]) if (v && v.renderPaused !== quiet) v.renderPaused = quiet;
+}
+setInterval(calmDown, 1000);
+document.addEventListener('visibilitychange', calmDown);
 
 (async function boot() {
   backgroundFx();

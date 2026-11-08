@@ -281,7 +281,7 @@ export default {
       const uuid = u ? u.uuid : norm(body.uuid);
       if (!UUID_RE.test(uuid)) return json({ error: 'bad uuid' }, 400);
       const data = {
-        wings: clean(body.wings), halo: clean(body.halo), cape: clean(body.cape), pet: clean(body.pet),
+        wings: clean(body.wings), halo: clean(body.halo), cape: clean(body.cape),
         emote: clean(body.emote), emoteAt: Number(body.emoteAt) || 0, flag: body.flag === 'none' ? 'none' : (() => { const c = String((req.cf && req.cf.country) || '').toUpperCase(); return /^[A-Z]{2}$/.test(c) && c !== 'XX' && c !== 'T1' ? c : 'none'; })(),
       };
       const now = Date.now();

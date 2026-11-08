@@ -40,7 +40,7 @@ public class WardrobeScreen extends Screen {
 		}
 	}
 
-	private static final String[] COSMETIC_SUBS = {"All", "Capes", "Wings", "Halos", "Pets"};
+	private static final String[] COSMETIC_SUBS = {"All", "Capes", "Wings", "Halos"};
 	private static final String[] EMOTE_SUBS = {"All", "Dances", "With music", "Basic", "Expressive", "Idle"};
 	private static final String[] SORTS = {"Featured", "Price", "Owned first", "Name"};
 	private static final Set<String> DANCES = Set.of("FLOSS", "TPOSE", "SIT");
@@ -175,7 +175,7 @@ public class WardrobeScreen extends Screen {
 
 	private static String equippedKey(String type) {
 		SurgeConfig c = SurgeConfig.get();
-		return switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; case "pet" -> c.pet; case "idle" -> c.idle; default -> c.cape; };
+		return switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; case "idle" -> c.idle; default -> c.cape; };
 	}
 
 	private static void setEquipped(String type, String key) {
@@ -183,16 +183,10 @@ public class WardrobeScreen extends Screen {
 		switch (type) {
 			case "wings" -> c.wings = key;
 			case "halo" -> c.halo = key;
-			case "pet" -> c.pet = key;
 			case "idle" -> c.idle = key;
 			default -> c.cape = key;
 		}
 		SurgeConfig.save();
-	}
-
-	private static String petName() {
-		String n = SurgeConfig.get().petName;
-		return n == null || n.isBlank() ? net.minecraft.client.Minecraft.getInstance().getUser().getName() : n;
 	}
 
 	private static String typeOf(Shop.Item item) {
@@ -282,7 +276,6 @@ public class WardrobeScreen extends Screen {
 				if (cosmeticSub.equals("Capes") && !t.equals("cape")) continue;
 				if (cosmeticSub.equals("Wings") && !t.equals("wings")) continue;
 				if (cosmeticSub.equals("Halos") && !t.equals("halo")) continue;
-				if (cosmeticSub.equals("Pets") && !t.equals("pet")) continue;
 				if (Locks.locked(i) && !Wallet.get().owns(i.id()) && !i.id().equals("cape:beta")) continue;
 			}
 			out.add(i);
@@ -314,15 +307,14 @@ public class WardrobeScreen extends Screen {
 			return new CapturedLook(null, null, null, e, t, true);
 		}
 		String t = typeOf(item);
-		String pet = t.equals("pet") ? (item.key().equals("plush") ? "plush:" + petName() : item.key()) : null;
-		return new CapturedLook(t.equals("cape") ? item.key() : null, t.equals("wings") ? item.key() : null, t.equals("halo") ? item.key() : null, null, 0f, false, pet);
+		return new CapturedLook(t.equals("cape") ? item.key() : null, t.equals("wings") ? item.key() : null, t.equals("halo") ? item.key() : null, null, 0f, false);
 	}
 
 	private void drawFocused(GuiGraphics g, Shop.Item item, int i, int x1, int y1, int x2, int y2) {
 		int h = y2 - y1;
 		String t = item.category().equals("emote") ? "emote" : typeOf(item);
-		float zoom = switch (t) { case "halo" -> 0.95f; case "pet" -> 0.85f; case "wings", "cape" -> 0.62f; default -> 0.36f; };
-		float drop = switch (t) { case "halo" -> 1.05f; case "pet" -> 0.8f; case "wings" -> 0.55f; case "cape" -> 0.45f; default -> 0f; };
+		float zoom = switch (t) { case "halo" -> 0.95f; case "wings", "cape" -> 0.62f; default -> 0.36f; };
+		float drop = switch (t) { case "halo" -> 1.05f; case "wings" -> 0.55f; case "cape" -> 0.45f; default -> 0f; };
 		int size = Math.round(h * zoom);
 		int shift = Math.round(size * drop);
 		g.enableScissor(x1, y1, x2, y2);
@@ -332,7 +324,7 @@ public class WardrobeScreen extends Screen {
 
 	private static float cardTurn(Shop.Item item) {
 		if (item.category().equals("emote")) return 18f;
-		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 0f; case "halo" -> 20f; case "pet" -> 35f; default -> 0f; };
+		return switch (typeOf(item)) { case "cape" -> 200f; case "wings" -> 0f; case "halo" -> 20f; default -> 0f; };
 	}
 
 	private void openMenu(int x, int y, List<String> labels, List<Runnable> actions) {
@@ -366,7 +358,6 @@ public class WardrobeScreen extends Screen {
 			l.add(eq ? "Take off" : "Equip"); a.add(() -> setEquipped(typeOf(item), eq ? "none" : item.key()));
 			if (item.id().equals("cape:beta")) { l.add("Customize"); a.add(() -> minecraft.setScreen(new BetaCapeScreen(this))); }
 			if (item.id().equals("cape:custom")) { l.add("Pick color"); a.add(() -> minecraft.setScreen(new BetaCapeScreen(this, false))); }
-			if (item.id().equals("pet:plush")) { l.add("Change whose skin"); a.add(() -> minecraft.setScreen(new PlushNameScreen(this))); }
 		}
 		if (l.isEmpty()) { l.add(item.id().equals("cape:beta") ? "Only for beta testers" : "Not available"); a.add(() -> { }); }
 		openMenu(x, y, l, a);
@@ -518,7 +509,6 @@ public class WardrobeScreen extends Screen {
 			boolean eq = item.key().equals(SurgeConfig.get().idle);
 			return new Primary(eq ? "Stop using" : "Use", true, () -> { setEquipped("idle", eq ? "none" : item.key()); if (!eq) toast("Stand still for 2 seconds to see it", Ui.ACCENT_2); });
 		}
-		if (item.id().equals("pet:plush") && !item.key().equals(equippedKey("pet"))) return new Primary("Equip", true, () -> { setEquipped("pet", "plush"); minecraft.setScreen(new PlushNameScreen(this)); });
 		if (item.category().equals("emote")) {
 			Emotes.Emote e = Emotes.Emote.byName(item.key());
 			if (section == Section.EMOTES) return new Primary(selectedEmote == e ? "Pick a slot" : "Add to wheel", true, () -> { selectedEmote = selectedEmote == e ? null : e; if (selectedEmote != null) toast("Click a slot on the wheel", Ui.ACCENT_2); });
@@ -544,7 +534,7 @@ public class WardrobeScreen extends Screen {
 			return e != null && e.music != null ? "Dance with music" : "Emote";
 		}
 		if (item.id().startsWith("idle:")) return "Idle animation";
-		return switch (typeOf(item)) { case "wings" -> "Wings"; case "halo" -> "Halo"; case "pet" -> "Shoulder pet"; default -> "Cape"; };
+		return switch (typeOf(item)) { case "wings" -> "Wings"; case "halo" -> "Halo"; default -> "Cape"; };
 	}
 
 	private boolean bigButton(GuiGraphics g, int mx, int my, int x, int y, int w, int h, String label, boolean primary, boolean enabled, boolean coin) {

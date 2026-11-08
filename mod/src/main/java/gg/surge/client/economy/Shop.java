@@ -29,9 +29,7 @@ public final class Shop {
 			{"cape:galaxy", "Galaxy Cape", "1100"},
 			{"cape:custom", "Color Cape", "300"},
 			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
-			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"},
-			{"pet:plush", "Skin Plush", "1500"}, {"pet:bee", "Bee Buddy", "900"}, {"pet:warden", "Tiny Warden", "1600"},
-			{"pet:allay", "Allay Friend", "1100"}, {"pet:axolotl", "Axolotl", "1000"}, {"pet:fox", "Sleepy Fox", "1000"}, {"pet:frog", "Frog", "800"}};
+			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));
 
 		String[][] emotes = {

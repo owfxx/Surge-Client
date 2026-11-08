@@ -61,8 +61,6 @@ public class SurgeConfig {
 	public String halo = "none";
 	public String wings = "none";
 	public String cape = "none";
-	public String pet = "none";
-	public String petName = "";
 	public String idle = "none";
 
 	public static class Outfit {

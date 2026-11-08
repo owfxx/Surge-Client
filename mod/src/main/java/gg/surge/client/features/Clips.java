@@ -1,10 +1,8 @@
 package gg.surge.client.features;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import gg.surge.client.mods.Mods;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -36,6 +34,7 @@ public final class Clips {
 	private static final ExecutorService WORKER = Executors.newFixedThreadPool(THREADS, r -> { Thread t = new Thread(r, "Surge Clips"); t.setDaemon(true); t.setPriority(Thread.MIN_PRIORITY + 1); return t; });
 	private static final AtomicInteger PENDING = new AtomicInteger();
 	private static long lastGrab;
+	private static com.mojang.blaze3d.pipeline.RenderTarget small;
 	private static boolean saving;
 
 	private Clips() {}
@@ -48,6 +47,21 @@ public final class Clips {
 		return switch (Mods.CLIP_RES.get()) { case "480p" -> 480; case "1080p" -> 1080; case "Full" -> 100_000; default -> 720; };
 	}
 
+	private static final int SLOTS = 3;
+	private static final com.mojang.blaze3d.buffers.GpuBuffer[] GPU = new com.mojang.blaze3d.buffers.GpuBuffer[SLOTS];
+	private static final boolean[] BUSY = new boolean[SLOTS];
+	private static final java.util.concurrent.ConcurrentLinkedQueue<java.nio.ByteBuffer> SPARE = new java.util.concurrent.ConcurrentLinkedQueue<>();
+	private static long gpuSize;
+
+	private static java.nio.ByteBuffer spare(int bytes) {
+		java.nio.ByteBuffer b;
+		while ((b = SPARE.poll()) != null) {
+			if (b.capacity() >= bytes) return b;
+			org.lwjgl.system.MemoryUtil.memFree(b);
+		}
+		return org.lwjgl.system.MemoryUtil.memAlloc(bytes);
+	}
+
 	public static void frame(Minecraft mc) {
 		if (!Mods.CLIPS.enabled() || mc.level == null) {
 			if (!FRAMES.isEmpty() && !saving) synchronized (FRAMES) { FRAMES.clear(); }
@@ -56,40 +70,76 @@ public final class Clips {
 		long now = System.nanoTime();
 		long gap = 1_000_000_000L / fps();
 		if (now - lastGrab < gap || PENDING.get() > THREADS * 2 + 1) return;
-		lastGrab = now - Math.min(gap, Math.max(0, now - lastGrab - gap));
-		long at = System.currentTimeMillis();
-		PENDING.incrementAndGet();
+		if (mc.isPaused() || (Mods.CLIP_SMART.on() && mc.getFps() < 30 && fps() > 20)) return;
 		try {
-			Screenshot.takeScreenshot(mc.getMainRenderTarget(), img -> {
+			com.mojang.blaze3d.textures.GpuTexture tex = mc.getMainRenderTarget().getColorTexture();
+			if (tex == null) return;
+			int w = tex.getWidth(0), h = tex.getHeight(0), px = tex.getFormat().pixelSize();
+			long size = (long) w * h * px;
+			if (size != gpuSize) {
+				for (int i = 0; i < SLOTS; i++) {
+					if (BUSY[i]) return;
+					if (GPU[i] != null) GPU[i].close();
+					GPU[i] = null;
+				}
+				gpuSize = size;
+			}
+			int slot = -1;
+			for (int i = 0; i < SLOTS; i++) if (!BUSY[i]) { slot = i; break; }
+			if (slot < 0) return;
+			var device = com.mojang.blaze3d.systems.RenderSystem.getDevice();
+			if (GPU[slot] == null) GPU[slot] = device.createBuffer(() -> "surge clip", com.mojang.blaze3d.buffers.GpuBuffer.USAGE_MAP_READ | com.mojang.blaze3d.buffers.GpuBuffer.USAGE_COPY_DST, size);
+			lastGrab = now - Math.min(gap, Math.max(0, now - lastGrab - gap));
+			long at = System.currentTimeMillis();
+			int s = slot;
+			com.mojang.blaze3d.buffers.GpuBuffer buf = GPU[s];
+			BUSY[s] = true;
+			PENDING.incrementAndGet();
+			var enc = device.createCommandEncoder();
+			enc.copyTextureToBuffer(tex, buf, 0L, () -> {
+				java.nio.ByteBuffer copy = null;
+				try (com.mojang.blaze3d.buffers.GpuBuffer.MappedView view = enc.mapBuffer(buf, true, false)) {
+					java.nio.ByteBuffer src = view.data();
+					copy = spare((int) size);
+					org.lwjgl.system.MemoryUtil.memCopy(org.lwjgl.system.MemoryUtil.memAddress(src), org.lwjgl.system.MemoryUtil.memAddress(copy), size);
+				} catch (Throwable t) {
+					fail("read", t);
+				} finally {
+					BUSY[s] = false;
+				}
+				if (copy == null) { PENDING.decrementAndGet(); return; }
+				java.nio.ByteBuffer data = copy;
 				try {
 					WORKER.execute(() -> {
-						try { encode(img, at); } finally { img.close(); PENDING.decrementAndGet(); }
+						try { encode(data, w, h, px, at); } finally { SPARE.offer(data); PENDING.decrementAndGet(); }
 					});
 				} catch (Throwable t) {
-					img.close();
+					SPARE.offer(data);
 					PENDING.decrementAndGet();
 				}
-			});
+			}, 0);
 		} catch (Throwable t) {
-			PENDING.decrementAndGet();
 			fail("grab", t);
 		}
 	}
 
-	private static void encode(NativeImage img, long at) {
+	private static void encode(java.nio.ByteBuffer raw, int sw, int sh, int px, long at) {
 		try {
-			int sw = img.getWidth(), sh = img.getHeight();
+			java.nio.ByteBuffer src = raw.duplicate().order(java.nio.ByteOrder.nativeOrder());
 			float k = Math.min(1f, targetHeight() / (float) sh);
 			int w = Math.max(2, Math.round(sw * k)) & ~1, h = Math.max(2, Math.round(sh * k)) & ~1;
-			int[] src = img.getPixels();
 			BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 			int[] dst = ((java.awt.image.DataBufferInt) bi.getRaster().getDataBuffer()).getData();
 			for (int y = 0; y < h; y++) {
-				int sy = Math.min(sh - 1, (int) (y / k)) * sw;
+				int sy = sh - 1 - Math.min(sh - 1, (int) (y / k));
+				int row = sy * sw;
 				int dy = y * w;
-				for (int x = 0; x < w; x++) dst[dy + x] = src[sy + Math.min(sw - 1, (int) (x / k))] & 0xFFFFFF;
+				for (int x = 0; x < w; x++) {
+					int v = src.getInt((row + Math.min(sw - 1, (int) (x / k))) * px);
+					dst[dy + x] = ((v & 0xFF) << 16) | (v & 0xFF00) | ((v >> 16) & 0xFF);
+				}
 			}
-			ByteArrayOutputStream out = new ByteArrayOutputStream(48_000);
+			ByteArrayOutputStream out = new ByteArrayOutputStream(64_000);
 			ImageWriter wr = ImageIO.getImageWritersByFormatName("jpeg").next();
 			ImageWriteParam p = wr.getDefaultWriteParam();
 			p.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
