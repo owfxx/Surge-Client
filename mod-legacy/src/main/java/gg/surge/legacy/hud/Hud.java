@@ -148,6 +148,7 @@ public final class Hud {
 	public static void render(MinecraftClient mc, int gw, int gh) {
 		if (mc.options.hudHidden || mc.options.debugEnabled) return;
 		if (mc.currentScreen instanceof gg.surge.legacy.gui.HudEditorScreen) return;
+		if (mc.currentScreen instanceof gg.surge.legacy.gui.MenuScreen && gg.surge.legacy.gui.Theme.glass()) return;
 		for (HudMod m : ALL) {
 			if (!m.enabled()) continue;
 			try { m.draw(gw, gh); } catch (Throwable ignored) { }

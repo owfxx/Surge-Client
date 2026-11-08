@@ -1,3 +1,13 @@
+## 1.8.7
+- Surge now supports Minecraft 1.8.9: make a 1.8.9 modpack in the launcher to get the Surge menu, HUD mods, PvP mods, performance features and your capes, wings and halos
+- 1.8.9 mods include Toggle Sprint, Zoom, Freelook, Keystrokes, CPS, Armor Status, Potion Effects, Reach Display, Combo Counter, Block Outline, Particles, Time Changer, Clear Weather, Scoreboard, Nick Hider, Auto GG and Chat Timestamps
+- 1.8.9 performance: hidden mob and chest culling, entity distance, background FPS, fast item stacks and a particle limit
+- More Culling and ScalableLux are back in the performance mods
+- VSync is now off and FPS is unlimited by default
+- Coordinates can now show your biome with a color for each biome, your chunk, your Nether or Overworld position, different direction styles, colored labels, and can hide Y
+- The Biome mod can color the biome name
+- The mod menu is now a centered window instead of covering your whole screen
+
 ## 1.8.6
 - Hidden Mob Culling now also skips chests, signs and other block entities behind walls, and checks are faster and more accurate
 - Surge's built in performance features now replace the extra performance mods added in 1.8.4, which are removed from your instances automatically
