@@ -180,6 +180,8 @@ public final class Ui {
 	public static final Identifier IC_SETTINGS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_settings_32.png");
 	public static final Identifier IC_WARDROBE = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_wardrobe_32.png");
 	public static final Identifier IC_MODS = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_mods_32.png");
+	public static final Identifier IC_DISCORD = Identifier.fromNamespaceAndPath("surge", "textures/gui/icon_discord_32.png");
+	public static final String DISCORD = "https://discord.gg/7wGxqGN86R";
 
 	public static void iconTex(GuiGraphics g, Identifier tex, int x, int y, int size, float alpha) {
 		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 32, 32, 32, 32, Colors.alpha(0xFFFFFFFF, alpha));

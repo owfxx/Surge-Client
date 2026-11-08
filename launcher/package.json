@@ -1,14 +1,14 @@
 {
   "name": "surge-client",
   "productName": "Surge Client",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "Surge Client - optimized Minecraft launcher",
   "main": "src/main.js",
   "author": "owfx",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win nsis portable",
+    "dist": "electron-builder --win nsis-web portable",
     "dist:dir": "electron-builder --win dir"
   },
   "dependencies": {
@@ -46,22 +46,30 @@
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        "nsis",
+        "nsis-web",
         "portable"
       ],
       "signAndEditExecutable": false
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
       "shortcutName": "Surge Client",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "artifactName": "Surge-Client-Setup-${version}.${ext}"
+      "uninstallDisplayName": "Surge Client",
+      "deleteAppDataOnUninstall": false
     },
     "portable": {
       "artifactName": "Surge-Client-${version}-Standalone.${ext}"
     },
-    "afterPack": "build/afterPack.js"
+    "afterPack": "build/afterPack.js",
+    "nsisWeb": {
+      "appPackageUrl": "https://surge-client.remvuxd.workers.dev/download/package",
+      "artifactName": "Surge-Client-Setup-${version}.${ext}"
+    }
   }
 }

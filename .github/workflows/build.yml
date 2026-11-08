@@ -101,7 +101,7 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
           for i in 1 2 3; do npm ci && break; sleep 15; done
-          for i in 1 2 3 4; do npx electron-builder --win portable --x64 --publish never && exit 0; echo "retry $i"; sleep 20; done
+          for i in 1 2 3 4; do npx electron-builder --win nsis-web portable --x64 --publish never && exit 0; echo "retry $i"; sleep 20; done
           exit 1
 
       - name: Collect files
@@ -109,6 +109,8 @@ jobs:
         run: |
           mkdir -p out
           cp launcher/dist/*-Standalone.exe out/
+          find launcher/dist -maxdepth 3 \( -name 'Surge-Client-Setup-*.exe' -o -name '*.nsis.7z' \) -exec cp {} out/ \;
+          cp out/Surge-Client-Setup-*.exe out/Surge-Client-Setup.exe
           for f in mod/build/libs/surge-client-*.jar; do
             case "$f" in *-sources.jar) continue;; esac
             cp "$f" "out/$(basename "$f" | sed 's/+/-/')"

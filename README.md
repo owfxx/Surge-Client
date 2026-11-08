@@ -6,10 +6,12 @@ A Minecraft launcher and client for **Minecraft 1.21.11** (Fabric), made to be f
 
 ## Download
 
-Get **Surge-Client-…-Standalone.exe** from the [latest release](../../releases/latest) and run it. No installation needed.
+Get **Surge-Client-Setup.exe** from the [latest release](../../releases/latest) and run it. It is a small installer that downloads the launcher and opens it.
 The launcher and the in-game mod keep themselves up to date.
 
 Requires Windows 10 or 11 and a Minecraft Java Edition account.
+
+Questions, ideas or bugs: [join the Discord](https://discord.gg/7wGxqGN86R).
 
 ## What's inside
 

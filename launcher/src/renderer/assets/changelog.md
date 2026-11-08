@@ -1,3 +1,8 @@
+## 1.6.4
+- Surge Client now comes as a small installer that is easy to download and share
+- Installed launchers update themselves in the background
+- Join our Discord from the launcher, the title screen and the website
+
 ## 1.6.3
 - Rune Cape now uses the real enchanting table glyphs, in white, and they shift and glow
 - New GUI Scales mod: give your hotbar, chat, tab list, titles, scoreboard and inventories their own size

@@ -107,13 +107,16 @@ async function updateMod(mcVersion, haveVersion, onProgress = () => {}) {
   return path.join(dir, best.name);
 }
 
+const portable = () => !!process.env.PORTABLE_EXECUTABLE_FILE;
+
 async function checkLauncher(currentVersion) {
   const list = await releases();
+  const want = portable() ? /^Surge-Client-([\d.]+)-Standalone\.exe$/ : /^Surge-Client-Setup-([\d.]+)\.exe$/;
   for (const rel of list) {
     if (rel.draft) continue;
-    const a = (rel.assets || []).find(x => /^Surge-Client-[\d.]+-Standalone\.exe$/.test(x.name));
+    const a = (rel.assets || []).find(x => want.test(x.name));
     if (!a) continue;
-    const v = a.name.match(/Surge-Client-([\d.]+)-Standalone/)[1];
+    const v = a.name.match(want)[1];
     if (newer(v, currentVersion)) return { version: v, url: a.browser_download_url, notes: rel.body || '' };
     return null;
   }
@@ -125,10 +128,15 @@ async function applyLauncher(url, onProgress = () => {}) {
   const res = await fetch(url, { headers: { 'User-Agent': UA } });
   if (!res.ok) throw new Error(`Download failed (${res.status})`);
   const buf = Buffer.from(await res.arrayBuffer());
-  const target = process.env.PORTABLE_EXECUTABLE_FILE;
   const tmp = path.join(os.tmpdir(), `surge-update-${Date.now()}.exe`);
   fs.writeFileSync(tmp, buf);
-  if (!target || process.platform !== 'win32') return { file: tmp, restart: false };
+  if (process.platform !== 'win32') return { file: tmp, restart: false };
+  if (!portable()) {
+    onProgress({ stage: 'Installing update…' });
+    spawn(tmp, ['/S', '--updated', '--force-run'], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+    return { file: tmp, restart: true };
+  }
+  const target = process.env.PORTABLE_EXECUTABLE_FILE;
   const script = path.join(os.tmpdir(), `surge-update-${Date.now()}.cmd`);
   fs.writeFileSync(script, [
     '@echo off',

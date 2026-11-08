@@ -181,6 +181,8 @@ public class SurgeTitleScreen extends Screen {
 		x -= 30;
 		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IC_SOCIAL, MenuOverlay.socialLabel(), true, kc) && click) action = () -> minecraft.setScreen(gg.surge.client.net.Social.screen(this));
 		MenuOverlay.unreadBadge(g, minecraft, x, ty, 24);
+		x -= 30;
+		if (Ui.tile(g, font, mx, my, x, ty, 24, Ui.IC_DISCORD, "Join our Discord", true, kc) && click) action = () -> net.minecraft.util.Util.getPlatform().openUri(Ui.DISCORD);
 
 		String name = minecraft.getUser().getName();
 		g.drawString(font, name, 10, ty + 3, Colors.alpha(0xFFFFFFFF, kc), true);

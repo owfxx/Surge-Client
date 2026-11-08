@@ -68,11 +68,21 @@ async function latest(env) {
   const r = await fetch(`https://api.github.com/repos/${REPO(env)}/releases/latest`, { headers: { 'User-Agent': 'surge-client-site', Accept: 'application/vnd.github+json' } });
   if (!r.ok) return latestCache;
   const rel = await r.json();
-  const exe = (rel.assets || []).find(a => /Standalone\.exe$/.test(a.name));
+  const assets = rel.assets || [];
+  const setup = assets.find(a => a.name === 'Surge-Client-Setup.exe') || assets.find(a => /^Surge-Client-Setup-[\d.]+\.exe$/.test(a.name));
+  const exe = setup || assets.find(a => /Standalone\.exe$/.test(a.name));
   if (!exe) return latestCache;
-  const jar = (rel.assets || []).find(a => /^surge-client-.+\.jar$/.test(a.name));
-  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url, jar: jar ? { name: jar.name, url: jar.browser_download_url } : null };
+  const jar = assets.find(a => /^surge-client-.+\.jar$/.test(a.name));
+  const pkg = assets.find(a => /\.nsis\.7z$/.test(a.name));
+  latestCache = { at: Date.now(), version: String(rel.tag_name || '').replace(/^v/, ''), size: exe.size, url: exe.browser_download_url, setup: !!setup, pkg: pkg ? pkg.browser_download_url : null, jar: jar ? { name: jar.name, url: jar.browser_download_url } : null };
   return latestCache;
+}
+
+async function packageFile(env) {
+  latestCache = null;
+  const l = await latest(env).catch(() => null);
+  if (!l || !l.pkg) return new Response('Download is not available right now. Try again in a minute.', { status: 502 });
+  return Response.redirect(l.pkg, 302);
 }
 
 async function download(env, mod) {
@@ -80,7 +90,7 @@ async function download(env, mod) {
   const base = `https://github.com/${REPO(env)}/releases/latest/download/`;
   const src = mod
     ? (l && l.jar ? l.jar : { url: base + 'Surge-Client-Mod.jar', name: 'surge-client-mc1.21.11.jar' })
-    : { url: l ? l.url : base + 'Surge-Client.exe', name: 'Surge Client.exe' };
+    : { url: l ? l.url : base + 'Surge-Client-Setup.exe', name: l && !l.setup ? 'Surge Client.exe' : 'Surge Client Setup.exe' };
   const r = await fetch(src.url, { redirect: 'follow', headers: { 'User-Agent': 'surge-client-site' } });
   if (!r.ok) return new Response('Download is not available right now. Try again in a minute.', { status: 502 });
   const h = new Headers({ 'content-type': mod ? 'application/java-archive' : 'application/octet-stream', 'content-disposition': `attachment; filename="${src.name}"`, 'cache-control': 'no-store' });
@@ -89,10 +99,12 @@ async function download(env, mod) {
   return new Response(r.body, { headers: h });
 }
 
+const DISCORD = 'https://discord.gg/7wGxqGN86R';
+
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 
 function page(l) {
-  const ver = l ? `Version ${l.version} · ${Math.round(l.size / 1048576)} MB` : 'Windows 10 and 11';
+  const ver = l ? `Version ${l.version} for Windows 10 and 11` : 'For Windows 10 and 11';
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Surge Client</title><meta name="description" content="A fast Minecraft launcher and client for 1.21.11.">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(MARK.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">
@@ -117,6 +129,8 @@ h1{font:700 clamp(44px,8vw,84px)/1 "Pixelify Sans",sans-serif;margin:18px 0 10px
 .f{background:#ffffff0d;border:2px solid #ffffff14;padding:18px 18px 16px}
 .f h3{font:700 19px "Pixelify Sans",sans-serif;margin:0 0 6px;color:#fff}.f p{margin:0;color:var(--muted);font-size:14.5px}
 .steps{margin:64px auto 0;max-width:620px;text-align:left;color:var(--muted)}.steps h2{font:700 24px "Pixelify Sans",sans-serif;color:#fff;margin:0 0 10px;text-align:center}
+.dc{display:inline-block;margin-top:16px;color:#fff;font:700 16px "Pixelify Sans",sans-serif;text-decoration:none;border:2px solid #ffffff33;padding:8px 18px;background:#5865f233}.dc:hover{background:#5865f266}.dc:focus-visible{outline:3px solid var(--lilac);outline-offset:4px}
+.steps a,footer a{color:#fff;text-underline-offset:3px}
 .steps ol{margin:0;padding-left:22px}.steps li{margin:6px 0}.steps b{color:#fff}
 footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
 @media (prefers-reduced-motion:reduce){.mark{animation:none}.dl{transition:none}}
@@ -126,7 +140,8 @@ footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
 <h1>Surge Client</h1>
 <p class="lead">A fast Minecraft launcher and client for 1.21.11. Mods, friends and cosmetics, ready the moment you press Play.</p>
 <a class="dl" href="/download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v13m-6-6 6 6 6-6M4 21h16"/></svg>Download for Windows</a>
-<div class="meta">${ver} · No install needed</div>
+<div class="meta">${ver}. The installer is small and easy to share.</div>
+<a class="dc" href="${DISCORD}" rel="noopener">Join our Discord</a>
 <p class="alt">Using your own launcher? <a href="/download/mod">Get the mod on its own</a> for Fabric 1.21.11. It needs <a href="https://modrinth.com/mod/fabric-api" rel="noopener">Fabric API</a> and updates itself.</p>
 <section class="grid">
 <div class="f"><h3>40+ mods</h3><p>Keystrokes, armor, CPS, zoom, waypoints, motion blur and more, each with its own settings.</p></div>
@@ -137,12 +152,13 @@ footer{color:#8a8a93;font-size:13px;text-align:center;padding:40px 20px}
 <div class="f"><h3>Always up to date</h3><p>The launcher and the mod update themselves. Nothing to download twice.</p></div>
 </section>
 <section class="steps"><h2>Getting started</h2><ol>
-<li>Press <b>Download for Windows</b> and open <b>Surge Client.exe</b>. If Windows warns you, choose <b>More info</b>, then <b>Run anyway</b>.</li>
+<li>Press <b>Download for Windows</b> and open <b>Surge Client Setup.exe</b>. If Windows warns you, choose <b>More info</b>, then <b>Run anyway</b>. It installs in a few seconds and opens the launcher.</li>
 <li>Sign in with your Microsoft account.</li>
 <li>Press <b>Play</b>. In game, <b>Right Shift</b> opens the mods and <b>B</b> opens emotes.</li>
+<li>Questions or ideas? Come say hi on <a href="${DISCORD}" rel="noopener">our Discord</a>.</li>
 </ol></section>
 </main>
-<footer>Surge Client by owfx · Not affiliated with Mojang or Microsoft</footer>
+<footer>Surge Client by owfx · <a href="${DISCORD}" rel="noopener">Discord</a> · Not affiliated with Mojang or Microsoft</footer>
 </body></html>`;
 }
 
@@ -204,6 +220,8 @@ export default {
     }
     if (req.method === 'GET' && p === '/download') return download(env, false);
     if (req.method === 'GET' && p === '/download/mod') return download(env, true);
+    if (req.method === 'GET' && p === '/download/package') return packageFile(env);
+    if (req.method === 'GET' && p === '/discord') return Response.redirect(DISCORD, 302);
     if (req.method === 'GET' && (p === '/admin' || p === '/admin/')) {
       return new Response(ADMIN_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' } });
     }

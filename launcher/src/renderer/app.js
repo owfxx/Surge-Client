@@ -186,14 +186,16 @@ async function refreshAccounts() {
 const activeAccount = () => state.accounts.accounts.find(a => a.uuid === state.accounts.active);
 const modCount = p => (p?.content || []).filter(c => c.type === 'mod').length;
 
-document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+document.querySelectorAll('.nav[data-view]').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+const DISCORD = 'https://discord.gg/7wGxqGN86R';
+$('#discordBtn').onclick = () => S.open(DISCORD);
 document.querySelectorAll('[data-win]').forEach(b => b.addEventListener('click', () => S.win[b.dataset.win]()));
 $('#accountBtn').addEventListener('click', openAccounts);
 
 function go(v, opts = {}) {
   state.view = v;
   if (v === 'packs' && !opts.keepDetail) state.detail = null;
-  document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.querySelectorAll('.nav[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   render();
   if (v === 'browse' && !state.browse.results) runSearch();
 }
@@ -1198,6 +1200,7 @@ function renderSettings() {
         ${row('Hide launcher while playing', `<button class="toggle ${c.closeOnLaunch ? 'on' : ''}" id="sHide" aria-label="Hide launcher while playing"></button>`)}
         ${row('Click sounds', `<button class="toggle ${c.uiSounds !== false ? 'on' : ''}" id="sSound" aria-label="Click sounds"></button>`)}
         ${row('Game folder', `<button class="btn sm" id="sData">Open folder</button>`)}
+        ${row('Help and news', `<button class="btn sm" id="sDiscord">Join our Discord</button>`)}
       </div></section>
     </div></div>`;
   const save = async patch => { state.cfg = { ...state.cfg, ...(await safe(() => S.config.set(patch))) }; };
@@ -1212,6 +1215,7 @@ function renderSettings() {
   $('#sHide').onclick = async () => { await save({ closeOnLaunch: !state.cfg.closeOnLaunch }); renderSettings(); };
   $('#sSound').onclick = async () => { await save({ uiSounds: state.cfg.uiSounds === false }); renderSettings(); };
   $('#sData').onclick = () => S.config.openDataDir();
+  $('#sDiscord').onclick = () => S.open(DISCORD);
 }
 
 window.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.code === 'F4') { e.preventDefault(); openAdmin(); } });
