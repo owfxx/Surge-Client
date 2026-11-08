@@ -129,7 +129,9 @@ public class GiftScreen extends Screen {
 					look = new CapturedLook(sub.equals("cape") ? it.key() : null, sub.equals("wings") ? it.key() : null, sub.equals("halo") ? it.key() : null, null, 0f, false);
 				}
 				float turn = it.sub().equals("cape") ? 180f + (float) Math.sin(System.currentTimeMillis() / 900.0) * 25f : (System.currentTimeMillis() / 30f) % 360f;
-				Preview.drawCard(g, x + 2, y + 2, x + card - 2, y + ch - 13, it.sub().equals("halo") ? 28 : 18, turn, look);
+				int size = Math.max(20, (ch - 16) * 4 / 10);
+				if (it.sub().equals("halo")) size = size * 3 / 2;
+				Preview.drawCard(g, x + 2, y + 2, x + card - 2, y + ch - 13, size, turn, look);
 				g.drawCenteredString(font, Ui.fit(font, it.name(), card - 6), x + card / 2, y + ch - 11, Ui.TEXT);
 			}
 		}

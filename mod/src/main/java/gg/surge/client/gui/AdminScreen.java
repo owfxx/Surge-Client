@@ -28,7 +28,7 @@ public class AdminScreen extends Screen {
 	private static final String[][] GROUPS = {{"all", "Everything"}, {"cosmetic", "All cosmetics"}, {"emote", "All emotes"},
 		{"sub:wings", "All wings"}, {"sub:halo", "All halos"}, {"sub:cape", "All capes"}};
 
-	private enum Tab { CODES("Codes"), GIFTS("Gifts"), SALES("Sales"), PRICES("Prices"), PLAYERS("Icons & capes"), LOCKS("Locks"), SERVERS("Servers");
+	private enum Tab { CODES("Codes"), GIFTS("Gifts"), SALES("Sales"), PRICES("Prices"), PLAYERS("Icons"), LOCKS("Locks"), SERVERS("Servers");
 		final String label;
 		Tab(String l) { label = l; }
 	}
@@ -198,9 +198,9 @@ public class AdminScreen extends Screen {
 			} else {
 				String sub = it.sub();
 				look = new CapturedLook(sub.equals("cape") ? it.key() : null, sub.equals("wings") ? it.key() : null, sub.equals("halo") ? it.key() : null, null, 0f, false);
-				if (sub.equals("cape")) turn = 200f;
+				if (sub.equals("cape") || sub.equals("wings")) turn = 200f;
 			}
-			Preview.drawCard(g, cx + 2, cy + 2, cx + cw - 2, cy + chh - 12, it.sub().equals("halo") ? 30 : 17, turn, look);
+			Preview.drawCard(g, cx + 2, cy + 2, cx + cw - 2, cy + chh - 12, it.sub().equals("halo") ? 22 : 17, turn, look);
 			if (dim.test(it)) {
 				g.fill(cx + 2, cy + 2, cx + cw - 2, cy + chh - 2, 0x90200000);
 				Ui.icon(g, new String[]{"..XXX...", ".X...X..", ".X...X..", "XXXXXXX.", "XXX.XXX.", "XXX.XXX.", "XXXXXXX.", "........"}, cx + cw - 12, cy + 4, 1, 0xFFFF6B6B);
@@ -240,7 +240,7 @@ public class AdminScreen extends Screen {
 			field(g, password, cx - 90, y + 30, 180, mx, my, delta);
 			if (Ui.pill(g, font, mx, my, cx - 45, y + 54, 90, 18, loading ? "Signing in…" : "Sign in", false) && click && !loading) action = this::signIn;
 		} else {
-			int tx = px + 60;
+			int tx = px + 34 + font.width(Component.literal("Admin").withStyle(ChatFormatting.BOLD)) + 8;
 			for (Tab t : Tab.values()) {
 				int tw = font.width(t.label) + 10;
 				if (Ui.pill(g, font, mx, my, tx, py + 7, tw, 16, t.label, tab == t) && click) { Tab nt = t; action = () -> { tab = nt; gridScroll = listScroll = 0; }; }

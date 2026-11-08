@@ -294,25 +294,30 @@ public class ServerTabsScreen extends Screen {
 			} else {
 				net.minecraft.resources.Identifier ic = d == null ? null : icon(r.ip(), d);
 				if (ic != null) g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, ic, x, y, 0f, 0f, 32, 32, 32, 32);
-				else g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace("icon/unknown_server"), x, y, 32, 32);
+				else g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace("textures/misc/unknown_server.png"), x, y, 0f, 0f, 32, 32, 32, 32);
 			}
 			if (r.ip() != null && Ui.hover(mx, my, x, y, 32, 32) && my >= top && my < bottom) {
 				g.fill(x, y, x + 32, y + 32, 0xA0909090);
 				g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace("server_list/join_highlighted"), x, y, 32, 32);
 			}
 			int tx = x + 35;
-			g.drawString(font, r.title(), tx, y + 1, 0xFFFFFFFF, false);
-			if (!r.tag().isEmpty()) g.drawString(font, r.tag(), tx + font.width(r.title()) + 6, y + 1, 0xFF8A8A8A, false);
 			int right = x + w;
+			int countW = 0;
 			if (d != null) {
 				int b = bars(d);
 				String sprite = d.state() == ServerData.State.PINGING || d.state() == ServerData.State.INITIAL ? "server_list/pinging_" + (1 + (int) (System.currentTimeMillis() / 100L % 5)) : b == 0 ? "server_list/unreachable" : "server_list/ping_" + b;
 				g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace(sprite), right - 15, y, 10, 8);
-				if (d.status != null && b > 0) {
-					int sw = font.width(d.status);
-					g.drawString(font, d.status, right - 17 - sw, y + 1, 0xFF808080, false);
+				if (d.players != null && b > 0) {
+					String count = d.players.online() + "/" + d.players.max();
+					countW = font.width(count) + 4;
+					g.drawString(font, count, right - 17 - font.width(count), y + 1, 0xFF808080, false);
 				}
 			}
+			int room = right - 20 - countW - tx;
+			String title = Ui.fit(font, r.title(), room);
+			g.drawString(font, title, tx, y + 1, 0xFFFFFFFF, false);
+			int tagRoom = room - font.width(title) - 6;
+			if (!r.tag().isEmpty() && tagRoom > 20) g.drawString(font, Ui.fit(font, r.tag(), tagRoom), tx + font.width(title) + 6, y + 1, 0xFF8A8A8A, false);
 			List<net.minecraft.util.FormattedCharSequence> lines = new ArrayList<>();
 			if (mode == Mode.DISCOVER) {
 				Component motd = d != null && d.motd != null && !d.motd.getString().isBlank() && d.state() == ServerData.State.SUCCESSFUL ? d.motd : Component.literal(r.sub().isEmpty() ? r.ip() : r.sub()).withStyle(ChatFormatting.GRAY);

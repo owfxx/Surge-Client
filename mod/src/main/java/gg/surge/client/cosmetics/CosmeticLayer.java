@@ -120,7 +120,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private void wings(PoseStack ps, SubmitNodeCollector q, int light, String style, float age, float moving, int key) {
 		Identifier tex = Identifier.fromNamespaceAndPath("surge", "textures/cosmetic/wings_" + style + ".png");
 		boolean glows = !("angel".equals(style) || "gold".equals(style));
-		int lit = glows ? FULL_BRIGHT : light;
+		int lit = glows ? FULL_BRIGHT : (light | (11 << 4));
 		float open = Math.min(1f, moving * 1.2f);
 		float flapSpeed = 0.07f + open * 0.18f;
 		float[] st = FLAP.computeIfAbsent(key, k -> new float[]{0f, age, 0f});
@@ -143,8 +143,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
 			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
-				wingQuad(pose, vc, 0.02f, -0.37f, 1.14f, 0.27f, -0.014f, lit, 0xFF9A9AA6);
-				wingQuad(pose, vc, 0.02f, -0.35f, 1.10f, 0.23f, 0.0f, lit, 0xFFFFFFFF);
+				wingQuad(pose, vc, 0.02f, -0.36f, 1.12f, 0.26f, 0.0f, lit, 0xFFFFFFFF);
 			});
 			ps.popPose();
 		}

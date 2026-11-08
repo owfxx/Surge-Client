@@ -365,8 +365,9 @@ public class SurgeMenuScreen extends Screen {
 		@Override int height() { return lastShareCode.isEmpty() ? 24 : 34; }
 
 		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
-			g.drawString(font, "Share code, ends after", x + 6, y + 8, Ui.TEXT, false);
-			int lx = x + 10 + font.width("Share code, ends after"), pw2 = 46;
+			String lbl = w > 380 ? "Share code, ends after" : "Ends after";
+			g.drawString(font, lbl, x + 6, y + 8, Ui.TEXT, false);
+			int lx = x + 10 + font.width(lbl), pw2 = Math.min(50, (x + w - 76 - lx - 6) / 4);
 			for (int i = 0; i < SHARE_HOURS.length; i++) {
 				int idx = i;
 				if (Ui.pill(g, font, mx, my, lx + i * (pw2 + 2), y + 4, pw2, 16, SHARE_NAMES[i], shareIdx == i) && hov && clickL) action = () -> shareIdx = idx;
