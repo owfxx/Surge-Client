@@ -1,3 +1,11 @@
+## 1.8.9
+- New mods: Target HUD, Look At, Mouse Strokes, Paperdoll, Horse Stats, TPS and CPU Usage
+- New mods: Snaplook, Auto Perspective, Item Physics, Shiny Pots, Mob Health, Hit Indicator, Loot Beams, Item Despawn Timer, Light Level Overlay and Toast Control
+- Block Outline on 1.21: pick the color, opacity and thickness of the outline
+- Reconnect: a Reconnect button when you get disconnected, with an optional auto reconnect
+- Minimal view bobbing in Settings: your hand still bobs but the camera stays still (Minimal Bobbing mod on 1.8.9)
+- GUI Modifier can now change how blurry menu backgrounds are
+
 ## 1.8.8
 - Wings now bend and flap like real wings: the tips follow the rest of the wing and the feathers ripple
 - 4 new animated capes: Sunset, Ender Eye, Diamond and Toxic

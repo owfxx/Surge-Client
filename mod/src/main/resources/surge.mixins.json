@@ -47,7 +47,14 @@
 		"KeyMappingMixin",
 		"WingsLayerMixin",
 		"FogRendererMixin",
-		"ScreenTintMixin"
+		"ScreenTintMixin",
+		"ToastManagerMixin",
+		"ItemFoilMixin",
+		"BlockOutlineMixin",
+		"ItemPhysicsMixin",
+		"DisconnectedScreenMixin",
+		"ScreenTickMixin",
+		"ConnectScreenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0

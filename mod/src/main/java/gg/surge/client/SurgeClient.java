@@ -50,7 +50,7 @@ import org.lwjgl.glfw.GLFW;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SurgeClient implements ClientModInitializer {
 	public static final String MOD_ID = "surge";
-	private static KeyMapping menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey, clipKey;
+	private static KeyMapping snapKey, menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey, clipKey;
 	private static boolean menuKeyWasDown, adminWasDown;
 
 	private static KeyMapping key(String name, int glfw, KeyMapping.Category category) {
@@ -65,6 +65,7 @@ public class SurgeClient implements ClientModInitializer {
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "surge"));
 		menuKey = key("menu", GLFW.GLFW_KEY_RIGHT_SHIFT, category);
 		zoomKey = key("zoom", GLFW.GLFW_KEY_C, category);
+		snapKey = key("snaplook", GLFW.GLFW_KEY_X, category);
 		freelookKey = key("freelook", GLFW.GLFW_KEY_LEFT_ALT, category);
 		emoteKey = key("emotes", GLFW.GLFW_KEY_B, category);
 		hudKey = key("hud_editor", GLFW.GLFW_KEY_UNKNOWN, category);
@@ -199,6 +200,7 @@ public class SurgeClient implements ClientModInitializer {
 
 		Zoom.setActive(mc, mc.screen == null && mc.player != null && zoomKey.isDown());
 		Freelook.update(mc, freelookKey.isDown());
+		gg.surge.client.features.MoreFeatures.tick(mc, snapKey.isDown());
 		CombatStats.tick(mc);
 		HudModules.tick(mc);
 		CommandKeys.tick(mc);

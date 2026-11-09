@@ -70,6 +70,7 @@ public final class Extras {
 	}
 
 	public static void render(GuiGraphics g, Minecraft mc) {
+		MoreFeatures.render(g, mc);
 		Qol.render(g, mc);
 	}
 

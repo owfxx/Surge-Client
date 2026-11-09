@@ -83,6 +83,7 @@ public final class HudModules {
 
 	public static void tick(Minecraft mc) {
 		ExtraModules.tick(mc);
+		MoreModules.tick(mc);
 		boolean now = mc.level != null;
 		if (now && !inWorld) sessionStart = System.currentTimeMillis();
 		inWorld = now;
@@ -273,6 +274,7 @@ public final class HudModules {
 		ALL.add(new ArmorStatus());
 		ALL.add(new ItemCounter());
 		ALL.addAll(ExtraModules.create());
+		ALL.addAll(MoreModules.create());
 	}
 
 	static final class Coordinates extends HudModule {

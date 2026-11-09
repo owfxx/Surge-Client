@@ -58,6 +58,8 @@ public final class Mods {
 	public static final Setting.Toggle UI_ANIM = GENERAL.toggle("animations", "Smooth animations", true);
 	public static final Setting.Slider UI_ANIM_SPEED = GENERAL.slider("animSpeed", "Animation speed", 100, 50, 200, 10, "%").showIf(() -> Mods.UI_ANIM.on());
 	public static final Setting.Choice BRAND_POS = GENERAL.choice("brandPos", "Surge Client label", "Bottom right", "Bottom right", "Under inventory");
+	public static final Setting.Header H_CAMERA = GENERAL.header("Camera");
+	public static final Setting.Toggle MIN_BOBBING = GENERAL.toggle("minBobbing", "Minimal view bobbing (only your hand moves)", false);
 
 	public static final SurgeMod TOGGLE_SPRINT = mod("toggle_sprint", "Toggle Sprint", Category.PVP, Items.SUGAR,
 		"Sprint without holding the key. Tap your sprint key to switch it on or off.", false);
@@ -117,6 +119,7 @@ public final class Mods {
 	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Modifier", Category.VISUAL, Items.SPYGLASS,
 		"Resize your hotbar, chat, tab list, titles and inventories, and remove the dark inventory background", false);
 	public static final Setting.Toggle GS_NO_TINT = GUI_SCALES.toggle("noTint", "Remove inventory background tint", false);
+	public static final Setting.Slider GS_BLUR = GUI_SCALES.slider("blur", "Menu background blur", 5, 0, 10, 1, "");
 	public static final Setting.Slider GS_HOTBAR = GUI_SCALES.slider("hotbar", "Hotbar, health and hunger", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_CHAT = GUI_SCALES.slider("chat", "Chat", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_TAB = GUI_SCALES.slider("tab", "Tab list", 100, 50, 150, 5, "%");
@@ -393,6 +396,65 @@ public final class Mods {
 	public static final Setting.Toggle DURA_SOUND = DURABILITY.toggle("sound", "Play a sound", true);
 	public static final Setting.Toggle DURA_ARMOR = DURABILITY.toggle("armor", "Check armor", true);
 	public static final Setting.Toggle DURA_HANDS = DURABILITY.toggle("hands", "Check held items", true);
+
+	public static final SurgeMod BLOCK_OUTLINE = mod("block_outline", "Block Outline", Category.VISUAL, Items.GLASS,
+		"Change the color and thickness of the outline around the block you look at", false);
+	public static final Setting.Color BO_COLOR = BLOCK_OUTLINE.color("color", "Color", "FFFFFF");
+	public static final Setting.Slider BO_ALPHA = BLOCK_OUTLINE.slider("alpha", "Opacity", 70, 10, 100, 5, "%");
+	public static final Setting.Slider BO_WIDTH = BLOCK_OUTLINE.slider("width", "Thickness", 3, 1, 10, 0.5f, "");
+
+	public static final SurgeMod SNAPLOOK = mod("snaplook", "Snaplook", Category.VISUAL, Items.ENDER_EYE,
+		"Hold X to quickly look at yourself, let go to go back", false);
+	public static final Setting.Choice SL_VIEW = SNAPLOOK.choice("view", "View", "Front", "Front", "Back");
+
+	public static final SurgeMod AUTO_PERSPECTIVE = mod("auto_perspective", "Auto Perspective", Category.VISUAL, Items.ELYTRA,
+		"Switches to third person while you fly with an elytra or ride something", false);
+	public static final Setting.Toggle AP_ELYTRA = AUTO_PERSPECTIVE.toggle("elytra", "When flying with an elytra", true);
+	public static final Setting.Toggle AP_RIDING = AUTO_PERSPECTIVE.toggle("riding", "When riding a horse, boat or minecart", true);
+
+	public static final SurgeMod ITEM_PHYSICS = mod("item_physics", "Item Physics", Category.VISUAL, Items.APPLE,
+		"Dropped items lie flat on the ground instead of floating and spinning", false);
+
+	public static final SurgeMod SHINY_POTS = mod("shiny_pots", "Shiny Pots", Category.VISUAL, Items.POTION,
+		"Potions shine with the enchantment glint like they used to", false);
+
+	public static final SurgeMod MOB_HEALTH = mod("mob_health", "Mob Health", Category.VISUAL, Items.GLISTERING_MELON_SLICE,
+		"Shows the health of mobs you can see above their heads", false);
+	public static final Setting.Choice MH_STYLE = MOB_HEALTH.choice("style", "Style", "Hearts", "Hearts", "Number", "Bar");
+	public static final Setting.Slider MH_RANGE = MOB_HEALTH.slider("range", "Range", 16, 6, 48, 2, " blocks");
+	public static final Setting.Toggle MH_PLAYERS = MOB_HEALTH.toggle("players", "Also show players", false);
+	public static final Setting.Toggle MH_HURT = MOB_HEALTH.toggle("hurt", "Only hurt mobs", false);
+
+	public static final SurgeMod HIT_INDICATOR = mod("hit_indicator", "Hit Indicator", Category.PVP, Items.ARROW,
+		"Shows which direction you got hit from", false);
+	public static final Setting.Color HI_COLOR = HIT_INDICATOR.color("color", "Color", "FF4040");
+
+	public static final SurgeMod LOOT_BEAMS = mod("loot_beams", "Loot Beams", Category.VISUAL, Items.BEACON,
+		"Beams of light above dropped items you can see, colored by rarity", false);
+	public static final Setting.Toggle LB_RARE = LOOT_BEAMS.toggle("rare", "Only rare and enchanted items", false);
+	public static final Setting.Slider LB_RANGE = LOOT_BEAMS.slider("range", "Range", 24, 8, 64, 4, " blocks");
+
+	public static final SurgeMod DESPAWN_TIMER = mod("despawn_timer", "Item Despawn Timer", Category.UTILITY, Items.CLOCK,
+		"Shows how long dropped items have left before they disappear", false);
+	public static final Setting.Slider DT_RANGE = DESPAWN_TIMER.slider("range", "Range", 10, 4, 32, 2, " blocks");
+
+	public static final SurgeMod LIGHT_OVERLAY = mod("light_overlay", "Light Level Overlay", Category.UTILITY, Items.TORCH,
+		"Marks the blocks around you where mobs can spawn at night", false);
+	public static final Setting.Slider LO_RANGE = LIGHT_OVERLAY.slider("range", "Range", 8, 4, 16, 1, " blocks");
+	public static final Setting.Toggle LO_NUMBERS = LIGHT_OVERLAY.toggle("numbers", "Show light numbers", false);
+	public static final Setting.Toggle LO_DAY = LIGHT_OVERLAY.toggle("day", "Count sunlight", false);
+
+	public static final SurgeMod TOASTS = mod("toasts", "Toast Control", Category.UTILITY, Items.BREAD,
+		"Hide the popups in the top right corner of the screen", false);
+	public static final Setting.Toggle TOAST_ADV = TOASTS.toggle("advancements", "Hide advancements", true);
+	public static final Setting.Toggle TOAST_RECIPE = TOASTS.toggle("recipes", "Hide new recipes", true);
+	public static final Setting.Toggle TOAST_TUTORIAL = TOASTS.toggle("tutorial", "Hide tutorial hints", true);
+	public static final Setting.Toggle TOAST_SYSTEM = TOASTS.toggle("system", "Hide system messages", false);
+
+	public static final SurgeMod RECONNECT = mod("reconnect", "Reconnect", Category.UTILITY, Items.RECOVERY_COMPASS,
+		"Adds a Reconnect button when you get disconnected from a server", true);
+	public static final Setting.Toggle RC_AUTO = RECONNECT.toggle("auto", "Reconnect by itself", false);
+	public static final Setting.Slider RC_DELAY = RECONNECT.slider("delay", "Wait before reconnecting", 10, 5, 60, 5, "s").showIf(() -> RC_AUTO.on());
 
 	public static final SurgeMod PROFILES = mod("profiles", "Profiles", Category.UTILITY, Items.BOOKSHELF,
 		"Save your whole setup (mods, HUD layout, settings) and switch between them, or per server", true);

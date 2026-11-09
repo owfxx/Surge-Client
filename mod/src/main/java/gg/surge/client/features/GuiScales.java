@@ -41,7 +41,11 @@ public final class GuiScales {
 	public static void refresh() {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc == null || mc.getWindow() == null) return;
-		mc.execute(() -> { applied = wants(mc.screen); mc.resizeDisplay(); });
+		mc.execute(() -> {
+			applied = wants(mc.screen);
+			if (gg.surge.client.mods.Mods.GUI_SCALES.enabled()) mc.options.menuBackgroundBlurriness().set(gg.surge.client.mods.Mods.GS_BLUR.asInt());
+			mc.resizeDisplay();
+		});
 	}
 
 	public static float hudFactor = 1f;

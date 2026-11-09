@@ -192,6 +192,58 @@ public final class AutoTest {
 		STEPS.add(new Step("22-inventory-tint", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
 		STEPS.add(new Step("22b-inventory-no-tint", 30, mc -> { Mods.GUI_SCALES.setEnabled(true); Mods.GS_NO_TINT.set(true); }));
 		STEPS.add(new Step("22c-inventory-reset", 10, mc -> { Mods.GS_NO_TINT.set(false); Mods.GUI_SCALES.setEnabled(false); open(mc, null); }));
+		STEPS.add(new Step("23-world-mods", 90, mc -> {
+			cmd(mc, "kill @e[type=!player]");
+			cmd(mc, "fill ~-9 ~40 ~-9 ~9 ~40 ~9 minecraft:smooth_stone");
+			cmd(mc, "fill ~-9 ~41 ~-9 ~9 ~44 ~9 minecraft:air");
+			cmd(mc, "tp @s ~ ~41 ~ 0 28");
+			cmd(mc, "time set 18000");
+			cmd(mc, "summon cow ~ ~ ~3.2 {NoAI:1b,Rotation:[160f,0f]}");
+			cmd(mc, "summon pig ~-2.5 ~ ~4 {NoAI:1b}");
+			cmd(mc, "summon horse ~3 ~ ~5 {NoAI:1b,Tame:1b,SaddleItem:{id:\"minecraft:saddle\",count:1}}");
+			cmd(mc, "summon item ~-1 ~0.3 ~2 {Item:{id:\"minecraft:nether_star\",count:1},PickupDelay:32767}");
+			cmd(mc, "summon item ~1 ~0.3 ~2 {Item:{id:\"minecraft:enchanted_golden_apple\",count:1},PickupDelay:32767}");
+			cmd(mc, "summon item ~0.2 ~0.3 ~2.6 {Item:{id:\"minecraft:diamond\",count:3},PickupDelay:32767}");
+			cmd(mc, "summon item ~-1.8 ~0.3 ~2.8 {Item:{id:\"minecraft:oak_planks\",count:1},PickupDelay:32767}");
+			cmd(mc, "item replace entity @s weapon.mainhand with minecraft:potion[potion_contents={potion:\"minecraft:healing\"}]");
+			mc.player.getAbilities().flying = false;
+			mc.player.onUpdateAbilities();
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(true);
+			for (String id : new String[]{"minimap", "effects", "compass", "armor"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(false); }
+			for (String id : new String[]{"target", "lookat", "mousestrokes", "paperdoll", "horse", "tps", "system"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(true); }
+			Mods.BO_COLOR.set("FF3B3B");
+			Mods.BO_WIDTH.set(6f);
+		}));
+		STEPS.add(new Step("23a-damage", 30, mc -> { cmd(mc, "damage @e[type=cow,limit=1] 3"); cmd(mc, "damage @e[type=pig,limit=1] 6"); cmd(mc, "damage @e[type=horse,limit=1] 2"); }));
+		STEPS.add(new Step("23b-mob-number", 20, mc -> Mods.MH_STYLE.set("Number")));
+		STEPS.add(new Step("23c-mob-bar", 20, mc -> Mods.MH_STYLE.set("Bar")));
+		STEPS.add(new Step("23d-light-numbers", 25, mc -> { Mods.MH_STYLE.set("Hearts"); Mods.LO_NUMBERS.set(true); mc.player.setXRot(62f); mc.player.setYRot(-35f); }));
+		STEPS.add(new Step("23e-hit-indicator", 8, mc -> { Mods.LO_NUMBERS.set(false); mc.player.setXRot(28f); mc.player.setYRot(0f); cmd(mc, "gamemode survival"); cmd(mc, "damage @s 1 minecraft:mob_attack by @e[type=pig,limit=1]"); }));
+		STEPS.add(new Step("23f-horse", 40, mc -> { cmd(mc, "gamemode creative"); cmd(mc, "ride @s mount @e[type=horse,limit=1]"); }));
+		STEPS.add(new Step("23g-snaplook", 15, mc -> { cmd(mc, "ride @s dismount"); com.mojang.blaze3d.platform.InputConstants.Key x = com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X); net.minecraft.client.KeyMapping.set(x, true); }));
+		STEPS.add(new Step("23h-snaplook-off", 15, mc -> { net.minecraft.client.KeyMapping.set(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X), false); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.PACK_LOAD_FAILURE, net.minecraft.network.chat.Component.literal("Toast test"), net.minecraft.network.chat.Component.literal("This one shows")); }));
+		STEPS.add(new Step("23i-toast-hidden", 20, mc -> { Mods.TOAST_SYSTEM.set(true); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.WORLD_BACKUP, net.minecraft.network.chat.Component.literal("Hidden toast"), net.minecraft.network.chat.Component.literal("This one should not show")); }));
+		STEPS.add(new Step("23j-new-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(null))));
+		STEPS.add(new Step("23k-target-settings", 25, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("target"), null))));
+		STEPS.add(new Step("23l-reconnect", 30, mc -> {
+			gg.surge.client.features.MoreFeatures.lastAddress = net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("play.example.com");
+			gg.surge.client.features.MoreFeatures.lastServer = new net.minecraft.client.multiplayer.ServerData("Test", "play.example.com", net.minecraft.client.multiplayer.ServerData.Type.OTHER);
+			Mods.RC_AUTO.set(true);
+			Mods.RC_DELAY.set(30f);
+			open(mc, new net.minecraft.client.gui.screens.DisconnectedScreen(new TitleScreen(), net.minecraft.network.chat.Component.literal("Connection lost"), net.minecraft.network.chat.Component.literal("Timed out")));
+		}));
+		STEPS.add(new Step("23m-cleanup", 5, mc -> {
+			Mods.RC_AUTO.set(false);
+			gg.surge.client.features.MoreFeatures.lastAddress = null;
+			open(mc, null);
+			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(false);
+			cmd(mc, "time set 1000");
+		}));
+	}
+
+	private static void cmd(Minecraft mc, String c) {
+		mc.player.connection.sendCommand(c);
 	}
 
 	private static void hover(Minecraft mc, double fx, double fy) {
@@ -247,7 +299,7 @@ public final class AutoTest {
 
 	public static void tick(Minecraft mc) {
 		if (!active()) return;
-		if (++total > 20 * 60 * 6) { LOG.error("Auto test timed out at step {}", index); mc.stop(); return; }
+		if (++total > 20 * 60 * 8) { LOG.error("Auto test timed out at step {}", index); mc.stop(); return; }
 		if (STEPS.isEmpty()) plan();
 		if (index < 0) {
 			if (mc.getOverlay() != null || mc.screen == null) return;

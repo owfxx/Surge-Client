@@ -49,6 +49,8 @@ public final class Features {
 
 	public static final Mod HURTCAM = add(new Mod("hurtcam", "No Hurt Cam", Category.PVP, new ItemStack(Items.GOLDEN_APPLE), "Stops the camera shaking when you take damage", false));
 
+	public static final Mod MIN_BOBBING = add(new Mod("minbob", "Minimal Bobbing", Category.VISUAL, new ItemStack(Items.FEATHER), "Only your hand bobs while you walk, the camera stays still", false));
+
 	public static final Mod OUTLINE = add(new Mod("outline", "Block Outline", Category.VISUAL, new ItemStack(Blocks.GLASS), "Change the color and thickness of the block outline", false));
 	public static final Setting.Color OUTLINE_COLOR = OUTLINE.color("color", "Color", "FFFFFF");
 	public static final Setting.Slider OUTLINE_ALPHA = OUTLINE.slider("alpha", "Opacity", 60, 10, 100, 5, "%");
