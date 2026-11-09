@@ -1,3 +1,8 @@
+## 1.9.6
+- New menu styles in Settings: Surge Dark, Surge Light, Minecraft Dark and Minecraft Light
+- Surge styles use a clean modern font with rounded menus, toggles and sliders, Minecraft styles keep the Minecraft font and blocky buttons
+- Capes now show in the wardrobe while you wear or fly with an elytra
+
 ## 1.9.5
 - Microsoft sign-in errors now say what went wrong and how to fix it instead of "[object Object]"
 

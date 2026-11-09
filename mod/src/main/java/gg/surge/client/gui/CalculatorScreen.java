@@ -107,7 +107,7 @@ public class CalculatorScreen extends Screen {
 				if (hov) fill = eq ? Ui.ACCENT_HOVER : op ? 0xFF3A3A40 : 0xFF48484C;
 				if (glass) Ui.glassRect(g, x, y, bw, bh, 5, hov ? 1.4f : eq ? 1.25f : 0.9f);
 				else Ui.box(g, x, y, bw, bh, fill, Ui.EDGE);
-				Ui.centered(g, font, k, x + bw / 2, y + (bh - 8) / 2, eq && !glass ? 0xFF101012 : Ui.TEXT);
+				Ui.centered(g, font, k, x + bw / 2, y + (bh - 8) / 2, Ui.TEXT);
 				if (hov && click) { press(k); Ui.click(); }
 			}
 		}

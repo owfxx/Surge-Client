@@ -136,7 +136,7 @@ public final class Ui {
 		float l = (mx + mn) / 510f;
 		if (!text && l < 0.1f && a < 0x60) return c;
 		float inv = 1f - l;
-		float v = text ? (mcStyle() ? 0.24f + inv * 0.34f : 0.08f + inv * 0.5f) : (mcStyle() ? 0.25f + inv * 0.55f : 0.09f + inv * 0.88f);
+		float v = text ? (mcStyle() ? 0.18f + inv * 0.26f : 0.08f + inv * 0.5f) : (mcStyle() ? 0.25f + inv * 0.55f : 0.09f + inv * 0.88f);
 		int k = Math.max(0, Math.min(255, Math.round(v * 255)));
 		int tb = Math.min(255, k + (mcStyle() ? 0 : 3));
 		return (a << 24) | (k << 16) | (k << 8) | tb;
