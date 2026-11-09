@@ -315,7 +315,7 @@ jobs:
           ALSOFT_DRIVERS: 'null'
         run: |
           chmod +x gradlew
-          for i in 1 2 3; do ./gradlew --version > /dev/null 2>&1 && break; sleep 15; done
+          for i in 1 2 3 4 5 6 7 8; do ./gradlew --version > /dev/null 2>&1 && break; sleep 30; done
           timeout 1300 xvfb-run -a -s "-screen 0 1600x900x24" ./gradlew runClient -Pautotest -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64 --no-configuration-cache 2>&1 | tail -250 || true
           ls -la run/screenshots || true
       - name: Publish screenshots
