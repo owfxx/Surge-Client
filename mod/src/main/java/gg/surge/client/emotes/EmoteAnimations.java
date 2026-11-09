@@ -66,32 +66,6 @@ final class EmoteAnimations {
 				float swing = sin(t * 14f);
 				p.rArm(26 * swing, 0, 42 * f).lArm(-26 * swing, 0, 42 * f).body(0, 0, -7 * f).sway(-2f * f).head(0, 0, 7 * f).rLeg(0, 0, -4 * f).lLeg(0, 0, -4 * f);
 			}
-			case IDLE_LOOK -> {
-				float look = sin(t * 0.8f) * 42 * Math.min(1f, t);
-				p.head(-4 + sin(t * 0.4f) * 6, look, 0).sway(sin(t * 0.8f) * 0.25f).rArm(-4, 0, 4).lArm(-4, 0, -4);
-			}
-			case IDLE_STRETCH -> {
-				float c = (t % 6f) / 6f;
-				float up = c < 0.08f ? 0f : c < 0.22f ? Emotes.ease((c - 0.08f) / 0.14f) : c < 0.55f ? 1f : c < 0.7f ? Emotes.ease(1f - (c - 0.55f) / 0.15f) : 0f;
-				p.rArm(0, 0, 170 * up).lArm(0, 0, -170 * up).head(-25 * up, 0, 0).lean(-8 * up).bob(-0.6f * up);
-			}
-			case IDLE_YAWN -> {
-				float c = (t % 7f) / 7f;
-				float y = Emotes.ease(Math.max(0f, Math.min(1f, Math.min(c * 5f, (0.6f - c) * 5f))));
-				p.rArm(-130 * y, -30 * y, 10 * y).head(-20 * y + 6 * (1 - y), 0, 6 * (1 - y)).lArm(-6, 0, -4).bob(0.3f * (1 - y));
-			}
-			case IDLE_TAP -> {
-				float tap = Math.max(0f, sin(t * 9f));
-				p.rLeg(-14 * tap, 0, 3).lArm(-50, 35, -6).rArm(-50, -35, 6).head(4, 0, sin(t * 4.5f) * 3);
-			}
-			case IDLE_CROSS -> {
-				float br = sin(t * 1.6f);
-				p.rArm(-62 + br * 2, -42, 12).lArm(-58 + br * 2, 42, -12).head(-3 + br, sin(t * 0.5f) * 10, 0).lean(-2);
-			}
-			case IDLE_VIBE -> {
-				float b = sin(t * 2f * (float) Math.PI);
-				p.head(10 * Math.abs(b), sin(t * (float) Math.PI) * 10, 0).bob(-Math.abs(b) * 0.6f).rArm(-10, 0, 8 + 6 * Math.abs(b)).lArm(-10, 0, -8 - 6 * Math.abs(b)).sway(b * 0.4f);
-			}
 			case TPOSE -> p.rArm(0, 0, 90).lArm(0, 0, -90).head(0, 0, 0).body(0, 0, 0);
 			case SIT -> {
 				float br = sin(t * 2f);
@@ -173,34 +147,6 @@ final class EmoteAnimations {
 				float wob = t < 0.6f ? sin(t * 14f) * 6 : 0;
 				p.head(wob + 10 * fall, wob, wob).rArm(-20 - 60 * fall, 0, 20 + 40 * fall).lArm(-20 - 60 * fall, 0, -20 - 40 * fall)
 					.lean(wob * 0.5f + 70 * fall).bob(6f * fall).rLeg(10 * fall, 0, 4).lLeg(10 * fall, 0, -4);
-			}
-			case IDLE_WATCH -> {
-				float c = (t % 6f) / 6f;
-				float a = c < 0.1f ? 0 : c < 0.22f ? Emotes.ease((c - 0.1f) / 0.12f) : c < 0.62f ? 1 : c < 0.75f ? Emotes.ease(1 - (c - 0.62f) / 0.13f) : 0;
-				p.lArm(-75 * a, 50 * a, 0).head(30 * a, 15 * a, 0).rArm(-4, 0, 4);
-				if (a > 0.9f) p.head(30 + sin(t * 9f) * 2, 15, 0);
-			}
-			case IDLE_SCRATCH -> {
-				float c = (t % 5f) / 5f;
-				float a = c < 0.15f ? Emotes.ease(c / 0.15f) : c < 0.6f ? 1 : c < 0.75f ? Emotes.ease(1 - (c - 0.6f) / 0.15f) : 0;
-				float sc = sin(t * 16f) * 6 * a;
-				p.rArm((-150 + sc) * a, -30 * a, 10 * a).head(6 * a, -10 * a, 10 * a).lArm(-4, 0, -4);
-			}
-			case IDLE_BOX -> {
-				float b = t * 2.6f;
-				int hit = (int) b % 2;
-				float pun = Math.max(0, sin((b % 1f) * (float) Math.PI));
-				float rr = hit == 0 ? pun : 0, ll = hit == 1 ? pun : 0;
-				p.rArm(-70 - 25 * rr, -20 + 25 * rr, 0).lArm(-70 - 25 * ll, 20 - 25 * ll, 0).head(8, 0, 0).lean(6)
-					.bob(-Math.abs(sin(b * (float) Math.PI)) * 0.5f).sway(sin(b * (float) Math.PI) * 0.4f).rLeg(-8, 0, 3).lLeg(10, 0, -3);
-			}
-			case IDLE_PHONE -> {
-				float scroll = sin(t * 3f);
-				p.rArm(-55, -18, 0).lArm(-55 + Math.max(0, scroll) * 6, 18, 0).head(32 + scroll, sin(t * 0.7f) * 4, 0);
-			}
-			case IDLE_WHISTLE -> {
-				float bob = sin(t * 2f * (float) Math.PI * 0.75f);
-				p.rArm(20, 0, 10).lArm(20, 0, -10).head(-10, sin(t * 0.8f) * 18, bob * 6).sway(bob * 0.3f).rLeg(0, 0, 0).lLeg(-6 * Math.max(0, bob), 0, -2);
 			}
 			case CRY -> {
 				float sob = sin(t * 10f);

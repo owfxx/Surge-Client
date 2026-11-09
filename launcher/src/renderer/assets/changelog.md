@@ -1,3 +1,6 @@
+## 1.9.3
+- Removed idle animations
+
 ## 1.9.2
 - Coins and cosmetics now stay in sync between the launcher and the game, even while the game is open
 - Discover: the play button on a server icon joins right away, and partnered servers show their real MOTD and ping

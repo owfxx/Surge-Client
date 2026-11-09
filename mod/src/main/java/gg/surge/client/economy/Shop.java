@@ -37,8 +37,6 @@ public final class Shop {
 			{"BOW", "650"}, {"HEART", "850"}, {"FLOSS", "1000"}, {"TPOSE", "600"}, {"CRY", "750"},
 			{"SIT", "600"}, {"GRIDDY", "1200"}, {"SHUFFLE", "1100"},
 			{"DISCO", "1000"}, {"ZOMBIE", "700"}, {"ROBOT", "900"}, {"AIRGUITAR", "1000"}, {"JUMPJACKS", "600"}, {"FLEX", "750"}, {"KISS", "700"}, {"SPIN", "800"}, {"FACEPLANT", "850"}};
-		String[][] idles = {{"IDLE_LOOK", "400"}, {"IDLE_STRETCH", "500"}, {"IDLE_YAWN", "500"}, {"IDLE_TAP", "450"}, {"IDLE_CROSS", "450"}, {"IDLE_VIBE", "600"}, {"IDLE_WATCH", "450"}, {"IDLE_SCRATCH", "450"}, {"IDLE_BOX", "600"}, {"IDLE_PHONE", "500"}, {"IDLE_WHISTLE", "550"}};
-		for (String[] e : idles) add("idle:" + e[0], "emote", "idle", gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]).label, Integer.parseInt(e[1]));
 		for (String[] e : emotes) {
 			gg.surge.client.emotes.Emotes.Emote em = gg.surge.client.emotes.Emotes.Emote.valueOf(e[0]);
 			add("emote:" + e[0], "emote", "", em.label, Integer.parseInt(e[1]));

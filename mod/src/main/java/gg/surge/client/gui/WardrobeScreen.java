@@ -41,7 +41,7 @@ public class WardrobeScreen extends Screen {
 	}
 
 	private static final String[] COSMETIC_SUBS = {"All", "Capes", "Wings", "Halos"};
-	private static final String[] EMOTE_SUBS = {"All", "Dances", "With music", "Basic", "Expressive", "Idle"};
+	private static final String[] EMOTE_SUBS = {"All", "Dances", "With music", "Basic", "Expressive"};
 	private static final String[] SORTS = {"Featured", "Price", "Owned first", "Name"};
 	private static final Set<String> DANCES = Set.of("FLOSS", "TPOSE", "SIT");
 	private static final Set<String> EXPRESSIVE = Set.of("FACEPALM", "SHRUG", "LAUGH", "CRY", "HEART", "BOW", "TPOSE");
@@ -176,7 +176,7 @@ public class WardrobeScreen extends Screen {
 
 	private static String equippedKey(String type) {
 		SurgeConfig c = SurgeConfig.get();
-		return switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; case "idle" -> c.idle; default -> c.cape; };
+		return switch (type) { case "wings" -> c.wings; case "halo" -> c.halo; default -> c.cape; };
 	}
 
 	private static void setEquipped(String type, String key) {
@@ -184,7 +184,6 @@ public class WardrobeScreen extends Screen {
 		switch (type) {
 			case "wings" -> c.wings = key;
 			case "halo" -> c.halo = key;
-			case "idle" -> c.idle = key;
 			default -> c.cape = key;
 		}
 		SurgeConfig.save();
@@ -237,7 +236,6 @@ public class WardrobeScreen extends Screen {
 	}
 
 	private static String emoteGroup(Emotes.Emote e) {
-		if (e.idle()) return "Idle";
 		if (e.music != null) return "With music";
 		if (DANCES.contains(e.name())) return "Dances";
 		if (EXPRESSIVE.contains(e.name())) return "Expressive";
@@ -344,12 +342,7 @@ public class WardrobeScreen extends Screen {
 		List<String> l = new ArrayList<>();
 		List<Runnable> a = new ArrayList<>();
 		if (!owned && !Locks.locked(item)) { l.add("Purchase (" + Shop.price(item) + " coins)"); a.add(() -> buy(item, true)); }
-		if (item.id().startsWith("idle:")) {
-			if (owned) {
-				boolean eq = item.key().equals(SurgeConfig.get().idle);
-				l.add(eq ? "Stop using" : "Use when standing still"); a.add(() -> setEquipped("idle", eq ? "none" : item.key()));
-			}
-		} else if (item.category().equals("emote")) {
+		if (item.category().equals("emote")) {
 			Emotes.Emote e = Emotes.Emote.byName(item.key());
 			if (owned && e != null) {
 				l.add("Play"); a.add(() -> { if (minecraft.player == null) { toast("Join a world to play emotes", Ui.MUTED); return; } minecraft.setScreen(null); Emotes.play(minecraft, e); });
@@ -507,10 +500,6 @@ public class WardrobeScreen extends Screen {
 			boolean confirm = item.id().equals(pendingBuy) && System.currentTimeMillis() < pendingUntil;
 			return new Primary((confirm ? "Confirm " : "Buy  ") + String.format("%,d", Shop.price(item)), w.coins >= Shop.price(item), () -> buy(item, false));
 		}
-		if (item.id().startsWith("idle:")) {
-			boolean eq = item.key().equals(SurgeConfig.get().idle);
-			return new Primary(eq ? "Stop using" : "Use", true, () -> { setEquipped("idle", eq ? "none" : item.key()); if (!eq) toast("Stand still for 2 seconds to see it", Ui.ACCENT_2); });
-		}
 		if (item.category().equals("emote")) {
 			Emotes.Emote e = Emotes.Emote.byName(item.key());
 			if (section == Section.EMOTES) return new Primary(selectedEmote == e ? "Pick a slot" : "Add to wheel", true, () -> { selectedEmote = selectedEmote == e ? null : e; if (selectedEmote != null) toast("Click a slot on the wheel", Ui.ACCENT_2); });
@@ -530,12 +519,10 @@ public class WardrobeScreen extends Screen {
 	}
 
 	private static String kind(Shop.Item item) {
-		if (item.id().startsWith("idle:")) return "Idle animation";
 		if (item.category().equals("emote")) {
 			Emotes.Emote e = Emotes.Emote.byName(item.key());
 			return e != null && e.music != null ? "Dance with music" : "Emote";
 		}
-		if (item.id().startsWith("idle:")) return "Idle animation";
 		return switch (typeOf(item)) { case "wings" -> "Wings"; case "halo" -> "Halo"; default -> "Cape"; };
 	}
 

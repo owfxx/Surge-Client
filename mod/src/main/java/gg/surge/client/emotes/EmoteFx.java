@@ -125,7 +125,7 @@ public final class EmoteFx {
 				}
 			});
 			default -> {
-				if (e.music != null || e == Emote.FLOSS || e == Emote.AIRGUITAR || e == Emote.IDLE_WHISTLE)
+				if (e.music != null || e == Emote.FLOSS || e == Emote.AIRGUITAR)
 					body(model, ps, q, (pose, vc) -> floaters(pose, vc, NOTE, 0xFFFFFF, tt, k, 3, 0.9f, 0.6f));
 			}
 		}

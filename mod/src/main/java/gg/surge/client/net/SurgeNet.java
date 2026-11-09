@@ -306,7 +306,7 @@ public final class SurgeNet {
 						rem.emote = em;
 						long age = d.has("emoteSrv") ? Math.max(0, serverNow - d.get("emoteSrv").getAsLong()) : 0;
 						Emotes.Emote played = Emotes.Emote.byName(em);
-						float len = played == null ? 0 : played.idle() ? Float.MAX_VALUE : (played.loops ? played.seconds * 3 : played.seconds) * 1000;
+						float len = played == null ? 0 : (played.loops ? played.seconds * 3 : played.seconds) * 1000;
 						rem.emoteStart = firstSight && age > len ? 0 : System.currentTimeMillis() - (firstSight ? age : Math.min(age, 1500));
 					}
 					fresh.put(id, rem);
@@ -335,7 +335,7 @@ public final class SurgeNet {
 		Emotes.Emote e = Emotes.Emote.byName(r.emote);
 		if (e == null) return null;
 		float t = (System.currentTimeMillis() - r.emoteStart) / 1000f;
-		if (!e.idle() && t > (e.loops ? e.seconds * 3 : e.seconds)) return null;
+		if (t > (e.loops ? e.seconds * 3 : e.seconds)) return null;
 		startOut[0] = r.emoteStart;
 		return e;
 	}

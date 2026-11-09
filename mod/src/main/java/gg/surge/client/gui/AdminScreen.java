@@ -263,9 +263,9 @@ public class AdminScreen extends Screen {
 			g.disableScissor();
 		} else Preview.drawCard(g, x + 3, y + 3, x + w - 3, y + h - 40, 36, back ? 180f + (float) Math.sin(spin / 57.3f) * 35f : spin, look);
 		g.fill(x + 1, y + h - 38, x + w - 1, y + h - 37, Ui.EDGE);
-		String name = it.name().replace(" (emote)", "").replace(" (idle)", "");
+		String name = it.name().replace(" (emote)", "");
 		g.drawString(font, Ui.fit(font, name, w - 8), x + 5, y + h - 33, Ui.TEXT, true);
-		String kind = it.category().equals("emote") ? (it.key().startsWith("IDLE_") ? "Idle" : "Emote") : Character.toUpperCase(it.sub().charAt(0)) + it.sub().substring(1);
+		String kind = it.category().equals("emote") ? "Emote" : Character.toUpperCase(it.sub().charAt(0)) + it.sub().substring(1);
 		g.drawString(font, kind, x + 5, y + h - 22, Ui.MUTED, false);
 		String price = Shop.price(it) + " coins";
 		g.drawString(font, price, x + w - 5 - font.width(price), y + h - 22, Ui.YELLOW, false);

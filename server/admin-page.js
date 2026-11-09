@@ -90,10 +90,10 @@ async function api(path, body) {
   return d;
 }
 const name = id => (data.items.find(i => i.id === id) || { name: id }).name;
-const CATS = [['all', 'All'], ['wings', 'Wings'], ['halo', 'Halos'], ['cape', 'Capes'], ['emote', 'Emotes'], ['idle', 'Idles']];
+const CATS = [['all', 'All'], ['wings', 'Wings'], ['halo', 'Halos'], ['cape', 'Capes'], ['emote', 'Emotes']];
 const kindOf = id => id.split(':')[0];
-const KIND_LABEL = { wings: 'Wings', halo: 'Halo', cape: 'Cape', emote: 'Emote', idle: 'Idle' };
-const cleanName = n => n.replace(/ \\((emote|idle)\\)$/, '');
+const KIND_LABEL = { wings: 'Wings', halo: 'Halo', cape: 'Cape', emote: 'Emote' };
+const cleanName = n => n.replace(/ \\(emote\\)$/, '');
 function picker(el, opts) {
   let cat = 'all', q = '';
   const draw = () => {
@@ -132,7 +132,7 @@ function thumb(id, big) {
     }
   } else if (k === 'wings') inner = '<div class="wg"><img alt="" src="/img/cosmetic/wings_' + esc(key) + '.png"><img alt="" src="/img/cosmetic/wings_' + esc(key) + '.png"></div>';
   else if (k === 'halo') inner = '<div class="hl" style="color:' + (HALO[key] || '#fff') + (key === 'rainbow' ? ';border-color:transparent;background:conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red) border-box;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))' : '') + '"></div>';
-  else if (k === 'emote' || k === 'idle') inner = EMOTE_SVG;
+  else if (k === 'emote') inner = EMOTE_SVG;
   else inner = '<span class="gl">?</span>';
   return '<span class="th' + (big ? ' big' : '') + '" title="' + esc(cleanName(name(id))) + '">' + inner + '</span>';
 }
@@ -272,7 +272,7 @@ function sales() {
     + '<div class="card"><h2>Running sales</h2><div class="list">' + (data.sales.map(s => '<div class="item"><div class="grow"><div>' + s.percent + '% off ' + esc(tn(s.target)) + (s.name ? ' for ' + esc(s.name) : '') + '</div><div class="sub">' + (s.until ? 'Ends ' + new Date(s.until).toLocaleString() : 'No end') + '</div></div><button class="btn ghost small" data-end="' + s.id + '">End</button></div>').join('') || '<p class="muted">No sales running.</p>') + '</div></div>';
   let target = 'all';
   const price = id => data.prices[id] ?? (data.items.find(i => i.id === id) || {}).price ?? 0;
-  const inTarget = t => data.items.filter(i => t === 'all' || (t === 'cosmetic' && ['wings', 'halo', 'cape'].includes(kindOf(i.id))) || (t === 'emote' && ['emote', 'idle'].includes(kindOf(i.id))) || (t.startsWith('sub:') && kindOf(i.id) === t.slice(4)) || i.id === t);
+  const inTarget = t => data.items.filter(i => t === 'all' || (t === 'cosmetic' && ['wings', 'halo', 'cape'].includes(kindOf(i.id))) || (t === 'emote' && kindOf(i.id) === 'emote') || (t.startsWith('sub:') && kindOf(i.id) === t.slice(4)) || i.id === t);
   const prevS = () => {
     const pct = Math.max(0, Math.min(100, +$('#sP').value || 0)), list = inTarget(target);
     $('#sPrev').innerHTML = '<div class="gp"><h3>' + pct + '% off ' + esc(tn(target)) + '</h3><div class="gsub">' + list.length + ' item' + (list.length === 1 ? '' : 's') + ($('#sWho').value.trim() ? ', only for ' + esc($('#sWho').value.trim()) : ', for everyone') + '</div><div class="gitems">'

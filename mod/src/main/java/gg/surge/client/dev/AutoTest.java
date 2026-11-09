@@ -100,13 +100,7 @@ public final class AutoTest {
 		STEPS.add(new Step("07m-emote-spin", 24, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.SPIN); }));
 		STEPS.add(new Step("07m-emote-faceplant", 40, mc -> { Emotes.stop(mc); Emotes.play(mc, Emotes.Emote.FACEPLANT); }));
 		STEPS.add(new Step("07n-emotes-done", 10, mc -> Emotes.stop(mc)));
-		STEPS.add(new Step("07s-idle-stretch", 120, mc -> { SurgeConfig.get().idle = "IDLE_STRETCH"; }));
-		STEPS.add(new Step("07s-idle-watch", 100, mc -> { SurgeConfig.get().idle = "IDLE_WATCH"; }));
-		STEPS.add(new Step("07s-idle-scratch", 100, mc -> { SurgeConfig.get().idle = "IDLE_SCRATCH"; }));
-		STEPS.add(new Step("07s-idle-box", 100, mc -> { SurgeConfig.get().idle = "IDLE_BOX"; }));
-		STEPS.add(new Step("07s-idle-phone", 100, mc -> { SurgeConfig.get().idle = "IDLE_PHONE"; }));
-		STEPS.add(new Step("07s-idle-whistle", 100, mc -> { SurgeConfig.get().idle = "IDLE_WHISTLE"; }));
-		STEPS.add(new Step("07t-elytra-emote", 40, mc -> { SurgeConfig.get().idle = "none"; Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); Emotes.play(mc, Emotes.Emote.DAB); mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
+		STEPS.add(new Step("07t-elytra-emote", 40, mc -> { Emotes.stop(mc); mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA)); Emotes.play(mc, Emotes.Emote.DAB); mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); }));
 		STEPS.add(new Step("07v-lod-collect", 300, mc -> { gg.surge.client.mods.Mods.LOD.setEnabled(true); mc.player.connection.sendCommand("gamemode spectator"); mc.player.connection.sendCommand("tp @s ~ ~100 ~"); mc.options.setCameraType(CameraType.FIRST_PERSON); mc.player.setXRot(40f); }));
 		STEPS.add(new Step("07w-lod-far", 120, mc -> { org.slf4j.LoggerFactory.getLogger("surge").info("Distant terrain " + gg.surge.client.lod.Lod.stats() + " rd=" + mc.options.getEffectiveRenderDistance()); mc.options.renderDistance().set(3); mc.player.setYRot(mc.player.getYRot() + 180f); mc.player.setXRot(35f); mc.options.setCameraType(CameraType.FIRST_PERSON); }));
 		STEPS.add(new Step("07w1-lod-low", 100, mc -> gg.surge.client.mods.Mods.LOD_QUALITY.set("Low")));

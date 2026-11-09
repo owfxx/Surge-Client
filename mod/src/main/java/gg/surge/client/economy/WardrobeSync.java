@@ -28,7 +28,6 @@ public final class WardrobeSync {
 			if (o.has("cape")) c.cape = o.get("cape").getAsString();
 			if (o.has("wings")) c.wings = o.get("wings").getAsString();
 			if (o.has("halo")) c.halo = o.get("halo").getAsString();
-			if (o.has("idle")) c.idle = o.get("idle").getAsString();
 			if (o.has("emotePages") && o.get("emotePages").isJsonArray()) {
 				List<List<String>> pages = new ArrayList<>();
 				for (JsonElement page : o.getAsJsonArray("emotePages")) {
