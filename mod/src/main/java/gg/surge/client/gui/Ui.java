@@ -46,11 +46,15 @@ public final class Ui {
 	}
 
 	public static boolean light() {
-		return style().endsWith("Light");
+		return style().endsWith("Light") && (screenDepth == 0 || lightAllowed);
 	}
 
+	private static boolean lightAllowed = true;
+
 	public static void beginScreen(net.minecraft.client.gui.screens.Screen s) {
-		if (s.getClass().getName().startsWith("gg.surge.client.gui.")) screenDepth++;
+		if (!s.getClass().getName().startsWith("gg.surge.client.gui.")) return;
+		screenDepth++;
+		lightAllowed = !(s instanceof HudEditorScreen);
 	}
 
 	public static int suspendTheme() {
@@ -113,8 +117,15 @@ public final class Ui {
 		return themed() && light() ? remapLight(c, true) : c;
 	}
 
+	private static boolean keep;
+
 	public static int remap(int c) {
-		return themed() && light() ? remapLight(c, false) : c;
+		return !keep && themed() && light() ? remapLight(c, false) : c;
+	}
+
+	private static void knob(GuiGraphics g, int x, int y, int d, int color) {
+		keep = true;
+		try { cut(g, x, y, d, d, d / 2, color); } finally { keep = false; }
 	}
 
 	private static int remapLight(int c, boolean text) {
@@ -123,9 +134,9 @@ public final class Ui {
 		float sat = mx == 0 ? 0 : (mx - mn) / (float) mx;
 		if (sat > 0.3f && mx > 0x50) return c;
 		float l = (mx + mn) / 510f;
-		if (!text && l < 0.1f && a < 0x90) return c;
+		if (!text && l < 0.1f && a < 0x60) return c;
 		float inv = 1f - l;
-		float v = mcStyle() ? 0.25f + inv * 0.55f : 0.09f + inv * 0.88f;
+		float v = text ? (mcStyle() ? 0.24f + inv * 0.34f : 0.08f + inv * 0.5f) : (mcStyle() ? 0.25f + inv * 0.55f : 0.09f + inv * 0.88f);
 		int k = Math.max(0, Math.min(255, Math.round(v * 255)));
 		int tb = Math.min(255, k + (mcStyle() ? 0 : 3));
 		return (a << 24) | (k << 16) | (k << 8) | tb;
@@ -546,6 +557,11 @@ public final class Ui {
 			glassRect(g, x, y, w, h, Math.min(6, Math.min(w, h) / 2), (disabled ? 0.5f : hov ? 1.6f : 1.1f) * alpha);
 			return;
 		}
+		if (surgeStyle()) {
+			int fill = disabled ? 0xFF26262A : hov ? 0xFF4A4A50 : 0xFF333338;
+			cutBox(g, x, y, w, h, 3, Colors.alpha(fill, alpha), Colors.alpha(hov ? 0xFF6A6A72 : EDGE, alpha));
+			return;
+		}
 		g.blitSprite(RenderPipelines.GUI_TEXTURED, disabled ? BUTTON_OFF_SPRITE : hov ? BUTTON_HOVER_SPRITE : BUTTON_SPRITE, x, y, w, h, alpha);
 	}
 
@@ -603,6 +619,14 @@ public final class Ui {
 			} finally { rawCut = false; }
 			return;
 		}
+		if (surgeStyle()) {
+			rawCut = true;
+			try {
+				cut(g, x, y, 22, 12, 6, Colors.lerp(0xFF3A3A3F, 0xFF34C759, a));
+				knob(g, x + 1 + Math.round(a * 10), y + 1, 10, 0xFFFFFFFF);
+			} finally { rawCut = false; }
+			return;
+		}
 		g.fill(x, y, x + 22, y + 12, 0xFF000000);
 		g.fill(x + 1, y + 1, x + 21, y + 11, Colors.lerp(0xFF8B2B2B, 0xFF3C8527, a));
 		g.fill(x + 1, y + 1, x + 21, y + 2, 0x40000000);
@@ -620,6 +644,16 @@ public final class Ui {
 				int kx = x + Math.round((w - 10) * f);
 				cut(g, kx, y + 1, 10, 10, 5, active ? 0xFFFFFFFF : 0xFFF4F4F6);
 				g.fill(kx + 2, y + 10, kx + 8, y + 11, 0x26000000);
+			} finally { rawCut = false; }
+			return;
+		}
+		if (surgeStyle()) {
+			float f = Math.max(0, Math.min(1, fraction));
+			rawCut = true;
+			try {
+				cut(g, x, y + 4, w, 4, 2, 0xFF3A3A3F);
+				cut(g, x, y + 4, Math.max(4, Math.round(w * f)), 4, 2, 0xFF34C759);
+				knob(g, x + Math.round((w - 10) * f), y + 1, 10, active ? 0xFFFFFFFF : 0xFFE8E8EC);
 			} finally { rawCut = false; }
 			return;
 		}
