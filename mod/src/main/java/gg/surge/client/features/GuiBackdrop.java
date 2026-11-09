@@ -170,16 +170,16 @@ public final class GuiBackdrop {
 	}
 
 	private static void stars(GuiGraphics g, int w, int h, float t, float fade, float amount, float s) {
-		g.fillGradient(0, 0, w, h, argb(fade * 0.3f, 0x0B1030), argb(fade * 0.15f, 0x1A1238));
+		g.fillGradient(0, 0, w, h, argb(fade * 0.4f, 0x0B1030), argb(fade * 0.25f, 0x1A1238));
 		int n = count(240, w, h, amount, s);
 		for (int i = 0; i < n; i++) {
 			float x = hash(i, 1) * w, y = hash(i, 2) * h;
 			float tw = 0.55f + 0.45f * (float) Math.sin(t * (0.8f + hash(i, 3) * 2.5f) + hash(i, 4) * 6.28f);
 			float big = hash(i, 5);
-			float r = (big > 0.93f ? 1.8f : big > 0.7f ? 1.1f : 0.7f) * s / 2f;
+			float r = (big > 0.9f ? 2.2f : big > 0.6f ? 1.5f : 1.0f) * s / 2f;
 			int c = hash(i, 6) > 0.8f ? 0xFFE9C4 : hash(i, 6) > 0.6f ? 0xC4D8FF : 0xFFFFFF;
-			if (big > 0.93f) glow(g, x, y, r, fade * tw, c);
-			else dot(g, x, y, r, argb(fade * tw * (0.35f + big * 0.6f), c));
+			if (big > 0.9f) glow(g, x, y, r, fade * tw, c);
+			else dot(g, x, y, r, argb(fade * tw * (0.55f + big * 0.45f), c));
 		}
 		float period = 6f;
 		int k = (int) Math.floor(t / period);
@@ -201,14 +201,14 @@ public final class GuiBackdrop {
 		int[] cols = {0x3CFFB0, 0x46D6FF, 0xA070FF};
 		int step = Math.max(2, Math.round(3 * s / 2f));
 		for (int band = 0; band < 3; band++) {
-			float base = h * (0.22f + band * 0.09f);
+			float base = h * (0.12f + band * 0.11f);
 			for (int x = 0; x < w; x += step) {
 				float u = x / (float) w;
 				float wave = (float) (Math.sin(u * 5.5f + t * 0.35f + band * 1.7f) * 0.6f + Math.sin(u * 13f - t * 0.6f + band) * 0.25f + Math.sin(u * 2.1f + t * 0.15f) * 0.5f);
 				float top = base + wave * h * 0.07f;
-				float height = h * (0.12f + 0.1f * (0.5f + 0.5f * (float) Math.sin(u * 9f + t * 0.8f + band * 2.3f)));
+				float height = h * (0.2f + 0.14f * (0.5f + 0.5f * (float) Math.sin(u * 9f + t * 0.8f + band * 2.3f)));
 				float shimmer = 0.6f + 0.4f * (float) Math.sin(u * 40f + t * 2.2f + band);
-				float a = fade * amount * (0.12f + 0.1f * shimmer) * (1f - Math.abs(u - 0.5f) * 0.6f);
+				float a = Math.min(0.85f, fade * amount * (0.28f + 0.2f * shimmer) * (1f - Math.abs(u - 0.5f) * 0.5f));
 				int c = cols[band];
 				g.fillGradient(x, Math.round(top), x + step, Math.round(top + height * 0.25f), argb(0, c), argb(a, c));
 				g.fillGradient(x, Math.round(top + height * 0.25f), x + step, Math.round(top + height), argb(a, c), argb(0, c));
@@ -229,16 +229,21 @@ public final class GuiBackdrop {
 			float y = wrap(hash(i, 2) * (h + 30) + t * speed, h + 30) - 15;
 			float x = wrap(hash(i, 3) * w + t * w * 0.03f * depth + (float) Math.sin(t * 0.9f + hash(i, 4) * 6.28f) * 30 * s / 2f, w);
 			float spin = t * (0.8f + hash(i, 5) * 2f) + hash(i, 6) * 6.28f;
-			float pw = (5 + depth * 6) * s / 2f, ph = pw * (0.35f + 0.65f * Math.abs((float) Math.cos(spin)));
+			float pw = (7 + depth * 7) * s / 2f, ph = pw * (0.3f + 0.4f * Math.abs((float) Math.cos(spin)));
 			int c = hash(i, 7) > 0.5f ? 0xFFB7D0 : 0xFFD4E2;
 			g.pose().pushMatrix();
 			g.pose().translate(x, y);
 			g.pose().rotate(spin * 0.5f);
 			float a = fade * (0.45f + depth * 0.45f);
-			int hw = Math.max(1, Math.round(pw / 2)), hh = Math.max(1, Math.round(ph / 2));
-			if (hh > 1) g.fill(-hw, -hh + 1, hw, hh - 1, argb(a, c));
-			g.fill(-hw + 1, -hh, hw - 1, hh, argb(a, c));
-			g.fill(-hw / 3, -hh, hw / 3, 0, argb(a * 0.5f, 0xFF8FB4));
+			float rx = pw / 2f, ry = Math.max(0.8f, ph / 2f);
+			int iy = Math.max(1, Math.round(ry));
+			for (int dy = -iy; dy < iy; dy++) {
+				float yy = (dy + 0.5f) / ry;
+				float span = rx * (float) Math.sqrt(Math.max(0, 1 - yy * yy)) * (1f - 0.25f * Math.max(0, yy));
+				int dx = Math.round(span);
+				if (dx > 0) g.fill(-dx, dy, dx, dy + 1, argb(a, c));
+			}
+			g.fill(-Math.round(rx * 0.6f), 0, Math.round(rx * 0.6f), 1, argb(a * 0.45f, 0xFF8FB4));
 			g.pose().popMatrix();
 		}
 	}

@@ -264,8 +264,15 @@ public class SurgeClient implements ClientModInitializer {
 		if (!underScreen(mc)) return;
 		underDrawnAt = System.currentTimeMillis();
 		underScreen = mc.screen;
-		drawModules(g, mc);
+		drawLayer(g, mc);
 		g.nextStratum();
+	}
+
+	private static void drawLayer(GuiGraphics g, Minecraft mc) {
+		if (mc.debugEntries.isOverlayVisible()) return;
+		Waypoints.render(g, mc);
+		gg.surge.client.features.Extras.render(g, mc);
+		drawModules(g, mc);
 	}
 
 	private static void renderHud(GuiGraphics g, DeltaTracker delta) {
@@ -287,9 +294,7 @@ public class SurgeClient implements ClientModInitializer {
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
 		boolean debug = mc.debugEntries.isOverlayVisible();
 		if (!debug) {
-			Waypoints.render(g, mc);
-			gg.surge.client.features.Extras.render(g, mc);
-			if (!(underScreen(mc) && System.currentTimeMillis() - underDrawnAt < 250 && underScreen == mc.screen)) drawModules(g, mc);
+			if (!(underScreen(mc) && System.currentTimeMillis() - underDrawnAt < 250 && underScreen == mc.screen)) drawLayer(g, mc);
 		}
 		if (mc.screen == null) gg.surge.client.gui.SocialToasts.render(g, mc, g.guiWidth());
 	}
