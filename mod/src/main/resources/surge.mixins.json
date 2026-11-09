@@ -56,7 +56,11 @@
     "WindowMixin",
     "PostChainAccessor",
     "PostPassAccessor",
-    "ElytraModelMixin"
+    "ElytraModelMixin",
+    "FontAccessor",
+    "FontThemeMixin",
+    "GuiGraphicsThemeMixin",
+    "ScreenThemeMixin"
   ],
   "injectors": {
     "defaultRequire": 0

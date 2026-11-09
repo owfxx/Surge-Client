@@ -28,6 +28,109 @@ public final class Ui {
 	private static boolean glass;
 	private static long themeAt;
 
+	private static String style = "Surge Dark";
+	private static int screenDepth;
+	private static Font uiFont;
+
+	public static String style() {
+		glass();
+		return style;
+	}
+
+	public static boolean surgeStyle() {
+		return style().startsWith("Surge");
+	}
+
+	public static boolean mcStyle() {
+		return style().startsWith("Minecraft");
+	}
+
+	public static boolean light() {
+		return style().endsWith("Light");
+	}
+
+	public static void beginScreen(net.minecraft.client.gui.screens.Screen s) {
+		if (s.getClass().getName().startsWith("gg.surge.client.gui.")) screenDepth++;
+	}
+
+	public static int suspendTheme() {
+		int d = screenDepth;
+		screenDepth = 0;
+		return d;
+	}
+
+	public static void resumeTheme(int d) {
+		screenDepth = d;
+	}
+
+	public static void endScreen() {
+		if (screenDepth > 0) screenDepth--;
+	}
+
+	public static boolean themed() {
+		return screenDepth > 0 && !glass();
+	}
+
+	public static Font uiFont() {
+		if (uiFont == null) {
+			Font.Provider p = new Font.Provider() {
+				private Font.Provider base() {
+					return ((gg.surge.client.mixin.FontAccessor) Minecraft.getInstance().font).surge$provider();
+				}
+
+				@Override
+				public net.minecraft.client.gui.GlyphSource glyphs(net.minecraft.network.chat.FontDescription d) {
+					if (d == null || d.equals(net.minecraft.network.chat.FontDescription.DEFAULT)) d = UI_FONT;
+					return base().glyphs(d);
+				}
+
+				@Override
+				public net.minecraft.client.gui.font.glyphs.EffectGlyph effect() {
+					return base().effect();
+				}
+			};
+			uiFont = new Font(p);
+		}
+		return uiFont;
+	}
+
+	private static final net.minecraft.network.chat.FontDescription UI_FONT = new net.minecraft.network.chat.FontDescription.Resource(Identifier.fromNamespaceAndPath("surge", "ui"));
+
+	public static Font swapFont(Font f) {
+		if (!themed() || !surgeStyle()) return null;
+		Minecraft mc = Minecraft.getInstance();
+		if (f != mc.font) return null;
+		return uiFont();
+	}
+
+	public static boolean textShadow(boolean shadow) {
+		if (!themed()) return shadow;
+		if (surgeStyle() || light()) return false;
+		return shadow;
+	}
+
+	public static int remapText(int c) {
+		return themed() && light() ? remapLight(c, true) : c;
+	}
+
+	public static int remap(int c) {
+		return themed() && light() ? remapLight(c, false) : c;
+	}
+
+	private static int remapLight(int c, boolean text) {
+		int a = c >>> 24, r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+		int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+		float sat = mx == 0 ? 0 : (mx - mn) / (float) mx;
+		if (sat > 0.3f && mx > 0x50) return c;
+		float l = (mx + mn) / 510f;
+		if (!text && l < 0.1f && a < 0x90) return c;
+		float inv = 1f - l;
+		float v = mcStyle() ? 0.25f + inv * 0.55f : 0.09f + inv * 0.88f;
+		int k = Math.max(0, Math.min(255, Math.round(v * 255)));
+		int tb = Math.min(255, k + (mcStyle() ? 0 : 3));
+		return (a << 24) | (k << 16) | (k << 8) | tb;
+	}
+
 	public static boolean glass() {
 		long now = System.currentTimeMillis();
 		if (now - themeAt > 200) { themeAt = now; theme(); }
@@ -36,6 +139,7 @@ public final class Ui {
 
 	private static void theme() {
 		String t = gg.surge.client.mods.Mods.THEME.get();
+		style = gg.surge.client.mods.Mods.UI_STYLE.get();
 		String key = t + gg.surge.client.mods.Mods.THEME_COLOR.get();
 		if (key.equals(themeKey)) return;
 		themeKey = key;
@@ -300,12 +404,12 @@ public final class Ui {
 			MOD_ICONS.put(m.id, ok ? t : null);
 		}
 		Identifier tex = MOD_ICONS.get(m.id);
-		if (tex != null) g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 64, 64, 64, 64, color);
+		if (tex != null) g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 64, 64, 64, 64, remapText(color));
 		else item(g, m.icon(), x, y, size);
 	}
 
 	public static void iconTex(GuiGraphics g, Identifier tex, int x, int y, int size, float alpha) {
-		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 32, 32, 32, 32, Colors.alpha(0xFFFFFFFF, alpha));
+		g.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, size, size, 32, 32, 32, 32, remapText(Colors.alpha(0xFFFFFFFF, alpha)));
 	}
 
 	public static boolean tile(GuiGraphics g, Font font, int mx, int my, int x, int y, int size, Identifier icon, String label, boolean labelLeft, float alpha) {
@@ -361,6 +465,8 @@ public final class Ui {
 
 	public static void cut(GuiGraphics g, int x, int y, int w, int h, int c, int color) {
 		if (glass && !rawCut) color = glassTint(color);
+		if (!glass && mcStyle()) c = 0;
+		else if (!glass && c > 0) c = c + 1;
 		c = Math.max(0, Math.min(c, Math.min(w, h) / 2));
 		if (glass && c > 0) {
 			for (int i = 0; i < c; i++) {
@@ -393,6 +499,25 @@ public final class Ui {
 		}
 		int a = (fill >>> 24) & 0xFF;
 		int ea = Math.max(a, (edge >>> 24) & 0xFF);
+		if (mcStyle()) {
+			g.fill(x, y, x + w, y + h, (ea << 24));
+			g.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
+			if (w >= 4 && h >= 4) {
+				int hi = ((a * 0x50 / 255) << 24) | 0xFFFFFF, lo = ((a * 0x70 / 255) << 24);
+				g.fill(x + 1, y + 1, x + w - 1, y + 2, hi);
+				g.fill(x + 1, y + 2, x + 2, y + h - 1, hi);
+				g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, lo);
+				g.fill(x + w - 2, y + 2, x + w - 1, y + h - 2, lo);
+			}
+			return;
+		}
+		if (surgeStyle() && !glass) {
+			boolean bright = ((edge >>> 24) & 0xFF) > 0x60 && (edge & 0xFFFFFF) > 0x606060;
+			int border = bright ? edge : (a << 24) | (Colors.lerp(fill | 0xFF000000, 0xFFFFFFFF, 0.07f) & 0xFFFFFF);
+			cut(g, x, y, w, h, c, border);
+			cut(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, c - 1), fill);
+			return;
+		}
 		g.fill(x, y, x + w, y + h, (ea << 24));
 		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
 		if (w >= 6 && h >= 6 && a > 0x40) {

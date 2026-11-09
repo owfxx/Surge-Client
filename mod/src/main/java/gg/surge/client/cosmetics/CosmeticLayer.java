@@ -61,7 +61,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			return;
 		}
 		float age = state.ageInTicks;
-		boolean elytra = p.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA) && !(Preview.clean || Preview.card != null);
+		boolean elytra = state.chestEquipment.is(Items.ELYTRA);
 		float speed = Math.min(1f, state.walkAnimationSpeed);
 		boolean flying = p.getAbilities().flying || p.isFallFlying();
 

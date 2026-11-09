@@ -40,6 +40,7 @@ public final class Mods {
 	public static final Setting.Toggle HUD_SHADOW = GENERAL.toggle("hudShadow", "Text shadow", true).showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Choice HUD_BRACKETS = GENERAL.choice("hudBrackets", "Brackets", "None", "None", "[ ]", "( )", "< >").showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Header H_THEME = GENERAL.header("Menu colors");
+	public static final Setting.Choice UI_STYLE = GENERAL.choice("uiStyle", "Style", "Surge Dark", "Surge Dark", "Surge Light", "Minecraft Dark", "Minecraft Light");
 	public static final Setting.Choice THEME = GENERAL.choice("theme2", "Theme", "Ash", "Ash", "Purple", "Blue", "Cyan", "Green", "Red", "Orange", "Pink", "Gold", "Mono", "Custom");
 	public static final Setting.Color THEME_COLOR = GENERAL.color("themeColor", "Custom color", "6B6B73").showIf(() -> Mods.THEME.is("Custom"));
 	public static final Setting.Header H_EMOTES = GENERAL.header("Emotes");

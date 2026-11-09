@@ -306,6 +306,23 @@ public final class AutoTest {
 			for (char ch : ")*(sqrt(".toCharArray()) mc.screen.charTyped(new net.minecraft.client.input.CharacterEvent(ch, 0));
 			mc.screen.keyPressed(new net.minecraft.client.input.KeyEvent(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0));
 		}));
+		STEPS.add(new Step("30a1-surge-dark-menu", 25, mc -> { Mods.UI_STYLE.set("Surge Dark"); open(mc, new SurgeMenuScreen(null)); }));
+		STEPS.add(new Step("30a2-surge-dark-wardrobe", 30, mc -> open(mc, new WardrobeScreen(null))));
+		STEPS.add(new Step("30a3-surge-dark-hub", 20, mc -> open(mc, new HudEditorScreen(null))));
+		STEPS.add(new Step("30a4-surge-dark-calc", 15, mc -> open(mc, new gg.surge.client.gui.CalculatorScreen(null))));
+		STEPS.add(new Step("30b1-surge-light-menu", 25, mc -> { Mods.UI_STYLE.set("Surge Light"); open(mc, new SurgeMenuScreen(null)); }));
+		STEPS.add(new Step("30b2-surge-light-wardrobe", 30, mc -> open(mc, new WardrobeScreen(null))));
+		STEPS.add(new Step("30b3-surge-light-hub", 20, mc -> open(mc, new HudEditorScreen(null))));
+		STEPS.add(new Step("30b4-surge-light-calc", 15, mc -> open(mc, new gg.surge.client.gui.CalculatorScreen(null))));
+		STEPS.add(new Step("30c1-mc-dark-menu", 25, mc -> { Mods.UI_STYLE.set("Minecraft Dark"); open(mc, new SurgeMenuScreen(null)); }));
+		STEPS.add(new Step("30c2-mc-dark-wardrobe", 30, mc -> open(mc, new WardrobeScreen(null))));
+		STEPS.add(new Step("30c3-mc-dark-hub", 20, mc -> open(mc, new HudEditorScreen(null))));
+		STEPS.add(new Step("30c4-mc-dark-calc", 15, mc -> open(mc, new gg.surge.client.gui.CalculatorScreen(null))));
+		STEPS.add(new Step("30d1-mc-light-menu", 25, mc -> { Mods.UI_STYLE.set("Minecraft Light"); open(mc, new SurgeMenuScreen(null)); }));
+		STEPS.add(new Step("30d2-mc-light-wardrobe", 30, mc -> open(mc, new WardrobeScreen(null))));
+		STEPS.add(new Step("30d3-mc-light-hub", 20, mc -> open(mc, new HudEditorScreen(null))));
+		STEPS.add(new Step("30d4-mc-light-calc", 15, mc -> open(mc, new gg.surge.client.gui.CalculatorScreen(null))));
+		STEPS.add(new Step("30e-style-reset", 5, mc -> { Mods.UI_STYLE.set("Surge Dark"); open(mc, null); }));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;

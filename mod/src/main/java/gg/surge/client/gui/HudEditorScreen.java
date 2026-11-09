@@ -154,7 +154,8 @@ public class HudEditorScreen extends Screen {
 			float a = Ui.anim("hud:" + m.id, active || m == hovered);
 			g.fill(x - 1, y - 1, x + w + 1, y + h + 1, Colors.alpha(0x30FFFFFF, 0.4f + a * 0.6f));
 			Ui.outline(g, x - 1, y - 1, w + 2, h + 2, Colors.lerp(0x60FFFFFF, active ? 0xFFFFFFFF : Ui.ACCENT_2, a));
-			m.draw(g, minecraft);
+			int depth = Ui.suspendTheme();
+			try { m.draw(g, minecraft); } finally { Ui.resumeTheme(depth); }
 			if (m == hovered || m == resizing) {
 				g.fill(x + w - 3, y + h - 3, x + w + 2, y + h + 2, Ui.EDGE);
 				g.fill(x + w - 2, y + h - 2, x + w + 1, y + h + 1, 0xFFFFFFFF);
@@ -212,7 +213,7 @@ public class HudEditorScreen extends Screen {
 		boolean hov = hubButton(g, mx, my, mainX, y, mainW, mainH, ui, "mods");
 		int textW = font.width("Mod Menu") + 20;
 		int ix = mainX + (mainW - textW) / 2;
-		g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon("mods"), ix, y + 8, 0f, 0f, 12, 12, 64, 64, 64, 64, Colors.alpha(0xFFFFFFFF, ui));
+		g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon("mods"), ix, y + 8, 0f, 0f, 12, 12, 64, 64, 64, 64, Ui.remapText(Colors.alpha(0xFFFFFFFF, ui)));
 		g.drawString(font, Component.literal("Mod Menu").withStyle(net.minecraft.ChatFormatting.BOLD), ix + 18, y + 10, Colors.alpha(0xFFFFFFFF, ui), false);
 		if (hov && click) out = () -> minecraft.setScreen(new SurgeMenuScreen(this));
 		String[][] items = {{"wardrobe", "Wardrobe"}, {"emotes", "Emotes"}, {"friends", "Friends"}, {"settings", "Settings"}, {"calc", "Calculator"}};
@@ -223,7 +224,7 @@ public class HudEditorScreen extends Screen {
 			boolean disabled = id.equals("emotes") && minecraft.player == null;
 			boolean h = hubButton(g, mx, my, bx, by, bw, bh, disabled ? ui * 0.5f : ui, id);
 			float ia = (disabled ? 0.35f : 1f) * ui;
-			g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon(id), bx + (bw - 16) / 2, by + 7, 0f, 0f, 16, 16, 64, 64, 64, 64, Colors.alpha(0xFFFFFFFF, ia));
+			g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon(id), bx + (bw - 16) / 2, by + 7, 0f, 0f, 16, 16, 64, 64, 64, 64, Ui.remapText(Colors.alpha(0xFFFFFFFF, ia)));
 			String label = items[i][1];
 			if (font.width(label) > bw - 4) label = Ui.fit(font, label, bw - 4);
 			Ui.centered(g, font, label, bx + bw / 2, by + 28, Colors.alpha(h ? 0xFFFFFFFF : 0xFFC8C8CE, ia));
