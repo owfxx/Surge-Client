@@ -1,3 +1,12 @@
+## 1.8.8
+- Wings now bend and flap like real wings: the tips follow the rest of the wing and the feathers ripple
+- 4 new animated capes: Sunset, Ender Eye, Diamond and Toxic
+- Launcher wardrobe: search, and show only items you own or items in the shop
+- Modpacks: play any modpack straight from its card, and see when you last played it
+- New default skin for previews when you don't have a skin yet
+- GUI Scales is now GUI Modifier and can remove the dark background behind inventories and chests
+- HUD mods now get darkened behind inventories like the rest of the screen
+
 ## 1.8.7
 - Surge now supports Minecraft 1.8.9: make a 1.8.9 modpack in the launcher to get the Surge menu, HUD mods, PvP mods, performance features and your capes, wings and halos
 - 1.8.9 mods include Toggle Sprint, Zoom, Freelook, Keystrokes, CPS, Armor Status, Potion Effects, Reach Display, Combo Counter, Block Outline, Particles, Time Changer, Clear Weather, Scoreboard, Nick Hider, Auto GG and Chat Timestamps
