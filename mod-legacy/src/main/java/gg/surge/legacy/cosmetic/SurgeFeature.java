@@ -59,7 +59,7 @@ public class SurgeFeature implements FeatureRenderer<AbstractClientPlayerEntity>
 		st[2] += (open - st[2]) * Math.min(1f, dAge * 0.15f);
 		open = st[2];
 		if (FLAP.size() > 256) FLAP.clear();
-		float flap = (float) Math.sin(st[0]) * (4f + open * 22f);
+		float flap = (float) Math.sin(st[0]) * (3f + open * 15f);
 		float spread = 62f - open * 34f;
 		float lift = 10f + open * 6f;
 		MinecraftClient.getInstance().getTextureManager().bindTexture(new Identifier("surge", "textures/cosmetic/wings_" + style + ".png"));
@@ -75,7 +75,7 @@ public class SurgeFeature implements FeatureRenderer<AbstractClientPlayerEntity>
 			GlStateManager.scale((float) side, 1f, 1f);
 			GlStateManager.rotate(-(spread + flap), 0f, 1f, 0f);
 			GlStateManager.rotate(-lift - flap * 0.3f, 0f, 0f, 1f);
-			wingQuad(0.02f, -0.46f, 1.32f, 0.30f, 0f);
+			wingMesh(st[0], open);
 			GlStateManager.popMatrix();
 		}
 		if (glows) lightmap(false);
@@ -88,20 +88,33 @@ public class SurgeFeature implements FeatureRenderer<AbstractClientPlayerEntity>
 		else com.mojang.blaze3d.platform.GLX.gl13MultiTexCoord2f(com.mojang.blaze3d.platform.GLX.lightmapTextureUnit, restore % 65536, restore / 65536);
 	}
 
-	private static void wingQuad(float x0, float y0, float x1, float y1, float z) {
+	private static void wingMesh(float phase, float open) {
+		int n = 12;
+		float len = 1.30f / n, x = 0.02f, y = 0f, z = 0f;
+		float flex = 10f + open * 26f, lift = 6f + open * 10f;
+		float[][] p = new float[n + 1][4];
+		for (int k = 0; k <= n; k++) {
+			float u = k / (float) n;
+			float wave = (float) Math.sin(phase - 0.9f - u * 1.7f);
+			p[k][0] = x; p[k][1] = y; p[k][2] = z;
+			p[k][3] = (float) Math.sin(phase * 1.6f - u * 5.2f) * (0.012f + open * 0.03f) * u;
+			float yaw = (float) Math.toRadians(14f * u + flex * u * wave);
+			float pitch = (float) Math.toRadians(-lift * u * (float) Math.sin(phase - 1.3f - u * 1.6f) + 9f * u * u);
+			float c = (float) Math.cos(pitch);
+			x += (float) Math.cos(yaw) * c * len;
+			z += (float) Math.sin(yaw) * c * len;
+			y += (float) Math.sin(pitch) * len;
+		}
 		Tessellator t = Tessellator.getInstance();
 		BufferBuilder b = t.getBuffer();
 		b.begin(7, VertexFormats.POSITION_TEXTURE);
-		int seg = 8;
-		float bend = 0.16f;
-		for (int i = 0; i < seg; i++) {
-			float ua = i / (float) seg, ub = (i + 1) / (float) seg;
-			float xa = x0 + (x1 - x0) * ua, xb = x0 + (x1 - x0) * ub;
-			float za = z + bend * ua * ua, zb = z + bend * ub * ub;
-			b.vertex(xa, y0, za).texture(ua, 0).next();
-			b.vertex(xa, y1, za).texture(ua, 1).next();
-			b.vertex(xb, y1, zb).texture(ub, 1).next();
-			b.vertex(xb, y0, zb).texture(ub, 0).next();
+		for (int i = 0; i < n; i++) {
+			float ua = i / (float) n, ub = (i + 1) / (float) n;
+			float[] a = p[i], c = p[i + 1];
+			b.vertex(a[0], a[1] - 0.46f, a[2]).texture(ua, 0).next();
+			b.vertex(a[0], a[1] + 0.30f + a[3], a[2]).texture(ua, 1).next();
+			b.vertex(c[0], c[1] + 0.30f + c[3], c[2]).texture(ub, 1).next();
+			b.vertex(c[0], c[1] - 0.46f, c[2]).texture(ub, 0).next();
 		}
 		t.draw();
 	}

@@ -471,3 +471,12 @@ input[type=checkbox]:checked::after { border-color: #1a1405; }
 .nav:hover svg { color: #fff; transform: scale(1.08); }
 .nav.active svg { color: var(--gold); filter: drop-shadow(0 0 8px #f2c43066); }
 .nav.ext:hover svg { color: #8b93ff; }
+.pack-card { cursor: pointer; }
+.pack-card.current { border-color: #f2c43066; }
+.pack-card .pack-play { flex: none; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; opacity: 0; transform: scale(.9); transition: opacity .15s, transform .15s; }
+.pack-card .pack-play svg { width: 14px; height: 14px; fill: currentColor; }
+.pack-card:hover .pack-play, .pack-card:focus-visible .pack-play, .pack-card.current .pack-play { opacity: 1; transform: none; }
+.ward-filter { display: flex; gap: 8px; align-items: center; margin: 10px 0 2px; }
+.ward-filter .input { flex: 1; max-width: 240px; height: 34px; }
+.ward-filter .count { margin-left: auto; }
+.ward-empty { grid-column: 1 / -1; padding: 30px 0; text-align: center; }

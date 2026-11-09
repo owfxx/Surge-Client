@@ -49,6 +49,16 @@ public class AdminScreen extends Screen {
 	private String priceItem = "cape:surge", badgeKind = "booster", capeFile = "";
 	private byte[] capePng;
 	private final Set<String> picked = new LinkedHashSet<>();
+	private boolean demo;
+
+	public static AdminScreen demo(String tabName, String... items) {
+		AdminScreen a = new AdminScreen(null);
+		if (!gg.surge.client.dev.AutoTest.active()) return a;
+		a.demo = true;
+		a.tab = Tab.valueOf(tabName);
+		for (String i : items) { a.picked.add(i); a.giftPicked.add(i); }
+		return a;
+	}
 	private String saleTarget = "all";
 	private int percent = 20, durationIdx = 1;
 	private float gridScroll, listScroll;
@@ -186,6 +196,7 @@ public class AdminScreen extends Screen {
 
 	private Runnable grid(GuiGraphics g, int x, int y, int w, int h, int mx, int my, boolean click, java.util.function.Predicate<Shop.Item> selected, java.util.function.Predicate<Shop.Item> dim, CellAction act) {
 		Runnable action = null;
+		hoverItem = null;
 		int cell = 46, cols = Math.max(1, w / cell), cw = w / cols, chh = 56;
 		List<Shop.Item> items = Shop.ITEMS;
 		int rows = (items.size() + cols - 1) / cols;
@@ -197,16 +208,9 @@ public class AdminScreen extends Screen {
 			if (cy + chh < y || cy > y + h) continue;
 			boolean sel = selected.test(it), hov = Ui.hover(mx, my, cx + 1, cy + 1, cw - 2, chh - 2) && my >= y && my < y + h;
 			Ui.cutBox(g, cx + 1, cy + 1, cw - 2, chh - 2, 2, sel ? 0xFF2F4A2A : hov ? 0xFF2E2E33 : 0xFF202024, sel ? 0xFF6BD35A : hov ? 0xFF8A8A90 : 0xFF2E2E33);
-			CapturedLook look;
-			float turn = 20f;
-			if (it.category().equals("emote")) {
-				Emotes.Emote e = Emotes.Emote.byName(it.key());
-				look = new CapturedLook(null, null, null, e, (System.currentTimeMillis() % 100000) / 1000f + i * 0.3f, true);
-			} else {
-				String sub = it.sub();
-				look = new CapturedLook(sub.equals("cape") ? it.key() : null, sub.equals("wings") ? it.key() : null, sub.equals("halo") ? it.key() : null, null, 0f, false);
-				if (sub.equals("cape") || sub.equals("wings")) turn = 200f;
-			}
+			CapturedLook look = lookFor(it, i * 0.3f);
+			float turn = it.sub().equals("cape") || it.sub().equals("wings") ? 200f : 20f;
+			if (hov) { hoverItem = it; hoverAt = locked.contains(it.id()); }
 			if (it.sub().equals("halo")) {
 				g.enableScissor(cx + 2, Math.max(y, cy + 2), cx + cw - 2, Math.min(y + h, cy + chh - 12));
 				Preview.drawCard(g, cx + 2, cy + 14, cx + cw - 2, cy + chh + 14, 24, 25f, look);
@@ -225,7 +229,87 @@ public class AdminScreen extends Screen {
 			if (hov && click) action = () -> act.run(it);
 		}
 		g.disableScissor();
+		if (hoverItem == null && demo && !picked.isEmpty()) { hoverItem = Shop.byId(picked.iterator().next()); mx = x + w / 3; my = y + h / 2; }
+		if (hoverItem != null) bigPreview(g, hoverItem, mx, my);
 		return action;
+	}
+
+	private Shop.Item hoverItem;
+	private boolean hoverAt;
+
+	private static CapturedLook lookFor(Shop.Item it, float offset) {
+		if (it.category().equals("emote")) {
+			Emotes.Emote e = Emotes.Emote.byName(it.key());
+			return new CapturedLook(null, null, null, e, (System.currentTimeMillis() % 100000) / 1000f + offset, true);
+		}
+		String sub = it.sub();
+		return new CapturedLook(sub.equals("cape") ? it.key() : null, sub.equals("wings") ? it.key() : null, sub.equals("halo") ? it.key() : null, null, 0f, false);
+	}
+
+	private void bigPreview(GuiGraphics g, Shop.Item it, int mx, int my) {
+		int w = 104, h = 150;
+		int x = mx + 14, y = my - h / 2;
+		if (x + w > width - 4) x = mx - 14 - w;
+		y = Math.max(4, Math.min(height - h - 4, y));
+		g.nextStratum();
+		Ui.shadow(g, x, y, w, h);
+		Ui.box(g, x, y, w, h, Ui.BG, Ui.ACCENT_DIM);
+		float spin = (System.currentTimeMillis() % 8000) / 8000f * 360f;
+		CapturedLook look = lookFor(it, 0f);
+		boolean back = it.sub().equals("cape") || it.sub().equals("wings");
+		if (it.sub().equals("halo")) {
+			g.enableScissor(x + 3, y + 3, x + w - 3, y + h - 40);
+			Preview.drawCard(g, x + 3, y + 24, x + w - 3, y + h - 10, 46, spin, look);
+			g.disableScissor();
+		} else Preview.drawCard(g, x + 3, y + 3, x + w - 3, y + h - 40, 36, back ? 180f + (float) Math.sin(spin / 57.3f) * 35f : spin, look);
+		g.fill(x + 1, y + h - 38, x + w - 1, y + h - 37, Ui.EDGE);
+		String name = it.name().replace(" (emote)", "").replace(" (idle)", "");
+		g.drawString(font, Ui.fit(font, name, w - 8), x + 5, y + h - 33, Ui.TEXT, true);
+		String kind = it.category().equals("emote") ? (it.key().startsWith("IDLE_") ? "Idle" : "Emote") : Character.toUpperCase(it.sub().charAt(0)) + it.sub().substring(1);
+		g.drawString(font, kind, x + 5, y + h - 22, Ui.MUTED, false);
+		String price = Shop.price(it) + " coins";
+		g.drawString(font, price, x + w - 5 - font.width(price), y + h - 22, Ui.YELLOW, false);
+		g.drawString(font, hoverAt ? "Locked, codes only" : "In the shop", x + 5, y + h - 12, hoverAt ? 0xFFFF8A8A : 0xFF8CFFA0, false);
+	}
+
+	private int strip(GuiGraphics g, int x, int y, int w, int coins, java.util.Collection<String> ids) {
+		int cw = 28, ch = 34, gap = 3;
+		int max = Math.max(1, (w + gap) / (cw + gap));
+		int n = 0;
+		if (coins > 0) {
+			Ui.cutBox(g, x, y, cw, ch, 2, 0xFF2A2410, 0xFF7A6420);
+			int cx = x + cw / 2, cy = y + 12;
+			for (int r = 6; r >= 0; r--) g.fill(cx - r, cy - (int) Math.sqrt(36 - r * r), cx + r, cy + (int) Math.sqrt(36 - r * r), r > 4 ? 0xFFA77A08 : 0xFFF2C430);
+			g.fill(cx - 2, cy - 3, cx, cy - 1, 0xFFFFF3B0);
+			String c = coins >= 10000 ? (coins / 1000) + "k" : String.valueOf(coins);
+			g.pose().pushMatrix();
+			g.pose().translate(cx, y + ch - 9);
+			g.pose().scale(0.7f, 0.7f);
+			g.drawString(font, c, -font.width(c) / 2, 0, Ui.YELLOW, true);
+			g.pose().popMatrix();
+			n++;
+		}
+		List<String> list = new ArrayList<>(ids);
+		for (int i = 0; i < list.size(); i++) {
+			int bx = x + n * (cw + gap);
+			if (n == max - 1 && list.size() - i > 1) {
+				Ui.cutBox(g, bx, y, cw, ch, 2, 0xFF202024, 0xFF2E2E33);
+				Ui.centered(g, font, "+" + (list.size() - i), bx + cw / 2, y + ch / 2 - 4, Ui.MUTED);
+				break;
+			}
+			Shop.Item it = Shop.byId(list.get(i));
+			Ui.cutBox(g, bx, y, cw, ch, 2, 0xFF1F2A1D, 0xFF4E8A44);
+			if (it != null) {
+				if (it.sub().equals("halo")) {
+					g.enableScissor(bx + 1, y + 1, bx + cw - 1, y + ch - 1);
+					Preview.drawCard(g, bx + 1, y + 10, bx + cw - 1, y + ch + 10, 18, 25f, lookFor(it, i * 0.4f));
+					g.disableScissor();
+				} else Preview.drawCard(g, bx + 1, y + 1, bx + cw - 1, y + ch - 1, 12, it.sub().equals("cape") || it.sub().equals("wings") ? 200f : 20f, lookFor(it, i * 0.4f));
+			}
+			n++;
+		}
+		if (n == 0) g.drawString(font, "Nothing picked yet", x, y + 13, Ui.FAINT, false);
+		return ch;
 	}
 
 	@Override
@@ -244,7 +328,7 @@ public class AdminScreen extends Screen {
 		g.drawString(font, Component.literal("Admin").withStyle(ChatFormatting.BOLD), px + 30, py + 11, Ui.TEXT, true);
 		if (Ui.iconButton(g, mx, my, px + pw - 26, py + 6, 18, Ui.CROSS) && click) action = this::onClose;
 
-		if (!AdminApi.signedIn()) {
+		if (!demo && !AdminApi.signedIn()) {
 			int cx = px + pw / 2, y = py + ph / 2 - 40;
 			Ui.centered(g, font, "Sign in with the admin password", cx, y, Ui.TEXT);
 			Ui.centered(g, font, "It's the ADMIN_PASSWORD secret of the Surge service", cx, y + 12, Ui.MUTED);
@@ -319,15 +403,31 @@ public class AdminScreen extends Screen {
 			post("announce", b, "Announcement removed");
 		};
 		int oy = ay + 40;
+		int half = (w - 10) / 2;
+		g.drawString(font, "Latest gifts", lx + half + 10, oy, Ui.ACCENT_2, false);
+		int gy = oy + 12;
+		for (int i = 0; i < Math.min(gifts.size(), 3) && gy + 46 <= py + ph - 28; i++) {
+			JsonObject c = gifts.get(i).getAsJsonObject();
+			boolean all = "*".equals(str(c, "uuid"));
+			g.drawString(font, Ui.fit(font, all ? "Everyone" : str(c, "name"), half - 70), lx + half + 10, gy, Ui.TEXT, false);
+			boolean got = c.has("claimed") && c.get("claimed").getAsLong() > 0;
+			String stt = all ? (c.has("got") ? c.get("got").getAsInt() : 0) + " got it" : got ? "Received" : "Waiting";
+			g.drawString(font, stt, lx + w - font.width(stt), gy, got || all ? 0xFF8CFFA0 : Ui.YELLOW, false);
+			List<String> ids = new ArrayList<>();
+			if (c.has("items")) for (JsonElement e : c.getAsJsonArray("items")) ids.add(e.getAsString());
+			strip(g, lx + half + 10, gy + 10, half, c.has("coins") ? c.get("coins").getAsInt() : 0, ids);
+			gy += 48;
+		}
+		if (gifts.isEmpty()) g.drawString(font, loaded ? "No gifts yet" : "Loading…", lx + half + 10, gy, Ui.FAINT, false);
 		g.drawString(font, "Online now", lx, oy, Ui.ACCENT_2, false);
 		JsonArray list = overview.has("list") ? overview.getAsJsonArray("list") : new JsonArray();
 		int ly = oy + 12, lh = py + ph - 28 - ly;
-		listScroll = Math.min(listScroll, Math.max(0, ((list.size() + 1) / 2) * 20 - lh));
-		g.enableScissor(lx, ly, lx + w, ly + lh);
-		int colW = (w - 4) / 2;
+		listScroll = Math.min(listScroll, Math.max(0, list.size() * 20 - lh));
+		g.enableScissor(lx, ly, lx + half, ly + lh);
+		int colW = half;
 		for (int i = 0; i < list.size(); i++) {
 			JsonObject u = list.get(i).getAsJsonObject();
-			int x = lx + (i % 2) * (colW + 4), y = ly + (i / 2) * 20 - Math.round(listScroll);
+			int x = lx, y = ly + i * 20 - Math.round(listScroll);
 			if (y + 20 < ly || y > ly + lh) continue;
 			g.fill(x, y, x + colW, y + 18, 0xFF1C1C20);
 			String st = str(u, "status");
@@ -338,6 +438,7 @@ public class AdminScreen extends Screen {
 		}
 		if (list.isEmpty()) g.drawString(font, loaded ? "Nobody is online right now" : "Loading…", lx + 4, ly + 4, Ui.FAINT, false);
 		g.disableScissor();
+		g.fill(lx + half + 4, oy, lx + half + 5, py + ph - 30, Ui.EDGE);
 		return action;
 	}
 
@@ -357,10 +458,10 @@ public class AdminScreen extends Screen {
 		field(g, countBox, lx + 60, top + 40, 40, mx, my, delta);
 		g.drawString(font, "Uses each", lx + 108, top + 44, Ui.MUTED, false);
 		field(g, usesBox, lx + 168, top + 40, lw - 168, mx, my, delta);
-		String unlocks = picked.isEmpty() ? "No items, pick on the right" : picked.size() == 1 ? "Unlocks " + itemLabel(picked.iterator().next()) : "Unlocks " + picked.size() + " items";
-		g.drawString(font, Ui.fit(font, unlocks, lw - 50), lx, top + 64, picked.isEmpty() ? Ui.FAINT : Ui.TEXT, false);
-		if (!picked.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 44, top + 60, 44, 16, "Clear", false) && click) action = picked::clear;
-		if (Ui.pill(g, font, mx, my, lx, top + 80, lw, 18, loading ? "Working…" : "Create", false) && click && !loading) action = () -> {
+		g.drawString(font, "Players get", lx, top + 62, Ui.MUTED, false);
+		strip(g, lx, top + 72, lw - 48, Math.max(0, parse(coinsBox, 0)), picked);
+		if (!picked.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 44, top + 81, 44, 16, "Clear", false) && click) action = picked::clear;
+		if (Ui.pill(g, font, mx, my, lx, top + 110, lw, 18, loading ? "Working…" : "Create", false) && click && !loading) action = () -> {
 			JsonObject b = new JsonObject();
 			b.addProperty("coins", Math.max(0, parse(coinsBox, 0)));
 			b.addProperty("code", codeBox.getValue().trim());
@@ -371,10 +472,10 @@ public class AdminScreen extends Screen {
 			b.add("items", it);
 			post("codes", b, null);
 		};
-		g.drawString(font, "Codes (click to copy)", lx, top + 106, Ui.ACCENT_2, false);
+		g.drawString(font, "Codes (click to copy)", lx, top + 136, Ui.ACCENT_2, false);
 		List<gg.surge.client.economy.AdminCodes.Code> old = oldCodes;
-		if (!old.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 120, top + 102, 120, 16, "Put " + old.size() + " old code" + (old.size() == 1 ? "" : "s") + " online", false) && click && !loading) action = () -> moveOld(old);
-		int ly = top + 118, lh = py + ph - 28 - ly;
+		if (!old.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 120, top + 132, 120, 16, "Put " + old.size() + " old code" + (old.size() == 1 ? "" : "s") + " online", false) && click && !loading) action = () -> moveOld(old);
+		int ly = top + 148, lh = py + ph - 28 - ly;
 		listScroll = Math.min(listScroll, Math.max(0, codes.size() * 22 - lh));
 		g.enableScissor(lx, ly, lx + lw, ly + lh);
 		for (int i = 0; i < codes.size(); i++) {
@@ -552,10 +653,10 @@ public class AdminScreen extends Screen {
 			if (Ui.pill(g, font, mx, my, bx + (i - 1) * bw, top + 20, bw - 2, 16, String.valueOf(v), parse(giftCoins, -1) == v) && click) action = () -> giftCoins.setValue(String.valueOf(v));
 		}
 		field(g, giftNote, lx, top + 40, lw, mx, my, delta);
-		String what = giftPicked.isEmpty() ? "No items, pick on the right" : giftPicked.size() == 1 ? "Gives " + itemLabel(giftPicked.iterator().next()) : "Gives " + giftPicked.size() + " items";
-		g.drawString(font, Ui.fit(font, what, lw - 50), lx, top + 64, giftPicked.isEmpty() ? Ui.FAINT : Ui.TEXT, false);
-		if (!giftPicked.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 44, top + 60, 44, 16, "Clear", false) && click) action = giftPicked::clear;
-		if (Ui.pill(g, font, mx, my, lx, top + 80, lw, 18, loading ? "Working…" : "Send gift", false) && click && !loading) action = () -> {
+		g.drawString(font, giftAll ? "Everyone gets" : "They get", lx, top + 62, Ui.MUTED, false);
+		strip(g, lx, top + 72, lw - 48, Math.max(0, parse(giftCoins, 0)), giftPicked);
+		if (!giftPicked.isEmpty() && Ui.pill(g, font, mx, my, lx + lw - 44, top + 81, 44, 16, "Clear", false) && click) action = giftPicked::clear;
+		if (Ui.pill(g, font, mx, my, lx, top + 110, lw, 18, loading ? "Working…" : "Send gift", false) && click && !loading) action = () -> {
 			JsonObject b = new JsonObject();
 			b.addProperty("player", giftWho.getValue().trim());
 			if (giftAll) { b.addProperty("everyone", true); b.addProperty("hours", 72); }
@@ -567,8 +668,8 @@ public class AdminScreen extends Screen {
 			post("gifts", b, giftAll ? "Gift sent to everyone" : "Gift sent to " + giftWho.getValue().trim());
 			giftPicked.clear();
 		};
-		g.drawString(font, "Recent gifts", lx, top + 106, Ui.ACCENT_2, false);
-		int ly = top + 118, lh = py + ph - 28 - ly;
+		g.drawString(font, "Recent gifts", lx, top + 136, Ui.ACCENT_2, false);
+		int ly = top + 148, lh = py + ph - 28 - ly;
 		listScroll = Math.min(listScroll, Math.max(0, gifts.size() * 22 - lh));
 		g.enableScissor(lx, ly, lx + lw, ly + lh);
 		for (int i = 0; i < gifts.size(); i++) {

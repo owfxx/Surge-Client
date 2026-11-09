@@ -62,6 +62,10 @@ public final class CapeTextures {
 		Map.entry("storm", new int[]{24, 110}),
 		Map.entry("phoenix", new int[]{20, 90}),
 		Map.entry("koi", new int[]{24, 120}),
+		Map.entry("sunset", new int[]{18, 110}),
+		Map.entry("ender", new int[]{24, 110}),
+		Map.entry("diamond", new int[]{20, 100}),
+		Map.entry("toxic", new int[]{20, 100}),
 		Map.entry("bloodmoon", new int[]{20, 120}),
 		Map.entry("obsidian", new int[]{16, 110}),
 		Map.entry("frost", new int[]{16, 130}));

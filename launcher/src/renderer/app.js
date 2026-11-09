@@ -754,12 +754,17 @@ function renderPacks() {
       <div style="display:flex;gap:8px"><button class="btn" id="importBtn">Import</button><button class="btn primary" id="newBtn">${I.plus}New modpack</button></div></div>
     <div class="grid">
       ${state.packs.map(p => `
-        <button class="panel pack-card" data-id="${esc(p.id)}">${img(p.icon, 'pack-icon')}
-          <div style="min-width:0"><div class="title">${esc(p.name)}</div><div class="meta">Fabric ${esc(p.mcVersion)}, ${plural(modCount(p), 'mod')}</div></div>
-        </button>`).join('')}
+        <div class="panel pack-card${state.selected && state.selected.id === p.id ? ' current' : ''}" data-id="${esc(p.id)}" role="button" tabindex="0">${img(p.icon, 'pack-icon')}
+          <div style="min-width:0;flex:1"><div class="title">${esc(p.name)}</div><div class="meta">${esc(p.mcVersion)}, ${plural(modCount(p), 'mod')}${p.lastPlayed ? `, played ${ago(p.lastPlayed)}` : ''}</div></div>
+          <button class="btn sm primary pack-play" data-play="${esc(p.id)}" data-tip="Play ${esc(p.name)}" aria-label="Play">${I.play || '&#9654;'}</button>
+        </div>`).join('')}
       <button class="panel pack-card new-card" id="newCard" aria-label="New modpack">${I.plus}</button>
     </div></div>`;
-  view.querySelectorAll('[data-id]').forEach(c => c.onclick = () => openDetail(c.dataset.id));
+  view.querySelectorAll('[data-id]').forEach(c => {
+    c.onclick = e => { if (e.target.closest('[data-play]')) return; openDetail(c.dataset.id); };
+    c.onkeydown = e => { if (e.key === 'Enter') openDetail(c.dataset.id); };
+  });
+  view.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const p = state.packs.find(x => x.id === b.dataset.play); if (!p) return; state.selected = p; S.config.set({ selectedInstance: p.id }); go('home'); play(); });
   $('#newBtn').onclick = $('#newCard').onclick = newPackModal;
   $('#importBtn').onclick = async () => { const r = await safe(() => S.instances.importPack()); if (r) { toast(`Imported ${r.name}`); await refreshPacks(); render(); } };
 }
@@ -968,7 +973,7 @@ function skinFront(dataUrl, canvas) {
 }
 
 let skinViewer = null;
-const ANIM_CAPES = { phoenix: [20, 90], koi: [24, 120], bloodmoon: [20, 120], obsidian: [16, 110], lava: [20, 110], matrix: [20, 80], storm: [24, 110], frost: [16, 130], flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
+const ANIM_CAPES = { sunset: [18, 110], ender: [24, 110], diamond: [20, 100], toxic: [20, 100], phoenix: [20, 90], koi: [24, 120], bloodmoon: [20, 120], obsidian: [16, 110], lava: [20, 110], matrix: [20, 80], storm: [24, 110], frost: [16, 130], flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
 const HALO_COLORS = { angel: 0xffec9a, surge: 0xc66bff, fire: 0xff8c28, enchanted: 0x78c8ff, void: 0x6a2bd9, rose: 0xff6fae, crown: 0xffd54a, orbit: 0x7af0ff, rainbow: 0xff7ad9 };
 const WARD_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['halo', 'Halos'], ['emote', 'Emotes'], ['idle', 'Idles']];
 const ward = { data: null, tab: 'cape', preview: null, elytra: false, viewer: null, raf: 0, imgs: {}, capeCanvas: null, capeKey: '', frame: -1, extras: [] };
@@ -1087,10 +1092,11 @@ function wardExtras(data) {
       const pivot = new T.Group();
       pivot.position.set(side * 1, 6, -2.6);
       const mat = new T.MeshLambertMaterial({ map: tex, transparent: true, side: T.DoubleSide, alphaTest: 0.05, emissive: 0x111111 });
-      const mesh = new T.Mesh(new T.PlaneGeometry(18, 9), mat);
-      mesh.position.set(side * 9, -2, 0);
+      const mesh = new T.Mesh(new T.PlaneGeometry(18, 9, 12, 1), mat);
+      mesh.position.set(0, -2, 0);
       mesh.scale.x = side;
       pivot.add(mesh);
+      pivot.userData.mesh = mesh;
       pivot.rotation.y = side * -0.55;
       pivot.rotation.z = side * 0.22;
       pivot.userData.side = side;
@@ -1128,6 +1134,35 @@ function wardExtras(data) {
       }
     }
   }
+}
+
+function wingShape(phase, open) {
+  const n = 12, len = 1.30 / n, pts = [];
+  let x = 0.02, y = 0, z = 0;
+  const flex = 10 + open * 26, lift = 6 + open * 10, rad = Math.PI / 180;
+  for (let k = 0; k <= n; k++) {
+    const u = k / n;
+    const wave = Math.sin(phase - 0.9 - u * 1.7);
+    pts.push([x, y, z, Math.sin(phase * 1.6 - u * 5.2) * (0.012 + open * 0.03) * u]);
+    const yaw = (14 * u + flex * u * wave) * rad;
+    const pitch = (-lift * u * Math.sin(phase - 1.3 - u * 1.6) + 9 * u * u) * rad;
+    x += Math.cos(yaw) * Math.cos(pitch) * len;
+    z += Math.sin(yaw) * Math.cos(pitch) * len;
+    y += Math.sin(pitch) * len;
+  }
+  return pts;
+}
+
+function bendWing(mesh, phase, open) {
+  if (!mesh) return;
+  const pos = mesh.geometry.attributes.position, pts = wingShape(phase, open), s = 18 / 1.30;
+  for (let i = 0; i <= 12; i++) {
+    const [x, y, z, r] = pts[i];
+    pos.setXYZ(i, x * s, 4.5 - y * s, -z * s);
+    pos.setXYZ(13 + i, x * s, -4.5 - (y + r) * s, -z * s);
+  }
+  pos.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
 }
 
 function crisp(v) {
@@ -1173,7 +1208,11 @@ async function mountWardrobeViewer(data) {
     } else if (ward.capeKey) { v.loadCape(null); ward.capeKey = ''; }
     const t = performance.now() / 1000;
     for (const e of ward.extras) {
-      if (e.userData.side) e.rotation.y = e.userData.side * (-0.55 - Math.sin(t * 1.6) * 0.12);
+      if (e.userData.side) {
+        const ph = t * 2.5;
+        e.rotation.y = e.userData.side * (-0.55 - Math.sin(ph) * 0.07);
+        bendWing(e.userData.mesh, ph, 0.3);
+      }
       if (e.userData.orbit !== undefined) { const a = t * 1.8 + e.userData.orbit * Math.PI * 2 / 3; e.position.set(Math.cos(a) * 5.8, 10.5 + Math.sin(t * 2.4 + e.userData.orbit) * 0.8, Math.sin(a) * 5.8); }
       if (look.halo === 'rainbow' || (look.halo === undefined && data.equipped.halo === 'rainbow')) { if (e.material && e.material.color && !e.userData.side && e.userData.orbit === undefined) e.material.color.setHSL((t * 0.25) % 1, 0.8, 0.65); }
     }
@@ -1202,6 +1241,9 @@ async function renderWardrobe() {
       </div>
       <div class="skins-side">
         <div class="seg" id="wdTabs">${WARD_TABS.map(([k, l]) => `<button data-t="${k}" class="${ward.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <div class="ward-filter"><input class="input" id="wdQ" placeholder="Search" value="${esc(ward.q || '')}" aria-label="Search the wardrobe">
+          <div class="seg" id="wdShow">${[['all', 'All'], ['owned', 'Owned'], ['shop', 'Shop']].map(([k, l]) => `<button data-s="${k}" class="${(ward.show || 'all') === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+          <span class="muted small count" id="wdCount"></span></div>
         <div class="ward-grid" id="wdGrid"><div class="muted small">Loading…</div></div>
       </div>
     </div></div>`;
@@ -1215,6 +1257,8 @@ async function renderWardrobe() {
     showGiftModal(items.length === 1 ? `You've been gifted ${items[0].name}!` : items.length ? `You've been gifted ${items.length} items!` : "You've been gifted coins!", coins, items, note);
   }
   view.querySelectorAll('#wdTabs [data-t]').forEach(b => b.onclick = () => { ward.tab = b.dataset.t; ward.preview = null; view.querySelectorAll('#wdTabs button').forEach(x => x.classList.toggle('on', x === b)); drawWardGrid(); });
+  $('#wdQ').oninput = e => { ward.q = e.target.value; drawWardGrid(); };
+  view.querySelectorAll('#wdShow [data-s]').forEach(b => b.onclick = () => { ward.show = b.dataset.s; view.querySelectorAll('#wdShow button').forEach(x => x.classList.toggle('on', x === b)); drawWardGrid(); });
   view.querySelectorAll('#wdBack [data-v]').forEach(b => b.onclick = () => { ward.elytra = b.dataset.v === 'elytra'; view.querySelectorAll('#wdBack button').forEach(x => x.classList.toggle('on', x === b)); ward.capeKey = ''; wardExtras(ward.data); });
   const redeem = async () => {
     const code = $('#wdCode').value.trim();
@@ -1236,8 +1280,11 @@ function drawWardGrid() {
   const data = ward.data, grid = $('#wdGrid');
   if (!data || !grid) return;
   $('#wdCoins').textContent = `${data.coins.toLocaleString()} coins`;
-  const items = data.items.filter(i => i.type === ward.tab && (!i.locked || i.owned || i.id === 'cape:beta'));
-  grid.innerHTML = '';
+  const q = (ward.q || '').trim().toLowerCase(), show = ward.show || 'all';
+  const all = data.items.filter(i => i.type === ward.tab && (!i.locked || i.owned || i.id === 'cape:beta'));
+  const items = all.filter(i => (!q || i.name.toLowerCase().includes(q)) && (show === 'all' || (show === 'owned') === !!i.owned));
+  if ($('#wdCount')) $('#wdCount').textContent = `${all.filter(i => i.owned).length} of ${all.length} owned`;
+  grid.innerHTML = items.length ? '' : `<div class="muted small ward-empty">${q ? 'Nothing matches your search' : show === 'owned' ? 'You don\'t own any yet' : 'You own everything here'}</div>`;
   for (const it of items) {
     const card = document.createElement('div');
     const equipped = it.type === 'emote' ? data.wheel.includes(it.key) : data.equipped[it.type] === it.key;
@@ -1656,7 +1703,7 @@ async function openAdmin() {
   S.open(base + '/admin');
 }
 
-const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "wings:bat", "name": "Bat Wings"}, {"id": "wings:dragon", "name": "Dragon Wings"}, {"id": "wings:butterfly", "name": "Butterfly Wings"}, {"id": "wings:fairy", "name": "Fairy Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "halo:crown", "name": "Royal Crown"}, {"id": "halo:orbit", "name": "Orbit Halo"}, {"id": "halo:rainbow", "name": "Rainbow Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:lava", "name": "Lava Cape"}, {"id": "cape:matrix", "name": "Matrix Cape"}, {"id": "cape:storm", "name": "Storm Cape"}, {"id": "cape:phoenix", "name": "Phoenix Cape"}, {"id": "cape:koi", "name": "Koi Cape"}, {"id": "cape:bloodmoon", "name": "Blood Moon Cape"}, {"id": "cape:obsidian", "name": "Obsidian Cape"}, {"id": "cape:frost", "name": "Frost Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:ROBOT", "name": "Robot (emote)"}, {"id": "emote:AIRGUITAR", "name": "Air Guitar (emote)"}, {"id": "emote:JUMPJACKS", "name": "Jumping Jacks (emote)"}, {"id": "emote:FLEX", "name": "Flex (emote)"}, {"id": "emote:KISS", "name": "Blow a Kiss (emote)"}, {"id": "emote:SPIN", "name": "Spin (emote)"}, {"id": "emote:FACEPLANT", "name": "Faint (emote)"}, {"id": "idle:IDLE_LOOK", "name": "Look Around (idle)"}, {"id": "idle:IDLE_STRETCH", "name": "Big Stretch (idle)"}, {"id": "idle:IDLE_YAWN", "name": "Sleepy (idle)"}, {"id": "idle:IDLE_TAP", "name": "Foot Tap (idle)"}, {"id": "idle:IDLE_CROSS", "name": "Arms Crossed (idle)"}, {"id": "idle:IDLE_VIBE", "name": "Vibing (idle)"}, {"id": "idle:IDLE_WATCH", "name": "Check Watch (idle)"}, {"id": "idle:IDLE_SCRATCH", "name": "Head Scratch (idle)"}, {"id": "idle:IDLE_BOX", "name": "Shadow Box (idle)"}, {"id": "idle:IDLE_PHONE", "name": "Scrolling (idle)"}, {"id": "idle:IDLE_WHISTLE", "name": "Whistling (idle)"}];
+const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "wings:bat", "name": "Bat Wings"}, {"id": "wings:dragon", "name": "Dragon Wings"}, {"id": "wings:butterfly", "name": "Butterfly Wings"}, {"id": "wings:fairy", "name": "Fairy Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "halo:crown", "name": "Royal Crown"}, {"id": "halo:orbit", "name": "Orbit Halo"}, {"id": "halo:rainbow", "name": "Rainbow Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:lava", "name": "Lava Cape"}, {"id": "cape:matrix", "name": "Matrix Cape"}, {"id": "cape:storm", "name": "Storm Cape"}, {"id": "cape:sunset", "name": "Sunset Cape"}, {"id": "cape:ender", "name": "Ender Eye Cape"}, {"id": "cape:diamond", "name": "Diamond Cape"}, {"id": "cape:toxic", "name": "Toxic Cape"}, {"id": "cape:phoenix", "name": "Phoenix Cape"}, {"id": "cape:koi", "name": "Koi Cape"}, {"id": "cape:bloodmoon", "name": "Blood Moon Cape"}, {"id": "cape:obsidian", "name": "Obsidian Cape"}, {"id": "cape:frost", "name": "Frost Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:ROBOT", "name": "Robot (emote)"}, {"id": "emote:AIRGUITAR", "name": "Air Guitar (emote)"}, {"id": "emote:JUMPJACKS", "name": "Jumping Jacks (emote)"}, {"id": "emote:FLEX", "name": "Flex (emote)"}, {"id": "emote:KISS", "name": "Blow a Kiss (emote)"}, {"id": "emote:SPIN", "name": "Spin (emote)"}, {"id": "emote:FACEPLANT", "name": "Faint (emote)"}, {"id": "idle:IDLE_LOOK", "name": "Look Around (idle)"}, {"id": "idle:IDLE_STRETCH", "name": "Big Stretch (idle)"}, {"id": "idle:IDLE_YAWN", "name": "Sleepy (idle)"}, {"id": "idle:IDLE_TAP", "name": "Foot Tap (idle)"}, {"id": "idle:IDLE_CROSS", "name": "Arms Crossed (idle)"}, {"id": "idle:IDLE_VIBE", "name": "Vibing (idle)"}, {"id": "idle:IDLE_WATCH", "name": "Check Watch (idle)"}, {"id": "idle:IDLE_SCRATCH", "name": "Head Scratch (idle)"}, {"id": "idle:IDLE_BOX", "name": "Shadow Box (idle)"}, {"id": "idle:IDLE_PHONE", "name": "Scrolling (idle)"}, {"id": "idle:IDLE_WHISTLE", "name": "Whistling (idle)"}];
 const shopName = id => (SHOP_ITEMS.find(i => i.id === id) || { name: id }).name;
 
 const SALE_TARGETS = [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...SHOP_ITEMS.map(i => [i.id, i.name])];

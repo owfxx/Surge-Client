@@ -26,7 +26,7 @@ public final class Shop {
 			{"cape:surge", "Surge Cape", "1000"}, {"cape:void", "Void Cape", "800"}, {"cape:flame", "Flame Cape", "1200"},
 			{"cape:ocean", "Ocean Cape", "700"}, {"cape:sakura", "Sakura Cape", "700"},
 			{"cape:midnight", "Midnight Cape", "750"}, {"cape:royal", "Royal Cape", "950"}, {"cape:emerald", "Emerald Cape", "700"},
-						{"cape:lava", "Lava Cape", "1200"}, {"cape:matrix", "Matrix Cape", "1300"}, {"cape:storm", "Storm Cape", "1500"}, {"cape:phoenix", "Phoenix Cape", "1600"}, {"cape:koi", "Koi Cape", "1400"}, {"cape:bloodmoon", "Blood Moon Cape", "1300"}, {"cape:obsidian", "Obsidian Cape", "1200"}, {"cape:frost", "Frost Cape", "1000"}, {"cape:galaxy", "Galaxy Cape", "1100"}, {"cape:aurora", "Aurora Cape", "900"}, 			{"cape:custom", "Color Cape", "300"},
+						{"cape:lava", "Lava Cape", "1200"}, {"cape:matrix", "Matrix Cape", "1300"}, {"cape:storm", "Storm Cape", "1500"}, {"cape:sunset", "Sunset Cape", "1500"}, {"cape:ender", "Ender Eye Cape", "1600"}, {"cape:diamond", "Diamond Cape", "1400"}, {"cape:toxic", "Toxic Cape", "1200"}, {"cape:phoenix", "Phoenix Cape", "1600"}, {"cape:koi", "Koi Cape", "1400"}, {"cape:bloodmoon", "Blood Moon Cape", "1300"}, {"cape:obsidian", "Obsidian Cape", "1200"}, {"cape:frost", "Frost Cape", "1000"}, {"cape:galaxy", "Galaxy Cape", "1100"}, {"cape:aurora", "Aurora Cape", "900"}, 			{"cape:custom", "Color Cape", "300"},
 			{"cape:blinkcat", "Blink Cat Cape", "1500"}, {"cape:enchanted", "Enchanted Cape", "1800"}, {"cape:runes", "Rune Cape", "1600"},
 			{"cape:beta", "Beta Tester Cape", "0"}, {"cape:image", "Picture Cape", "0"}};
 		for (String[] c : cos) add(c[0], "cosmetic", c[0].substring(0, c[0].indexOf(':')), c[1], Integer.parseInt(c[2]));

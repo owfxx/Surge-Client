@@ -101,7 +101,7 @@ async function download(env, mod) {
 }
 
 const DISCORD = 'https://discord.gg/7wGxqGN86R';
-const SHOWCASE = [['koi', 'Koi', 24, 120], ['phoenix', 'Phoenix', 20, 90], ['storm', 'Storm', 24, 110], ['bloodmoon', 'Blood Moon', 20, 120], ['obsidian', 'Obsidian', 16, 110], ['lava', 'Lava', 20, 110], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
+const SHOWCASE = [['sunset', 'Sunset', 18, 110], ['ender', 'Ender Eye', 24, 110], ['diamond', 'Diamond', 20, 100], ['toxic', 'Toxic', 20, 100], ['koi', 'Koi', 24, 120], ['phoenix', 'Phoenix', 20, 90], ['storm', 'Storm', 24, 110], ['bloodmoon', 'Blood Moon', 20, 120], ['obsidian', 'Obsidian', 16, 110], ['lava', 'Lava', 20, 110], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
 
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 
@@ -393,6 +393,13 @@ export default {
       const key = p.slice('/img/cape/'.length).replace(/\.png$/, '');
       if (!SHOWCASE.some(c => c[0] === key)) return new Response('not found', { status: 404 });
       const r = await fetch(`https://raw.githubusercontent.com/${REPO(env)}/main/mod/src/main/resources/assets/surge/textures/cosmetic/cape_${key}.png`, { cf: { cacheTtl: 86400, cacheEverything: true } });
+      if (!r.ok) return new Response('not found', { status: 404 });
+      return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } });
+    }
+    if (req.method === 'GET' && p.startsWith('/img/cosmetic/')) {
+      const file = p.slice('/img/cosmetic/'.length).replace(/\.png$/, '');
+      if (!/^(cape|wings)_[a-z0-9_]{1,32}$/.test(file)) return new Response('not found', { status: 404 });
+      const r = await fetch(`https://raw.githubusercontent.com/${REPO(env)}/main/mod/src/main/resources/assets/surge/textures/cosmetic/${file}.png`, { cf: { cacheTtl: 86400, cacheEverything: true } });
       if (!r.ok) return new Response('not found', { status: 404 });
       return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } });
     }

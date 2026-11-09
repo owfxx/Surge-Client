@@ -173,8 +173,16 @@ public final class AutoTest {
 		STEPS.add(new Step("19d-inventory", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
 		STEPS.add(new Step("19e-gift", 40, mc -> gg.surge.client.gui.GiftScreen.show("You've been gifted 2 items!", "Thanks for testing Surge.", 500, java.util.List.of("cape:koi", "emote:SHUFFLE"))));
 		STEPS.add(new Step("19f-admin", 40, mc -> open(mc, new gg.surge.client.gui.AdminScreen(null))));
+		STEPS.add(new Step("19g-admin-codes", 40, mc -> open(mc, gg.surge.client.gui.AdminScreen.demo("CODES", "cape:sunset", "wings:angel", "halo:crown", "emote:FLOSS"))));
+		STEPS.add(new Step("19h-admin-gifts", 40, mc -> open(mc, gg.surge.client.gui.AdminScreen.demo("GIFTS", "cape:ender", "wings:dragon"))));
 		STEPS.add(new Step("19g-profiles-tab", 30, mc -> open(mc, SurgeMenuScreen.profiles(null))));
 		STEPS.add(new Step("20-chat", 30, mc -> { open(mc, null); mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal("Surge Client test message")); }));
+		STEPS.add(new Step("20b-wings-flap-a", 30, mc -> { SurgeConfig.get().cape = "sunset"; SurgeConfig.get().wings = "angel"; mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK); open(mc, null); }));
+		STEPS.add(new Step("20c-wings-flap-b", 7, mc -> { }));
+		STEPS.add(new Step("20d-cape-ender", 25, mc -> { SurgeConfig.get().cape = "ender"; SurgeConfig.get().wings = "none"; }));
+		STEPS.add(new Step("20e-cape-diamond", 25, mc -> SurgeConfig.get().cape = "diamond"));
+		STEPS.add(new Step("20f-cape-toxic", 25, mc -> { SurgeConfig.get().cape = "toxic"; }));
+		STEPS.add(new Step("20g-firstperson", 5, mc -> { mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); SurgeConfig.get().cape = "none"; }));
 		STEPS.add(new Step("21-glass-menu", 40, mc -> { Mods.THEME.set("Custom"); Mods.THEME_COLOR.set("EDEADE"); open(mc, new SurgeMenuScreen(null)); }));
 		STEPS.add(new Step("21b-glass-settings", 30, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("coords"), null))));
 		STEPS.add(new Step("21c-glass-hud", 30, mc -> { Mods.hud("keystrokes").setEnabled(true); Mods.hud("cps").setEnabled(true); open(mc, null); }));
@@ -245,6 +253,7 @@ public final class AutoTest {
 			STEPS.get(0).action().accept(mc);
 			return;
 		}
+		if (index >= STEPS.size()) return;
 		Step s = STEPS.get(index);
 		if (s.name().equals("world")) {
 			if (mc.player == null || mc.level == null) return;

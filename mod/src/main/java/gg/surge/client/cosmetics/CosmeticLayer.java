@@ -131,7 +131,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		st[2] += (open - st[2]) * Math.min(1f, dAge * 0.15f);
 		open = st[2];
 		if (FLAP.size() > 256) FLAP.clear();
-		float flap = (float) Math.sin(st[0]) * (4f + open * 22f);
+		float flap = (float) Math.sin(st[0]) * (3f + open * 15f);
 		float spread = 62f - open * 34f;
 		float lift = 10f + open * 6f;
 
@@ -142,30 +142,56 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 			ps.scale(side, 1f, 1f);
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
+			final float ph = st[0], op = open;
 			q.submitCustomGeometry(ps, RenderTypes.entityTranslucent(tex), (pose, vc) -> {
-				wingQuad(pose, vc, 0.02f, -0.46f, 1.32f, 0.30f, 0.0f, lit, 0xFFFFFFFF);
+				wingMesh(pose, vc, ph, op, lit, 0xFFFFFFFF);
 			});
 			ps.popPose();
 		}
 	}
 
-	private static void wingQuad(PoseStack.Pose pose, VertexConsumer vc, float x0, float y0, float x1, float y1, float z, int light, int color) {
-		int seg = 8;
-		float bend = 0.16f;
-		for (int i = 0; i < seg; i++) {
-			float ua = i / (float) seg, ub = (i + 1) / (float) seg;
-			float xa = x0 + (x1 - x0) * ua, xb = x0 + (x1 - x0) * ub;
-			float za = z + bend * ua * ua, zb = z + bend * ub * ub;
-			float dx = xb - xa, dz = zb - za, len = (float) Math.sqrt(dx * dx + dz * dz);
+	public static float[][] wingShape(float phase, float open) {
+		int n = 12;
+		float len = 1.30f / n;
+		float[][] pts = new float[n + 1][4];
+		float x = 0.02f, y = 0f, z = 0f;
+		float flex = 10f + open * 26f, lift = 6f + open * 10f;
+		for (int k = 0; k <= n; k++) {
+			float u = k / (float) n;
+			float wave = (float) Math.sin(phase - 0.9f - u * 1.7f);
+			float ripple = (float) Math.sin(phase * 1.6f - u * 5.2f) * (0.012f + open * 0.03f) * u;
+			pts[k][0] = x;
+			pts[k][1] = y;
+			pts[k][2] = z;
+			pts[k][3] = ripple;
+			float yaw = (float) Math.toRadians(14f * u + flex * u * wave);
+			float pitch = (float) Math.toRadians(-lift * u * (float) Math.sin(phase - 1.3f - u * 1.6f) + 9f * u * u);
+			float c = (float) Math.cos(pitch);
+			x += (float) Math.cos(yaw) * c * len;
+			z += (float) Math.sin(yaw) * c * len;
+			y += (float) Math.sin(pitch) * len;
+		}
+		return pts;
+	}
+
+	private static void wingMesh(PoseStack.Pose pose, VertexConsumer vc, float phase, float open, int light, int color) {
+		float[][] p = wingShape(phase, open);
+		int n = p.length - 1;
+		float top = -0.46f, bot = 0.30f;
+		for (int i = 0; i < n; i++) {
+			float ua = i / (float) n, ub = (i + 1) / (float) n;
+			float[] a = p[i], b = p[i + 1];
+			float dx = b[0] - a[0], dz = b[2] - a[2], len = Math.max(1e-4f, (float) Math.sqrt(dx * dx + dz * dz));
 			float nx = -dz / len, nz = dx / len;
-			vc.addVertex(pose, xa, y0, za).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
-			vc.addVertex(pose, xa, y1, za).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
-			vc.addVertex(pose, xb, y1, zb).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
-			vc.addVertex(pose, xb, y0, zb).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
-			vc.addVertex(pose, xb, y0, zb).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
-			vc.addVertex(pose, xb, y1, zb).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
-			vc.addVertex(pose, xa, y1, za).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
-			vc.addVertex(pose, xa, y0, za).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			float ta = a[1] + top, tb = b[1] + top, ba = a[1] + bot + a[3], bb = b[1] + bot + b[3];
+			vc.addVertex(pose, a[0], ta, a[2]).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, a[0], ba, a[2]).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, b[0], bb, b[2]).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, b[0], tb, b[2]).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, nx, 0f, nz);
+			vc.addVertex(pose, b[0], tb, b[2]).setColor(color).setUv(ub, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, b[0], bb, b[2]).setColor(color).setUv(ub, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, a[0], ba, a[2]).setColor(color).setUv(ua, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
+			vc.addVertex(pose, a[0], ta, a[2]).setColor(color).setUv(ua, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, -nx, 0f, -nz);
 		}
 	}
 
