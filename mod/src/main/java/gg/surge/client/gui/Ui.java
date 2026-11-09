@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Ui {
-	public static final int BG = 0xF2242427;
+	public static final int BG = 0xD81C1C1F;
 	public static final int SIDEBAR = 0xFF1C1C1F;
 	public static final int SURFACE = 0xFF3A3A3D;
 	public static final int SURFACE_HOVER = 0xFF48484C;

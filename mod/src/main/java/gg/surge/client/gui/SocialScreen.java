@@ -77,7 +77,7 @@ public class SocialScreen extends Screen {
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		if (Ui.glassBackdrop(g, () -> renderBlurredBackground(g), this.width, this.height)) return;
 		float p = Math.min(1f, (System.currentTimeMillis() - openedAt) / 180f);
-		g.fill(0, 0, this.width, this.height, Colors.alpha(0xE8141416, p));
+		g.fill(0, 0, this.width, this.height, Colors.alpha(0xB0101012, p));
 		g.fillGradient(0, this.height / 2, this.width, this.height, 0x00000000, Colors.alpha(0x60000000, p));
 	}
 

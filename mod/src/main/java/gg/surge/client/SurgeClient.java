@@ -182,7 +182,7 @@ public class SurgeClient implements ClientModInitializer {
 		adminWasDown = adminDown;
 
 		while (menuKey.consumeClick()) {
-			if (mc.screen == null) mc.setScreen(new SurgeMenuScreen());
+			if (mc.screen == null) mc.setScreen(new HudEditorScreen(null));
 		}
 		while (emoteKey.consumeClick()) {
 			if (mc.screen == null && mc.player != null) mc.setScreen(new EmoteWheelScreen());

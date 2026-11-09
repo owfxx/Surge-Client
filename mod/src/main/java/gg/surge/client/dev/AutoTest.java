@@ -209,9 +209,9 @@ public final class AutoTest {
 			mc.player.getAbilities().flying = false;
 			mc.player.onUpdateAbilities();
 			mc.options.setCameraType(CameraType.FIRST_PERSON);
-			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(true);
-			for (String id : new String[]{"minimap", "effects", "compass", "armor"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(false); }
-			for (String id : new String[]{"lookat", "mousestrokes", "paperdoll", "horse", "tps", "system"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(true); }
+			mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
+			mc.getToastManager().clear();
+			only("mob_health", "loot_beams", "despawn_timer", "light_overlay", "item_physics", "shiny_pots", "block_outline", "hit_indicator", "auto_perspective", "snaplook", "toasts", "lookat", "mousestrokes", "paperdoll", "horse", "tps", "system");
 			Mods.BO_COLOR.set("FF3B3B");
 			Mods.BO_WIDTH.set(6f);
 		}));
@@ -234,7 +234,7 @@ public final class AutoTest {
 			Mods.RC_DELAY.set(30f);
 			open(mc, new net.minecraft.client.gui.screens.DisconnectedScreen(new TitleScreen(), net.minecraft.network.chat.Component.literal("Connection lost"), net.minecraft.network.chat.Component.literal("Timed out")));
 		}));
-		STEPS.add(new Step("24a-backdrop-rain-and-thunder", 60, mc -> { Mods.GUI_SCALES.setEnabled(true); open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)); Mods.GS_BACKDROP.set("Rain and thunder"); }));
+		STEPS.add(new Step("24a-backdrop-rain-and-thunder", 60, mc -> { only("fps", "keystrokes"); Mods.GUI_SCALES.setEnabled(true); open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)); Mods.GS_BACKDROP.set("Rain and thunder"); }));
 		STEPS.add(new Step("24a2-backdrop-thunder", 3, mc -> gg.surge.client.features.GuiBackdrop.strikeNow()));
 		STEPS.add(new Step("24b-backdrop-snow", 20, mc -> { Mods.GS_BACKDROP.set("Snow"); }));
 		STEPS.add(new Step("24c-backdrop-fireflies", 20, mc -> { Mods.GS_BACKDROP.set("Fireflies"); }));
@@ -245,7 +245,7 @@ public final class AutoTest {
 		STEPS.add(new Step("24h-backdrop-no-tint", 20, mc -> { Mods.GS_BACKDROP.set("Snow"); Mods.GS_NO_TINT.set(true); }));
 		STEPS.add(new Step("24i-backdrop-chest", 20, mc -> { Mods.GS_NO_TINT.set(false); Mods.GS_BACKDROP.set("Fireflies"); open(mc, new net.minecraft.client.gui.screens.inventory.ContainerScreen(net.minecraft.world.inventory.ChestMenu.threeRows(0, mc.player.getInventory()), mc.player.getInventory(), net.minecraft.network.chat.Component.literal("Chest"))); }));
 		STEPS.add(new Step("24j-backdrop-off", 5, mc -> { Mods.GS_BACKDROP.set("None"); Mods.GUI_SCALES.setEnabled(false); open(mc, null); }));
-		STEPS.add(new Step("25a-color-grayscale", 30, mc -> { open(mc, null); Mods.COLOR_GRADE.setEnabled(true); Mods.CG_PRESET.set("Grayscale"); }));
+		STEPS.add(new Step("25a-color-grayscale", 30, mc -> { open(mc, null); only("color_grade"); Mods.CG_PRESET.set("Grayscale"); }));
 		STEPS.add(new Step("25b-color-vivid", 15, mc -> Mods.CG_PRESET.set("Vivid")));
 		STEPS.add(new Step("25c-color-sepia", 15, mc -> Mods.CG_PRESET.set("Sepia")));
 		STEPS.add(new Step("25d-color-custom", 15, mc -> { Mods.CG_PRESET.set("Custom"); Mods.CG_HUE.set(120f); Mods.CG_SATURATION.set(160f); Mods.CG_VIGNETTE.set(60f); }));
@@ -258,8 +258,8 @@ public final class AutoTest {
 				java.nio.file.Files.createDirectories(dir);
 				java.nio.file.Files.copy(in, dir.resolve("logo.png"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 			} catch (Exception e) { throw new RuntimeException(e); }
+			only("image");
 			HudModule m = Mods.hud("image");
-			m.setEnabled(true);
 			for (gg.surge.client.mods.Setting<?> st : m.settings) if (st.key.equals("file")) ((gg.surge.client.mods.Setting.Choice) st).cycle(1);
 			for (gg.surge.client.mods.Setting<?> st : m.settings) if (st.key.equals("rotation")) ((gg.surge.client.mods.Setting.Slider) st).set(-12f);
 		}));
@@ -276,6 +276,9 @@ public final class AutoTest {
 		STEPS.add(new Step("25j-borderless", 40, mc -> { open(mc, null); Mods.FULLSCREEN_MODE.set("Borderless"); mc.getWindow().toggleFullScreen(); }));
 		STEPS.add(new Step("25k-borderless-off", 30, mc -> { mc.getWindow().toggleFullScreen(); Mods.FULLSCREEN_MODE.set("Exclusive"); }));
 		STEPS.add(new Step("25l-settings-window", 20, mc -> { open(mc, SurgeMenuScreen.general(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestScroll(); }));
+		STEPS.add(new Step("26a-hub", 25, mc -> { only("fps", "coords", "keystrokes", "armor"); open(mc, new HudEditorScreen(null)); }));
+		STEPS.add(new Step("26b-menu-clean", 25, mc -> open(mc, new SurgeMenuScreen(null))));
+		STEPS.add(new Step("26c-wardrobe-clean", 30, mc -> open(mc, new WardrobeScreen(null))));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;
@@ -283,6 +286,17 @@ public final class AutoTest {
 			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(false);
 			cmd(mc, "time set 1000");
 		}));
+	}
+
+	private static final java.util.Set<String> CORE = java.util.Set.of("general", "cosmetics", "main_menu", "discord", "profiles", "server_region", "reconnect", "gui_scales", "chat", "tooltips", "background_fps");
+
+	private static void only(String... keep) {
+		java.util.Set<String> k = java.util.Set.of(keep);
+		for (gg.surge.client.mods.SurgeMod m : Mods.all()) {
+			if (CORE.contains(m.id) || !m.toggleable) continue;
+			boolean on = k.contains(m.id);
+			if (m.enabled() != on) m.setEnabled(on);
+		}
 	}
 
 	private static void cmd(Minecraft mc, String c) {

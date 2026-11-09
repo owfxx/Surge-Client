@@ -1,3 +1,7 @@
+## 1.9.1
+- Right Shift now opens the HUD editor with a Mod Menu button in the middle and quick buttons for Wardrobe, Emotes, Friends, Settings and the Calculator
+- Cleaner, more see-through menus
+
 ## 1.9.0
 - GUI Modifier can now add an animated background behind inventories and containers: Rain and thunder, Snow, Fireflies, Starry night, Aurora, Sakura and Embers
 - Color Customizer: change saturation, brightness, contrast, gamma, hue, tint and vignette of the whole game, or pick a preset like Grayscale, Vivid, Sepia or Noir

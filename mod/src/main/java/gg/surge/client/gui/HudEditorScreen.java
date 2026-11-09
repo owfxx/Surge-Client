@@ -68,7 +68,8 @@ public class HudEditorScreen extends Screen {
 		boolean busy = dragging != null || resizing != null;
 		float ui = Ui.approach("hudedit:ui", busy ? 0f : 1f, 12f);
 		int tw = 200, tx = (W - tw) / 2, ty = H - 34 + Math.round((1 - ui) * 46);
-		boolean onToolbar = Ui.hover(mx, my, tx, ty, tw, 22);
+		int hubW = 5 * 50 + 4 * 4, hubX = (W - hubW) / 2, hubY = H / 2 - 36;
+		boolean onToolbar = Ui.hover(mx, my, tx, ty, tw, 22) || (ui > 0.5f && Ui.hover(mx, my, hubX - 4, hubY - 4, hubW + 8, 84));
 		Runnable action = null;
 
 		if (alt) {
@@ -161,6 +162,11 @@ public class HudEditorScreen extends Screen {
 			g.drawString(font, text, lx, ly, Ui.TEXT, false);
 		}
 
+		if (ui > 0.05f) {
+			Runnable hub = hub(g, mx, my, click, hubX, hubY, hubW, ui);
+			if (hub != null) action = hub;
+		}
+
 		Ui.shadow(g, tx, ty, tw, 22);
 		Ui.box(g, tx, ty, tw, 22, Ui.BG, Ui.EDGE);
 		int bw = (tw - 16) / 3;
@@ -173,6 +179,57 @@ public class HudEditorScreen extends Screen {
 		}
 
 		if (action != null) { Ui.click(); action.run(); }
+	}
+
+	private static net.minecraft.resources.Identifier hubIcon(String n) {
+		return net.minecraft.resources.Identifier.fromNamespaceAndPath("surge", "textures/gui/hub/" + n + ".png");
+	}
+
+	private boolean hubButton(GuiGraphics g, int mx, int my, int x, int y, int w, int h, float ui, String key) {
+		boolean hov = Ui.hover(mx, my, x, y, w, h);
+		float a = Ui.anim("hub:" + key, hov);
+		if (Ui.glass()) Ui.glassRect(g, x, y, w, h, 6, 0.8f + a * 0.6f);
+		else {
+			g.fill(x, y, x + w, y + h, Colors.alpha(Colors.lerp(0x8C0E0E10, 0xB0202024, a), ui));
+			Ui.outline(g, x, y, w, h, Colors.alpha(Colors.lerp(0x24FFFFFF, 0x60FFFFFF, a), ui));
+		}
+		return hov;
+	}
+
+	private Runnable hub(GuiGraphics g, int mx, int my, boolean click, int x, int y, int w, float ui) {
+		Runnable out = null;
+		int mainW = 150, mainH = 28, mainX = (width - mainW) / 2;
+		int lift = Math.round((1 - ui) * 10);
+		y += lift;
+		boolean hov = hubButton(g, mx, my, mainX, y, mainW, mainH, ui, "mods");
+		int textW = font.width("Mod Menu") + 20;
+		int ix = mainX + (mainW - textW) / 2;
+		g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon("mods"), ix, y + 8, 0f, 0f, 12, 12, 64, 64, 64, 64, Colors.alpha(0xFFFFFFFF, ui));
+		g.drawString(font, Component.literal("Mod Menu").withStyle(net.minecraft.ChatFormatting.BOLD), ix + 18, y + 10, Colors.alpha(0xFFFFFFFF, ui), false);
+		if (hov && click) out = () -> minecraft.setScreen(new SurgeMenuScreen(this));
+		String[][] items = {{"wardrobe", "Wardrobe"}, {"emotes", "Emotes"}, {"friends", "Friends"}, {"settings", "Settings"}, {"calc", "Calculator"}};
+		int by = y + mainH + 6, bw = 50, bh = 42;
+		for (int i = 0; i < items.length; i++) {
+			int bx = x + i * (bw + 4);
+			String id = items[i][0];
+			boolean disabled = id.equals("emotes") && minecraft.player == null;
+			boolean h = hubButton(g, mx, my, bx, by, bw, bh, disabled ? ui * 0.5f : ui, id);
+			float ia = (disabled ? 0.35f : 1f) * ui;
+			g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hubIcon(id), bx + (bw - 16) / 2, by + 7, 0f, 0f, 16, 16, 64, 64, 64, 64, Colors.alpha(0xFFFFFFFF, ia));
+			String label = items[i][1];
+			if (font.width(label) > bw - 4) label = Ui.fit(font, label, bw - 4);
+			Ui.centered(g, font, label, bx + bw / 2, by + 28, Colors.alpha(h ? 0xFFFFFFFF : 0xFFC8C8CE, ia));
+			if (h && click && !disabled) {
+				out = switch (id) {
+					case "wardrobe" -> () -> minecraft.setScreen(new WardrobeScreen(this));
+					case "emotes" -> () -> minecraft.setScreen(new EmoteWheelScreen());
+					case "friends" -> () -> minecraft.setScreen(new SocialScreen(this));
+					case "settings" -> () -> minecraft.setScreen(SurgeMenuScreen.general(this));
+					default -> () -> minecraft.setScreen(new CalculatorScreen(this));
+				};
+			}
+		}
+		return out;
 	}
 
 	private void resetPositions() {
