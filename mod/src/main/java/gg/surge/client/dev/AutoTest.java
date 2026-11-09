@@ -279,6 +279,23 @@ public final class AutoTest {
 		STEPS.add(new Step("26a-hub", 25, mc -> { only("fps", "coords", "keystrokes", "armor"); open(mc, new HudEditorScreen(null)); }));
 		STEPS.add(new Step("26b-menu-clean", 25, mc -> open(mc, new SurgeMenuScreen(null))));
 		STEPS.add(new Step("26c-wardrobe-clean", 30, mc -> open(mc, new WardrobeScreen(null))));
+		STEPS.add(new Step("27a-launcher-sync-write", 40, mc -> {
+			open(mc, null);
+			try {
+				java.nio.file.Path home = gg.surge.client.economy.Wallet.home();
+				gg.surge.client.economy.Wallet.get().save();
+				com.google.gson.JsonObject w = com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(home.resolve("wallet.json"))).getAsJsonObject();
+				if (!w.has("owned")) w.add("owned", new com.google.gson.JsonArray());
+				w.addProperty("coins", 4321);
+				w.getAsJsonArray("owned").add("cape:sunset");
+				java.nio.file.Files.writeString(home.resolve("wallet.json"), w.toString());
+				java.nio.file.Files.writeString(home.resolve("wardrobe-pending.json"), "{\"cape\":\"sunset\"}");
+			} catch (Exception e) { throw new RuntimeException(e); }
+		}));
+		STEPS.add(new Step("27b-launcher-sync-check", 40, mc -> {
+			LOG.info("Sync check: coins={} ownsSunset={} cape={}", gg.surge.client.economy.Wallet.get().coins, gg.surge.client.economy.Wallet.get().owns("cape:sunset"), SurgeConfig.get().cape);
+			open(mc, new WardrobeScreen(null));
+		}));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;

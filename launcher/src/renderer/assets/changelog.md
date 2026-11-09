@@ -1,3 +1,6 @@
+## 1.9.2
+- Coins and cosmetics now stay in sync between the launcher and the game, even while the game is open
+
 ## 1.9.1
 - Right Shift now opens the HUD editor with a Mod Menu button in the middle and quick buttons for Wardrobe, Emotes, Friends, Settings and the Calculator
 - Cleaner, more see-through menus

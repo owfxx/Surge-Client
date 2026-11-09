@@ -90,7 +90,19 @@ function wheel(conf, w) {
 let claimed = [];
 let badge = '';
 
+let inboxAt = 0;
+let playing = () => false;
+function setPlaying(fn) { playing = fn; }
+
+function pending(patch) {
+  if (!playing()) return;
+  const file = path.join(paths.root, 'wardrobe-pending.json');
+  writeJson(file, { ...(readJson(file) || {}), ...patch });
+}
+
 async function checkInbox() {
+  if (Date.now() - inboxAt < 20000) return;
+  inboxAt = Date.now();
   if (!social.token()) { try { await social.social(); } catch { } }
   if (!social.token()) return;
   try {
@@ -159,6 +171,7 @@ function equip(type, key) {
   const conf = readJson(configFile()) || {};
   conf[type] = key;
   writeJson(configFile(), conf);
+  pending({ [type]: key });
   return get();
 }
 
@@ -176,6 +189,7 @@ function toggleWheel(key) {
   }
   conf.emotePages = pages;
   writeJson(configFile(), conf);
+  pending({ emotePages: pages });
   return get();
 }
 
@@ -204,4 +218,4 @@ async function redeem(raw) {
   return data;
 }
 
-module.exports = { CATALOG, get, buy, equip, toggleWheel, redeem };
+module.exports = { CATALOG, get, buy, equip, toggleWheel, redeem, setPlaying };

@@ -256,12 +256,12 @@ handle('skins:cape', id => skins.setCape(id));
 handle('skins:remove', name => skins.remove(name));
 handle('skins:saveCurrent', () => skins.saveCurrent());
 handle('skins:current', () => skins.current());
-const notPlaying = () => { if (launcher.isRunning()) throw new Error('Close Minecraft first, then change your wardrobe here. Or use the Wardrobe in the game.'); };
+wardrobe.setPlaying(() => launcher.isRunning());
 handle('wardrobe:get', async () => ({ ...(await wardrobe.get()), playing: launcher.isRunning() }));
-handle('wardrobe:buy', async id => { notPlaying(); return wardrobe.buy(id); });
-handle('wardrobe:equip', async (type, key) => { notPlaying(); return wardrobe.equip(type, key); });
-handle('wardrobe:wheel', async key => { notPlaying(); return wardrobe.toggleWheel(key); });
-handle('wardrobe:redeem', async code => { notPlaying(); return wardrobe.redeem(code); });
+handle('wardrobe:buy', async id => wardrobe.buy(id));
+handle('wardrobe:equip', async (type, key) => wardrobe.equip(type, key));
+handle('wardrobe:wheel', async key => wardrobe.toggleWheel(key));
+handle('wardrobe:redeem', async code => wardrobe.redeem(code));
 handle('skins:folder', () => shell.openPath(skins.LIB));
 handle('skins:import', async () => {
   const r = await dialog.showOpenDialog(win, { title: 'Import skins', properties: ['openFile', 'multiSelections'], filters: [{ name: 'Skins', extensions: ['png'] }] });

@@ -35,6 +35,9 @@ public final class Wallet {
 	public String lastDaily = "";
 	public int streak = 0;
 	public int playSeconds = 0;
+	private transient long stamp = -1;
+	private transient int baseCoins;
+	private static long checkedAt;
 
 	public static Path home() {
 		String prop = System.getProperty("surge.home");
@@ -45,23 +48,67 @@ public final class Wallet {
 
 	private static Path file() { return home().resolve("wallet.json"); }
 
+	private static Wallet read() {
+		try (Reader r = Files.newBufferedReader(file())) {
+			return GSON.fromJson(r, Wallet.class);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private static long mtime() {
+		try { return Files.getLastModifiedTime(file()).toMillis(); } catch (Exception e) { return -1; }
+	}
+
 	public static Wallet get() {
 		if (instance == null) {
-			try (Reader r = Files.newBufferedReader(file())) {
-				instance = GSON.fromJson(r, Wallet.class);
-			} catch (Exception e) {
-				instance = null;
-			}
+			long m = mtime();
+			instance = read();
 			if (instance == null) instance = new Wallet();
-			if (instance.owned == null) instance.owned = new LinkedHashSet<>();
-			if (instance.redeemed == null) instance.redeemed = new LinkedHashSet<>();
+			fix(instance);
+			instance.stamp = m;
+			instance.baseCoins = instance.coins;
+			checkedAt = System.currentTimeMillis();
+		} else if (System.currentTimeMillis() - checkedAt > 1000) {
+			checkedAt = System.currentTimeMillis();
+			instance.sync();
 		}
 		return instance;
 	}
 
-	public void save() {
-		try (Writer w = Files.newBufferedWriter(file())) {
-			GSON.toJson(this, w);
+	private static void fix(Wallet w) {
+		if (w.owned == null) w.owned = new LinkedHashSet<>();
+		if (w.redeemed == null) w.redeemed = new LinkedHashSet<>();
+		if (w.lastDaily == null) w.lastDaily = "";
+	}
+
+	private synchronized void sync() {
+		long m = mtime();
+		if (m == stamp || m < 0) return;
+		Wallet disk = read();
+		if (disk == null) return;
+		fix(disk);
+		int delta = coins - baseCoins;
+		coins = Math.max(0, disk.coins + delta);
+		baseCoins = disk.coins;
+		owned.addAll(disk.owned);
+		redeemed.addAll(disk.redeemed);
+		if (disk.lastDaily.compareTo(lastDaily) > 0) { lastDaily = disk.lastDaily; streak = disk.streak; }
+		playSeconds = Math.max(playSeconds, disk.playSeconds);
+		stamp = m;
+	}
+
+	public synchronized void save() {
+		sync();
+		try {
+			Path f = file();
+			Path tmp = f.resolveSibling("wallet.json.game.tmp");
+			try (Writer w = Files.newBufferedWriter(tmp)) {
+				GSON.toJson(this, w);
+			}
+			Files.move(tmp, f, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+			stamp = mtime();
+			baseCoins = coins;
 		} catch (Exception ignored) { }
 	}
 

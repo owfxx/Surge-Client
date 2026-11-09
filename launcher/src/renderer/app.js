@@ -1241,7 +1241,6 @@ async function renderWardrobe() {
   if (state.view !== 'wardrobe') return;
   if (!data) { $('#wdGrid').innerHTML = '<div class="muted small">Your wardrobe could not be loaded</div>'; return; }
   ward.data = data;
-  if (data.playing) $('#wdNote').textContent = 'Minecraft is open. Use the Wardrobe in the game, or close it to change things here.';
   if ((data.gifts || []).length) {
     const coins = data.gifts.reduce((a, g) => a + (g.coins || 0), 0), items = data.gifts.flatMap(g => g.items), note = data.gifts.map(g => g.note).filter(Boolean).join(' ');
     showGiftModal(items.length === 1 ? `You've been gifted ${items[0].name}!` : items.length ? `You've been gifted ${items.length} items!` : "You've been gifted coins!", coins, items, note);
@@ -1264,6 +1263,22 @@ async function renderWardrobe() {
   $('#wdCode').onkeydown = e => { if (e.key === 'Enter' && !e.repeat) redeem(); };
   drawWardGrid();
   mountWardrobeViewer(data);
+  clearInterval(ward.poll);
+  ward.poll = setInterval(refreshWardrobe, 2500);
+}
+
+function wardSig(d) {
+  return d ? JSON.stringify([d.coins, d.items.filter(i => i.owned).map(i => i.id), d.equipped, d.wheel]) : '';
+}
+
+async function refreshWardrobe() {
+  if (state.view !== 'wardrobe' || document.hidden) { if (state.view !== 'wardrobe') clearInterval(ward.poll); return; }
+  const d = await S.wardrobe.get().catch(() => null);
+  if (!d || state.view !== 'wardrobe' || wardSig(d) === wardSig(ward.data)) return;
+  const equipChanged = JSON.stringify(d.equipped) !== JSON.stringify(ward.data && ward.data.equipped);
+  ward.data = d;
+  drawWardGrid();
+  if (equipChanged) { ward.capeKey = ''; wardExtras(d); }
 }
 
 function drawWardGrid() {

@@ -196,6 +196,7 @@ public class SurgeClient implements ClientModInitializer {
 		while (fullbrightKey.consumeClick()) Mods.FULLBRIGHT.toggle();
 		while (calcKey.consumeClick()) if (mc.screen == null) mc.setScreen(new gg.surge.client.gui.CalculatorScreen(null));
 		gg.surge.client.features.Borderless.tick(mc);
+		gg.surge.client.economy.WardrobeSync.tick();
 		while (waypointKey.consumeClick()) Waypoints.addHere(mc);
 		while (stopwatchKey.consumeClick()) HudModules.toggleStopwatch();
 		while (clipKey.consumeClick()) gg.surge.client.features.Clips.save(mc);
