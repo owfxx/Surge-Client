@@ -30,6 +30,13 @@ public class HudEditorScreen extends Screen {
 	}
 
 	@Override
+	protected void init() {
+		if (!opened) { opened = true; Ui.openSound("preset:pop"); }
+	}
+
+	private boolean opened;
+
+	@Override
 	public boolean isPauseScreen() {
 		return false;
 	}
@@ -187,6 +194,7 @@ public class HudEditorScreen extends Screen {
 
 	private boolean hubButton(GuiGraphics g, int mx, int my, int x, int y, int w, int h, float ui, String key) {
 		boolean hov = Ui.hover(mx, my, x, y, w, h);
+		Ui.hoverTick("hub:" + key, hov);
 		float a = Ui.anim("hub:" + key, hov);
 		if (Ui.glass()) Ui.glassRect(g, x, y, w, h, 6, 0.8f + a * 0.6f);
 		else {
@@ -293,6 +301,7 @@ public class HudEditorScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		Ui.closeSound();
 		SurgeConfig.save();
 		minecraft.setScreen(parent);
 	}

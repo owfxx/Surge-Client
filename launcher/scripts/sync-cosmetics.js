@@ -9,4 +9,12 @@ for (const f of fs.readdirSync(from)) {
   fs.copyFileSync(path.join(from, f), path.join(to, f));
   n++;
 }
+for (const f of ['cape_runes.png']) {
+  const src = path.join(__dirname, '..', '..', 'server', 'img', f);
+  if (fs.existsSync(src)) { fs.copyFileSync(src, path.join(to, f)); n++; }
+}
+for (const f of ['cape_overlay_logo.png', 'cape_overlay_logo_center.png', 'cape_text_beta.png', 'cape_text_beta_tester.png', 'cape_text_early.png', 'cape_text_og.png', 'cape_text_surge.png']) {
+  const src = path.join(from, f);
+  if (fs.existsSync(src)) { fs.copyFileSync(src, path.join(to, f)); n++; }
+}
 console.log(`copied ${n} cosmetic textures`);

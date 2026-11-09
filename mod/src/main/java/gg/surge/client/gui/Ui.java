@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Ui {
-	public static final int BG = 0xD81C1C1F;
+	public static final int BG = 0xB81A1A1D;
 	public static final int SIDEBAR = 0xFF1C1C1F;
 	public static final int SURFACE = 0xFF3A3A3D;
 	public static final int SURFACE_HOVER = 0xFF48484C;
@@ -151,6 +151,21 @@ public final class Ui {
 		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
 		if (glass()) { gg.surge.client.features.CustomSounds.preview(on ? "preset:glass_on" : "preset:glass_off", 1f, 0.6f); return; }
 		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), on ? 1.25F : 0.85F, 0.5F));
+	}
+
+	public static void closeSound() {
+		if (!gg.surge.client.mods.Mods.UI_CLICKS.on()) return;
+		if (glass()) gg.surge.client.features.CustomSounds.preview("preset:glass_off", 1.1f, 0.4f);
+		else gg.surge.client.features.CustomSounds.preview("preset:blip", 0.75f, 0.3f);
+	}
+
+	private static long tickAt;
+
+	public static void tickSound(float fraction) {
+		if (!gg.surge.client.mods.Mods.UI_CLICKS.on() || System.currentTimeMillis() - tickAt < 45) return;
+		tickAt = System.currentTimeMillis();
+		if (glass()) gg.surge.client.features.CustomSounds.preview("preset:glass_tap", 0.8f + fraction * 0.6f, 0.25f);
+		else Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.4F + fraction * 0.6F, 0.12F));
 	}
 
 	public static void openSound(String normal) {

@@ -32,7 +32,7 @@ public abstract class HudModule extends SurgeMod {
 		});
 		background = toggle("bg", "Background", true);
 		backgroundColor = color("bgColor", "Background color", "000000").showIf(() -> background.on());
-		backgroundOpacity = slider("bgOpacity", "Background opacity", 45, 0, 100, 5, "%").showIf(() -> background.on());
+		backgroundOpacity = slider("bgOpacity", "Background opacity", 35, 0, 100, 5, "%").showIf(() -> background.on());
 		textColor = color("textColor", "Text color", "FFFFFF");
 		shadow = toggle("shadow", "Text shadow", true);
 		brackets = choice("brackets", "Brackets", "None", "None", "[ ]", "( )", "< >");

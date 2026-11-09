@@ -22,8 +22,8 @@ public final class CapeTextures {
 
 	static {
 		Object[][] a = {{"flame", 16, 70}, {"enchanted", 16, 90}, {"runes", 24, 90}, {"blinkcat", 2, 0}, {"aurora", 16, 140}, {"emerald", 16, 110}, {"galaxy", 24, 120},
-			{"midnight", 20, 160}, {"ocean", 16, 120}, {"royal", 16, 110}, {"sakura", 20, 130}, {"surge", 16, 110}, {"void", 16, 120}, {"lava", 20, 110}, {"matrix", 20, 80},
-			{"storm", 24, 110}, {"phoenix", 20, 90}, {"koi", 24, 120}, {"bloodmoon", 20, 120}, {"obsidian", 16, 110}, {"frost", 16, 130}, {"sunset", 18, 110}, {"ender", 24, 110}, {"diamond", 20, 100}, {"toxic", 20, 100}};
+			{"midnight", 20, 160}, {"ocean", 16, 120}, {"royal", 16, 110}, {"sakura", 20, 130}, {"surge", 16, 110}, {"void", 16, 120}, {"lava", 32, 110}, {"matrix", 48, 110},
+			{"storm", 24, 110}, {"phoenix", 20, 90}, {"koi", 24, 120}, {"bloodmoon", 20, 120}, {"obsidian", 16, 110}, {"frost", 16, 130}, {"ender", 24, 110}, {"diamond", 20, 100}, {"toxic", 20, 100}};
 		for (Object[] r : a) ANIM.put((String) r[0], new int[]{(Integer) r[1], (Integer) r[2]});
 	}
 

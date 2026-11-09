@@ -132,13 +132,13 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 		open = st[2];
 		if (FLAP.size() > 256) FLAP.clear();
 		float flap = (float) Math.sin(st[0]) * (3f + open * 15f);
-		float spread = 62f - open * 34f;
+		float spread = 68f - open * 34f;
 		float lift = 10f + open * 6f;
 
 		for (int side = -1; side <= 1; side += 2) {
 			ps.pushPose();
 			getParentModel().body.translateAndRotate(ps);
-			ps.translate(side * 0.06f, 0.14f, 0.15f);
+			ps.translate(side * 0.05f, 0.18f, 0.16f);
 			ps.scale(side, 1f, 1f);
 			ps.mulPose(Axis.YP.rotationDegrees(-(spread + flap)));
 			ps.mulPose(Axis.ZP.rotationDegrees(-lift - flap * 0.3f));
@@ -177,7 +177,7 @@ public class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static void wingMesh(PoseStack.Pose pose, VertexConsumer vc, float phase, float open, int light, int color) {
 		float[][] p = wingShape(phase, open);
 		int n = p.length - 1;
-		float top = -0.46f, bot = 0.30f;
+		float top = -0.50f, bot = 0.20f;
 		for (int i = 0; i < n; i++) {
 			float ua = i / (float) n, ub = (i + 1) / (float) n;
 			float[] a = p[i], b = p[i + 1];

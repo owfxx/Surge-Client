@@ -43,7 +43,10 @@ public class CalculatorScreen extends Screen {
 		ph = 236;
 		px = (width - pw) / 2;
 		py = (height - ph) / 2;
+		if (!opened) { opened = true; Ui.openSound("preset:pop"); }
 	}
+
+	private boolean opened;
 
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
@@ -97,6 +100,7 @@ public class CalculatorScreen extends Screen {
 				String k = KEYS[r][c];
 				int x = gx + c * (bw + gap), y = gy + r * (bh + gap);
 				boolean hov = Ui.hover(mx, my, x, y, bw, bh);
+				Ui.hoverTick("calc:" + k, hov);
 				boolean op = c == 3 || r == 0;
 				boolean eq = k.equals("=");
 				int fill = eq ? Ui.ACCENT : op ? 0xFF2E2E33 : 0xFF3A3A3D;
@@ -195,6 +199,7 @@ public class CalculatorScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		Ui.closeSound();
 		minecraft.setScreen(parent);
 	}
 

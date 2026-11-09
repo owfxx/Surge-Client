@@ -590,7 +590,7 @@ public class SurgeMenuScreen extends Screen {
 			g.pose().translate(0, (1f - k) * 8f);
 		}
 
-		Ui.cutBox(g, wx, wy, ww, wh, 5, 0xC8121214, 0xFF2C2C31);
+		Ui.cutBox(g, wx, wy, ww, wh, 5, 0xA8101012, 0xFF2C2C31);
 		g.fill(px + SIDEBAR_W + 4, py + HEADER_H + 2, px + SIDEBAR_W + 5, py + ph - 2, 0x18FFFFFF);
 		header(g, mx, my, delta);
 		sidebar(g, mx, my);
@@ -650,7 +650,7 @@ public class SurgeMenuScreen extends Screen {
 		int sw = Math.max(60, Math.min(170, bx - 8 - left));
 		int sx = left;
 		boolean focused = search.isFocused();
-		Ui.cutBox(g, sx, y, sw, 18, 3, 0xFF141416, focused ? Ui.ACCENT_2 : 0xFF2E2E33);
+		Ui.cutBox(g, sx, y, sw, 18, 3, 0xB0141416, focused ? Ui.ACCENT_2 : 0xFF2E2E33);
 		Ui.icon(g, Ui.SEARCH, sx + 5, y + 5, 1, focused ? Ui.ACCENT_2 : 0xFF55555C);
 		search.setX(sx + 17);
 		search.setY(y + 5);
@@ -712,7 +712,7 @@ public class SurgeMenuScreen extends Screen {
 		int lift = Math.round(a * 1.5f);
 		yy -= lift;
 		g.fill(x + 1, yy + CARD_H - 1 + lift, x + w - 1, yy + CARD_H + 1 + lift, 0x40000000);
-		Ui.cutBox(g, x, yy, w, CARD_H, 4, Colors.lerp(0xF0141417, 0xF01C1C21, a), Colors.lerp(0xFF26262D, 0xFF3A3A44, a));
+		Ui.cutBox(g, x, yy, w, CARD_H, 4, Colors.lerp(0xA0141417, 0xB81C1C21, a), Colors.lerp(0xFF26262D, 0xFF3A3A44, a));
 		int iconCol = Colors.lerp(0xFF8A8A93, 0xFFFFFFFF, Math.max(on, a));
 		Ui.modIcon(g, m, x + w / 2 - 10, yy + 8, 20, iconCol);
 		String name = Ui.fit(font, m.name, w - 10);
@@ -798,7 +798,12 @@ public class SurgeMenuScreen extends Screen {
 			g.fill(x, barY, x + 2, barY + barH, Ui.ACCENT_2);
 		}
 
-		if (dragging != null && downL) dragging.setFraction(Math.max(0, Math.min(1, (mx - dragX) / (float) dragW)));
+		if (dragging != null && downL) {
+			String before = dragging.text();
+			float nf = Math.max(0, Math.min(1, (mx - dragX) / (float) dragW));
+			dragging.setFraction(nf);
+			if (!before.equals(dragging.text())) Ui.tickSound(nf);
+		}
 		if (drag2d != null && downL) drag2d.accept(mx, my);
 	}
 
@@ -1173,7 +1178,7 @@ public class SurgeMenuScreen extends Screen {
 				return;
 			}
 			if (r == null) {
-				Ui.cutBox(g, x, y + 2, w, 112, 6, 0x9A1C1C1F, 0xFF2E2E33);
+				Ui.cutBox(g, x, y + 2, w, 112, 6, 0x781C1C1F, 0xFF2E2E33);
 				Ui.item(g, new ItemStack(Items.CLOCK), x + 12, y + 14, 16);
 				g.drawString(font, "Find out why your game lags", x + 36, y + 18, Ui.TEXT, false);
 				int ly = y + 38;
@@ -1191,7 +1196,7 @@ public class SurgeMenuScreen extends Screen {
 			int[] colors = {Ui.TEXT, r.lowFps() < 30 ? 0xFFFF8C8C : r.lowFps() < 55 ? 0xFFFFC56B : 0xFF8CFFA0, r.stutters() > 10 ? 0xFFFF8C8C : r.stutters() > 3 ? 0xFFFFC56B : 0xFF8CFFA0};
 			for (int i = 0; i < 3; i++) {
 				int bx = x + i * (bw + 4);
-				Ui.cutBox(g, bx, y + 2, bw, 40, 5, 0x9A1C1C1F, 0xFF2E2E33);
+				Ui.cutBox(g, bx, y + 2, bw, 40, 5, 0x781C1C1F, 0xFF2E2E33);
 				g.pose().pushMatrix();
 				g.pose().translate(bx + 8, y + 8);
 				g.pose().scale(2f, 2f);
@@ -1238,7 +1243,7 @@ public class SurgeMenuScreen extends Screen {
 			for (PerfCheck.Finding fd : r.findings()) {
 				int fh = findingH(fd, w);
 				int sev = switch (fd.severity) { case 2 -> 0xFFFF6B6B; case 1 -> 0xFFFFB347; case -1 -> 0xFF6EE07A; default -> 0xFF6E6F74; };
-				Ui.cutBox(g, x, fy, w, fh, 4, 0x9A1C1C1F, 0xFF2A2A2E);
+				Ui.cutBox(g, x, fy, w, fh, 4, 0x781C1C1F, 0xFF2A2A2E);
 				g.fill(x + 1, fy + 4, x + 3, fy + fh - 4, sev);
 				g.drawString(font, Ui.fit(font, fd.title, w - 110), x + 10, fy + 6, Ui.TEXT, false);
 				int ly = fy + 18;
@@ -1376,7 +1381,7 @@ public class SurgeMenuScreen extends Screen {
 		@Override void draw(GuiGraphics g, int x, int y, int w, int mx, int my, boolean hov, float delta) {
 			boolean active = name.equals(gg.surge.client.features.Profiles.active());
 			float a = Ui.anim(this, hov);
-			Ui.cutBox(g, x, y + 2, w, 22, 3, Colors.lerp(0x9A1C1C1F, 0xC0242428, a), active ? Ui.ACCENT_2 : 0xFF2A2A2E);
+			Ui.cutBox(g, x, y + 2, w, 22, 3, Colors.lerp(0x781C1C1F, 0xA0242428, a), active ? Ui.ACCENT_2 : 0xFF2A2A2E);
 			int bx = x + w - 4;
 			String[] labels = renaming ? new String[]{"Cancel", "Done"} : new String[]{System.currentTimeMillis() - confirmDelete < 3000 ? "Sure?" : "Delete", "Rename", "Save", active ? "Loaded" : "Load"};
 			int[] widths = new int[labels.length];
@@ -1459,6 +1464,7 @@ public class SurgeMenuScreen extends Screen {
 
 	@Override
 	public void onClose() {
+		Ui.closeSound();
 		SurgeConfig.save();
 		minecraft.options.save();
 		minecraft.setScreen(parent);

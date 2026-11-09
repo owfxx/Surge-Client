@@ -55,7 +55,8 @@
     "ConnectScreenMixin",
     "WindowMixin",
     "PostChainAccessor",
-    "PostPassAccessor"
+    "PostPassAccessor",
+    "ElytraModelMixin"
   ],
   "injectors": {
     "defaultRequire": 0

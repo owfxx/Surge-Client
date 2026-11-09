@@ -72,6 +72,10 @@ public final class Emotes {
 		preview = e;
 	}
 
+	public static boolean canEmoteInAir(LocalPlayer p) {
+		return p != null && !p.isFallFlying() && !p.isPassenger() && !p.isSwimming() && !p.isSleeping() && !p.isSpectator() && !p.isDeadOrDying();
+	}
+
 	public static boolean canEmote(LocalPlayer p) {
 		return p != null && p.onGround() && !p.isFallFlying() && !p.isPassenger() && !p.isSwimming() && !p.isSleeping()
 			&& !p.getAbilities().flying && !p.isInWater() && !p.isSpectator() && !p.isDeadOrDying() && !p.onClimbable();
@@ -82,7 +86,7 @@ public final class Emotes {
 	public static void play(Minecraft mc, Emote emote) {
 		LocalPlayer p = mc.player;
 		if (p == null || !owned(emote)) return;
-		if (!canEmote(p)) {
+		if (!(WALKABLE.contains(emote) ? canEmoteInAir(p) : canEmote(p))) {
 			mc.gui.setOverlayMessage(net.minecraft.network.chat.Component.literal("You can't emote right now"), false);
 			return;
 		}
@@ -111,12 +115,12 @@ public final class Emotes {
 		if (p == null) { current = null; return; }
 		var o = mc.options;
 		float t = (System.nanoTime() - startNanos) / 1e9f;
+		boolean walkable = WALKABLE.contains(current);
 		airTicks = p.onGround() ? 0 : airTicks + 1;
-		if (p.isFallFlying() || p.isSwimming() || p.isPassenger() || p.isSleeping() || p.getAbilities().flying || p.isDeadOrDying() || p.isSpectator() || airTicks > 6) {
+		if (p.isFallFlying() || p.isSwimming() || p.isPassenger() || p.isSleeping() || p.isDeadOrDying() || p.isSpectator() || (!walkable && (airTicks > 6 || p.getAbilities().flying))) {
 			stop(mc);
 			return;
 		}
-		boolean walkable = WALKABLE.contains(current);
 		boolean moved = o.keyUp.isDown() || o.keyDown.isDown() || o.keyLeft.isDown() || o.keyRight.isDown() || o.keyJump.isDown();
 		if (t > 0.25f && (o.keyAttack.isDown() || o.keyUse.isDown() || (walkable ? o.keyShift.isDown() : moved))) {
 			stop(mc);

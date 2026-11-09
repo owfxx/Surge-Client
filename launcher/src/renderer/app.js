@@ -265,39 +265,383 @@ const EASE = x => x * x * (3 - 2 * x);
 const CL = v => Math.max(0, Math.min(1, v));
 function emotePose(name, t) {
   const P = { rArm: [0, 0, 0], lArm: [0, 0, 0], rLeg: [0, 0, 0], lLeg: [0, 0, 0], head: [0, 0, 0], body: [0, 0, 0], lean: 0, bob: 0, sway: 0, spin: 0 };
-  const sin = Math.sin, cos = Math.cos, abs = Math.abs;
+  const { sin, cos, abs, max, min, pow, floor, PI } = Math, clamp = CL, ease = EASE, fract = a => a - Math.floor(a), mix = (a, b, k) => a + (b - a) * k, sel = (i, ...v) => v[Math.max(0, Math.min(v.length - 1, i | 0))];
+  const back = x => { const c = 1.70158, d = x - 1; return 1 + (c + 1) * d * d * d + c * d * d; };
   switch (name) {
-    case 'WAVE': { const w = sin(t * 9), hi = EASE(CL(t / 0.3)); P.rArm = [-15 + w * 5, 0, (150 + w * 24) * hi]; P.lArm = [4, 0, -6]; P.head = [-8, -14, 6 + w * 3]; P.body = [0, -6, 0]; P.bob = -abs(sin(t * 4.5)) * 0.5; break; }
-    case 'CLAP': { const c = abs(sin(t * 7)); P.rArm = [-72, -(4 + 17 * c), 0]; P.lArm = [-72, 4 + 17 * c, 0]; P.head = [4 - 6 * c, 0, 0]; P.bob = -c * 0.3; break; }
-    case 'DAB': { const d = EASE(CL(t * 4)); P.lArm = [0, 0, -125 * d]; P.rArm = [-105 * d, -55 * d, 0]; P.head = [30 * d, 28 * d, 0]; P.lean = 8 * d; break; }
-    case 'SHRUG': { const k = EASE(0.5 - 0.5 * cos(t * Math.PI * 2 / 1.2)); P.rArm = [-25 * k, 0, 32 * k]; P.lArm = [-25 * k, 0, -32 * k]; P.head = [-6 * k, 0, 14 * k]; break; }
-    case 'SALUTE': P.rArm = [-118, -50, 14]; P.lArm = [0, 0, -4]; P.head = [-6, 0, 0]; break;
-    case 'CHEER': { const j = abs(sin(t * 5)), pump = sin(t * 10) * 14; P.rArm = [0, 0, 160 + pump]; P.lArm = [0, 0, -160 - pump]; P.head = [-15, 0, 0]; P.bob = -j * 2.5; P.rLeg = [0, 0, 4 * j]; P.lLeg = [0, 0, -4 * j]; break; }
-    case 'BOW': { const ph = (t % 3) / 3, dn = EASE(CL(ph / 0.35)) * (1 - EASE(CL((ph - 0.65) / 0.35))); P.lean = 40 * dn; P.rArm = [-70 * dn, -45 * dn, 0]; P.lArm = [25 * dn, 0, -5]; P.head = [10 * dn, 0, 0]; break; }
-    case 'HEART': { const beat = Math.max(0, sin(t * 7)), k = sin(t * 2); P.rArm = [-82 - beat * 4, -36, 0]; P.lArm = [-82 - beat * 4, 36, 0]; P.head = [-6, 0, k * 6]; P.sway = k * 0.6; P.body = [0, k * 5, 0]; P.bob = -beat * 0.4; break; }
-    case 'FLOSS': { const f = sin(t * 7), sw = sin(t * 14); P.rArm = [26 * sw, 0, 42 * f]; P.lArm = [-26 * sw, 0, 42 * f]; P.body = [0, 0, -7 * f]; P.sway = -2 * f; P.head = [0, 0, 7 * f]; P.rLeg = [0, 0, -4 * f]; P.lLeg = [0, 0, -4 * f]; break; }
-    case 'TPOSE': P.rArm = [0, 0, 90]; P.lArm = [0, 0, -90]; break;
-    case 'LAUGH': { const sh = sin(t * 20); P.lean = -14 + sh * 2; P.rArm = [-30, -30, 0]; P.lArm = [-35, 32, 0]; P.head = [-24 + sh * 5, 0, 0]; P.bob = abs(sh) * 0.5; break; }
-    case 'FACEPALM': { const a = EASE(CL(t / 0.45)), sh = t > 0.6 ? sin(t * 6.5) * 9 * a : 0; P.rArm = [-128 * a, -38 * a, 0]; P.lArm = [-20 * a, 25 * a, -6]; P.head = [30 * a, sh, 0]; P.lean = 7 * a; P.bob = 0.4 * a; break; }
-    case 'ZOMBIE': { const l = sin(t * 2.4); P.rArm = [-88 + l * 4, -6, 0]; P.lArm = [-86 - l * 4, 6, 0]; P.head = [10 + l * 4, l * 8, 8 * l]; P.sway = l * 0.5; P.body = [0, l * 6, 0]; P.rLeg = [-10 * Math.max(0, l), 0, 2]; P.lLeg = [-10 * Math.max(0, -l), 0, -2]; break; }
-    case 'ROBOT': { const b = Math.floor(t * 2.5) % 8; const r = [[-90, 0, 0], [-90, 0, 0], [0, 0, 90], [0, 0, 0], [-90, -40, 0], [-170, 0, 0], [0, 0, 0], [-45, 0, 45]], l = [[0, 0, 0], [-90, 0, 0], [0, 0, -90], [-90, 0, 0], [-90, 40, 0], [0, 0, 0], [-170, 0, 0], [-45, 0, -45]], hd = [0, 30, -30, 0, 0, 20, -20, 0]; P.rArm = r[b]; P.lArm = l[b]; P.head = [0, hd[b], 0]; P.bob = b % 2 === 0 ? 0.3 : 0; break; }
-    case 'AIRGUITAR': { const st = sin(t * 22), bang = abs(sin(t * 6)); P.lArm = [-70, 40, -10]; P.rArm = [-35 + st * 18, -25, 10]; P.head = [20 * bang, 0, 0]; P.lean = -6 + bang * 4; P.rLeg = [0, 0, 6]; P.lLeg = [-12, 0, -8]; P.bob = -bang * 0.4; break; }
-    case 'JUMPJACKS': { const j = 0.5 - 0.5 * cos(t * Math.PI * 2.4); P.rArm = [0, 0, 20 + 150 * j]; P.lArm = [0, 0, -20 - 150 * j]; P.rLeg = [0, 0, 4 + 14 * j]; P.lLeg = [0, 0, -4 - 14 * j]; P.bob = -abs(sin(t * Math.PI * 2.4)) * 1.6; P.head = [-4 * j, 0, 0]; break; }
-    case 'FLEX': { const up = EASE(CL(t / 0.3)), pump = sin(t * 5), sq = Math.max(0, pump); P.rArm = [-30 * up, -20 * up, (125 + 10 * sq) * up]; P.lArm = [-30 * up, 20 * up, (-125 - 10 * sq) * up]; P.head = [(-10 + 8 * sq) * up, pump * 8, 0]; P.lean = (-6 + 4 * sq) * up; P.bob = -0.3 * up; break; }
-    case 'KISS': { const tt = t % 3.4, a = EASE(CL(tt / 0.4)), o = EASE(CL((tt - 0.9) / 0.35)); P.rArm = [(-120 + 80 * o) * a, (-35 + 10 * o) * a, (10 + 30 * o) * a]; P.head = [-6 * a, -10 * a, 6 * a]; P.lean = -4 * o; P.lArm = [4, 0, -6]; break; }
-    case 'SPIN': { const tt = t % 3, sp = EASE(CL(tt / 1.6)); P.spin = sp * 720; P.rArm = [0, 0, 80 + 10 * sin(t * 8)]; P.lArm = [0, 0, -80 - 10 * sin(t * 8)]; P.head = [-10, 0, 0]; P.bob = -abs(sin(t * 4)) * 0.8; break; }
-    case 'FACEPLANT': { const tt = t % 4.6, f = EASE(CL((tt - 0.6) / 0.5)), w = tt < 0.6 ? sin(tt * 14) * 6 : 0; P.head = [w + 10 * f, w, w]; P.rArm = [-20 - 60 * f, 0, 20 + 40 * f]; P.lArm = [-20 - 60 * f, 0, -20 - 40 * f]; P.lean = w * 0.5 + 70 * f; P.bob = 6 * f; P.rLeg = [10 * f, 0, 4]; P.lLeg = [10 * f, 0, -4]; break; }
-    case 'SIT': { const br = sin(t * 2); P.bob = 10; P.rLeg = [-88, 8, 0]; P.lLeg = [-88, -8, 0]; P.rArm = [-20, 0, 12]; P.lArm = [-20, 0, -12]; P.head = [4 + br * 2, sin(t * 0.7) * 12, 0]; break; }
+    case 'WAVE': {
+      const up = back(clamp(t / 0.42));
+      const w = t > 0.3 ? sin((t - 0.3) * 10.5) : 0;
+      const fade = 1 - 0.35 * clamp((t - 2.2) / 0.6);
+      const br = sin(t * 2.4);
+      P.rArm = [-12 - 6 * w * fade, -8 + 12 * w * fade, (148 + 20 * w * fade) * up];
+      P.lArm = [3 + br * 2, 0, -5 - br * 2];
+      P.head = [-8 * up, -12 * up + 4 * w * fade, 9 * up];
+      P.body = [0, -9 * up, 0];
+      P.sway = -0.35 * up;
+      P.bob = -abs(sin(t * 5.2)) * 0.35 * up;
+      P.lLeg = [0, 0, -2 * up];
+      P.rLeg = [0, 0, 3 * up];
+      break;
+    }
+    case 'CLAP': {
+      const f = max(0, t - 0.25) * (5.5 + 1.5 * clamp(t / 2));
+      const v = abs(sin(f * PI));
+      const open = t < 0.25 ? ease(t / 0.25) : pow(v, 0.55);
+      const hit = 1 - open;
+      P.rArm = [-66 - 8 * hit, -(3 + 21 * open), 4 * open];
+      P.lArm = [-66 - 8 * hit, 3 + 21 * open, -4 * open];
+      P.head = [-4 + 7 * hit, sin(t * 2.1) * 7, sin(t * 1.3) * 3];
+      P.lean = 3 * hit;
+      P.bob = -0.45 * hit + 0.2 * abs(sin(t * 2.8));
+      P.body = [0, sin(t * 2.1) * 4, 0];
+      break;
+    }
+    case 'FACEPALM': {
+      const up = back(clamp((t - 0.08) / 0.45));
+      const down = ease(clamp((t - 2.45) / 0.45));
+      const a = up * (1 - down);
+      const sigh = sin(clamp((t - 0.55) / 1.4) * PI);
+      const shake = t > 0.75 ? sin((t - 0.75) * 5.6) * 11 * (1 - clamp((t - 1.9) / 0.5)) : 0;
+      P.rArm = [-134 * a, -32 * a, 6 * a];
+      P.lArm = [10 * a, 16 * a, -16 * a];
+      P.head = [26 * a + 7 * sigh * a, shake * a, -5 * a];
+      P.lean = 6 * a + 6 * sigh * a;
+      P.bob = (0.3 + 0.5 * sigh) * a;
+      P.sway = shake * 0.02 * a;
+      break;
+    }
+    case 'DAB': {
+      const pre = ease(clamp(t / 0.14)) * (1 - ease(clamp((t - 0.14) / 0.1)));
+      const d = back(clamp((t - 0.14) / 0.2));
+      const jit = t > 0.4 ? sin(t * 31) * 1.2 * d * (1 - clamp((t - 0.9) / 0.4)) : 0;
+      P.lArm = [-14 * d + 20 * pre, 6 * d, -128 * d + jit - 10 * pre];
+      P.rArm = [-102 * d + 15 * pre, -64 * d, 8 * d + 12 * pre];
+      P.head = [34 * d, 30 * d, -8 * d];
+      P.body = [0, 14 * d, 0];
+      P.lean = 10 * d;
+      P.bob = 1.1 * pre - 0.2 * d;
+      P.sway = -0.45 * d;
+      P.rLeg = [-4 * d, 0, 4 * d];
+      P.lLeg = [0, 0, -7 * d];
+      break;
+    }
+    case 'SHRUG': {
+      const s = back(clamp((t - 0.05) / 0.3)) * (1 - ease(clamp((t - 1.55) / 0.45)));
+      const s2 = t > 0.45 && t < 1.4 ? sin((t - 0.45) * 9) * 0.12 * (1 - clamp((t - 0.45) / 0.9)) : 0;
+      const k = s + s2;
+      P.rArm = [-38 * k, 14 * k, 34 * k];
+      P.lArm = [-38 * k, -14 * k, -34 * k];
+      P.head = [-4 * k, -8 * k, 16 * k];
+      P.bob = -0.9 * k;
+      P.lean = -3 * k;
+      P.body = [0, 0, 3 * k];
+      break;
+    }
+    case 'SALUTE': {
+      const u = back(clamp((t - 0.08) / 0.32));
+      const hold = t > 0.45 ? 1 : 0;
+      const br = sin(t * 2.2);
+      P.rArm = [(-122 + 2 * br * hold) * u, -52 * u, 18 * u];
+      P.lArm = [2, 0, -3];
+      P.head = [-10 * u, 3 * u, 0];
+      P.lean = -4 * u;
+      P.bob = -0.25 * u + 0.08 * br;
+      P.rLeg = [0, 0, 1];
+      P.lLeg = [0, 0, -1];
+      break;
+    }
+    case 'CHEER': {
+      const pre = t < 0.25 ? sin(t / 0.25 * PI) : 0;
+      const ph = fract(max(0, t - 0.25) * 1.6);
+      const air = t > 0.25 ? max(0, sin(ph * PI * 1.25 - 0.15 * PI)) : 0;
+      const crouch = t > 0.25 ? max(0, -sin(ph * PI * 1.25 - 0.15 * PI)) : pre;
+      const pump = sin(ph * PI * 2) * 16;
+      const up = back(clamp(t / 0.35));
+      P.rArm = [-8 * air, -6, (150 + pump) * up];
+      P.lArm = [-8 * air, 6, (-150 - pump) * up];
+      P.head = [-18 * up + 6 * crouch, sin(t * 3) * 6, 0];
+      P.bob = -3.2 * air + 1.2 * crouch;
+      P.rLeg = [-14 * air, 0, 7 * air];
+      P.lLeg = [-6 * air, 0, -7 * air];
+      P.lean = -4 * air + 5 * crouch;
+      break;
+    }
+    case 'LAUGH': {
+      const cyc = fract(t / 1.75);
+      const bk = ease(clamp(cyc / 0.18)) * (1 - ease(clamp((cyc - 0.5) / 0.15)));
+      const over = ease(clamp((cyc - 0.5) / 0.15)) * (1 - ease(clamp((cyc - 0.88) / 0.12)));
+      const slap = over * pow(abs(sin((cyc - 0.5) * PI * 5.5)), 2);
+      const sh = sin(t * 23) * (0.7 + 0.3 * bk);
+      P.lean = -15 * bk + 24 * over + sh * 2;
+      P.rArm = [-28 * bk - 50 * over + 12 * slap, -26 * bk + 6 * over, 8 * bk + 12 * slap];
+      P.lArm = [-40 * bk - 20 * over, 34 * bk + 10 * over, -4 * bk];
+      P.head = [-26 * bk + 14 * over + sh * 6, sin(t * 3) * 6, sin(t * 2) * 4];
+      P.bob = abs(sh) * 0.5 + 0.6 * over;
+      P.rLeg = [-6 * slap, 0, 2];
+      P.lLeg = [4 * over, 0, -2];
+      break;
+    }
+    case 'BOW': {
+      const ph = fract(t / 3);
+      const down = ease(clamp((ph - 0.05) / 0.3)) * (1 - ease(clamp((ph - 0.68) / 0.27)));
+      const flourish = sin(clamp(ph / 0.32) * PI);
+      P.lean = 44 * down;
+      P.rArm = [-62 * down - 20 * flourish, -58 * down, 12 * flourish];
+      P.lArm = [28 * down, -6 * down, -34 * down - 12 * flourish];
+      P.head = [14 * down, 0, 0];
+      P.lLeg = [18 * down, 0, -3 * down];
+      P.rLeg = [-6 * down, 0, 2 * down];
+      P.bob = 0.4 * down;
+      break;
+    }
+    case 'HEART': {
+      const up = back(clamp(t / 0.45));
+      const beat = pow(max(0, sin(t * 7.5)), 3);
+      const s = sin(t * 2.2);
+      P.rArm = [(-158 - beat * 6) * up, -24 * up, -18 * up];
+      P.lArm = [(-158 - beat * 6) * up, 24 * up, 18 * up];
+      P.head = [-12 * up, s * 6, s * 9];
+      P.body = [0, s * 6, s * 3];
+      P.sway = s * 0.7;
+      P.bob = -beat * 0.45 - 0.1;
+      P.rLeg = [0, 0, 2 + 2 * s];
+      P.lLeg = [0, 0, -2 + 2 * s];
+      break;
+    }
+    case 'FLOSS': {
+      const f = sin(t * PI * 2 * 1.15);
+      const sw = sin(t * PI * 2 * 2.3);
+      const lag = sin(t * PI * 2 * 1.15 - 0.6);
+      P.rArm = [30 * sw, 0, 40 * f];
+      P.lArm = [-30 * sw, 0, 40 * f];
+      P.body = [0, 6 * sw, -10 * lag];
+      P.sway = -2.6 * lag;
+      P.head = [-4, 6 * sw, 9 * lag];
+      P.rLeg = [0, 0, -6 * lag];
+      P.lLeg = [0, 0, -6 * lag];
+      P.bob = -abs(sw) * 0.35;
+      break;
+    }
+    case 'TPOSE': {
+      P.rArm = [0, 0, 90];
+      P.lArm = [0, 0, -90];
+      P.head = [0, 0, 0];
+      P.body = [0, 0, 0];
+      break;
+    }
+    case 'SIT': {
+      const sit = ease(clamp(t / 0.6));
+      const br = sin(t * 2);
+      const look = sin(t * 0.55) * 22 + sin(t * 1.3) * 6;
+      P.bob = 10 * sit;
+      P.rLeg = [-86 * sit, 10 * sit, 0];
+      P.lLeg = [-80 * sit, -6 * sit, 0];
+      P.rArm = [36 * sit, 0, 16 * sit];
+      P.lArm = [36 * sit, 0, -16 * sit];
+      P.lean = -8 * sit + br * 1.2;
+      P.head = [6 * sit + br * 2, look * sit, sin(t * 0.8) * 4];
+      break;
+    }
+    case 'GRIDDY': {
+      const b = t * 146 / 60;
+      const ph = b * PI;
+      const side = sin(ph);
+      const hop = pow(abs(side), 0.7);
+      const goggles = fract(b / 16) > 0.5 ? 1 : 0;
+      const g = goggles;
+      P.rArm = [(-60 - 40 * side) * (1 - g) - 152 * g, -10 * (1 - g) - 34 * g, 12 * (1 - g)];
+      P.lArm = [(-60 + 40 * side) * (1 - g) - 152 * g, 10 * (1 - g) + 34 * g, -12 * (1 - g)];
+      P.head = [6 * hop - 6 * g, side * 7, side * 3];
+      P.rLeg = [-38 * max(0, side) + 10 * max(0, -side), 0, 4];
+      P.lLeg = [-38 * max(0, -side) + 10 * max(0, side), 0, -4];
+      P.lean = 11 + 3 * hop;
+      P.bob = -hop * 1.6;
+      P.sway = side * 0.7;
+      P.body = [0, side * 8, 0];
+      break;
+    }
+    case 'SHUFFLE': {
+      const b = t * 126 / 60;
+      const ph = b * PI;
+      const step = sin(ph);
+      const lift = max(0, sin(ph * 2));
+      const tw = sin(ph * 2);
+      const ts = fract(b / 16) > 0.5 ? 1 : 0;
+      const n = 1 - ts;
+      P.rLeg = [(-55 * max(0, step) + 18 * max(0, -step)) * n - 12 * lift * ts, 26 * tw * ts, 3 * n + (8 + 10 * max(0, tw)) * ts];
+      P.lLeg = [(-55 * max(0, -step) + 18 * max(0, step)) * n - 12 * (1 - lift) * ts, -26 * tw * ts, -3 * n + (-8 - 10 * max(0, -tw)) * ts];
+      P.rArm = [(-45 + 35 * step) * n + (-38 - 14 * lift) * ts, -20 * ts, 10 * n + 18 * ts];
+      P.lArm = [(-45 - 35 * step) * n + (-38 - 14 * lift) * ts, 20 * ts, -10 * n - 18 * ts];
+      P.body = [0, 12 * tw * ts + 5 * step * n, 0];
+      P.lean = 6 * n + 2;
+      P.sway = step * 0.9;
+      P.bob = -abs(sin(ph * 2)) * 1.5;
+      P.head = [6 * lift, step * 8, 0];
+      break;
+    }
+    case 'DISCO': {
+      const b = t * 120 / 60;
+      const hip = sin(b * PI);
+      const up = fract(b / 4) < 0.5 ? 1 : 0;
+      const tr = ease(clamp(fract(b / 2) * 4)) ;
+      const pt = up;
+      P.rArm = [-172 * pt + (-40) * (1 - pt), -10 * pt + 30 * (1 - pt), 36 * pt - 42 * (1 - pt)];
+      P.lArm = [-22, 0, -18 - 12 * abs(hip)];
+      P.head = [-22 * pt + 12 * (1 - pt), -16 * pt + 16 * (1 - pt), hip * 4];
+      P.body = [0, 12 * hip, 0];
+      P.sway = hip * 1.3;
+      P.rLeg = [0, 0, 6 + 5 * hip];
+      P.lLeg = [-12 * max(0, hip), 0, -6];
+      P.bob = -abs(hip) * 0.6 * tr;
+      break;
+    }
+    case 'ZOMBIE': {
+      const l = sin(t * 2.2);
+      const stumble = pow(max(0, sin(t * 1.1 + 0.5)), 6);
+      const limp = sin(t * 4.4);
+      P.rArm = [-90 + l * 5 + 6 * stumble, -6 + limp * 3, 2];
+      P.lArm = [-84 - l * 5 + 6 * stumble, 6 - limp * 3, -2];
+      P.head = [14 + l * 4 + 10 * stumble, l * 10, 14 * sin(t * 1.1)];
+      P.sway = l * 0.6;
+      P.body = [0, l * 7, l * 3];
+      P.lean = 6 + 8 * stumble;
+      P.rLeg = [-12 * max(0, l), 0, 2];
+      P.lLeg = [-12 * max(0, -l), 0, -2];
+      P.bob = abs(limp) * 0.4;
+      break;
+    }
+    case 'ROBOT': {
+      const bt = t * 2.4;
+      const i = floor(bt) % 8;
+      const j = (i + 7) % 8;
+      const k = clamp(fract(bt) / 0.22);
+      const ek = back(k);
+      const ra = mix(sel(j, -90, -90, 0, 0, -90, -170, 0, -45), sel(i, -90, -90, 0, 0, -90, -170, 0, -45), ek);
+      const rb = mix(sel(j, 0, 0, 0, 0, -40, 0, 0, 0), sel(i, 0, 0, 0, 0, -40, 0, 0, 0), ek);
+      const rc = mix(sel(j, 0, 0, 90, 0, 0, 0, 0, 45), sel(i, 0, 0, 90, 0, 0, 0, 0, 45), ek);
+      const la = mix(sel(j, 0, -90, 0, -90, -90, 0, -170, -45), sel(i, 0, -90, 0, -90, -90, 0, -170, -45), ek);
+      const lb = mix(sel(j, 0, 0, 0, 0, 40, 0, 0, 0), sel(i, 0, 0, 0, 0, 40, 0, 0, 0), ek);
+      const lc = mix(sel(j, 0, 0, -90, 0, 0, 0, 0, -45), sel(i, 0, 0, -90, 0, 0, 0, 0, -45), ek);
+      const hd = mix(sel(j, 0, 30, -30, 0, 0, 20, -20, 0), sel(i, 0, 30, -30, 0, 0, 20, -20, 0), ek);
+      P.rArm = [ra, rb, rc];
+      P.lArm = [la, lb, lc];
+      P.head = [0, hd, 0];
+      P.body = [0, hd * 0.3, 0];
+      P.bob = 0.25 * (1 - k);
+      break;
+    }
+    case 'AIRGUITAR': {
+      const wind = fract(t / 2.4) > 0.75 ? 1 : 0;
+      const wp = fract(t / 2.4 * 4) * PI * 2;
+      const strum = sin(t * 21);
+      const bang = pow(abs(sin(t * 5.5)), 1.5);
+      P.rArm = [(-36 + strum * 18) * (1 - wind) + (-90 - 120 * sin(wp)) * wind, -24 * (1 - wind), 10 * (1 - wind) + 60 * wind];
+      P.lArm = [-72, 42, -8];
+      P.head = [22 * bang, 0, sin(t * 2.75) * 6];
+      P.lean = -7 + bang * 6;
+      P.rLeg = [-6 * bang, 0, 8];
+      P.lLeg = [-14, 0, -9];
+      P.bob = -bang * 0.5 + 0.6;
+      break;
+    }
+    case 'JUMPJACKS': {
+      const ph = fract(t * 1.2);
+      const j = 0.5 - 0.5 * cos(ph * PI * 2);
+      const air = max(0, sin(ph * PI * 2 - PI / 2) * 0 + sin(ph * PI));
+      const land = pow(max(0, cos(ph * PI * 2)), 4);
+      P.rArm = [-4 * j, 0, 18 + 152 * j];
+      P.lArm = [-4 * j, 0, -18 - 152 * j];
+      P.rLeg = [0, 0, 4 + 15 * j];
+      P.lLeg = [0, 0, -4 - 15 * j];
+      P.bob = -2.2 * air + 0.6 * land;
+      P.head = [-5 * j + 3 * land, 0, 0];
+      break;
+    }
+    case 'FLEX': {
+      const up = back(clamp(t / 0.32));
+      const second = ease(clamp((t - 1.8) / 0.3));
+      const pump = pow(max(0, sin(t * 6)), 2);
+      const f = 1 - second;
+      P.rArm = [(-30 * f - 70 * second) * up, (-20 * f - 40 * second) * up, ((128 + 10 * pump) * f + 30 * second) * up];
+      P.lArm = [(-30 * f - 70 * second) * up, (20 * f + 40 * second) * up, ((-128 - 10 * pump) * f - 30 * second) * up];
+      P.head = [(-12 + 8 * pump) * up * f + 12 * second, sin(t * 2.5) * 6, 0];
+      P.lean = (-6 + 4 * pump) * f + 10 * second;
+      P.bob = -0.3 * up + 0.8 * second;
+      P.rLeg = [0, 0, 5 * up];
+      P.lLeg = [0, 0, -5 * up];
+      break;
+    }
+    case 'KISS': {
+      const a = back(clamp(t / 0.38));
+      const out = ease(clamp((t - 0.85) / 0.3));
+      const fall = ease(clamp((t - 1.9) / 0.6));
+      P.rArm = [((-124 + 92 * out) * a) * (1 - fall), ((-34 + 16 * out) * a) * (1 - fall), ((8 + 40 * out) * a) * (1 - fall)];
+      P.lArm = [4, 0, -6];
+      P.head = [-6 * a + 6 * out, -12 * a + 8 * out, 8 * a];
+      P.lean = -3 * a + 6 * out * (1 - fall);
+      P.bob = -0.25 * out;
+      P.lLeg = [-10 * out * (1 - fall), 0, -2];
+      break;
+    }
+    case 'SPIN': {
+      const s = ease(clamp(t / 1.7));
+      const arms = sin(clamp(t / 1.7) * PI);
+      P.spin = s * 720;
+      P.rArm = [0, 0, 40 + 50 * arms];
+      P.lArm = [0, 0, -40 - 50 * arms];
+      P.head = [-12 * arms, 0, 6 * arms];
+      P.lean = -4 * arms;
+      P.bob = -abs(sin(t * 5)) * 0.6 * arms;
+      P.rLeg = [0, 0, 6 * arms];
+      P.lLeg = [-20 * arms, 0, -8 * arms];
+      break;
+    }
+    case 'FACEPLANT': {
+      const dz = t < 0.7 ? 1 : 0;
+      const wob = sin(t * 9) * 8 * (1 - clamp((t - 0.4) / 0.3));
+      const fall = t < 0.7 ? 0 : clamp((t - 0.7) / 0.32);
+      const ff = fall * fall;
+      const bounce = t > 1.02 ? sin(clamp((t - 1.02) / 0.3) * PI) * (1 - clamp((t - 1.02) / 0.3)) : 0;
+      P.head = [wob + 12 * ff, wob, wob * 0.8];
+      P.rArm = [-20 - 150 * ff, 0, 18 + 10 * ff];
+      P.lArm = [-20 - 150 * ff, 0, -18 - 10 * ff];
+      P.lean = wob * 0.5 + 84 * ff - 8 * bounce;
+      P.bob = 11 * ff;
+      P.rLeg = [84 * ff, 0, 4];
+      P.lLeg = [84 * ff, 0, -4];
+      P.sway = wob * 0.04;
+      break;
+    }
+    case 'CRY': {
+      const ein = back(clamp(t / 0.4));
+      const sob = pow(abs(sin(t * 4.5)), 3);
+      const rub = sin(t * 3.4);
+      P.rArm = [(-128 + rub * 6) * ein, (-36 + rub * 5) * ein, 0];
+      P.lArm = [(-128 - rub * 6) * ein, (36 - rub * 5) * ein, 0];
+      P.head = [18 + sob * 6, rub * 5, sin(t * 1.3) * 5];
+      P.lean = 6 + sob * 4;
+      P.bob = sob * 0.6;
+      P.body = [0, 0, sin(t * 1.3) * 2];
+      break;
+    }
     default: { const b = abs(sin(t * 4)), side = sin(t * 4); P.rArm = [-40 - 30 * side, 0, 20]; P.lArm = [-40 + 30 * side, 0, -20]; P.head = [6 * b, side * 8, 0]; P.bob = -b * 1.2; P.sway = side * 0.5; }
   }
   return P;
 }
 const D2R = Math.PI / 180;
+const LEAN_BASE = { head: [0, 0], body: [-6, 0], rightArm: [-2, 0], leftArm: [-2, 0] };
+function leanParts(s, a) {
+  const c = Math.cos(a), sn = Math.sin(a);
+  for (const n in LEAN_BASE) { const [y0, z0] = LEAN_BASE[n], d = y0 + 12; s[n].position.y = -12 + d * c; s[n].position.z = z0 + d * sn; }
+}
 function applyPose(player, P, k) {
   const s = player.skin;
   const set = (part, r) => part.rotation.set(r[0] * D2R * k, -r[1] * D2R * k, -r[2] * D2R * k);
   set(s.rightArm, P.rArm); set(s.leftArm, P.lArm); set(s.rightLeg, P.rLeg); set(s.leftLeg, P.lLeg); set(s.head, P.head);
-  s.body.rotation.set((P.body[0] + P.lean) * D2R * k, -P.body[1] * D2R * k, -P.body[2] * D2R * k);
+  const a = P.lean * D2R * k;
+  s.body.rotation.set(P.body[0] * D2R * k + a, -P.body[1] * D2R * k, -P.body[2] * D2R * k);
+  s.head.rotation.x += a; s.rightArm.rotation.x += a; s.leftArm.rotation.x += a;
+  leanParts(s, a);
   player.position.y = -P.bob * k;
   player.position.x = P.sway * k;
   player.rotation.y = (P.spin || 0) * D2R * k;
@@ -312,6 +656,7 @@ function emoteAnimation(getName) {
       s.rightArm.rotation.set(Math.sin(t * 0.67) * 0.04, 0, 0.06 + Math.cos(t * 0.9) * 0.035);
       s.leftArm.rotation.set(-Math.sin(t * 0.67) * 0.04, 0, -0.06 - Math.cos(t * 0.9) * 0.035);
       s.rightLeg.rotation.set(0, 0, 0); s.leftLeg.rotation.set(0, 0, 0); s.head.rotation.set(0, 0, 0); s.body.rotation.set(0, 0, 0);
+      leanParts(s, 0);
       player.position.set(0, 0, 0);
       player.rotation.y = 0;
       player.cape.rotation.x = 0.06 * Math.PI + Math.sin(t * 2) * 0.01;
@@ -1001,7 +1346,7 @@ function skinFront(dataUrl, canvas) {
 }
 
 let skinViewer = null;
-const ANIM_CAPES = { sunset: [18, 110], ender: [24, 110], diamond: [20, 100], toxic: [20, 100], phoenix: [20, 90], koi: [24, 120], bloodmoon: [20, 120], obsidian: [16, 110], lava: [20, 110], matrix: [20, 80], storm: [24, 110], frost: [16, 130], flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
+const ANIM_CAPES = { ender: [24, 110], diamond: [20, 100], toxic: [20, 100], phoenix: [20, 90], koi: [24, 120], bloodmoon: [20, 120], obsidian: [16, 110], lava: [32, 110], matrix: [48, 110], runes: [24, 90], storm: [24, 110], frost: [16, 130], flame: [16, 70], enchanted: [16, 90], aurora: [16, 140], emerald: [16, 110], galaxy: [24, 120], midnight: [20, 160], ocean: [16, 120], royal: [16, 110], sakura: [20, 130], surge: [16, 110], void: [16, 120], blinkcat: [2, 0] };
 const HALO_COLORS = { angel: 0xffec9a, surge: 0xc66bff, fire: 0xff8c28, enchanted: 0x78c8ff, void: 0x6a2bd9, rose: 0xff6fae, crown: 0xffd54a, orbit: 0x7af0ff, rainbow: 0xff7ad9 };
 const WARD_TABS = [['cape', 'Capes'], ['wings', 'Wings'], ['halo', 'Halos'], ['emote', 'Emotes']];
 const ward = { data: null, tab: 'cape', preview: null, elytra: false, viewer: null, raf: 0, imgs: {}, capeCanvas: null, capeKey: '', frame: -1, extras: [] };
@@ -1026,23 +1371,43 @@ function blinkFrame(now) {
 
 function hexToRgb(h) { const n = parseInt(String(h || '8F50F2'), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 
+function capeFill(g, top, bottom) {
+  const [r1, g1, b1] = hexToRgb(top), [r2, g2, b2] = hexToRgb(bottom || top), grad = !!bottom && bottom !== top;
+  const mix = t => `rgb(${Math.round(r1 + (r2 - r1) * t)},${Math.round(g1 + (g2 - g1) * t)},${Math.round(b1 + (b2 - b1) * t)})`;
+  const s = 8, cl = v => Math.max(0, Math.min(1, v));
+  for (let y = 0; y < 256; y++) {
+    const t = y >= 22 * s ? 0.5 : grad ? cl((y / s - 1) / 16) : 0;
+    g.fillStyle = mix(t); g.fillRect(0, y, 512, 1);
+    if (y < 22 * s) { g.fillStyle = mix(grad ? cl((y / s - 2) / 20) : 0); g.fillRect(22 * s, y, 24 * s, 1); }
+  }
+}
+
+function capeOverlay(g, src, tint) {
+  const img = wardImg(src);
+  if (!img.complete || !img.naturalWidth) return false;
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+  const x = c.getContext('2d');
+  x.imageSmoothingEnabled = false;
+  x.drawImage(img, 0, 0, 512, 256);
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = '#' + String(tint || 'FFFFFF').padStart(6, '0'); x.fillRect(0, 0, 512, 256);
+  g.drawImage(c, 0, 0);
+  return true;
+}
+
+const BETA_TEXTS = ['beta_tester', 'beta', 'early', 'surge', 'og'];
 function drawGenerated(g, key, data) {
   const w = 512, h = 256;
   g.clearRect(0, 0, w, h);
+  let ready = true;
   if (key === 'custom') {
-    const [r, gg, b] = hexToRgb(data.capeColor);
-    g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, w, h);
-  } else if (key === 'runes' || key === 'beta') {
-    g.fillStyle = key === 'runes' ? '#111114' : '#141418'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#fff';
-    const t = Date.now() / 600;
-    for (let r = 0; r < 8; r++) for (let c = 0; c < 5; c++) {
-      g.globalAlpha = key === 'runes' ? 0.45 + 0.55 * (0.5 + 0.5 * Math.cos(t - r * 0.8)) : 0;
-      const x = 12 + c * 16, y = 12 + r * 16;
-      g.fillRect(x, y, 2, 10); g.fillRect(x, y, 8, 2); if ((r + c) % 2) g.fillRect(x + 6, y + 4, 2, 6); else g.fillRect(x + 2, y + 8, 6, 2);
-    }
-    g.globalAlpha = 1;
-    if (key === 'beta') { g.font = 'bold 22px Monocraft, monospace'; g.textAlign = 'center'; g.fillText('BETA', 48, 80); }
+    capeFill(g, data.capeColor, data.capeGradient ? data.capeColor2 : null);
+  } else if (key === 'beta') {
+    const b = data.betaCape || {};
+    capeFill(g, b.color || '141418', b.gradient ? (b.color2 || '8F50F2') : null);
+    const text = b.text || 'beta_tester', hasText = BETA_TEXTS.includes(text);
+    ready = capeOverlay(g, `assets/cosmetics/${hasText ? 'cape_overlay_logo.png' : 'cape_overlay_logo_center.png'}`, b.logo || 'FFFFFF') && ready;
+    if (hasText) ready = capeOverlay(g, `assets/cosmetics/cape_text_${text}.png`, b.logo || 'FFFFFF') && ready;
   } else if (key === 'image') {
     const acc = activeAccount();
     const img = acc && wardImg(`${state.cfg.apiUrl || 'https://surge-client.remvuxd.workers.dev'}/v1/cape/${acc.uuid.replace(/-/g, '')}`);
@@ -1052,6 +1417,7 @@ function drawGenerated(g, key, data) {
       else { const k = Math.max(80 / img.naturalWidth, 128 / img.naturalHeight); const sw = 80 / k, sh = 128 / k; g.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 8, 8, 80, 128); }
     }
   }
+  return ready;
 }
 
 function capeFrameCanvas(key, data) {
@@ -1061,7 +1427,7 @@ function capeFrameCanvas(key, data) {
   const anim = ANIM_CAPES[key];
   let frame = 0;
   if (anim) frame = anim[1] === 0 ? blinkFrame(now) : Math.floor(now / anim[1]) % anim[0];
-  if (['custom', 'runes', 'beta', 'image'].includes(key)) { drawGenerated(g, key, data); return { canvas: ward.capeCanvas, changed: key === 'runes' || key !== ward.capeKey || key === 'image' }; }
+  if (['custom', 'beta', 'image'].includes(key)) { const ok = drawGenerated(g, key, data); const changed = key !== ward.capeKey || key === 'image' || !ward.genReady; ward.genReady = ok !== false; return { canvas: ward.capeCanvas, changed }; }
   const img = wardImg(`assets/cosmetics/cape_${key}.png`);
   if (!img.complete || !img.naturalWidth) return { canvas: null, changed: false };
   if (key === ward.capeKey && frame === ward.frame) return { canvas: ward.capeCanvas, changed: false };
@@ -1078,10 +1444,10 @@ function wardThumb(item, data) {
   g.imageSmoothingEnabled = true;
   if (item.type === 'cape') {
     c.width = 80; c.height = 128;
-    if (['custom', 'runes', 'beta', 'image'].includes(item.key)) {
+    if (['custom', 'beta', 'image'].includes(item.key)) {
       const t = document.createElement('canvas'); t.width = 512; t.height = 256;
-      drawGenerated(t.getContext('2d'), item.key, data);
-      g.drawImage(t, 8, 8, 80, 128, 0, 0, 80, 128);
+      const paint = () => { const ok = drawGenerated(t.getContext('2d'), item.key, data); g.clearRect(0, 0, 80, 128); g.drawImage(t, 8, 8, 80, 128, 0, 0, 80, 128); return ok; };
+      if (paint() === false) setTimeout(paint, 400);
     } else {
       const img = wardImg(`assets/cosmetics/cape_${item.key}.png`);
       const draw = () => g.drawImage(img, 8, 8, 80, 128, 0, 0, 80, 128);
@@ -1118,14 +1484,14 @@ function wardExtras(data) {
     tex.magFilter = T.LinearFilter;
     for (const side of [-1, 1]) {
       const pivot = new T.Group();
-      pivot.position.set(side * 1, 6, -2.6);
+      pivot.position.set(side * 0.8, 5, -2.4);
       const mat = new T.MeshLambertMaterial({ map: tex, transparent: true, side: T.DoubleSide, alphaTest: 0.05, emissive: 0x111111 });
       const mesh = new T.Mesh(new T.PlaneGeometry(18, 9, 12, 1), mat);
       mesh.position.set(0, -2, 0);
       mesh.scale.x = side;
       pivot.add(mesh);
       pivot.userData.mesh = mesh;
-      pivot.rotation.y = side * -0.55;
+      pivot.rotation.y = side * 0.62;
       pivot.rotation.z = side * 0.22;
       pivot.userData.side = side;
       v.playerObject.add(pivot);
@@ -1216,6 +1582,7 @@ async function mountWardrobeViewer(data) {
   holdSpin(v, canvas);
   v.controls.enableZoom = false;
   v.playerObject.rotation.y = Math.PI;
+  v.playerObject.elytra.traverse(o => { if (o.isMesh) o.scale.z = 0.3; });
   const acc = activeAccount();
   let ok = false;
   for (const u of acc ? [`https://mc-heads.net/skin/${acc.uuid}`, `https://crafatar.com/skins/${acc.uuid}`] : []) { try { await v.loadSkin(u); ok = true; break; } catch { } }
@@ -1239,7 +1606,7 @@ async function mountWardrobeViewer(data) {
     for (const e of ward.extras) {
       if (e.userData.side) {
         const ph = t * 2.5;
-        e.rotation.y = e.userData.side * (-0.55 - Math.sin(ph) * 0.07);
+        e.rotation.y = e.userData.side * (0.62 + Math.sin(ph) * 0.09);
         bendWing(e.userData.mesh, ph, 0.3);
       }
       if (e.userData.orbit !== undefined) { const a = t * 1.8 + e.userData.orbit * Math.PI * 2 / 3; e.position.set(Math.cos(a) * 5.8, 10.5 + Math.sin(t * 2.4 + e.userData.orbit) * 0.8, Math.sin(a) * 5.8); }
@@ -1748,7 +2115,7 @@ async function openAdmin() {
   S.open(base + '/admin');
 }
 
-const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "wings:bat", "name": "Bat Wings"}, {"id": "wings:dragon", "name": "Dragon Wings"}, {"id": "wings:butterfly", "name": "Butterfly Wings"}, {"id": "wings:fairy", "name": "Fairy Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "halo:crown", "name": "Royal Crown"}, {"id": "halo:orbit", "name": "Orbit Halo"}, {"id": "halo:rainbow", "name": "Rainbow Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:lava", "name": "Lava Cape"}, {"id": "cape:matrix", "name": "Matrix Cape"}, {"id": "cape:storm", "name": "Storm Cape"}, {"id": "cape:sunset", "name": "Sunset Cape"}, {"id": "cape:ender", "name": "Ender Eye Cape"}, {"id": "cape:diamond", "name": "Diamond Cape"}, {"id": "cape:toxic", "name": "Toxic Cape"}, {"id": "cape:phoenix", "name": "Phoenix Cape"}, {"id": "cape:koi", "name": "Koi Cape"}, {"id": "cape:bloodmoon", "name": "Blood Moon Cape"}, {"id": "cape:obsidian", "name": "Obsidian Cape"}, {"id": "cape:frost", "name": "Frost Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:ROBOT", "name": "Robot (emote)"}, {"id": "emote:AIRGUITAR", "name": "Air Guitar (emote)"}, {"id": "emote:JUMPJACKS", "name": "Jumping Jacks (emote)"}, {"id": "emote:FLEX", "name": "Flex (emote)"}, {"id": "emote:KISS", "name": "Blow a Kiss (emote)"}, {"id": "emote:SPIN", "name": "Spin (emote)"}, {"id": "emote:FACEPLANT", "name": "Faint (emote)"}];
+const SHOP_ITEMS = [{"id": "wings:angel", "name": "Angel Wings"}, {"id": "wings:surge", "name": "Surge Wings"}, {"id": "wings:soul", "name": "Soul Wings"}, {"id": "wings:flame", "name": "Flame Wings"}, {"id": "wings:void", "name": "Void Wings"}, {"id": "wings:crystal", "name": "Crystal Wings"}, {"id": "wings:gold", "name": "Golden Wings"}, {"id": "wings:bat", "name": "Bat Wings"}, {"id": "wings:dragon", "name": "Dragon Wings"}, {"id": "wings:butterfly", "name": "Butterfly Wings"}, {"id": "wings:fairy", "name": "Fairy Wings"}, {"id": "halo:angel", "name": "Angel Halo"}, {"id": "halo:surge", "name": "Surge Halo"}, {"id": "halo:fire", "name": "Fire Halo"}, {"id": "halo:enchanted", "name": "Enchanted Halo"}, {"id": "halo:void", "name": "Void Halo"}, {"id": "halo:rose", "name": "Rose Halo"}, {"id": "halo:crown", "name": "Royal Crown"}, {"id": "halo:orbit", "name": "Orbit Halo"}, {"id": "halo:rainbow", "name": "Rainbow Halo"}, {"id": "cape:surge", "name": "Surge Cape"}, {"id": "cape:void", "name": "Void Cape"}, {"id": "cape:flame", "name": "Flame Cape"}, {"id": "cape:ocean", "name": "Ocean Cape"}, {"id": "cape:sakura", "name": "Sakura Cape"}, {"id": "cape:midnight", "name": "Midnight Cape"}, {"id": "cape:royal", "name": "Royal Cape"}, {"id": "cape:emerald", "name": "Emerald Cape"}, {"id": "cape:lava", "name": "Lava Cape"}, {"id": "cape:matrix", "name": "Matrix Cape"}, {"id": "cape:storm", "name": "Storm Cape"}, {"id": "cape:ender", "name": "Ender Eye Cape"}, {"id": "cape:diamond", "name": "Diamond Cape"}, {"id": "cape:toxic", "name": "Toxic Cape"}, {"id": "cape:phoenix", "name": "Phoenix Cape"}, {"id": "cape:koi", "name": "Koi Cape"}, {"id": "cape:bloodmoon", "name": "Blood Moon Cape"}, {"id": "cape:obsidian", "name": "Obsidian Cape"}, {"id": "cape:frost", "name": "Frost Cape"}, {"id": "cape:galaxy", "name": "Galaxy Cape"}, {"id": "cape:aurora", "name": "Aurora Cape"}, {"id": "cape:custom", "name": "Color Cape"}, {"id": "cape:blinkcat", "name": "Blink Cat Cape"}, {"id": "cape:enchanted", "name": "Enchanted Cape"}, {"id": "cape:runes", "name": "Rune Cape"}, {"id": "cape:beta", "name": "Beta Tester Cape"}, {"id": "cape:image", "name": "Picture Cape"}, {"id": "emote:WAVE", "name": "Wave (emote)"}, {"id": "emote:CLAP", "name": "Clap (emote)"}, {"id": "emote:FACEPALM", "name": "Facepalm (emote)"}, {"id": "emote:DAB", "name": "Dab (emote)"}, {"id": "emote:SHRUG", "name": "Shrug (emote)"}, {"id": "emote:SALUTE", "name": "Salute (emote)"}, {"id": "emote:CHEER", "name": "Cheer (emote)"}, {"id": "emote:LAUGH", "name": "Laugh (emote)"}, {"id": "emote:BOW", "name": "Bow (emote)"}, {"id": "emote:HEART", "name": "Heart (emote)"}, {"id": "emote:FLOSS", "name": "Floss (emote)"}, {"id": "emote:TPOSE", "name": "T-Pose (emote)"}, {"id": "emote:CRY", "name": "Cry (emote)"}, {"id": "emote:SIT", "name": "Sit (emote)"}, {"id": "emote:GRIDDY", "name": "Griddy (emote)"}, {"id": "emote:SHUFFLE", "name": "Shuffle (emote)"}, {"id": "emote:DISCO", "name": "Disco Fever (emote)"}, {"id": "emote:ZOMBIE", "name": "Zombie (emote)"}, {"id": "emote:ROBOT", "name": "Robot (emote)"}, {"id": "emote:AIRGUITAR", "name": "Air Guitar (emote)"}, {"id": "emote:JUMPJACKS", "name": "Jumping Jacks (emote)"}, {"id": "emote:FLEX", "name": "Flex (emote)"}, {"id": "emote:KISS", "name": "Blow a Kiss (emote)"}, {"id": "emote:SPIN", "name": "Spin (emote)"}, {"id": "emote:FACEPLANT", "name": "Faint (emote)"}];
 const shopName = id => (SHOP_ITEMS.find(i => i.id === id) || { name: id }).name;
 
 const SALE_TARGETS = [['all', 'Everything'], ['cosmetic', 'All cosmetics'], ['emote', 'All emotes'], ['sub:wings', 'All wings'], ['sub:halo', 'All halos'], ['sub:cape', 'All capes'], ...SHOP_ITEMS.map(i => [i.id, i.name])];

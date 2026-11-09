@@ -1,5 +1,14 @@
 ## 1.9.3
 - Removed idle animations
+- Smoother, more lively animations for every emote
+- Movement emotes now work while jumping or falling
+- Lava Cape now loops without a jump, Matrix Cape is slower and looks better
+- Removed the Sunset Cape
+- The launcher wardrobe now shows the Rune Cape, Beta Tester Cape and Color Cape exactly like in game
+- Wings sit on your back instead of going through your arms
+- Elytra are much thinner
+- Menus and HUD backgrounds are more see-through
+- More interface sounds, hover sounds are on by default
 
 ## 1.9.2
 - Coins and cosmetics now stay in sync between the launcher and the game, even while the game is open

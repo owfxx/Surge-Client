@@ -113,7 +113,7 @@ function picker(el, opts) {
   return draw;
 }
 
-const ANIM = { runes: 24, flame: 16, enchanted: 16, blinkcat: 2, aurora: 16, emerald: 16, galaxy: 24, midnight: 20, ocean: 16, royal: 16, sakura: 20, surge: 16, void: 16, lava: 20, matrix: 20, storm: 24, phoenix: 20, koi: 24, bloodmoon: 20, obsidian: 16, frost: 16, sunset: 18, ender: 24, diamond: 20, toxic: 20 };
+const ANIM = { runes: 24, flame: 16, enchanted: 16, blinkcat: 2, aurora: 16, emerald: 16, galaxy: 24, midnight: 20, ocean: 16, royal: 16, sakura: 20, surge: 16, void: 16, lava: 32, matrix: 48, storm: 24, phoenix: 20, koi: 24, bloodmoon: 20, obsidian: 16, frost: 16, ender: 24, diamond: 20, toxic: 20 };
 const HALO = { angel: '#ffec9a', surge: '#c66bff', fire: '#ff8c28', enchanted: '#78c8ff', void: '#8a4bff', rose: '#ff6fae', crown: '#ffd54a', orbit: '#7af0ff', rainbow: '#ffffff' };
 const EMOTE_SVG = '<svg class="em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2.2"/><path d="M12 7v7M12 14l-3.5 6M12 14l3.5 6M6 9.5l6 1.5 6-3"/></svg>';
 function thumb(id, big) {

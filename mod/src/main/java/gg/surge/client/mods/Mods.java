@@ -35,7 +35,7 @@ public final class Mods {
 	public static final Setting.Toggle HUD_OVERRIDE = GENERAL.toggle("hudOverride", "Same style for every HUD mod", false);
 	public static final Setting.Toggle HUD_BG = GENERAL.toggle("hudBg", "Background", true).showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Color HUD_BG_COLOR = GENERAL.color("hudBgColor", "Background color", "000000").showIf(() -> Mods.HUD_OVERRIDE.on() && Mods.HUD_BG.on());
-	public static final Setting.Slider HUD_BG_OPACITY = GENERAL.slider("hudBgOpacity", "Background opacity", 45, 0, 100, 5, "%").showIf(() -> Mods.HUD_OVERRIDE.on() && Mods.HUD_BG.on());
+	public static final Setting.Slider HUD_BG_OPACITY = GENERAL.slider("hudBgOpacity", "Background opacity", 35, 0, 100, 5, "%").showIf(() -> Mods.HUD_OVERRIDE.on() && Mods.HUD_BG.on());
 	public static final Setting.Color HUD_TEXT = GENERAL.color("hudText", "Text color", "FFFFFF").showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Toggle HUD_SHADOW = GENERAL.toggle("hudShadow", "Text shadow", true).showIf(() -> Mods.HUD_OVERRIDE.on());
 	public static final Setting.Choice HUD_BRACKETS = GENERAL.choice("hudBrackets", "Brackets", "None", "None", "[ ]", "( )", "< >").showIf(() -> Mods.HUD_OVERRIDE.on());
@@ -54,7 +54,7 @@ public final class Mods {
 	public static final Setting.Toggle SOCIAL_ONLINE_TOASTS = GENERAL.toggle("onlineToasts", "Pop-up when a friend comes online", true).showIf(() -> Mods.SOCIAL_TOASTS.on());
 	public static final Setting.Header H_MENUS = GENERAL.header("Menus");
 	public static final Setting.Toggle UI_CLICKS = GENERAL.toggle("clicks", "Click sounds", true);
-	public static final Setting.Toggle UI_HOVER = GENERAL.toggle("hoverSounds", "Hover sounds", false);
+	public static final Setting.Toggle UI_HOVER = GENERAL.toggle("hoverSounds", "Hover sounds", true);
 	public static final Setting.Toggle UI_ANIM = GENERAL.toggle("animations", "Smooth animations", true);
 	public static final Setting.Slider UI_ANIM_SPEED = GENERAL.slider("animSpeed", "Animation speed", 100, 50, 200, 10, "%").showIf(() -> Mods.UI_ANIM.on());
 	public static final Setting.Choice BRAND_POS = GENERAL.choice("brandPos", "Surge Client label", "Bottom right", "Bottom right", "Under inventory");
