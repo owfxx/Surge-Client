@@ -55,7 +55,7 @@ function handle(channel, fn) {
   ipcMain.handle(channel, async (_e, ...args) => {
     try { return { ok: true, data: await fn(...args) }; } catch (err) {
       console.error(channel, err);
-      return { ok: false, error: err?.message || String(err) };
+      return { ok: false, error: err?.message || (typeof err === 'string' ? err : 'Something went wrong. Please try again.') };
     }
   });
 }

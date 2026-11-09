@@ -1,3 +1,6 @@
+## 1.9.5
+- Microsoft sign-in errors now say what went wrong and how to fix it instead of "[object Object]"
+
 ## 1.9.4
 - Fixed the calculator crashing the game
 - Fixed your character floating higher in the wardrobe while wearing an elytra
