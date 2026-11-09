@@ -21,9 +21,6 @@ public final class MoreFeatures {
 
 	private static CameraType snapSaved, autoSaved;
 	private static boolean snapping, autoActive;
-	private static int lastHurt;
-	private static float hitAngle;
-	private static long hitAt;
 	public static ServerAddress lastAddress;
 	public static ServerData lastServer;
 
@@ -53,12 +50,6 @@ public final class MoreFeatures {
 				if (autoSaved != null && mc.options.getCameraType() == CameraType.THIRD_PERSON_BACK) mc.options.setCameraType(autoSaved);
 			}
 		}
-		int h = mc.player.hurtTime;
-		if (h > 0 && lastHurt == 0) {
-			hitAngle = mc.player.getHurtDir();
-			hitAt = System.currentTimeMillis();
-		}
-		lastHurt = h;
 	}
 
 	public static void render(GuiGraphics g, Minecraft mc) {
@@ -70,25 +61,6 @@ public final class MoreFeatures {
 			if (Mods.LOOT_BEAMS.enabled() || Mods.DESPAWN_TIMER.enabled()) items(g, mc);
 			if (Mods.MOB_HEALTH.enabled()) mobHealth(g, mc);
 		}
-		if (Mods.HIT_INDICATOR.enabled()) hitIndicator(g);
-	}
-
-	private static void hitIndicator(GuiGraphics g) {
-		long age = System.currentTimeMillis() - hitAt;
-		if (age > 900) return;
-		float a = 1f - age / 900f;
-		int rgb = Mods.HI_COLOR.rgb(0) & 0xFFFFFF;
-		float cx = g.guiWidth() / 2f, cy = g.guiHeight() / 2f;
-		double ang = Math.toRadians(hitAngle);
-		g.pose().pushMatrix();
-		g.pose().translate(cx, cy);
-		g.pose().rotate((float) (ang - Math.PI / 2));
-		for (int i = 0; i < 9; i++) {
-			int w = 18 - i * 2;
-			int al = (int) (220 * a * (1f - i / 10f));
-			g.fill(-w, -44 - i, w, -43 - i, (al << 24) | rgb);
-		}
-		g.pose().popMatrix();
 	}
 
 	private static boolean sees(Minecraft mc, Entity e) {
@@ -115,7 +87,7 @@ public final class MoreFeatures {
 		double r = Mods.MH_RANGE.get();
 		for (Entity e : mc.level.entitiesForRendering()) {
 			if (!(e instanceof LivingEntity le) || e == mc.player || !le.isAlive() || le.isInvisible()) continue;
-			if (e instanceof Player && !Mods.MH_PLAYERS.on()) continue;
+			if (e instanceof Player) continue;
 			if (e instanceof net.minecraft.world.entity.decoration.ArmorStand) continue;
 			if (e.distanceToSqr(mc.player) > r * r) continue;
 			float hp = le.getHealth(), max = Math.max(1f, le.getMaxHealth());

@@ -48,6 +48,7 @@ public final class SkinArt {
 		if (dragging) {
 			if (mx != lastX) drag(mx - lastX);
 			lastX = mx;
+			idleSince = now;
 		} else {
 			if (now - idleSince > 5000) target += dt * 20f;
 			rot += (target - rot) * (1f - (float) Math.exp(-dt * 12f));

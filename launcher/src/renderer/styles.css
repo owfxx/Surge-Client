@@ -480,3 +480,7 @@ input[type=checkbox]:checked::after { border-color: #1a1405; }
 .ward-filter .input { flex: 1; max-width: 240px; height: 34px; }
 .ward-filter .count { margin-left: auto; }
 .ward-empty { grid-column: 1 / -1; padding: 30px 0; text-align: center; }
+.modal-card.chat-card { backdrop-filter: none; background: #151519fa; }
+.modal:has(.chat-card) { backdrop-filter: none; background: #000000b8; }
+.chat-log { contain: content; overscroll-behavior: contain; }
+.cmsg { contain: layout paint; }

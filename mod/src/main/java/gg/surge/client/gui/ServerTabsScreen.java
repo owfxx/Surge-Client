@@ -83,6 +83,12 @@ public class ServerTabsScreen extends Screen {
 		}
 	}
 
+	public static void testListing(List<Listing> list) {
+		discover = list;
+		discoverError = null;
+		discoverAt = System.currentTimeMillis();
+	}
+
 	private static void loadDiscover() {
 		discoverAt = System.currentTimeMillis();
 		discoverError = null;
@@ -147,6 +153,7 @@ public class ServerTabsScreen extends Screen {
 	private final java.util.Map<String, ServerData> pings = new java.util.HashMap<>();
 	private final java.util.Map<String, net.minecraft.client.gui.screens.FaviconTexture> icons = new java.util.HashMap<>();
 	private final java.util.Map<String, byte[]> iconBytes = new java.util.HashMap<>();
+	private final java.util.Map<String, Long> pingStarted = new java.util.HashMap<>();
 	private String selected;
 	private long lastClick;
 
@@ -161,14 +168,24 @@ public class ServerTabsScreen extends Screen {
 		if (d != null) return d;
 		d = new ServerData(name, ip, ServerData.Type.OTHER);
 		d.setState(ServerData.State.PINGING);
+		d.ping = -2L;
+		d.motd = null;
 		pings.put(ip, d);
 		ServerData data = d;
+		pingStarted.put(ip, System.currentTimeMillis());
+		Runnable settle = () -> minecraft.execute(() -> {
+			if (data.state() != ServerData.State.PINGING && data.state() != ServerData.State.INITIAL) return;
+			if (data.motd == null || data.ping < 0) return;
+			data.setState(data.protocol == net.minecraft.SharedConstants.getCurrentVersion().protocolVersion() ? ServerData.State.SUCCESSFUL : ServerData.State.INCOMPATIBLE);
+		});
 		PINGS.submit(() -> {
 			try {
-				pinger.pingServer(data, () -> { }, () -> { }, net.minecraft.server.network.EventLoopGroupHolder.remote(minecraft.options.useNativeTransport()));
+				pinger.pingServer(data, settle, settle, net.minecraft.server.network.EventLoopGroupHolder.remote(minecraft.options.useNativeTransport()));
 			} catch (Exception e) {
-				data.setState(ServerData.State.UNREACHABLE);
-				data.motd = Component.literal("Can't reach this server").withStyle(ChatFormatting.DARK_RED);
+				minecraft.execute(() -> {
+					data.setState(ServerData.State.UNREACHABLE);
+					data.motd = Component.literal("Can't reach this server").withStyle(ChatFormatting.DARK_RED);
+				});
 			}
 		});
 		return d;
@@ -203,6 +220,17 @@ public class ServerTabsScreen extends Screen {
 	@Override
 	public void tick() {
 		pinger.tick();
+		long now = System.currentTimeMillis();
+		for (var e : pings.entrySet()) {
+			ServerData d = e.getValue();
+			if (d.state() != ServerData.State.PINGING && d.state() != ServerData.State.INITIAL) continue;
+			if (d.motd != null && d.ping >= 0) {
+				d.setState(d.protocol == net.minecraft.SharedConstants.getCurrentVersion().protocolVersion() ? ServerData.State.SUCCESSFUL : ServerData.State.INCOMPATIBLE);
+			} else if (now - pingStarted.getOrDefault(e.getKey(), now) > 12000) {
+				d.setState(ServerData.State.UNREACHABLE);
+				d.motd = Component.literal("Can't reach this server").withStyle(ChatFormatting.DARK_RED);
+			}
+		}
 	}
 
 	@Override
@@ -305,7 +333,7 @@ public class ServerTabsScreen extends Screen {
 			int countW = 0;
 			if (d != null) {
 				int b = bars(d);
-				String sprite = d.state() == ServerData.State.PINGING || d.state() == ServerData.State.INITIAL ? "server_list/pinging_" + (1 + (int) (System.currentTimeMillis() / 100L % 5)) : b == 0 ? "server_list/unreachable" : "server_list/ping_" + b;
+				String sprite = d.state() == ServerData.State.PINGING || d.state() == ServerData.State.INITIAL ? "server_list/pinging_" + (1 + (int) (System.currentTimeMillis() / 100L % 5)) : d.state() == ServerData.State.INCOMPATIBLE ? "server_list/incompatible" : b == 0 ? "server_list/unreachable" : "server_list/ping_" + b;
 				g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, net.minecraft.resources.Identifier.withDefaultNamespace(sprite), right - 15, y, 10, 8);
 				if (d.players != null && b > 0) {
 					String count = d.players.online() + "/" + d.players.max();
@@ -320,14 +348,19 @@ public class ServerTabsScreen extends Screen {
 			if (!r.tag().isEmpty() && tagRoom > 20) g.drawString(font, Ui.fit(font, r.tag(), tagRoom), tx + font.width(title) + 6, y + 1, 0xFF8A8A8A, false);
 			List<net.minecraft.util.FormattedCharSequence> lines = new ArrayList<>();
 			if (mode == Mode.DISCOVER) {
-				Component motd = d != null && d.motd != null && !d.motd.getString().isBlank() && d.state() == ServerData.State.SUCCESSFUL ? d.motd : Component.literal(r.sub().isEmpty() ? r.ip() : r.sub()).withStyle(ChatFormatting.GRAY);
+				boolean live = d != null && d.motd != null && !d.motd.getString().isBlank() && d.state() != ServerData.State.PINGING && d.state() != ServerData.State.INITIAL;
+				Component motd = live ? d.motd : Component.literal(r.sub().isEmpty() ? r.ip() : r.sub()).withStyle(ChatFormatting.GRAY);
 				lines = font.split(motd, w - 37);
 			} else {
 				lines.add(Component.literal(r.sub()).withColor(r.dot() & 0xFFFFFF).getVisualOrderText());
 				lines.add(Component.literal(r.extra()).withStyle(ChatFormatting.GRAY).getVisualOrderText());
 			}
 			for (int i = 0; i < Math.min(2, lines.size()); i++) g.drawString(font, lines.get(i), tx, y + 12 + i * 9, 0xFF808080, false);
-			if (hov && click) {
+			boolean onIcon = r.ip() != null && Ui.hover(mx, my, x, y, 32, 32) && my >= top && my < bottom;
+			if (onIcon && click) {
+				Row rr = r;
+				action = () -> join(rr.ip(), rr.title());
+			} else if (hov && click) {
 				Row rr = r;
 				boolean dbl = key != null && key.equals(selected) && System.currentTimeMillis() - lastClick < 300;
 				action = () -> {

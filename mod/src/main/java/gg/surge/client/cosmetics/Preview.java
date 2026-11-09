@@ -104,7 +104,7 @@ public final class Preview {
 			s.target += nudge;
 			nudge = 0f;
 			forced = null;
-			s.touchedAt = System.currentTimeMillis() + 4000;
+			s.touchedAt = System.currentTimeMillis();
 		}
 		if (down && (s.dragging || over)) {
 			if (s.dragging) {
@@ -118,7 +118,7 @@ public final class Preview {
 		}
 		s.lastMouse = mx;
 
-		if (!s.dragging && (forced != null || System.currentTimeMillis() - s.touchedAt > 2500)) {
+		if (!s.dragging && System.currentTimeMillis() - s.touchedAt > 5000) {
 			float want = forced != null ? forced : facing();
 			if (forced == null && want == 0f && Cosmetics.previewSub == null) want = (float) Math.sin(System.currentTimeMillis() / 2400.0) * 25f;
 			float diff = ((want - s.target) % 360 + 540) % 360 - 180;

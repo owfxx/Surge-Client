@@ -267,6 +267,7 @@ var st=cv.parentNode,reduce=matchMedia('(prefers-reduced-motion: reduce)').match
 try{v=new skinview3d.SkinViewer({canvas:cv,width:st.clientWidth,height:st.clientHeight,skin:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABp0lEQVR4Xu2b3WrDMAyFl9KbjXbdCmWM3fX932r0ogwCy9qNlbGWBAKu6lg2srGNzncZ/yQ5SmQpVpo7hs3z9uzq8ns6OmfojvuGO0dO5j4nXz++Wbu13W44vrhfW9sPP63P9FmZZT17AUCAAoyQFQiQVf4C8FoFRm8/RQ3eformafnqXOdnjVuj//Of047c+LZ7zxonDHe3fNhYb+Lr+2M4vlq8WNs/D/vhuHR8TtT7AAiQ8/ErAQhQghVyon4ZvFmDaf5P830uv0/9/UB6fRRrlDPm/zTf9434Un8/kF6fiXofYH0CaOzva/mR1LmD9PpMbpwgjd1prB/aTuHmC+3PzcflGle5AI39aawf2k7h5gvtz803trtQ7wMggPP5UAAEUGBkOEGsAg7wCmj3AepDYQAAAAAAAAAAAOgjeo2edP9eOj6UJJ/E+v17s0ag/59g6p8CG9LxISQRoCa8aoVDke7fS8eHIPYBtNY4tH6A29/n2rn9f44or0BfK2zWC/e1xWZ9cep2CVEEqBkIULP1YgABYqhYMxCgZuvFAALEULFm1IfCF6x65pImO40GAAAAAElFTkSuQmCC'});}catch(e){return;}
 v.fov=38;v.zoom=0.82;v.autoRotate=!reduce;v.autoRotateSpeed=0.7;v.playerObject.rotation.y=Math.PI*0.85;
 if(v.controls){v.controls.enableZoom=false;v.controls.enablePan=false;}
+var spinT=0;cv.addEventListener('pointerdown',function(){v.autoRotate=false;clearTimeout(spinT);addEventListener('pointerup',function(){clearTimeout(spinT);spinT=setTimeout(function(){v.autoRotate=!reduce;},5000);},{once:true});});
 if(!reduce)v.animation=new skinview3d.IdleAnimation();
 var cards=[].slice.call(document.querySelectorAll('.cape3d .cape')),img=null,frames=1,ms=100,last=-1,t0=performance.now(),user=false,cur=0,token=0;
 var buf=document.createElement('canvas');buf.width=512;buf.height=256;var bx=buf.getContext('2d');

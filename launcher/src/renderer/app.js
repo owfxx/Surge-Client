@@ -350,7 +350,15 @@ function surgeIdle() {
 
 let viewer = null;
 let sceneRaf = 0;
-const look = { x: 0, y: 0, tx: 0, ty: 0, drag: 0, dragging: false, lastX: 0 };
+const look = { x: 0, y: 0, tx: 0, ty: 0, drag: 0, dragging: false, lastX: 0, releasedAt: 0 };
+function holdSpin(v, canvas) {
+  let timer = 0;
+  canvas.addEventListener('pointerdown', () => {
+    v.autoRotate = false;
+    clearTimeout(timer);
+    window.addEventListener('pointerup', () => { clearTimeout(timer); timer = setTimeout(() => { if (v.renderer) v.autoRotate = true; }, 5000); }, { once: true });
+  });
+}
 window.addEventListener('mousemove', e => {
   const c = document.getElementById('scene');
   if (!c) return;
@@ -360,7 +368,7 @@ window.addEventListener('mousemove', e => {
   look.ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height * 0.35)) / (window.innerHeight / 2)));
   if (look.dragging) { look.drag += (e.clientX - look.lastX) * 0.012; look.lastX = e.clientX; }
 });
-window.addEventListener('mouseup', () => { look.dragging = false; });
+window.addEventListener('mouseup', () => { if (look.dragging) look.releasedAt = Date.now(); look.dragging = false; });
 
 function disposeScene() {
   cancelAnimationFrame(sceneRaf);
@@ -471,7 +479,7 @@ async function mountScene() {
     skin.head.rotation.y = look.x * 0.7;
     skin.head.rotation.x = look.y * 0.4;
     viewer.playerObject.rotation.y = look.x * 0.3 + look.drag;
-    if (!look.dragging) look.drag *= 0.96;
+    if (!look.dragging && Date.now() - look.releasedAt > 5000) look.drag *= 0.96;
     tickGeode(now);
     if (viewer.nameTag) viewer.nameTag.position.x = shift;
     sceneRaf = requestAnimationFrame(loop);
@@ -560,7 +568,10 @@ function unread(u) {
   return chat.msgs.filter(m => normId(m.sender) === normId(u) && m.id > seen).length;
 }
 async function fetchChats() {
+  if (chat.busy) return false;
+  chat.busy = true;
   const r = await S.messages(chat.since).catch(() => null);
+  chat.busy = false;
   if (!r) return false;
   chat.me = normId(r.me);
   let added = false;
@@ -575,14 +586,30 @@ async function fetchChats() {
 function pollChats() {
   if (chat.timer) return;
   const tick = async () => {
-    const added = await fetchChats();
-    if (added) {
-      if (chat.open) renderChat();
-      else if (state.view === 'home') homeSide();
+    if (!document.hidden || chat.open) {
+      const added = await fetchChats();
+      if (added) {
+        if (chat.open) renderChat();
+        else if (state.view === 'home') homeSide();
+      }
     }
-    chat.timer = setTimeout(tick, chat.open ? 2500 : 15000);
+    chat.timer = setTimeout(tick, chat.open ? 1200 : document.hidden ? 30000 : 8000);
   };
   tick();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && chat.timer) chatNow(); });
+function chatNow() {
+  clearTimeout(chat.timer);
+  chat.timer = null;
+  pollChats();
+}
+function chatRow(m) {
+  const mine = normId(m.sender) === chat.me;
+  const t = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const el = document.createElement('div');
+  el.className = `cmsg ${mine ? 'mine' : ''}${m.pending ? ' pending' : ''}`;
+  el.innerHTML = `<div class="cbody">${esc(m.text)}</div><div class="ctime">${m.pending ? 'sending…' : t}${m.edited ? ' · edited' : ''}</div>`;
+  return el;
 }
 function renderChat() {
   const box = $('#chatLog');
@@ -590,11 +617,33 @@ function renderChat() {
   const other = normId(chat.open.uuid);
   const list = chat.msgs.filter(m => normId(m.sender) === other || normId(m.receiver) === other);
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-  box.innerHTML = list.map(m => {
-    const mine = normId(m.sender) === chat.me;
-    const t = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `<div class="cmsg ${mine ? 'mine' : ''}${m.pending ? ' pending' : ''}"><div class="cbody">${esc(m.text)}</div><div class="ctime">${m.pending ? 'sending…' : t}${m.edited ? ' · edited' : ''}</div></div>`;
-  }).join('') || '<div class="muted small" style="text-align:center;margin-top:30px">No messages yet. Say hi!</div>';
+  if (box.dataset.for !== other) { box.textContent = ''; box.dataset.for = other; delete box.dataset.ready; }
+  if (!list.length) {
+    if (!box.querySelector('.chat-empty')) box.innerHTML = '<div class="muted small chat-empty" style="text-align:center;margin-top:30px">No messages yet. Say hi!</div>';
+  } else {
+    const empty = box.querySelector('.chat-empty');
+    if (empty) empty.remove();
+    const shown = new Map([...box.children].map(el => [el.dataset.key, el]));
+    const keep = new Set();
+    let prev = null;
+    for (const m of list) {
+      const key = m.key || (m.key = `m${m.id}`);
+      const sig = `${m.pending ? 1 : 0}${m.edited ? 1 : 0}${m.text}`;
+      let el = shown.get(key);
+      if (!el || el.dataset.sig !== sig) {
+        const fresh = chatRow(m);
+        fresh.dataset.key = key;
+        fresh.dataset.sig = sig;
+        if (el) el.replaceWith(fresh);
+        el = fresh;
+      }
+      keep.add(key);
+      const want = prev ? prev.nextSibling : box.firstChild;
+      if (want !== el) box.insertBefore(el, want);
+      prev = el;
+    }
+    for (const [k, el] of shown) if (!keep.has(k)) el.remove();
+  }
   if (atBottom || !box.dataset.ready) { box.scrollTop = box.scrollHeight; box.dataset.ready = '1'; }
   const last = list.filter(m => normId(m.sender) === other).pop();
   if (last) try { localStorage.setItem(seenKey(other), String(last.id)); } catch { }
@@ -613,7 +662,7 @@ function openChat(uuid, name) {
       const text = input.value.trim();
       if (!text) return;
       input.value = '';
-      const temp = { id: -Date.now(), sender: chat.me, receiver: normId(uuid), text, ts: Date.now(), pending: true };
+      const temp = { id: -Date.now(), key: `t${Date.now()}`, sender: chat.me, receiver: normId(uuid), text, ts: Date.now(), pending: true };
       chat.msgs.push(temp);
       renderChat();
       try {
@@ -634,7 +683,7 @@ function openChat(uuid, name) {
   });
   obs.observe($('#modal'), { attributes: true, attributeFilter: ['class'] });
   renderChat();
-  fetchChats().then(renderChat);
+  chatNow();
   return close;
 }
 
@@ -1175,6 +1224,7 @@ async function mountWardrobeViewer(data) {
   v.animation = emoteAnimation(() => ward.emote || (ward.data && ward.data.equipped.idle && ward.data.equipped.idle !== 'none' ? ward.data.equipped.idle : null));
   v.autoRotate = true;
   v.autoRotateSpeed = 0.55;
+  holdSpin(v, canvas);
   v.controls.enableZoom = false;
   v.playerObject.rotation.y = Math.PI;
   const acc = activeAccount();
@@ -1355,6 +1405,7 @@ async function renderSkins() {
   skinViewer.animation = new skinview3d.IdleAnimation();
   skinViewer.autoRotate = true;
   skinViewer.autoRotateSpeed = 0.6;
+  holdSpin(skinViewer, canvas);
   skinViewer.controls.enableZoom = false;
   skinViewer.loadSkin(unknownSkin());
 

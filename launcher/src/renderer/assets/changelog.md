@@ -1,5 +1,9 @@
 ## 1.9.2
 - Coins and cosmetics now stay in sync between the launcher and the game, even while the game is open
+- Discover: the play button on a server icon joins right away, and partnered servers show their real MOTD and ping
+- Smoother launcher chat, new messages show up faster
+- When you turn a skin preview yourself, it stays where you left it for 5 seconds before spinning again (game, launcher and website)
+- Removed Hit Indicator, and Mob Health no longer shows other players
 
 ## 1.9.1
 - Right Shift now opens the HUD editor with a Mod Menu button in the middle and quick buttons for Wardrobe, Emotes, Friends, Settings and the Calculator

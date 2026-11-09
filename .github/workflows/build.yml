@@ -41,6 +41,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 2 }
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '25' }
       - uses: actions/setup-node@v5
@@ -63,7 +64,8 @@ jobs:
         run: |
           VER=$(node -p "require('./launcher/package.json').version")
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-          if [ "${GITHUB_REF}" = "refs/heads/main" ] && ! gh release view "v$VER" >/dev/null 2>&1; then
+          PREV=$(git show HEAD~1:launcher/package.json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).version)}catch{console.log('')}})")
+          if [ "${GITHUB_REF}" = "refs/heads/main" ] && [ "$PREV" != "$VER" ] && ! gh release view "v$VER" >/dev/null 2>&1; then
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "release=false" >> "$GITHUB_OUTPUT"
@@ -165,7 +167,7 @@ jobs:
           body_path: notes.md
 
       - name: Post update to Discord
-        if: steps.ver.outputs.release == 'true' || startsWith(github.ref, 'refs/tags/v')
+        if: steps.ver.outputs.release == 'true' && !startsWith(github.ref, 'refs/tags/v')
         shell: bash
         env:
           HOOK: ${{ secrets.DISCORD_UPDATES_WEBHOOK }}

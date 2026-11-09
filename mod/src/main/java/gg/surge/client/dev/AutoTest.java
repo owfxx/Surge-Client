@@ -211,7 +211,7 @@ public final class AutoTest {
 			mc.options.setCameraType(CameraType.FIRST_PERSON);
 			mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
 			mc.getToastManager().clear();
-			only("mob_health", "loot_beams", "despawn_timer", "light_overlay", "item_physics", "shiny_pots", "block_outline", "hit_indicator", "auto_perspective", "snaplook", "toasts", "lookat", "mousestrokes", "paperdoll", "horse", "tps", "system");
+			only("mob_health", "loot_beams", "despawn_timer", "light_overlay", "item_physics", "shiny_pots", "block_outline", "auto_perspective", "snaplook", "toasts", "lookat", "mousestrokes", "paperdoll", "horse", "tps", "system");
 			Mods.BO_COLOR.set("FF3B3B");
 			Mods.BO_WIDTH.set(6f);
 		}));
@@ -219,7 +219,6 @@ public final class AutoTest {
 		STEPS.add(new Step("23b-mob-number", 20, mc -> Mods.MH_STYLE.set("Number")));
 		STEPS.add(new Step("23c-mob-bar", 20, mc -> Mods.MH_STYLE.set("Bar")));
 		STEPS.add(new Step("23d-light-numbers", 25, mc -> { Mods.MH_STYLE.set("Hearts"); Mods.LO_NUMBERS.set(true); mc.player.setXRot(62f); mc.player.setYRot(-35f); }));
-		STEPS.add(new Step("23e-hit-indicator", 8, mc -> { Mods.LO_NUMBERS.set(false); mc.player.setXRot(28f); mc.player.setYRot(0f); cmd(mc, "gamemode survival"); cmd(mc, "difficulty easy"); cmd(mc, "damage @s 1 minecraft:mob_attack by @e[type=pig,limit=1]"); }));
 		STEPS.add(new Step("23f-horse", 40, mc -> { cmd(mc, "difficulty peaceful"); cmd(mc, "gamemode creative"); cmd(mc, "ride @s mount @e[type=horse,limit=1]"); }));
 		STEPS.add(new Step("23g-snaplook", 15, mc -> { cmd(mc, "ride @s dismount"); com.mojang.blaze3d.platform.InputConstants.Key x = com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X); net.minecraft.client.KeyMapping.set(x, true); }));
 		STEPS.add(new Step("23h-snaplook-off", 15, mc -> { net.minecraft.client.KeyMapping.set(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X), false); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.PACK_LOAD_FAILURE, net.minecraft.network.chat.Component.literal("Toast test"), net.minecraft.network.chat.Component.literal("This one shows")); }));
@@ -296,11 +295,15 @@ public final class AutoTest {
 			LOG.info("Sync check: coins={} ownsSunset={} cape={}", gg.surge.client.economy.Wallet.get().coins, gg.surge.client.economy.Wallet.get().owns("cape:sunset"), SurgeConfig.get().cape);
 			open(mc, new WardrobeScreen(null));
 		}));
+		STEPS.add(new Step("28a-discover-ping", 120, mc -> {
+			ServerTabsScreen.testListing(List.of(new ServerTabsScreen.Listing("Hypixel", "mc.hypixel.net", "Partner description", "Partner"), new ServerTabsScreen.Listing("Not a server", "nope.invalid", "Should show as unreachable", "")));
+			open(mc, new ServerTabsScreen(new JoinMultiplayerScreen(new TitleScreen()), ServerTabsScreen.Mode.DISCOVER));
+		}));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;
 			open(mc, null);
-			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(false);
+			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(false);
 			cmd(mc, "time set 1000");
 		}));
 	}

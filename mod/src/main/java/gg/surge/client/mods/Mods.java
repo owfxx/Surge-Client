@@ -443,12 +443,8 @@ public final class Mods {
 		"Shows the health of mobs you can see above their heads", false);
 	public static final Setting.Choice MH_STYLE = MOB_HEALTH.choice("style", "Style", "Hearts", "Hearts", "Number", "Bar");
 	public static final Setting.Slider MH_RANGE = MOB_HEALTH.slider("range", "Range", 16, 6, 48, 2, " blocks");
-	public static final Setting.Toggle MH_PLAYERS = MOB_HEALTH.toggle("players", "Also show players", false);
 	public static final Setting.Toggle MH_HURT = MOB_HEALTH.toggle("hurt", "Only hurt mobs", false);
 
-	public static final SurgeMod HIT_INDICATOR = mod("hit_indicator", "Hit Indicator", Category.PVP, Items.ARROW,
-		"Shows which direction you got hit from", false);
-	public static final Setting.Color HI_COLOR = HIT_INDICATOR.color("color", "Color", "FF4040");
 
 	public static final SurgeMod LOOT_BEAMS = mod("loot_beams", "Loot Beams", Category.VISUAL, Items.BEACON,
 		"Beams of light above dropped items you can see, colored by rarity", false);
