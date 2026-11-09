@@ -113,7 +113,7 @@ function picker(el, opts) {
   return draw;
 }
 
-const ANIM = { flame: 16, enchanted: 16, blinkcat: 2, aurora: 16, emerald: 16, galaxy: 24, midnight: 20, ocean: 16, royal: 16, sakura: 20, surge: 16, void: 16, lava: 20, matrix: 20, storm: 24, phoenix: 20, koi: 24, bloodmoon: 20, obsidian: 16, frost: 16, sunset: 18, ender: 24, diamond: 20, toxic: 20 };
+const ANIM = { runes: 24, flame: 16, enchanted: 16, blinkcat: 2, aurora: 16, emerald: 16, galaxy: 24, midnight: 20, ocean: 16, royal: 16, sakura: 20, surge: 16, void: 16, lava: 20, matrix: 20, storm: 24, phoenix: 20, koi: 24, bloodmoon: 20, obsidian: 16, frost: 16, sunset: 18, ender: 24, diamond: 20, toxic: 20 };
 const HALO = { angel: '#ffec9a', surge: '#c66bff', fire: '#ff8c28', enchanted: '#78c8ff', void: '#8a4bff', rose: '#ff6fae', crown: '#ffd54a', orbit: '#7af0ff', rainbow: '#ffffff' };
 const EMOTE_SVG = '<svg class="em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2.2"/><path d="M12 7v7M12 14l-3.5 6M12 14l3.5 6M6 9.5l6 1.5 6-3"/></svg>';
 function thumb(id, big) {
@@ -123,12 +123,12 @@ function thumb(id, big) {
     const u = box * 0.82 / 16, w = Math.round(10 * u), h = Math.round(16 * u);
     const base = 'width:' + w + 'px;height:' + h + 'px;';
     if (key === 'custom') inner = '<div class="cp" style="' + base + 'background:linear-gradient(#8f50f2,#ec68b0)"></div>';
-    else if (key === 'runes') inner = '<div class="cp" style="' + base + 'background:#111114;display:grid;place-items:center;color:#fff;font-size:' + Math.round(u * 5) + 'px">&#5809;</div>';
     else if (key === 'image') inner = '<div class="cp" style="' + base + 'background:linear-gradient(135deg,#3a3a44,#1b1b20);display:grid;place-items:center;color:#a1a1aa;font-size:' + Math.round(u * 3.4) + 'px">IMG</div>';
     else {
       const src = key === 'beta' ? 'cape_overlay_logo' : 'cape_' + key;
+      const url = key === 'runes' ? '/img/cape/runes.png' : '/img/cosmetic/' + src + '.png';
       const bg = key === 'beta' ? 'background-color:#141418;' : '';
-      inner = '<div class="cp" data-n="' + (ANIM[key] || 1) + '" data-u="' + u + '" style="' + base + bg + 'background-image:url(/img/cosmetic/' + src + '.png);background-size:' + (64 * u) + 'px auto;background-position:' + (-u) + 'px ' + (-u) + 'px"></div>';
+      inner = '<div class="cp" data-n="' + (ANIM[key] || 1) + '" data-u="' + u + '" style="' + base + bg + 'background-image:url(' + url + ');background-size:' + (64 * u) + 'px auto;background-position:' + (-u) + 'px ' + (-u) + 'px"></div>';
     }
   } else if (k === 'wings') inner = '<div class="wg"><img alt="" src="/img/cosmetic/wings_' + esc(key) + '.png"><img alt="" src="/img/cosmetic/wings_' + esc(key) + '.png"></div>';
   else if (k === 'halo') inner = '<div class="hl" style="color:' + (HALO[key] || '#fff') + (key === 'rainbow' ? ';border-color:transparent;background:conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red) border-box;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))' : '') + '"></div>';

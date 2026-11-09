@@ -101,7 +101,7 @@ async function download(env, mod) {
 }
 
 const DISCORD = 'https://discord.gg/7wGxqGN86R';
-const SHOWCASE = [['sunset', 'Sunset', 18, 110], ['ender', 'Ender Eye', 24, 110], ['diamond', 'Diamond', 20, 100], ['toxic', 'Toxic', 20, 100], ['koi', 'Koi', 24, 120], ['phoenix', 'Phoenix', 20, 90], ['storm', 'Storm', 24, 110], ['bloodmoon', 'Blood Moon', 20, 120], ['obsidian', 'Obsidian', 16, 110], ['lava', 'Lava', 20, 110], ['matrix', 'Matrix', 20, 80], ['frost', 'Frost', 16, 130]];
+const SHOWCASE = [['flame', 'Flame', 16, 70], ['runes', 'Runes', 24, 90], ['koi', 'Koi', 24, 120], ['frost', 'Frost', 16, 130], ['ocean', 'Ocean', 16, 120], ['ender', 'Ender Eye', 24, 110], ['storm', 'Storm', 24, 110], ['bloodmoon', 'Blood Moon', 20, 120]];
 
 const MARK = `<svg viewBox="0 0 120 140" aria-hidden="true"><path fill="#fff" d="M30 80a22 22 0 0 1-2-44 30 30 0 0 1 57-8 24 24 0 0 1 7 52z"/><path fill="#fff" d="M64 84 44 112h14l-6 26 24-34H62l8-20z"/></svg>`;
 
@@ -193,10 +193,11 @@ summary::-webkit-details-marker{display:none}
 summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
 details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
 details p{margin:0 0 18px;color:var(--muted)}
+.cape3d{display:grid;grid-template-columns:minmax(260px,400px) 1fr;gap:32px;align-items:center}.stage{position:relative;height:480px;border-radius:18px;background:radial-gradient(ellipse at 50% 38%,#2a2440 0,#15121f 55%,#0e0e11 100%);border:1px solid #ffffff12;overflow:hidden}.stage canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}.stage canvas:active{cursor:grabbing}.stage .nm{position:absolute;left:0;right:0;bottom:16px;text-align:center;font:700 20px "Pixelify Sans",sans-serif;pointer-events:none}.stage .hint{position:absolute;left:0;right:0;top:14px;text-align:center;color:#a1a1aa;font-size:12.5px;pointer-events:none}.cape3d .capes{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px;overflow:visible;padding:0}.cape{cursor:pointer;background:none;border:0;color:inherit;font:inherit;padding:8px 0}@media (max-width:760px){.cape3d{grid-template-columns:1fr}.stage{height:400px}}
 .capes{display:flex;gap:18px;overflow-x:auto;padding:6px 2px 18px;scroll-snap-type:x mandatory;scrollbar-width:thin}
 .cape{flex:none;scroll-snap-align:start;text-align:center;width:132px}
-.cape .c{width:120px;height:192px;margin:0 auto 10px;border-radius:6px;background-repeat:no-repeat;image-rendering:pixelated;box-shadow:0 18px 40px -16px #000,0 0 0 1px #ffffff14;transition:transform .25s cubic-bezier(.2,.8,.3,1.3)}
-.cape:hover .c{transform:translateY(-6px) rotate(-2deg)}
+.cape .c{width:60px;height:96px;margin:0 auto 8px;border-radius:4px;background-repeat:no-repeat;image-rendering:pixelated;box-shadow:0 10px 18px -8px #000,0 0 0 1px #ffffff14;transition:transform .25s cubic-bezier(.2,.8,.3,1.3)}
+.cape:hover .c,.cape.on .c{transform:translateY(-4px)}.cape.on .c{box-shadow:0 10px 18px -8px #000,0 0 0 2px #f2c430}.cape.on b{color:#f2c430}
 .cape b{font:700 16px "Pixelify Sans",sans-serif}
 .navdl{display:none!important;background:var(--gold)!important;color:#1a1405!important;border-color:var(--gold)!important;font-weight:600}
 nav.scrolled .navdl{display:inline-block!important}
@@ -235,7 +236,8 @@ footer a{color:var(--muted);text-underline-offset:3px}
 <div class="f rv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Custom Sounds</h3><p>Swap any game sound for a built in one or your own mp3, wav or ogg.</p></div>
 </div></section>
 <section id="capes"><h2>Look the part</h2><p class="sub">Animated capes, wings, halos and emotes. Every Surge player sees them, and you can try them all on in the launcher.</p>
-<div class="capes rv">${SHOWCASE.map(([k, n, f, ms]) => `<div class="cape"><div class="c" style="background-image:url(/img/cape/${k}.png);background-size:768px auto;background-position:-12px -12px;animation:cape-${k} ${f * ms}ms steps(${f}) infinite"></div><b>${n}</b></div><style>@keyframes cape-${k}{to{background-position:-12px ${-12 - 384 * f}px}}</style>`).join('')}</div></section>
+<div class="cape3d rv"><div class="stage"><canvas id="cv3d" aria-label="3D preview of the selected cape"></canvas><div class="hint">Drag to turn</div><div class="nm" id="cvName">${SHOWCASE[0][1]}</div></div>
+<div class="capes">${SHOWCASE.map(([k, n, f, ms], i) => `<button class="cape${i ? '' : ' on'}" data-k="${k}" data-n="${n}" data-f="${f}" data-ms="${ms}"><div class="c" style="background-image:url(/img/cape/${k}.png);background-size:384px auto;background-position:-6px -6px;animation:cape-${k} ${f * ms}ms steps(${f}) infinite"></div><b>${n}</b></button><style>@keyframes cape-${k}{to{background-position:-6px ${-6 - 192 * f}px}}</style>`).join('')}</div></div></section>
 <section id="start"><div class="split">
 <div><h2>Get started</h2><p class="sub">From download to playing in about a minute.</p>
 <ol class="steps rv">
@@ -257,6 +259,25 @@ ${notes ? `<div class="new rv"><h3>What's new <span>${esc(l.version)}</span></h3
 <div class="band rv"><div><h2>Join the community</h2><p>Updates, giveaways, codes and help from other players.</p></div><a class="dl" href="${DISCORD}" rel="noopener">Join our Discord</a></div>
 </main>
 <button class="snd" id="snd" aria-label="Turn sounds on" title="Sounds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="sndw" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" opacity=".25"/></svg></button>
+<script src="https://cdn.jsdelivr.net/npm/skinview3d@3.1.0/bundles/skinview3d.bundle.js" defer></script>
+<script>
+addEventListener('load',function(){
+var cv=document.getElementById('cv3d');if(!cv||!window.skinview3d)return;
+var st=cv.parentNode,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,v;
+try{v=new skinview3d.SkinViewer({canvas:cv,width:st.clientWidth,height:st.clientHeight,skin:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABp0lEQVR4Xu2b3WrDMAyFl9KbjXbdCmWM3fX932r0ogwCy9qNlbGWBAKu6lg2srGNzncZ/yQ5SmQpVpo7hs3z9uzq8ns6OmfojvuGO0dO5j4nXz++Wbu13W44vrhfW9sPP63P9FmZZT17AUCAAoyQFQiQVf4C8FoFRm8/RQ3eformafnqXOdnjVuj//Of047c+LZ7zxonDHe3fNhYb+Lr+2M4vlq8WNs/D/vhuHR8TtT7AAiQ8/ErAQhQghVyon4ZvFmDaf5P830uv0/9/UB6fRRrlDPm/zTf9434Un8/kF6fiXofYH0CaOzva/mR1LmD9PpMbpwgjd1prB/aTuHmC+3PzcflGle5AI39aawf2k7h5gvtz803trtQ7wMggPP5UAAEUGBkOEGsAg7wCmj3AepDYQAAAAAAAAAAAOgjeo2edP9eOj6UJJ/E+v17s0ag/59g6p8CG9LxISQRoCa8aoVDke7fS8eHIPYBtNY4tH6A29/n2rn9f44or0BfK2zWC/e1xWZ9cep2CVEEqBkIULP1YgABYqhYMxCgZuvFAALEULFm1IfCF6x65pImO40GAAAAAElFTkSuQmCC'});}catch(e){return;}
+v.fov=38;v.zoom=0.82;v.autoRotate=!reduce;v.autoRotateSpeed=0.7;v.playerObject.rotation.y=Math.PI*0.85;
+if(v.controls){v.controls.enableZoom=false;v.controls.enablePan=false;}
+if(!reduce)v.animation=new skinview3d.IdleAnimation();
+var cards=[].slice.call(document.querySelectorAll('.cape3d .cape')),img=null,frames=1,ms=100,last=-1,t0=performance.now(),user=false,cur=0,token=0;
+var buf=document.createElement('canvas');buf.width=512;buf.height=256;var bx=buf.getContext('2d');
+function pick(i){cur=i;var c=cards[i];cards.forEach(function(x){x.classList.toggle('on',x===c)});document.getElementById('cvName').textContent=c.getAttribute('data-n');frames=+c.getAttribute('data-f');ms=+c.getAttribute('data-ms');var my=++token,im=new Image();im.onload=function(){if(my===token){img=im;last=-1;t0=performance.now();}};im.src='/img/cape/'+c.getAttribute('data-k')+'.png';}
+function tick(now){if(img){var f=reduce?0:Math.floor((now-t0)/ms)%frames;if(f!==last){last=f;var sw=img.width,sh=sw/2;bx.clearRect(0,0,512,256);bx.imageSmoothingEnabled=false;bx.drawImage(img,0,f*sh,sw,sh,0,0,512,256);try{v.loadCape(buf);}catch(e){}}}requestAnimationFrame(tick);}
+cards.forEach(function(c,i){c.addEventListener('click',function(){user=true;pick(i);});c.addEventListener('mouseenter',function(){user=true;pick(i);});});
+setInterval(function(){if(!user&&!document.hidden)pick((cur+1)%cards.length);},4500);
+addEventListener('resize',function(){v.setSize(st.clientWidth,st.clientHeight);});
+pick(0);requestAnimationFrame(tick);
+});
+</script>
 <footer class="wrap">Surge Client by owfx. Not affiliated with Mojang or Microsoft. <a href="${DISCORD}" rel="noopener">Discord</a></footer>
 <script>
 (function(){
@@ -392,7 +413,7 @@ export default {
     if (req.method === 'GET' && p.startsWith('/img/cape/')) {
       const key = p.slice('/img/cape/'.length).replace(/\.png$/, '');
       if (!SHOWCASE.some(c => c[0] === key)) return new Response('not found', { status: 404 });
-      const r = await fetch(`https://raw.githubusercontent.com/${REPO(env)}/main/mod/src/main/resources/assets/surge/textures/cosmetic/cape_${key}.png`, { cf: { cacheTtl: 86400, cacheEverything: true } });
+      const r = await fetch(`https://raw.githubusercontent.com/${REPO(env)}/main/${key === 'runes' ? 'server/img' : 'mod/src/main/resources/assets/surge/textures/cosmetic'}/cape_${key}.png`, { cf: { cacheTtl: 86400, cacheEverything: true } });
       if (!r.ok) return new Response('not found', { status: 404 });
       return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } });
     }

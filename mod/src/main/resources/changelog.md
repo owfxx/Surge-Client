@@ -3,7 +3,7 @@
 - 4 new animated capes: Sunset, Ender Eye, Diamond and Toxic
 - Launcher wardrobe: search, and show only items you own or items in the shop
 - Modpacks: play any modpack straight from its card, and see when you last played it
-- Fixed a rare crash at the end of a session
+- New default skin for previews when you don't have a skin yet
 
 ## 1.8.7
 - Surge now supports Minecraft 1.8.9: make a 1.8.9 modpack in the launcher to get the Surge menu, HUD mods, PvP mods, performance features and your capes, wings and halos

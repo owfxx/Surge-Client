@@ -256,19 +256,9 @@ function render() {
 }
 
 const PLACEHOLDER_SKIN = 'chroynic';
-const Q_MARK = ['..XXXX..', '.XX..XX.', '.....XX.', '....XX..', '...XX...', '........', '...XX...'];
 
 function unknownSkin() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const g = c.getContext('2d');
-  const paint = (color, rects) => { g.fillStyle = color; rects.forEach(([x, y, w, h]) => g.fillRect(x, y, w, h)); };
-  paint('#15101f', [[0, 0, 32, 16], [16, 16, 24, 16], [40, 16, 16, 16], [0, 16, 16, 16], [16, 48, 16, 16], [32, 48, 16, 16]]);
-  paint('#0a0710', [[8, 8, 8, 8], [20, 20, 8, 12], [44, 20, 4, 12], [36, 52, 4, 12], [4, 20, 4, 12], [20, 52, 4, 12]]);
-  paint('#211833', [[8, 0, 8, 8], [20, 16, 8, 4], [44, 16, 4, 4], [36, 48, 4, 4], [4, 16, 4, 4], [20, 48, 4, 4]]);
-  g.fillStyle = '#d4d4d8';
-  Q_MARK.forEach((row, r) => [...row].forEach((ch, col) => { if (ch === 'X') g.fillRect(8 + col, 8 + r, 1, 1); }));
-  return c;
+  return 'assets/default-skin.png';
 }
 
 const EASE = x => x * x * (3 - 2 * x);
