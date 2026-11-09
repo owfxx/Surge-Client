@@ -1,3 +1,7 @@
+## 1.9.4
+- Fixed the calculator crashing the game
+- Fixed your character floating higher in the wardrobe while wearing an elytra
+
 ## 1.9.3
 - Removed idle animations
 - Smoother, more lively animations for every emote

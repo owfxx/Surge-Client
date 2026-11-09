@@ -293,6 +293,19 @@ public final class AutoTest {
 			ServerTabsScreen.testListing(List.of(new ServerTabsScreen.Listing("Hypixel", "mc.hypixel.net", "Partner description", "Partner"), new ServerTabsScreen.Listing("Not a server", "nope.invalid", "Should show as unreachable", "")));
 			open(mc, new ServerTabsScreen(new JoinMultiplayerScreen(new TitleScreen()), ServerTabsScreen.Mode.DISCOVER));
 		}));
+		STEPS.add(new Step("29a-wardrobe-elytra", 40, mc -> {
+			mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ELYTRA));
+			open(mc, new WardrobeScreen(null));
+		}));
+		STEPS.add(new Step("29b-calculator-partial", 20, mc -> {
+			mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.item.ItemStack.EMPTY);
+			open(mc, new gg.surge.client.gui.CalculatorScreen(null));
+			for (char ch : "5+".toCharArray()) mc.screen.charTyped(new net.minecraft.client.input.CharacterEvent(ch, 0));
+		}));
+		STEPS.add(new Step("29c-calculator-odd", 20, mc -> {
+			for (char ch : ")*(sqrt(".toCharArray()) mc.screen.charTyped(new net.minecraft.client.input.CharacterEvent(ch, 0));
+			mc.screen.keyPressed(new net.minecraft.client.input.KeyEvent(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0));
+		}));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;

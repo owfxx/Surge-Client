@@ -52,6 +52,15 @@ public final class Preview {
 			st.displayFireAnimation = false;
 			st.isInvisible = false;
 			st.isInvisibleToPlayer = false;
+			st.isFallFlying = false;
+			st.fallFlyingTimeInTicks = 0f;
+			st.shouldApplyFlyingYRot = false;
+			st.isVisuallySwimming = false;
+			st.swimAmount = 0f;
+			st.isCrouching = false;
+			st.isPassenger = false;
+			st.pose = net.minecraft.world.entity.Pose.STANDING;
+			st.boundingBoxHeight = 1.8f * st.scale;
 			if (st.chestEquipment.is(net.minecraft.world.item.Items.ELYTRA)) st.chestEquipment = net.minecraft.world.item.ItemStack.EMPTY;
 			if (st.isSpectator) {
 				st.isSpectator = false;

@@ -137,7 +137,7 @@ public class CalculatorScreen extends Screen {
 			if (HISTORY.size() > 20) HISTORY.remove(0);
 			last = out;
 			expr = out;
-		} catch (RuntimeException e) {
+		} catch (RuntimeException | StackOverflowError e) {
 			flash = "Can't calculate that";
 			flashAt = System.currentTimeMillis();
 		}
@@ -148,7 +148,7 @@ public class CalculatorScreen extends Screen {
 		try {
 			String v = format(new Parser(expr).parse());
 			return v.equals(expr) ? "" : "= " + v;
-		} catch (RuntimeException e) {
+		} catch (RuntimeException | StackOverflowError e) {
 			return "";
 		}
 	}
@@ -212,6 +212,8 @@ public class CalculatorScreen extends Screen {
 		private final String s;
 		private int i;
 
+		private int depth;
+
 		Parser(String s) { this.s = s.replace(" ", "").toLowerCase(Locale.ROOT); }
 
 		double parse() {
@@ -270,6 +272,7 @@ public class CalculatorScreen extends Screen {
 		}
 
 		private double atom() {
+			if (++depth > 400) throw new IllegalArgumentException();
 			if (eat('(')) {
 				double v = sum();
 				eat(')');
@@ -286,6 +289,7 @@ public class CalculatorScreen extends Screen {
 			}
 			while (i < s.length() && Character.isLetter(s.charAt(i))) i++;
 			String name = s.substring(start, i);
+			if (name.isEmpty()) throw new IllegalArgumentException();
 			switch (name) {
 				case "pi" -> { return Math.PI; }
 				case "e" -> { return Math.E; }
