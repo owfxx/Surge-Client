@@ -52,8 +52,6 @@
 		"ItemFoilMixin",
 		"BlockOutlineMixin",
 		"ItemPhysicsMixin",
-		"DisconnectedScreenMixin",
-		"ScreenTickMixin",
 		"ConnectScreenMixin"
 	],
 	"injectors": {

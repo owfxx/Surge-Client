@@ -219,12 +219,13 @@ public final class AutoTest {
 		STEPS.add(new Step("23b-mob-number", 20, mc -> Mods.MH_STYLE.set("Number")));
 		STEPS.add(new Step("23c-mob-bar", 20, mc -> Mods.MH_STYLE.set("Bar")));
 		STEPS.add(new Step("23d-light-numbers", 25, mc -> { Mods.MH_STYLE.set("Hearts"); Mods.LO_NUMBERS.set(true); mc.player.setXRot(62f); mc.player.setYRot(-35f); }));
-		STEPS.add(new Step("23e-hit-indicator", 8, mc -> { Mods.LO_NUMBERS.set(false); mc.player.setXRot(28f); mc.player.setYRot(0f); cmd(mc, "gamemode survival"); cmd(mc, "damage @s 1 minecraft:mob_attack by @e[type=pig,limit=1]"); }));
-		STEPS.add(new Step("23f-horse", 40, mc -> { cmd(mc, "gamemode creative"); cmd(mc, "ride @s mount @e[type=horse,limit=1]"); }));
+		STEPS.add(new Step("23e-hit-indicator", 8, mc -> { Mods.LO_NUMBERS.set(false); mc.player.setXRot(28f); mc.player.setYRot(0f); cmd(mc, "gamemode survival"); cmd(mc, "difficulty easy"); cmd(mc, "damage @s 1 minecraft:mob_attack by @e[type=pig,limit=1]"); }));
+		STEPS.add(new Step("23f-horse", 40, mc -> { cmd(mc, "difficulty peaceful"); cmd(mc, "gamemode creative"); cmd(mc, "ride @s mount @e[type=horse,limit=1]"); }));
 		STEPS.add(new Step("23g-snaplook", 15, mc -> { cmd(mc, "ride @s dismount"); com.mojang.blaze3d.platform.InputConstants.Key x = com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X); net.minecraft.client.KeyMapping.set(x, true); }));
 		STEPS.add(new Step("23h-snaplook-off", 15, mc -> { net.minecraft.client.KeyMapping.set(com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(org.lwjgl.glfw.GLFW.GLFW_KEY_X), false); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.PACK_LOAD_FAILURE, net.minecraft.network.chat.Component.literal("Toast test"), net.minecraft.network.chat.Component.literal("This one shows")); }));
 		STEPS.add(new Step("23i-toast-hidden", 20, mc -> { Mods.TOAST_SYSTEM.set(true); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.WORLD_BACKUP, net.minecraft.network.chat.Component.literal("Hidden toast"), net.minecraft.network.chat.Component.literal("This one should not show")); }));
-		STEPS.add(new Step("23j-new-mods-menu", 30, mc -> open(mc, new SurgeMenuScreen(null))));
+		STEPS.add(new Step("23j-new-mods-menu", 30, mc -> { open(mc, new SurgeMenuScreen(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestSearch("health"); }));
+		STEPS.add(new Step("23j2-camera-settings", 25, mc -> { Mods.MIN_BOBBING.set(true); open(mc, SurgeMenuScreen.general(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestScroll(); }));
 		STEPS.add(new Step("23k-target-settings", 25, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("target"), null))));
 		STEPS.add(new Step("23l-reconnect", 30, mc -> {
 			gg.surge.client.features.MoreFeatures.lastAddress = net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("play.example.com");

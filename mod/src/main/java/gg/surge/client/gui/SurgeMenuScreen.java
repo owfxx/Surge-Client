@@ -173,6 +173,16 @@ public class SurgeMenuScreen extends Screen {
 		buildPage();
 	}
 
+	private int pendingScroll;
+
+	public void autotestSearch(String q) {
+		if (search != null) search.setValue(q);
+	}
+
+	public void autotestScroll() {
+		pendingScroll = 20;
+	}
+
 	private boolean gridMode() {
 		return openMod == null && (!query.isEmpty() || (tab != Tab.FPS && tab != Tab.PROFILES && tab != Tab.PERF));
 	}
@@ -585,6 +595,7 @@ public class SurgeMenuScreen extends Screen {
 		header(g, mx, my, delta);
 		sidebar(g, mx, my);
 
+		if (pendingScroll > 0) { pendingScroll--; scroll = scrollTarget = Math.max(0, contentH - viewH()); }
 		scroll += (scrollTarget - scroll) * (1f - (float) Math.exp(-Ui.dt() * 18f));
 		if (Math.abs(scroll - scrollTarget) < 0.5f) scroll = scrollTarget;
 

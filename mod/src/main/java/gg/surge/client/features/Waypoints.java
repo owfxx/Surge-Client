@@ -68,6 +68,10 @@ public final class Waypoints {
 		focal = halfH / Math.tan(Math.toRadians(Zoom.lastFov()) / 2.0);
 	}
 
+	static double focal() {
+		return focal;
+	}
+
 	static double[] project(double x, double y, double z) {
 		double vx = x - ex, vy = y - ey, vz = z - ez;
 		double cz = vx * fx + vy * fy + vz * fz;

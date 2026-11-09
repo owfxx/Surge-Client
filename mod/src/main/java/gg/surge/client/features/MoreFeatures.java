@@ -163,13 +163,20 @@ public final class MoreFeatures {
 			ItemStack s = it.getItem();
 			int rgb = rarityColor(s);
 			if (beam > 0 && d2 <= beam * beam && (!Mods.LB_RARE.on() || rgb != 0xFFFFFF)) {
-				for (int k = 0; k < 8; k++) {
-					double[] a = Waypoints.project(e.getX(), e.getY() + 0.2 + k * 0.35, e.getZ()), b = Waypoints.project(e.getX(), e.getY() + 0.2 + (k + 1) * 0.35, e.getZ());
-					if (a == null || b == null) continue;
-					int al = (int) (150 * (1f - k / 8f) * pulse);
-					float w = (float) Math.max(1.0, 3.0 * 6.0 / Math.max(1.0, a[2]));
-					int x0 = (int) Math.round(Math.min(a[0], b[0]) - w / 2), x1 = (int) Math.round(Math.max(a[0], b[0]) + w / 2);
-					g.fill(x0, (int) Math.round(Math.min(a[1], b[1])), Math.max(x0 + 1, x1), (int) Math.round(Math.max(a[1], b[1])) + 1, (al << 24) | rgb);
+				double[] a = Waypoints.project(e.getX(), e.getY() + 0.15, e.getZ()), b = Waypoints.project(e.getX(), e.getY() + 3.0, e.getZ());
+				if (a != null && b != null) {
+					double dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+					if (len > 1) {
+						float w = (float) Math.max(1.5, 0.14 * Waypoints.focal() / Math.max(1.0, a[2]));
+						int base = (int) (170 * pulse) << 24 | rgb, top = rgb;
+						g.pose().pushMatrix();
+						g.pose().translate((float) a[0], (float) a[1]);
+						g.pose().rotate((float) (Math.atan2(dy, dx) - Math.PI / 2));
+						int hw = Math.max(1, Math.round(w / 2));
+						g.fillGradient(-hw, 0, hw, (int) Math.round(len), base, top);
+						g.fillGradient(-Math.max(1, hw / 3), 0, Math.max(1, hw / 3), (int) Math.round(len * 0.8), (int) (200 * pulse) << 24 | 0xFFFFFF, 0x00FFFFFF);
+						g.pose().popMatrix();
+					}
 				}
 			}
 			if (timer > 0 && d2 <= timer * timer) {
@@ -230,10 +237,14 @@ public final class MoreFeatures {
 	private static net.minecraft.client.gui.components.Button rcButton;
 	private static long rcShown;
 
-	public static void reconnectButton(net.minecraft.client.gui.screens.Screen s, net.minecraft.client.gui.components.Button b) {
+	public static void onScreenInit(Minecraft mc, net.minecraft.client.gui.screens.Screen s) {
+		if (!(s instanceof net.minecraft.client.gui.screens.DisconnectedScreen) || !Mods.RECONNECT.enabled() || lastAddress == null) return;
+		net.minecraft.client.gui.components.Button b = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Reconnect"), x -> reconnect(mc)).bounds(s.width / 2 - 100, s.height - 32, 200, 20).build();
+		net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(s).add(b);
 		if (rcScreen.get() != s) rcShown = System.currentTimeMillis();
 		rcScreen = new java.lang.ref.WeakReference<>(s);
 		rcButton = b;
+		net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterTick(s).register(MoreFeatures::screenTick);
 	}
 
 	public static void screenTick(net.minecraft.client.gui.screens.Screen s) {

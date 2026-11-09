@@ -227,7 +227,7 @@ final class MoreModules {
 	static final class Paperdoll extends HudModule {
 		final Setting.Toggle onlyMoving = toggle("moving", "Only while sprinting, swimming or flying", false);
 
-		Paperdoll() { super("paperdoll", "Paperdoll", Items.ARMOR_STAND, "A small model of your character on screen", false, 0.02f, 0.62f); }
+		Paperdoll() { super("paperdoll", "Paperdoll", Items.ARMOR_STAND, "A small model of your character on screen", false, 0.02f, 0.3f); }
 
 		@Override public int width(Minecraft mc) { return 40; }
 
@@ -248,7 +248,7 @@ final class MoreModules {
 	}
 
 	static final class HorseStats extends HudModule {
-		HorseStats() { super("horse", "Horse Stats", Items.SADDLE, "Speed, jump height and health of the horse you ride or look at", false, 0.4f, 0.72f); }
+		HorseStats() { super("horse", "Horse Stats", Items.SADDLE, "Speed, jump height and health of the horse you ride or look at", false, 1f, 0.2f); }
 
 		private AbstractHorse horse(Minecraft mc) {
 			if (mc.player == null) return null;

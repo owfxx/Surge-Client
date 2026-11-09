@@ -18,6 +18,7 @@ public final class MenuOverlay {
 
 	public static void register() {
 		ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+			gg.surge.client.features.MoreFeatures.onScreenInit(client, screen);
 			ScreenEvents.afterRender(screen).register((s, g, mx, my, delta) -> Brand.draw(client, s, g));
 			if (screen instanceof net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen) {
 				boolean[] down = {true};
