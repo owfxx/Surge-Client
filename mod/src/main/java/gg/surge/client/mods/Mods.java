@@ -114,8 +114,9 @@ public final class Mods {
 		"Show each player's head on the locator bar instead of a dot", true);
 	public static final Setting.Toggle LH_OUTLINE = LOCATOR_HEADS.toggle("outline", "Colored outline", true);
 
-	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Scales", Category.VISUAL, Items.SPYGLASS,
-		"Give your hotbar, chat, tab list, titles and inventories their own size", false);
+	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Modifier", Category.VISUAL, Items.SPYGLASS,
+		"Resize your hotbar, chat, tab list, titles and inventories, and remove the dark inventory background", false);
+	public static final Setting.Toggle GS_NO_TINT = GUI_SCALES.toggle("noTint", "Remove inventory background tint", false);
 	public static final Setting.Slider GS_HOTBAR = GUI_SCALES.slider("hotbar", "Hotbar, health and hunger", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_CHAT = GUI_SCALES.slider("chat", "Chat", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_TAB = GUI_SCALES.slider("tab", "Tab list", 100, 50, 150, 5, "%");

@@ -189,6 +189,9 @@ public final class AutoTest {
 		STEPS.add(new Step("21d-glass-wardrobe", 40, mc -> open(mc, new gg.surge.client.gui.WardrobeScreen(null))));
 		STEPS.add(new Step("21e-glass-general", 30, mc -> open(mc, SurgeMenuScreen.general(null))));
 		STEPS.add(new Step("21f-glass-off", 20, mc -> { Mods.THEME.set("Ash"); Mods.THEME_COLOR.set("6B6B73"); open(mc, null); }));
+		STEPS.add(new Step("22-inventory-tint", 30, mc -> open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player))));
+		STEPS.add(new Step("22b-inventory-no-tint", 30, mc -> { Mods.GUI_SCALES.setEnabled(true); Mods.GS_NO_TINT.set(true); }));
+		STEPS.add(new Step("22c-inventory-reset", 10, mc -> { Mods.GS_NO_TINT.set(false); Mods.GUI_SCALES.setEnabled(false); open(mc, null); }));
 	}
 
 	private static void hover(Minecraft mc, double fx, double fy) {
