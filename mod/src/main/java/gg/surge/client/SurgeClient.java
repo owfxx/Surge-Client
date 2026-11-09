@@ -243,6 +243,29 @@ public class SurgeClient implements ClientModInitializer {
 		return GLFW.glfwGetKey(mc.getWindow().handle(), bound.getValue()) == GLFW.GLFW_PRESS;
 	}
 
+	private static long underDrawnAt;
+	private static Object underScreen;
+
+	public static boolean underScreen(Minecraft mc) {
+		return mc.screen != null && mc.level != null && mc.screen.isInGameUi() && mc.screen.getClass().getName().startsWith("net.minecraft.") && !mc.options.hideGui && !(mc.screen instanceof HudEditorScreen);
+	}
+
+	public static void drawModules(GuiGraphics g, Minecraft mc) {
+		if (mc.debugEntries.isOverlayVisible()) return;
+		for (HudModule m : HudModules.ALL) {
+			if (m.enabled()) m.draw(g, mc);
+		}
+	}
+
+	public static void drawUnderScreen(GuiGraphics g) {
+		Minecraft mc = Minecraft.getInstance();
+		if (!underScreen(mc)) return;
+		underDrawnAt = System.currentTimeMillis();
+		underScreen = mc.screen;
+		drawModules(g, mc);
+		g.nextStratum();
+	}
+
 	private static void renderHud(GuiGraphics g, DeltaTracker delta) {
 		Minecraft mc = Minecraft.getInstance();
 		gg.surge.client.features.Clips.frame(mc);
@@ -264,9 +287,7 @@ public class SurgeClient implements ClientModInitializer {
 		if (!debug) {
 			Waypoints.render(g, mc);
 			gg.surge.client.features.Extras.render(g, mc);
-			for (HudModule m : HudModules.ALL) {
-				if (m.enabled()) m.draw(g, mc);
-			}
+			if (!(underScreen(mc) && System.currentTimeMillis() - underDrawnAt < 250 && underScreen == mc.screen)) drawModules(g, mc);
 		}
 		if (mc.screen == null) gg.surge.client.gui.SocialToasts.render(g, mc, g.guiWidth());
 	}
