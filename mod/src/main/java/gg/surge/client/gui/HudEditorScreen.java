@@ -68,7 +68,7 @@ public class HudEditorScreen extends Screen {
 		boolean busy = dragging != null || resizing != null;
 		float ui = Ui.approach("hudedit:ui", busy ? 0f : 1f, 12f);
 		int tw = 200, tx = (W - tw) / 2, ty = H - 34 + Math.round((1 - ui) * 46);
-		int hubW = 5 * 50 + 4 * 4, hubX = (W - hubW) / 2, hubY = H / 2 - 36;
+		int hubW = 5 * 60 + 4 * 4, hubX = (W - hubW) / 2, hubY = H / 2 - 36;
 		boolean onToolbar = Ui.hover(mx, my, tx, ty, tw, 22) || (ui > 0.5f && Ui.hover(mx, my, hubX - 4, hubY - 4, hubW + 8, 84));
 		Runnable action = null;
 
@@ -208,7 +208,7 @@ public class HudEditorScreen extends Screen {
 		g.drawString(font, Component.literal("Mod Menu").withStyle(net.minecraft.ChatFormatting.BOLD), ix + 18, y + 10, Colors.alpha(0xFFFFFFFF, ui), false);
 		if (hov && click) out = () -> minecraft.setScreen(new SurgeMenuScreen(this));
 		String[][] items = {{"wardrobe", "Wardrobe"}, {"emotes", "Emotes"}, {"friends", "Friends"}, {"settings", "Settings"}, {"calc", "Calculator"}};
-		int by = y + mainH + 6, bw = 50, bh = 42;
+		int by = y + mainH + 6, bw = 60, bh = 42;
 		for (int i = 0; i < items.length; i++) {
 			int bx = x + i * (bw + 4);
 			String id = items[i][0];

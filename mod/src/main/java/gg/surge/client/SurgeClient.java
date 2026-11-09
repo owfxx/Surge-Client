@@ -297,7 +297,8 @@ public class SurgeClient implements ClientModInitializer {
 		if (mc.options.hideGui || mc.screen instanceof HudEditorScreen) return;
 		boolean debug = mc.debugEntries.isOverlayVisible();
 		if (!debug) {
-			if (!(underScreen(mc) && System.currentTimeMillis() - underDrawnAt < 250 && underScreen == mc.screen)) drawLayer(g, mc);
+			boolean surgeScreen = mc.screen != null && mc.screen.getClass().getName().startsWith("gg.surge.") && !(mc.screen instanceof SurgeMenuScreen);
+			if (!surgeScreen && !(underScreen(mc) && System.currentTimeMillis() - underDrawnAt < 250 && underScreen == mc.screen)) drawLayer(g, mc);
 		}
 		if (mc.screen == null) gg.surge.client.gui.SocialToasts.render(g, mc, g.guiWidth());
 	}
