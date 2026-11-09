@@ -82,7 +82,7 @@ public final class MoreFeatures {
 		double ang = Math.toRadians(hitAngle);
 		g.pose().pushMatrix();
 		g.pose().translate(cx, cy);
-		g.pose().rotate((float) -ang + (float) Math.PI);
+		g.pose().rotate((float) (ang - Math.PI / 2));
 		for (int i = 0; i < 9; i++) {
 			int w = 18 - i * 2;
 			int al = (int) (220 * a * (1f - i / 10f));

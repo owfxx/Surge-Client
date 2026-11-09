@@ -37,7 +37,7 @@ public class SurgeMod {
 		this.defEnabled = DEFAULT_ON.contains(id);
 	}
 
-	private static final java.util.Set<String> DEFAULT_ON = java.util.Set.of("fps", "ping", "general", "cosmetics", "main_menu", "discord", "profiles", "server_region", "clips", "command_keys", "chat", "locator_heads", "background_fps", "death_coords", "tooltips");
+	private static final java.util.Set<String> DEFAULT_ON = java.util.Set.of("fps", "ping", "general", "cosmetics", "main_menu", "discord", "profiles", "server_region", "clips", "command_keys", "chat", "locator_heads", "background_fps", "death_coords", "tooltips", "reconnect");
 
 	public ItemStack icon() {
 		if (iconStack == null) iconStack = new ItemStack(icon);
