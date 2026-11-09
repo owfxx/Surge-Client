@@ -14,7 +14,13 @@ public class ScreenTintMixin {
 	private void surge$tint(GuiGraphics g, CallbackInfo ci) {
 		gg.surge.client.SurgeClient.drawUnderScreen(g);
 		if (Mods.GUI_SCALES.enabled() && Mods.GS_NO_TINT.on()) {
+			gg.surge.client.features.GuiBackdrop.draw(g);
 			ci.cancel();
 		}
+	}
+
+	@Inject(method = "renderTransparentBackground", at = @At("TAIL"), require = 0)
+	private void surge$backdrop(GuiGraphics g, CallbackInfo ci) {
+		gg.surge.client.features.GuiBackdrop.draw(g);
 	}
 }

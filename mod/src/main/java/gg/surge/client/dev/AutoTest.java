@@ -211,7 +211,7 @@ public final class AutoTest {
 			mc.options.setCameraType(CameraType.FIRST_PERSON);
 			for (gg.surge.client.mods.SurgeMod m : new gg.surge.client.mods.SurgeMod[]{Mods.MOB_HEALTH, Mods.LOOT_BEAMS, Mods.DESPAWN_TIMER, Mods.LIGHT_OVERLAY, Mods.ITEM_PHYSICS, Mods.SHINY_POTS, Mods.BLOCK_OUTLINE, Mods.HIT_INDICATOR, Mods.AUTO_PERSPECTIVE, Mods.SNAPLOOK, Mods.TOASTS}) m.setEnabled(true);
 			for (String id : new String[]{"minimap", "effects", "compass", "armor"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(false); }
-			for (String id : new String[]{"target", "lookat", "mousestrokes", "paperdoll", "horse", "tps", "system"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(true); }
+			for (String id : new String[]{"lookat", "mousestrokes", "paperdoll", "horse", "tps", "system"}) { HudModule m = Mods.hud(id); if (m != null) m.setEnabled(true); }
 			Mods.BO_COLOR.set("FF3B3B");
 			Mods.BO_WIDTH.set(6f);
 		}));
@@ -226,7 +226,7 @@ public final class AutoTest {
 		STEPS.add(new Step("23i-toast-hidden", 20, mc -> { Mods.TOAST_SYSTEM.set(true); net.minecraft.client.gui.components.toasts.SystemToast.add(mc.getToastManager(), net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.WORLD_BACKUP, net.minecraft.network.chat.Component.literal("Hidden toast"), net.minecraft.network.chat.Component.literal("This one should not show")); }));
 		STEPS.add(new Step("23j-new-mods-menu", 30, mc -> { open(mc, new SurgeMenuScreen(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestSearch("health"); }));
 		STEPS.add(new Step("23j2-camera-settings", 25, mc -> { Mods.MIN_BOBBING.set(true); open(mc, SurgeMenuScreen.general(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestScroll(); }));
-		STEPS.add(new Step("23k-target-settings", 25, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("target"), null))));
+		STEPS.add(new Step("23k-lookat-settings", 25, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("lookat"), null))));
 		STEPS.add(new Step("23l-reconnect", 30, mc -> {
 			gg.surge.client.features.MoreFeatures.lastAddress = net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("play.example.com");
 			gg.surge.client.features.MoreFeatures.lastServer = new net.minecraft.client.multiplayer.ServerData("Test", "play.example.com", net.minecraft.client.multiplayer.ServerData.Type.OTHER);
@@ -234,6 +234,17 @@ public final class AutoTest {
 			Mods.RC_DELAY.set(30f);
 			open(mc, new net.minecraft.client.gui.screens.DisconnectedScreen(new TitleScreen(), net.minecraft.network.chat.Component.literal("Connection lost"), net.minecraft.network.chat.Component.literal("Timed out")));
 		}));
+		STEPS.add(new Step("24a-backdrop-rain-and-thunder", 60, mc -> { Mods.GUI_SCALES.setEnabled(true); open(mc, new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player)); Mods.GS_BACKDROP.set("Rain and thunder"); }));
+		STEPS.add(new Step("24a2-backdrop-thunder", 3, mc -> gg.surge.client.features.GuiBackdrop.strikeNow()));
+		STEPS.add(new Step("24b-backdrop-snow", 20, mc -> { Mods.GS_BACKDROP.set("Snow"); }));
+		STEPS.add(new Step("24c-backdrop-fireflies", 20, mc -> { Mods.GS_BACKDROP.set("Fireflies"); }));
+		STEPS.add(new Step("24d-backdrop-starry-night", 20, mc -> { Mods.GS_BACKDROP.set("Starry night"); }));
+		STEPS.add(new Step("24e-backdrop-aurora", 20, mc -> { Mods.GS_BACKDROP.set("Aurora"); }));
+		STEPS.add(new Step("24f-backdrop-sakura", 20, mc -> { Mods.GS_BACKDROP.set("Sakura"); }));
+		STEPS.add(new Step("24g-backdrop-embers", 20, mc -> { Mods.GS_BACKDROP.set("Embers"); }));
+		STEPS.add(new Step("24h-backdrop-no-tint", 20, mc -> { Mods.GS_BACKDROP.set("Snow"); Mods.GS_NO_TINT.set(true); }));
+		STEPS.add(new Step("24i-backdrop-chest", 20, mc -> { Mods.GS_NO_TINT.set(false); Mods.GS_BACKDROP.set("Fireflies"); open(mc, new net.minecraft.client.gui.screens.inventory.ContainerScreen(net.minecraft.world.inventory.ChestMenu.threeRows(0, mc.player.getInventory()), mc.player.getInventory(), net.minecraft.network.chat.Component.literal("Chest"))); }));
+		STEPS.add(new Step("24j-backdrop-off", 5, mc -> { Mods.GS_BACKDROP.set("None"); Mods.GUI_SCALES.setEnabled(false); open(mc, null); }));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;

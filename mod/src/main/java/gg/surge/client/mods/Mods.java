@@ -120,6 +120,8 @@ public final class Mods {
 		"Resize your hotbar, chat, tab list, titles and inventories, and remove the dark inventory background", false);
 	public static final Setting.Toggle GS_NO_TINT = GUI_SCALES.toggle("noTint", "Remove inventory background tint", false);
 	public static final Setting.Slider GS_BLUR = GUI_SCALES.slider("blur", "Menu background blur", 5, 0, 10, 1, "");
+	public static final Setting.Choice GS_BACKDROP = GUI_SCALES.choice("backdrop", "Inventory background", "None", "None", "Rain and thunder", "Snow", "Fireflies", "Starry night", "Aurora", "Sakura", "Embers");
+	public static final Setting.Slider GS_BACKDROP_AMOUNT = GUI_SCALES.slider("backdropAmount", "Background amount", 100, 20, 200, 10, "%").showIf(() -> !GS_BACKDROP.get().equals("None"));
 	public static final Setting.Slider GS_HOTBAR = GUI_SCALES.slider("hotbar", "Hotbar, health and hunger", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_CHAT = GUI_SCALES.slider("chat", "Chat", 100, 50, 150, 5, "%");
 	public static final Setting.Slider GS_TAB = GUI_SCALES.slider("tab", "Tab list", 100, 50, 150, 5, "%");

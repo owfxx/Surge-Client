@@ -1,5 +1,9 @@
+## 1.9.0
+- GUI Modifier can now add an animated background behind inventories and containers: Rain and thunder, Snow, Fireflies, Starry night, Aurora, Sakura and Embers
+- Removed Target HUD
+
 ## 1.8.9
-- New mods: Target HUD, Look At, Mouse Strokes, Paperdoll, Horse Stats, TPS and CPU Usage
+- New mods: Look At, Mouse Strokes, Paperdoll, Horse Stats, TPS and CPU Usage
 - New mods: Snaplook, Auto Perspective, Item Physics, Shiny Pots, Mob Health, Hit Indicator, Loot Beams, Item Despawn Timer, Light Level Overlay and Toast Control
 - Block Outline on 1.21: pick the color, opacity and thickness of the outline
 - Reconnect: a Reconnect button when you get disconnected, with an optional auto reconnect

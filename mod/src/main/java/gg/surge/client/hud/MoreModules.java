@@ -23,8 +23,6 @@ import java.util.Locale;
 final class MoreModules {
 	private MoreModules() {}
 
-	private static LivingEntity target;
-	private static long targetAt;
 	private static long tpsAt;
 	private static long tpsGame = -1;
 	private static double tps = 20;
@@ -33,7 +31,6 @@ final class MoreModules {
 
 	static List<HudModule> create() {
 		List<HudModule> out = new ArrayList<>();
-		out.add(new TargetHud());
 		out.add(new LookAt());
 		out.add(new MouseStrokes());
 		out.add(new Paperdoll());
@@ -44,9 +41,7 @@ final class MoreModules {
 	}
 
 	static void tick(Minecraft mc) {
-		if (mc.player == null || mc.level == null) { target = null; tpsGame = -1; return; }
-		if (mc.crosshairPickEntity instanceof LivingEntity le && le.isAlive() && !le.isInvisible()) { target = le; targetAt = System.currentTimeMillis(); }
-		if (target != null && (!target.isAlive() || target.isRemoved() || System.currentTimeMillis() - targetAt > 3500)) target = null;
+		if (mc.player == null || mc.level == null) { tpsGame = -1; return; }
 		long now = System.currentTimeMillis(), game = mc.level.getGameTime();
 		if (tpsGame < 0) { tpsGame = game; tpsAt = now; }
 		else if (now - tpsAt >= 2000) {
@@ -63,72 +58,6 @@ final class MoreModules {
 				if (v >= 0) cpu = cpu * 0.4 + v * 0.6;
 			} catch (Throwable ignored) { }
 		}
-	}
-
-	static final class TargetHud extends HudModule {
-		final Setting.Toggle model = toggle("model", "Show a 3D model", true);
-		final Setting.Toggle armor = toggle("armor", "Show armor", true);
-		final Setting.Toggle distance = toggle("distance", "Show distance", true);
-
-		TargetHud() { super("target", "Target HUD", Items.IRON_SWORD, "Shows the health, armor and distance of what you're fighting", false, 0.56f, 0.56f); }
-
-		@Override public int width(Minecraft mc) { return 132; }
-
-		@Override public int height(Minecraft mc) { return 44; }
-
-		@Override public void draw(GuiGraphics g, Minecraft mc) {
-			LivingEntity e = target;
-			boolean editing = mc.screen instanceof HudEditorScreen;
-			if (e == null && !editing) return;
-			if (e == null) e = mc.player;
-			if (e == null) return;
-			int x = screenX(g, mc), y = screenY(g, mc);
-			float s = scale();
-			g.pose().pushMatrix();
-			g.pose().translate(x, y);
-			g.pose().scale(s, s);
-			body(g, mc, e);
-			g.pose().popMatrix();
-			if (model.on()) {
-				int mx0 = x + Math.round(2 * s), my0 = y + Math.round(2 * s), mx1 = x + Math.round(36 * s), my1 = y + Math.round(42 * s);
-				InventoryScreen.renderEntityInInventoryFollowsMouse(g, mx0, my0, mx1, my1, Math.max(6, Math.round(16 * s / Math.max(0.8f, e.getBbHeight() / 1.8f))), 0.0625f, (mx0 + mx1) / 2f + 20, (my0 + my1) / 2f, e);
-			}
-		}
-
-		private void body(GuiGraphics g, Minecraft mc, LivingEntity e) {
-			int w = 132, h = 44;
-			if (bgOn()) panel(g, 0, 0, w, h);
-			int tx = model.on() ? 40 : 6;
-			String name = e.getDisplayName().getString();
-			text(g, mc, gg.surge.client.gui.Ui.fit(mc.font, name, w - tx - 4), tx, 5, fg());
-			float hp = e.getHealth(), max = Math.max(1f, e.getMaxHealth()), pct = Math.max(0f, Math.min(1f, hp / max));
-			int bw = w - tx - 6;
-			g.fill(tx, 17, tx + bw, 22, 0x80000000);
-			int col = pct > 0.6f ? 0xFF6BFF8A : pct > 0.3f ? 0xFFFFE07A : 0xFFFF6B6B;
-			g.fill(tx, 17, tx + Math.round(bw * pct), 22, col);
-			String hpText = String.format(Locale.ROOT, "%.1f", hp / 2f) + " ❤";
-			int line = 27;
-			text(g, mc, hpText, tx, line, 0xFFFF7A7A);
-			if (distance.on() && mc.player != null && e != mc.player) {
-				String d = String.format(Locale.ROOT, "%.1fm", mc.player.distanceTo(e));
-				text(g, mc, d, w - 5 - mc.font.width(d), line, 0xFFB4B4BA);
-			}
-			if (armor.on()) {
-				int ax = tx + mc.font.width(hpText) + 6;
-				for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[]{net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
-					ItemStack st = e.getItemBySlot(slot);
-					if (st.isEmpty()) continue;
-					g.pose().pushMatrix();
-					g.pose().translate(ax, line - 2);
-					g.pose().scale(0.6f, 0.6f);
-					g.renderItem(st, 0, 0);
-					g.pose().popMatrix();
-					ax += 11;
-				}
-			}
-		}
-
-		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) { }
 	}
 
 	static final class LookAt extends HudModule {
