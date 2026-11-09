@@ -50,7 +50,7 @@ import org.lwjgl.glfw.GLFW;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SurgeClient implements ClientModInitializer {
 	public static final String MOD_ID = "surge";
-	private static KeyMapping snapKey, menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey, clipKey;
+	private static KeyMapping snapKey, calcKey, menuKey, emoteKey, zoomKey, freelookKey, hudKey, sprintKey, fullbrightKey, waypointKey, stopwatchKey, wardrobeKey, clipKey;
 	private static boolean menuKeyWasDown, adminWasDown;
 
 	private static KeyMapping key(String name, int glfw, KeyMapping.Category category) {
@@ -66,6 +66,7 @@ public class SurgeClient implements ClientModInitializer {
 		menuKey = key("menu", GLFW.GLFW_KEY_RIGHT_SHIFT, category);
 		zoomKey = key("zoom", GLFW.GLFW_KEY_C, category);
 		snapKey = key("snaplook", GLFW.GLFW_KEY_X, category);
+		calcKey = key("calculator", GLFW.GLFW_KEY_UNKNOWN, category);
 		freelookKey = key("freelook", GLFW.GLFW_KEY_LEFT_ALT, category);
 		emoteKey = key("emotes", GLFW.GLFW_KEY_B, category);
 		hudKey = key("hud_editor", GLFW.GLFW_KEY_UNKNOWN, category);
@@ -193,6 +194,8 @@ public class SurgeClient implements ClientModInitializer {
 			if (mc.screen == null) mc.setScreen(new WardrobeScreen(null));
 		}
 		while (fullbrightKey.consumeClick()) Mods.FULLBRIGHT.toggle();
+		while (calcKey.consumeClick()) if (mc.screen == null) mc.setScreen(new gg.surge.client.gui.CalculatorScreen(null));
+		gg.surge.client.features.Borderless.tick(mc);
 		while (waypointKey.consumeClick()) Waypoints.addHere(mc);
 		while (stopwatchKey.consumeClick()) HudModules.toggleStopwatch();
 		while (clipKey.consumeClick()) gg.surge.client.features.Clips.save(mc);

@@ -1,5 +1,9 @@
 ## 1.9.0
 - GUI Modifier can now add an animated background behind inventories and containers: Rain and thunder, Snow, Fireflies, Starry night, Aurora, Sakura and Embers
+- Color Customizer: change saturation, brightness, contrast, gamma, hue, tint and vignette of the whole game, or pick a preset like Grayscale, Vivid, Sepia or Noir
+- Image HUD: put any picture on your screen and change its size, opacity and rotation
+- Calculator: open it from the mod menu or set a key for it
+- Borderless fullscreen in Settings, F11 then switches without the screen going black
 - Removed Target HUD
 
 ## 1.8.9

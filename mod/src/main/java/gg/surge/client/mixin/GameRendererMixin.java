@@ -14,6 +14,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class GameRendererMixin {
 	@Shadow private void bobView(com.mojang.blaze3d.vertex.PoseStack ps, float delta) { }
 
+	@Shadow @org.spongepowered.asm.mixin.Final private com.mojang.blaze3d.resource.CrossFrameResourcePool resourcePool;
+
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;endFrame()V"), require = 0)
+	private void surge$colorGrade(net.minecraft.client.DeltaTracker delta, boolean tick, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+		gg.surge.client.features.ColorGrade.apply(net.minecraft.client.Minecraft.getInstance(), resourcePool);
+	}
+
 	@Inject(method = "getFov", at = @At("RETURN"), cancellable = true)
 	private void surge$zoom(Camera camera, float partialTick, boolean useFovSetting, CallbackInfoReturnable<Float> cir) {
 		if (!useFovSetting) return;

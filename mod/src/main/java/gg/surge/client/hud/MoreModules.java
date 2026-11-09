@@ -32,6 +32,7 @@ final class MoreModules {
 	static List<HudModule> create() {
 		List<HudModule> out = new ArrayList<>();
 		out.add(new LookAt());
+		out.add(new ImageModule());
 		out.add(new MouseStrokes());
 		out.add(new Paperdoll());
 		out.add(new HorseStats());
@@ -209,6 +210,162 @@ final class MoreModules {
 			if (bgOn()) panel(g, x, y, x + w, y + 34);
 			String[] ls = lines(mc);
 			for (int i = 0; i < ls.length; i++) text(g, mc, ls[i], x + 5, y + 3 + i * 10, fg());
+		}
+	}
+
+	static final class ImageFile extends Setting.Choice {
+		private String[] cached = new String[0];
+		private long listedAt;
+
+		ImageFile(gg.surge.client.mods.SurgeMod mod) { super(mod, "file", "Image", "None", "None"); }
+
+		static java.nio.file.Path folder() {
+			java.nio.file.Path p = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("surge images");
+			try { java.nio.file.Files.createDirectories(p); } catch (Exception ignored) { }
+			return p;
+		}
+
+		String[] files() {
+			if (System.currentTimeMillis() - listedAt > 2000) {
+				listedAt = System.currentTimeMillis();
+				try (var st = java.nio.file.Files.list(folder())) {
+					cached = st.map(f -> f.getFileName().toString()).filter(n -> n.matches("(?i).+\\.(png|jpe?g|gif|bmp)")).sorted(String.CASE_INSENSITIVE_ORDER).toArray(String[]::new);
+				} catch (Exception e) {
+					cached = new String[0];
+				}
+			}
+			return cached;
+		}
+
+		@Override public String get() {
+			Object r = raw();
+			return r instanceof String str && !str.isEmpty() ? str : "None";
+		}
+
+		@Override public void cycle(int dir) {
+			String[] f = files();
+			if (f.length == 0) { set("None"); return; }
+			int idx = -1;
+			for (int k = 0; k < f.length; k++) if (f[k].equals(get())) idx = k;
+			idx = idx < 0 ? (dir > 0 ? 0 : f.length - 1) : (idx + dir + f.length) % f.length;
+			set(f[idx]);
+		}
+	}
+
+	static final class ImageModule extends HudModule {
+		final ImageFile file = add(new ImageFile(this));
+		final Setting.Slider size = slider("size", "Width", 96, 16, 400, 4, "px");
+		final Setting.Slider opacity = slider("opacity", "Opacity", 100, 5, 100, 5, "%");
+		final Setting.Slider rotation = slider("rotation", "Rotation", 0, -180, 180, 5, "\u00b0");
+		final Setting.Color tint = color("tint", "Tint", "FFFFFF");
+		final Setting.Toggle flip = toggle("flip", "Mirror", false);
+		private static volatile String picked;
+		private String loaded;
+		private long loadedStamp;
+		private long checkedAt;
+		private net.minecraft.resources.Identifier tex;
+		private int texW = 1, texH = 1;
+		private static final net.minecraft.resources.Identifier ID = net.minecraft.resources.Identifier.fromNamespaceAndPath("surge", "hud_image");
+
+		ImageModule() {
+			super("image", "Image", Items.PAINTING, "Put any picture on your screen, pick one and change its size, opacity and rotation", false, 0.8f, 0.6f);
+			button("Pick an image", "Browse", ImageModule::browse);
+			button("Image folder", "Open", () -> { try { net.minecraft.util.Util.getPlatform().openPath(ImageFile.folder()); } catch (Exception ignored) { } });
+		}
+
+		private static void browse() {
+			java.util.concurrent.CompletableFuture.runAsync(() -> {
+				try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
+					org.lwjgl.PointerBuffer f = stack.mallocPointer(5);
+					f.put(stack.UTF8("*.png")).put(stack.UTF8("*.jpg")).put(stack.UTF8("*.jpeg")).put(stack.UTF8("*.gif")).put(stack.UTF8("*.bmp"));
+					f.flip();
+					String path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_openFileDialog("Pick an image", null, f, "Images", false);
+					if (path == null) return;
+					java.nio.file.Path src = java.nio.file.Path.of(path);
+					java.nio.file.Path dst = ImageFile.folder().resolve(src.getFileName().toString());
+					if (!src.toAbsolutePath().normalize().equals(dst.toAbsolutePath().normalize())) java.nio.file.Files.copy(src, dst, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+					picked = dst.getFileName().toString();
+				} catch (Throwable ignored) { }
+			});
+		}
+
+		private void ensure(Minecraft mc) {
+			String p = picked;
+			if (p != null) { picked = null; file.set(p); }
+			String name = file.get();
+			if (name.equals("None")) { if (tex != null) release(mc); return; }
+			if (name.equals(loaded) && System.currentTimeMillis() - checkedAt < 1000) return;
+			checkedAt = System.currentTimeMillis();
+			java.nio.file.Path path = ImageFile.folder().resolve(name);
+			long stamp;
+			try { stamp = java.nio.file.Files.getLastModifiedTime(path).toMillis(); } catch (Exception e) { release(mc); return; }
+			if (name.equals(loaded) && stamp == loadedStamp) return;
+			loaded = name;
+			loadedStamp = stamp;
+			try {
+				if (name.toLowerCase(java.util.Locale.ROOT).endsWith(".png")) {
+					try (java.io.InputStream in = java.nio.file.Files.newInputStream(path)) {
+						com.mojang.blaze3d.platform.NativeImage ni = com.mojang.blaze3d.platform.NativeImage.read(in);
+						if (ni.getWidth() <= 2048 && ni.getHeight() <= 2048) {
+							mc.getTextureManager().register(ID, new net.minecraft.client.renderer.texture.DynamicTexture(() -> "surge hud image", ni));
+							tex = ID;
+							texW = ni.getWidth();
+							texH = ni.getHeight();
+							return;
+						}
+						ni.close();
+					} catch (Throwable ignored) { }
+				}
+				java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(path.toFile());
+				if (img == null) { release(mc); loaded = name; return; }
+				int w = img.getWidth(), h = img.getHeight();
+				float k = Math.min(1f, 1024f / Math.max(w, h));
+				int nw = Math.max(1, Math.round(w * k)), nh = Math.max(1, Math.round(h * k));
+				com.mojang.blaze3d.platform.NativeImage ni = new com.mojang.blaze3d.platform.NativeImage(nw, nh, false);
+				for (int y = 0; y < nh; y++) for (int x = 0; x < nw; x++) ni.setPixel(x, y, img.getRGB(Math.min(w - 1, (int) (x / k)), Math.min(h - 1, (int) (y / k))));
+				mc.getTextureManager().register(ID, new net.minecraft.client.renderer.texture.DynamicTexture(() -> "surge hud image", ni));
+				tex = ID;
+				texW = nw;
+				texH = nh;
+			} catch (Throwable t) {
+				release(mc);
+				loaded = name;
+			}
+		}
+
+		private void release(Minecraft mc) {
+			if (tex != null) mc.getTextureManager().release(tex);
+			tex = null;
+			loaded = null;
+		}
+
+		@Override public int width(Minecraft mc) { return size.asInt(); }
+
+		@Override public int height(Minecraft mc) {
+			ensure(mc);
+			return tex == null ? Math.max(16, size.asInt() / 2) : Math.max(1, Math.round(size.get() * texH / (float) texW));
+		}
+
+		@Override public void render(GuiGraphics g, Minecraft mc, int x, int y) {
+			ensure(mc);
+			int w = width(mc), h = height(mc);
+			boolean editing = mc.screen instanceof HudEditorScreen;
+			if (tex == null) {
+				if (editing) {
+					g.fill(x, y, x + w, y + h, 0x40FFFFFF);
+					String t = "Pick an image";
+					g.drawString(mc.font, t, x + (w - mc.font.width(t)) / 2, y + (h - 8) / 2, 0xFFFFFFFF, true);
+				}
+				return;
+			}
+			int a = Math.round(opacity.get() * 2.55f);
+			int color = (a << 24) | (tint.rgb(0) & 0xFFFFFF);
+			g.pose().pushMatrix();
+			g.pose().translate(x + w / 2f, y + h / 2f);
+			if (rotation.get() != 0) g.pose().rotate((float) Math.toRadians(rotation.get()));
+			if (flip.on()) g.pose().scale(-1f, 1f);
+			g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, tex, -w / 2, -h / 2, 0f, 0f, w, h, texW, texH, texW, texH, color);
+			g.pose().popMatrix();
 		}
 	}
 }

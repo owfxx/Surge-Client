@@ -60,6 +60,9 @@ public final class Mods {
 	public static final Setting.Choice BRAND_POS = GENERAL.choice("brandPos", "Surge Client label", "Bottom right", "Bottom right", "Under inventory");
 	public static final Setting.Header H_CAMERA = GENERAL.header("Camera");
 	public static final Setting.Toggle MIN_BOBBING = GENERAL.toggle("minBobbing", "Minimal view bobbing (only your hand moves)", false);
+	public static final Setting.Header H_WINDOW = GENERAL.header("Window");
+	public static final Setting.Choice FULLSCREEN_MODE = GENERAL.choice("fullscreenMode", "Fullscreen (F11)", "Exclusive", "Exclusive", "Borderless");
+	public static final Setting.Toggle BORDERLESS_ACTIVE = GENERAL.toggle("borderlessActive", "Borderless active", false).showIf(() -> false);
 
 	public static final SurgeMod TOGGLE_SPRINT = mod("toggle_sprint", "Toggle Sprint", Category.PVP, Items.SUGAR,
 		"Sprint without holding the key. Tap your sprint key to switch it on or off.", false);
@@ -115,6 +118,22 @@ public final class Mods {
 	public static final SurgeMod LOCATOR_HEADS = mod("locator_heads", "Locator Bar Heads", Category.VISUAL, Items.PLAYER_HEAD,
 		"Show each player's head on the locator bar instead of a dot", true);
 	public static final Setting.Toggle LH_OUTLINE = LOCATOR_HEADS.toggle("outline", "Colored outline", true);
+
+	public static final SurgeMod COLOR_GRADE = mod("color_grade", "Color Customizer", Category.VISUAL, Items.CYAN_DYE,
+		"Change the colors of the whole game, like saturation, brightness, contrast and hue", false);
+	public static final Setting.Choice CG_PRESET = COLOR_GRADE.choice("preset", "Preset", "Custom", "Custom", "Grayscale", "Vivid", "Warm", "Cold", "Sepia", "Noir", "Cinematic");
+	public static final Setting.Slider CG_SATURATION = COLOR_GRADE.slider("saturation", "Saturation", 100, 0, 250, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_BRIGHTNESS = COLOR_GRADE.slider("brightness", "Brightness", 100, 40, 180, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_CONTRAST = COLOR_GRADE.slider("contrast", "Contrast", 100, 40, 200, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_GAMMA = COLOR_GRADE.slider("gamma", "Gamma", 100, 40, 200, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_HUE = COLOR_GRADE.slider("hue", "Hue shift", 0, -180, 180, 5, "\u00b0").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Color CG_TINT = COLOR_GRADE.color("tint", "Tint color", "FFB070").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_TINT_AMOUNT = COLOR_GRADE.slider("tintAmount", "Tint strength", 0, 0, 100, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+	public static final Setting.Slider CG_VIGNETTE = COLOR_GRADE.slider("vignette", "Vignette", 0, 0, 100, 5, "%").showIf(() -> CG_PRESET.is("Custom"));
+
+	public static final SurgeMod CALCULATOR = mod("calculator", "Calculator", Category.UTILITY, Items.COMPARATOR,
+		"A calculator you can open anywhere, set a key for it in Controls", false);
+	public static final Setting.Button CALC_OPEN = CALCULATOR.button("Calculator", "Open", () -> net.minecraft.client.Minecraft.getInstance().setScreen(new gg.surge.client.gui.CalculatorScreen(net.minecraft.client.Minecraft.getInstance().screen)));
 
 	public static final SurgeMod GUI_SCALES = mod("gui_scales", "GUI Modifier", Category.VISUAL, Items.SPYGLASS,
 		"Resize your hotbar, chat, tab list, titles and inventories, and remove the dark inventory background", false);

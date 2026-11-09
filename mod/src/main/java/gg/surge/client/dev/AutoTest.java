@@ -245,6 +245,37 @@ public final class AutoTest {
 		STEPS.add(new Step("24h-backdrop-no-tint", 20, mc -> { Mods.GS_BACKDROP.set("Snow"); Mods.GS_NO_TINT.set(true); }));
 		STEPS.add(new Step("24i-backdrop-chest", 20, mc -> { Mods.GS_NO_TINT.set(false); Mods.GS_BACKDROP.set("Fireflies"); open(mc, new net.minecraft.client.gui.screens.inventory.ContainerScreen(net.minecraft.world.inventory.ChestMenu.threeRows(0, mc.player.getInventory()), mc.player.getInventory(), net.minecraft.network.chat.Component.literal("Chest"))); }));
 		STEPS.add(new Step("24j-backdrop-off", 5, mc -> { Mods.GS_BACKDROP.set("None"); Mods.GUI_SCALES.setEnabled(false); open(mc, null); }));
+		STEPS.add(new Step("25a-color-grayscale", 30, mc -> { open(mc, null); Mods.COLOR_GRADE.setEnabled(true); Mods.CG_PRESET.set("Grayscale"); }));
+		STEPS.add(new Step("25b-color-vivid", 15, mc -> Mods.CG_PRESET.set("Vivid")));
+		STEPS.add(new Step("25c-color-sepia", 15, mc -> Mods.CG_PRESET.set("Sepia")));
+		STEPS.add(new Step("25d-color-custom", 15, mc -> { Mods.CG_PRESET.set("Custom"); Mods.CG_HUE.set(120f); Mods.CG_SATURATION.set(160f); Mods.CG_VIGNETTE.set(60f); }));
+		STEPS.add(new Step("25e-color-settings", 20, mc -> open(mc, SurgeMenuScreen.settings(Mods.COLOR_GRADE, null))));
+		STEPS.add(new Step("25f-image-hud", 30, mc -> {
+			open(mc, null);
+			Mods.COLOR_GRADE.setEnabled(false);
+			try (java.io.InputStream in = mc.getResourceManager().getResource(gg.surge.client.gui.Ui.LOGO).orElseThrow().open()) {
+				java.nio.file.Path dir = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("surge images");
+				java.nio.file.Files.createDirectories(dir);
+				java.nio.file.Files.copy(in, dir.resolve("logo.png"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			} catch (Exception e) { throw new RuntimeException(e); }
+			HudModule m = Mods.hud("image");
+			m.setEnabled(true);
+			for (gg.surge.client.mods.Setting<?> st : m.settings) if (st.key.equals("file")) ((gg.surge.client.mods.Setting.Choice) st).cycle(1);
+			for (gg.surge.client.mods.Setting<?> st : m.settings) if (st.key.equals("rotation")) ((gg.surge.client.mods.Setting.Slider) st).set(-12f);
+		}));
+		STEPS.add(new Step("25g-image-settings", 20, mc -> open(mc, SurgeMenuScreen.settings(Mods.hud("image"), null))));
+		STEPS.add(new Step("25h-calculator", 20, mc -> {
+			Mods.hud("image").setEnabled(false);
+			open(mc, new gg.surge.client.gui.CalculatorScreen(null));
+			for (char ch : "12*(3+4)^2".toCharArray()) mc.screen.charTyped(new net.minecraft.client.input.CharacterEvent(ch, 0));
+		}));
+		STEPS.add(new Step("25i-calculator-result", 20, mc -> {
+			mc.screen.keyPressed(new net.minecraft.client.input.KeyEvent(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0));
+			for (char ch : "+sqrt(81)/3".toCharArray()) mc.screen.charTyped(new net.minecraft.client.input.CharacterEvent(ch, 0));
+		}));
+		STEPS.add(new Step("25j-borderless", 40, mc -> { open(mc, null); Mods.FULLSCREEN_MODE.set("Borderless"); mc.getWindow().toggleFullScreen(); }));
+		STEPS.add(new Step("25k-borderless-off", 30, mc -> { mc.getWindow().toggleFullScreen(); Mods.FULLSCREEN_MODE.set("Exclusive"); }));
+		STEPS.add(new Step("25l-settings-window", 20, mc -> { open(mc, SurgeMenuScreen.general(null)); if (mc.screen instanceof SurgeMenuScreen sm) sm.autotestScroll(); }));
 		STEPS.add(new Step("23m-cleanup", 5, mc -> {
 			Mods.RC_AUTO.set(false);
 			gg.surge.client.features.MoreFeatures.lastAddress = null;
